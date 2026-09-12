@@ -23,6 +23,10 @@ final class HotkeyRecorderControl: NSObject {
         button.setAccessibilityLabel(AgrypnosCopy.shortcutLabel)
     }
 
+    deinit {
+        stop()
+    }
+
     func apply(title: String) {
         button.title = title
         button.sizeToFit()
@@ -58,7 +62,7 @@ final class HotkeyRecorderControl: NSObject {
     private func handle(_ event: NSEvent) -> NSEvent? {
         guard isRecording else { return event }
         if event.isARepeat { return nil }
-        let flags = event.modifierFlags
+        let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
         let capture = HotkeyCapture.from(
             keyCode: UInt32(event.keyCode),
             option: flags.contains(.option),

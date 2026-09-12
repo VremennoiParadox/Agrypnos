@@ -252,10 +252,10 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         batterySlider.isContinuous = true
         batterySlider.frame = NSRect(x: ci, y: ci + 26, width: cw, height: 20)
         g4.addSubview(batterySlider)
-        let minHint = LabelFactory.make("\(batteryRange.lowerBound)%", font: .systemFont(ofSize: 10), color: .tertiaryLabelColor)
+        let minHint = LabelFactory.make(BatteryFloorChrome.minLabel, font: .systemFont(ofSize: 10), color: .tertiaryLabelColor)
         minHint.frame = NSRect(x: ci, y: ci + 50, width: 34, height: 13)
         g4.addSubview(minHint)
-        let maxHint = LabelFactory.make("\(batteryRange.upperBound)%", font: .systemFont(ofSize: 10), color: .tertiaryLabelColor)
+        let maxHint = LabelFactory.make(BatteryFloorChrome.maxLabel, font: .systemFont(ofSize: 10), color: .tertiaryLabelColor)
         maxHint.alignment = .right
         maxHint.frame = NSRect(x: contentW - ci - 40, y: ci + 50, width: 40, height: 13)
         g4.addSubview(maxHint)
@@ -383,11 +383,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
 
     @objc private func durationChanged(_ sender: NSSegmentedControl) {
         stopRecordingIfNeeded()
-        let typed = minutesField?.stringValue ?? ""
-        guard let option = DurationPickerChrome.duration(
-            selectingSegment: sender.selectedSegment,
-            minutesText: typed
-        ) else {
+        guard let option = DurationPickerChrome.duration(selectingSegment: sender.selectedSegment) else {
             minutesField?.window?.makeFirstResponder(minutesField)
             refresh()
             return
@@ -407,19 +403,23 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     }
 
     @objc private func keyboardToggled(_ sender: NSSwitch) {
+        stopRecordingIfNeeded()
         runtime?.setHygiene(keyboard: sender.state == .on)
     }
 
     @objc private func floorToggled(_ sender: NSSwitch) {
+        stopRecordingIfNeeded()
         runtime?.setHygiene(floor: sender.state == .on)
     }
 
     @objc private func batteryChanged(_ sender: NSSlider) {
+        stopRecordingIfNeeded()
         runtime?.setBatteryFloor(Int(sender.doubleValue.rounded()))
         batteryValue?.stringValue = "\(Int(sender.doubleValue.rounded()))%"
     }
 
     @objc private func loginToggled(_ sender: NSSwitch) {
+        stopRecordingIfNeeded()
         do {
             try LaunchAtLoginController.setEnabled(sender.state == .on)
         } catch {

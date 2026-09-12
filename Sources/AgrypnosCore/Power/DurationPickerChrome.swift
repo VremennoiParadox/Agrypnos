@@ -1,6 +1,4 @@
 public struct DurationPickerChrome: Equatable, Sendable {
-    public static let customSegmentIndex = 4
-
     public var segmentTitles: [String]
     public var selectedSegment: Int
     public var minutesText: String
@@ -19,19 +17,17 @@ public struct DurationPickerChrome: Equatable, Sendable {
     }
 
     public static func make(duration: DurationOption) -> DurationPickerChrome {
-        var titles = DurationOption.presets.map(\.segmentTitle)
+        let titles = DurationOption.presets.map(\.segmentTitle)
         switch duration {
         case .custom(let minutes):
             let value = max(minutes, 1)
-            titles.append("\(value)m")
             return DurationPickerChrome(
                 segmentTitles: titles,
-                selectedSegment: customSegmentIndex,
+                selectedSegment: -1,
                 minutesText: "\(value)",
                 customSelected: true
             )
         default:
-            titles.append(AgrypnosCopy.minutesSegmentIdle)
             let index = DurationOption.presets.firstIndex(of: duration) ?? 0
             return DurationPickerChrome(
                 segmentTitles: titles,
@@ -48,14 +44,9 @@ public struct DurationPickerChrome: Equatable, Sendable {
         return DurationOption.customMinutes(value).minutes
     }
 
-    public static func duration(selectingSegment index: Int, minutesText: String) -> DurationOption? {
-        if DurationOption.presets.indices.contains(index) {
-            return DurationOption.presets[index]
-        }
-        if index == customSegmentIndex, let minutes = parseMinutes(minutesText) {
-            return .customMinutes(minutes)
-        }
-        return nil
+    public static func duration(selectingSegment index: Int) -> DurationOption? {
+        guard DurationOption.presets.indices.contains(index) else { return nil }
+        return DurationOption.presets[index]
     }
 
     public static func shouldCommit(minutes: Int, current: DurationOption) -> Bool {

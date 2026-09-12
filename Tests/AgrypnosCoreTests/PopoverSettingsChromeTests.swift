@@ -2,13 +2,11 @@ import XCTest
 @testable import AgrypnosCore
 
 final class DurationPickerChromeTests: XCTestCase {
-    func testCustomMinutesSelectsTheMinutesChipNotABlankPreset() {
+    func testCustomMinutesFillsTheFieldAndLeavesPresetsUnselected() {
         let chrome = DurationPickerChrome.make(duration: .customMinutes(33))
-        XCTAssertEqual(DurationOption.presets.map(\.segmentTitle), ["∞", "1h", "3h", "Agents"])
-        XCTAssertEqual(Array(chrome.segmentTitles.prefix(4)), ["∞", "1h", "3h", "Agents"])
-        XCTAssertEqual(chrome.segmentTitles[DurationPickerChrome.customSegmentIndex], "33m")
-        XCTAssertEqual(chrome.selectedSegment, DurationPickerChrome.customSegmentIndex)
-        XCTAssertNotEqual(chrome.selectedSegment, -1)
+        XCTAssertEqual(chrome.segmentTitles, ["∞", "1h", "3h", "Agents"])
+        XCTAssertEqual(chrome.segmentTitles, DurationOption.presets.map(\.segmentTitle))
+        XCTAssertEqual(chrome.selectedSegment, -1)
         XCTAssertTrue(chrome.customSelected)
         XCTAssertEqual(chrome.minutesText, "33")
         XCTAssertFalse(DurationOption.presets.indices.contains(chrome.selectedSegment))
@@ -16,10 +14,10 @@ final class DurationPickerChromeTests: XCTestCase {
 
     func testPresetSelectionStaysOnTheFourPresets() {
         let idle = DurationPickerChrome.make(duration: .indefinite)
+        XCTAssertEqual(idle.segmentTitles, ["∞", "1h", "3h", "Agents"])
         XCTAssertEqual(idle.selectedSegment, 0)
         XCTAssertFalse(idle.customSelected)
         XCTAssertEqual(idle.minutesText, "")
-        XCTAssertEqual(idle.segmentTitles[DurationPickerChrome.customSegmentIndex], AgrypnosCopy.minutesSegmentIdle)
 
         let hour = DurationPickerChrome.make(duration: .oneHour)
         XCTAssertEqual(hour.selectedSegment, 1)
@@ -37,22 +35,12 @@ final class DurationPickerChromeTests: XCTestCase {
         XCTAssertNil(DurationPickerChrome.parseMinutes("3.5"))
     }
 
-    func testSegmentClickMapsToDurationIncludingTypedMinutes() {
-        XCTAssertEqual(
-            DurationPickerChrome.duration(selectingSegment: 0, minutesText: "33"),
-            .indefinite
-        )
-        XCTAssertEqual(
-            DurationPickerChrome.duration(selectingSegment: 3, minutesText: ""),
-            .untilAgentsSettle
-        )
-        XCTAssertEqual(
-            DurationPickerChrome.duration(selectingSegment: 4, minutesText: "33"),
-            .customMinutes(33)
-        )
-        XCTAssertNil(DurationPickerChrome.duration(selectingSegment: 4, minutesText: ""))
-        XCTAssertNil(DurationPickerChrome.duration(selectingSegment: 4, minutesText: "abc"))
-        XCTAssertNil(DurationPickerChrome.duration(selectingSegment: 9, minutesText: "33"))
+    func testSegmentClickMapsToTheFourPresets() {
+        XCTAssertEqual(DurationPickerChrome.duration(selectingSegment: 0), .indefinite)
+        XCTAssertEqual(DurationPickerChrome.duration(selectingSegment: 3), .untilAgentsSettle)
+        XCTAssertNil(DurationPickerChrome.duration(selectingSegment: 4))
+        XCTAssertNil(DurationPickerChrome.duration(selectingSegment: 9))
+        XCTAssertNil(DurationPickerChrome.duration(selectingSegment: -1))
     }
 
     func testSameCustomMinutesDoNotCountAsANewCommit() {
