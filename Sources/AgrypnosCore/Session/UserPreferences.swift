@@ -57,11 +57,10 @@ public struct UserPreferences: Equatable, Sendable, Codable {
     }
 
     public static func clampAgentSettleGrace(_ seconds: TimeInterval) -> TimeInterval {
-        let clamped = min(
-            max(Int(seconds.rounded()), agentSettleGraceRange.lowerBound),
-            agentSettleGraceRange.upperBound
-        )
-        return TimeInterval(clamped)
+        let lo = TimeInterval(agentSettleGraceRange.lowerBound)
+        let hi = TimeInterval(agentSettleGraceRange.upperBound)
+        guard seconds.isFinite else { return 90 }
+        return min(max(seconds, lo), hi)
     }
 
     public static func clampAgentSettleGrace(minutes: Int) -> TimeInterval {

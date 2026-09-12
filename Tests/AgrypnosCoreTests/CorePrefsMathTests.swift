@@ -29,7 +29,10 @@ final class CorePrefsMathTests: XCTestCase {
 
     func testBrightnessFloorPercentPersistsAndLegacyFractionDecodes() throws {
         let prefs = UserPreferences(brightnessFloorPercent: 20)
-        let loaded = try roundTrip(prefs)
+        let data = try JSONEncoder().encode(prefs)
+        let object = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        XCTAssertEqual(object["brightnessFloorPercent"] as? Int, 20)
+        let loaded = try JSONDecoder().decode(UserPreferences.self, from: data)
         XCTAssertEqual(loaded.brightnessFloorPercent, 20)
         XCTAssertEqual(loaded.brightnessFloor, 0.20, accuracy: 0.0001)
 
@@ -61,6 +64,9 @@ final class CorePrefsMathTests: XCTestCase {
         XCTAssertEqual(UserPreferences(agentSettleGrace: 5).agentSettleGrace, 15)
         XCTAssertEqual(UserPreferences(agentSettleGrace: 120).agentSettleGrace, 120)
         XCTAssertEqual(UserPreferences(agentSettleGrace: 9_999).agentSettleGrace, 900)
+        XCTAssertEqual(UserPreferences.clampAgentSettleGrace(1e20), 900)
+        XCTAssertEqual(UserPreferences.clampAgentSettleGrace(.infinity), 90)
+        XCTAssertEqual(UserPreferences(agentSettleGrace: .nan).agentSettleGrace, 90)
     }
 
     func testAgentSettleGracePersistsAndDecodedOvershootClamps() throws {
