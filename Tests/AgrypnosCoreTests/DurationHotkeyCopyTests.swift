@@ -32,15 +32,25 @@ final class AgrypnosCopyTests: XCTestCase {
     }
 
     func testDisplaySleepCopyMatchesBuiltInOnlyBehavior() {
-        let title = AgrypnosCopy.displaySleep.lowercased()
+        XCTAssertEqual(AgrypnosCopy.displaySleep, "Built-in display asleep")
+        XCTAssertEqual(
+            AgrypnosCopy.displaySleepHelp,
+            "Asleep, not dim. Skips when an external display is connected."
+        )
+        XCTAssertEqual(
+            AgrypnosCopy.captionOn(floor: 15),
+            "Lid can fall. Built-in display sleeps for real — not dim. Turns off at 15% battery."
+        )
+        XCTAssertFalse(AgrypnosCopy.displaySleep.lowercased().contains("force"))
         let help = AgrypnosCopy.displaySleepHelp.lowercased()
         let caption = AgrypnosCopy.captionOn(floor: 15).lowercased()
-        XCTAssertTrue(title.contains("built-in"))
-        XCTAssertFalse(title.contains("force display asleep"))
-        XCTAssertTrue(help.contains("extra"))
         XCTAssertTrue(help.contains("not dim"))
+        XCTAssertTrue(help.contains("external"))
+        XCTAssertTrue(help.contains("skip"))
         XCTAssertTrue(caption.contains("built-in"))
+        XCTAssertTrue(caption.contains("not dim"))
         XCTAssertFalse(caption.contains("watt"))
+        XCTAssertFalse(caption.contains("1.76"))
     }
 
     func testHotkeyHintDoesNotClaimActiveWhenRegistrationFailed() {
