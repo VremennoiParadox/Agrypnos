@@ -27,6 +27,9 @@ final class WatchRuntime {
     var hotkeyRegistered = false
     var adoptedLeftover: Bool { engine.leftoverAdopted }
     var bindHotkey: ((HotkeyChord) -> Bool)?
+    var unbindHotkey: (() -> Void)?
+    private(set) var lastFailedHotkey: HotkeyChord?
+    private var hotkeySuspendedForRecord = false
 
     init() {
         engine = WatchEngine(preferences: store.load())
@@ -58,22 +61,42 @@ final class WatchRuntime {
     }
 
     func setHotkey(_ chord: HotkeyChord) {
+        lastFailedHotkey = nil
+        hotkeySuspendedForRecord = false
         let previous = engine.preferences.hotkey
-        guard chord.isBindable else {
-            UserNotify.post(AgrypnosCopy.hotkeyHint(chord, registered: false))
-            delegate?.watchRuntimeDidChange(self)
-            return
-        }
-        let registered = bindHotkey?(chord) ?? false
-        let resolved = HotkeyBindPolicy.resolve(attempted: chord, previous: previous, registered: registered)
-        if resolved.shouldPersist {
-            _ = engine.preferences.applyHotkeyRemap(resolved.chord)
+        let registered = chord.isBindable ? (bindHotkey?(chord) ?? false) : false
+        let plan = HotkeyRemapPlan.make(
+            attempted: chord,
+            previous: previous,
+            osRegistered: registered
+        )
+        if plan.persist {
+            _ = engine.preferences.applyHotkeyRemap(plan.chordToRegister)
             store.save(engine.preferences)
             hotkeyRegistered = true
         } else {
-            hotkeyRegistered = bindHotkey?(previous) ?? false
-            UserNotify.post(AgrypnosCopy.hotkeyHint(chord, registered: false))
+            lastFailedHotkey = plan.failedAttempt
+            hotkeyRegistered = bindHotkey?(plan.chordToRegister) ?? false
+            if let hint = plan.hint {
+                UserNotify.post(hint)
+            }
         }
+        delegate?.watchRuntimeDidChange(self)
+    }
+
+    func prepareHotkeyRemap() {
+        lastFailedHotkey = nil
+        if !hotkeySuspendedForRecord {
+            unbindHotkey?()
+            hotkeySuspendedForRecord = true
+        }
+        delegate?.watchRuntimeDidChange(self)
+    }
+
+    func restoreSuspendedHotkey() {
+        guard hotkeySuspendedForRecord else { return }
+        hotkeySuspendedForRecord = false
+        hotkeyRegistered = bindHotkey?(engine.preferences.hotkey) ?? false
         delegate?.watchRuntimeDidChange(self)
     }
 
