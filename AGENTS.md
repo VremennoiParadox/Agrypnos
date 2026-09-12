@@ -47,7 +47,7 @@ Ship these, and stop:
 | Global hotkey | Activate/toggle the watch. Default `⌥⌘A`. **Remappable** in the popover (conflict-safe). Required V1. Surface bind failure honestly when the chord cannot register. |
 | Keep the watch (armed) | ON = **armed** while the lid is open. Machine may already be held awake (`pmset disablesleep` / SleepDisabled) as needed for the watch, but **no** display blank, **no** `displaysleepnow`, **no** keyboard backlight off on toggle. |
 | Lid-closed keep-awake | With the watch armed, lid close keeps the Mac awake via `pmset disablesleep` (SleepDisabled). IOKit assertions do **not** survive lid close; use them only as extra idle prevention, never as the lid story. |
-| Lid-close hygiene | On lid **close** (not on toggle): set brightness to the **user floor %** (default lowest) and turn **keyboard backlight off**. Do **not** use `displaysleepnow` for this path. |
+| Lid-close hygiene | On lid **close** (not on toggle): set brightness to the **user floor %** (default **15%**, range 5–40; never 0%) and turn **keyboard backlight off**. Do **not** use `displaysleepnow` for this path. |
 | Lid-open restore | If the lid opens again while the watch is still armed (timer/agents not finished): gradual brightness ramp (**1 / 2 / 3 s**, default **2s**) + keyboard backlight on. |
 | Hold until end | Stay armed until the selected timer ends or Agents mode settles idle (then allow sleep). |
 | Auto-off timer | Segmented presets `∞` / `1h` / `3h` / `Agents`, plus **custom minutes** (e.g. 33) the user can set. |
@@ -63,12 +63,13 @@ Ship these, and stop:
 - Remappable global hotkey (default still `⌥⌘A`)
 - Custom duration in minutes (beyond fixed presets)
 - Low-battery auto-off threshold **5–100%** (default 15%)
+- Brightness floor **%** (Core math + persist; default **15%**; range 5–40; never 0%; lid-close uses this floor)
+- Agents settle grace (Core math + persist; 15s–15m, default 90s)
+- Lid-open ramp duration **1 / 2 / 3 s** (Core math + persist; default **2s**)
 
-**Core prefs math slice** (Boss unlocked — implement next, popover only):
+**Popover chrome next** (still popover only — no settings window):
 
-- Brightness floor **%** (user-settable; default = lowest)
-- Agents settle grace (user-settable seconds/minutes before idle → allow sleep)
-- Lid-open ramp duration **1 / 2 / 3 s** (default **2s**)
+- Controls for floor %, settle grace, and ramp (Core already reads prefs)
 
 Still **locked** until Boss unlocks after Mac prove:
 

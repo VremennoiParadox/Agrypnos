@@ -91,9 +91,49 @@ final class WatchLidHygieneTests: XCTestCase {
         var engine = WatchEngine(preferences: .default)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: true)
         XCTAssertTrue(engine.lidHygieneApplied)
-        _ = engine.userSetEngaged(false, now: t0.addingTimeInterval(1), lidClosed: true)
+        XCTAssertEqual(
+            engine.userSetEngaged(false, now: t0.addingTimeInterval(1), lidClosed: true),
+            [.disengage(.user)]
+        )
         XCTAssertFalse(engine.engaged)
         XCTAssertFalse(engine.lidHygieneApplied)
+    }
+
+    func testAgentsSettledWithLidClosedRequestsSleep() {
+        var prefs = UserPreferences.default
+        prefs.duration = .untilAgentsSettle
+        var engine = WatchEngine(preferences: prefs)
+        _ = engine.userSetEngaged(true, now: t0, lidClosed: true)
+        XCTAssertTrue(
+            engine.tick(
+                now: t0,
+                safety: .acPower,
+                agents: AgentSnapshot(reports: [
+                    AgentReport(
+                        kind: .claudeCode,
+                        processRunning: true,
+                        cpuBusy: true,
+                        recentSessionWrite: true,
+                        isBusy: true
+                    )
+                ])
+            ).isEmpty
+        )
+        XCTAssertEqual(
+            engine.tick(now: t0.addingTimeInterval(90), safety: .acPower, agents: .idle),
+            [.disengage(.agentsSettled), .requestSleep]
+        )
+    }
+
+    func testTimerExpiredWithLidClosedRequestsSleep() {
+        var prefs = UserPreferences.default
+        prefs.duration = .oneHour
+        var engine = WatchEngine(preferences: prefs)
+        _ = engine.userSetEngaged(true, now: t0, lidClosed: true)
+        XCTAssertEqual(
+            engine.tick(now: t0.addingTimeInterval(3600), safety: .acPower, agents: .idle),
+            [.disengage(.timerExpired), .requestSleep]
+        )
     }
 
     func testStayArmedAcrossLidOpenUntilTimerEnds() {

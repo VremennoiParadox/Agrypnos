@@ -13,7 +13,7 @@ The name is Greek: *agrypnos*, sleepless. The tone is a night watch that likes y
 | You can check | What Agrypnos does |
 |---|---|
 | Keep the watch | **Armed** while the lid is open — screen stays usable; no blanking on toggle |
-| Lid close | Brightness → user floor % (default lowest) + keyboard backlight off |
+| Lid close | Brightness → user floor % (default **15%**, range 5–40; never 0%) + keyboard backlight off |
 | Lid open mid-watch | Gradual brightness ramp **1 / 2 / 3 s** (default **2s**) + keyboard backlight on |
 | Lid closed keep-awake | Kernel `SleepDisabled` via `pmset disablesleep` |
 | Agents | Busy stays awake; settled idle after user settle grace allows sleep |
@@ -55,7 +55,7 @@ From Terminal, equivalent grant:
 2. Flip **Keep the watch** (arms the watch — screen stays usable; nothing blanks on toggle).
 3. Pick how long: **∞**, **1h**, **3h**, **Agents**, or type minutes (33 is a fine watch).
 4. Click **Shortcut** and press a chord to remap the hotkey (default **⌥⌘A**). If that chord cannot register, Agrypnos says so and keeps the last live bind.
-5. Close the lid when ready. Brightness goes to the floor % (default lowest); keyboard goes dark; the Mac stays up.
+5. Close the lid when ready. Brightness goes to the floor % (default **15%**); keyboard goes dark; the Mac stays up.
 6. Open mid-watch if you need the panel — brightness ramps over **1 / 2 / 3 s** (default **2s**) + keyboard back on.
 7. Walk away until the timer or Agents settle ends the watch.
 
@@ -64,7 +64,7 @@ From Terminal, equivalent grant:
 **Popover settings** (no separate window):
 
 - **Landed:** remappable hotkey (default **⌥⌘A**), custom duration in minutes, low-battery auto-off **5–100%** (default 15%).
-- **User-settable next (still popover):** brightness floor **%** (default lowest), Agents settle grace, lid-open ramp **1 / 2 / 3 s** (default **2s**).
+- **Landed in Core (popover chrome next):** brightness floor **%** (default **15%**, range 5–40, never 0%), Agents settle grace (15s–15m, default 90s), lid-open ramp **1 / 2 / 3 s** (default **2s**). Persistence and lid/settle/ramp math read these prefs; the sliders/segments in the popover follow.
 
 Safety nets, always:
 
@@ -103,10 +103,12 @@ Linux contributors: `./Scripts/verify-linux.sh` runs `swift test` and the 600-li
 | Agent busy/settle rules | Yes | — |
 | Timer / battery / thermal state machine | Yes | — |
 | Copy, hotkey chord encoding | Yes | — |
+| Floor % / settle grace / ramp prefs (clamp, default, decode) | Yes | — |
 | Menu-bar popover | — | Render + click |
+| Popover chrome for floor % / grace / ramp | — | Not in this slice |
 | Armed with lid open (no blank) | — | Flip Keep the watch |
 | `SleepDisabled` lid-close | — | Close the lid |
-| Brightness floor + keyboard off on lid close | — | Close the lid, eyeball |
+| User brightness floor % + keyboard off on lid close | — | Close the lid, eyeball |
 | Ramp from prefs (1/2/3s, default 2s) + keyboard on lid open mid-watch | — | Open mid-watch |
 | `⌥⌘A` | — | Press it |
 | Launch at login | — | Log out/in |

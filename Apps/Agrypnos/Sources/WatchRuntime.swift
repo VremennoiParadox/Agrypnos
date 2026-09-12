@@ -60,6 +60,24 @@ final class WatchRuntime {
         delegate?.watchRuntimeDidChange(self)
     }
 
+    func setBrightnessFloorPercent(_ percent: Int) {
+        engine.preferences.brightnessFloorPercent = UserPreferences.clampBrightnessFloor(percent)
+        store.save(engine.preferences)
+        delegate?.watchRuntimeDidChange(self)
+    }
+
+    func setAgentSettleGrace(_ seconds: TimeInterval) {
+        engine.userSetAgentSettleGrace(seconds)
+        store.save(engine.preferences)
+        delegate?.watchRuntimeDidChange(self)
+    }
+
+    func setLidOpenRampSeconds(_ seconds: Int) {
+        engine.preferences.lidOpenRampSeconds = UserPreferences.clampLidOpenRamp(seconds)
+        store.save(engine.preferences)
+        delegate?.watchRuntimeDidChange(self)
+    }
+
     func setHotkey(_ chord: HotkeyChord) {
         lastFailedHotkey = nil
         hotkeySuspendedForRecord = false
@@ -147,11 +165,13 @@ final class WatchRuntime {
         )
         let agents = AgentProbeService.snapshot(now: Date(), freshness: engine.preferences.sessionFreshness)
         let commands = engine.tick(now: Date(), safety: safety, agents: agents)
+        var applyCommands = commands
         for command in commands {
             if case .disengage(let reason) = command {
                 if !disarmKernel() {
                     _ = engine.userSetEngaged(true, now: Date(), lidClosed: LidStateReader.isClosed())
                     UserNotify.post("Couldn't drop SleepDisabled. The watch stays up.")
+                    applyCommands = []
                     break
                 }
                 restoreHygiene()
@@ -160,7 +180,7 @@ final class WatchRuntime {
                 }
             }
         }
-        apply(commands)
+        apply(applyCommands)
         delegate?.watchRuntimeDidChange(self)
     }
 

@@ -47,15 +47,24 @@ final class AutoOffEvaluatorTests: XCTestCase {
         XCTAssertEqual(reason, .thermal)
     }
 
-    func testLowPowerModeOnBatteryEvenIfUserForced() {
+    func testLowPowerModeHonorsUserForceExceptBatteryFloor() {
         let lpm = AutoOffEvaluator.reason(
+            engaged: true,
+            timerEnd: nil,
+            safety: SafetyInputs(batteryPercent: 50, onBatteryDischarging: true, thermalSerious: false, lowPowerMode: true),
+            batteryFloorPercent: 15,
+            userForcedThisSession: false
+        )
+        XCTAssertEqual(lpm, .lowPowerMode)
+
+        let forced = AutoOffEvaluator.reason(
             engaged: true,
             timerEnd: nil,
             safety: SafetyInputs(batteryPercent: 50, onBatteryDischarging: true, thermalSerious: false, lowPowerMode: true),
             batteryFloorPercent: 15,
             userForcedThisSession: true
         )
-        XCTAssertEqual(lpm, .lowPowerMode)
+        XCTAssertNil(forced)
     }
 
     func testIdleEngineNeverAutoOffs() {

@@ -50,7 +50,7 @@ enum BrightnessFloorController {
     }
 
     static func isBuiltIn(_ id: CGDirectDisplayID) -> Bool {
-        CGDisplayIsBuiltin(id)
+        CGDisplayIsBuiltin(id) != 0
     }
 
     // MARK: DisplayServices (private)

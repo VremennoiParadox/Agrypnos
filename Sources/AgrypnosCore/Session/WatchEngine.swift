@@ -58,6 +58,11 @@ public struct WatchEngine: Equatable, Sendable {
         return []
     }
 
+    public mutating func userSetAgentSettleGrace(_ seconds: TimeInterval) {
+        preferences.agentSettleGrace = UserPreferences.clampAgentSettleGrace(seconds)
+        settle.grace = preferences.agentSettleGrace
+    }
+
     public mutating func tick(now: Date, safety: SafetyInputs, agents: AgentSnapshot) -> [WatchCommand] {
         guard engaged else { return [] }
         if let reason = AutoOffEvaluator.reason(
@@ -135,7 +140,12 @@ public struct WatchEngine: Equatable, Sendable {
         leftoverAdopted = false
         lidHygieneApplied = false
         settle.reset()
-        return [.disengage(reason)]
+        var commands: [WatchCommand] = [.disengage(reason)]
+        // Clearing SleepDisabled does not retrigger clamshell sleep.
+        if lidClosed, reason != .user {
+            commands.append(.requestSleep)
+        }
+        return commands
     }
 
     /// Lid close only: brightness floor + keyboard off. Never `displaysleepnow`.
