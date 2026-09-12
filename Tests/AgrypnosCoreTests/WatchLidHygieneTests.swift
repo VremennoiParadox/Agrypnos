@@ -9,7 +9,6 @@ final class WatchLidHygieneTests: XCTestCase {
         let commands = engine.userSetEngaged(true, now: t0, lidClosed: true)
         XCTAssertEqual(commands, [.engage, .applyBrightnessFloor, .requestKeyboardBacklightOff])
         XCTAssertTrue(engine.lidHygieneApplied)
-        XCTAssertFalse(commands.contains(.requestDisplaySleep))
     }
 
     func testSecondLidCloseIsNoOp() {
@@ -53,7 +52,6 @@ final class WatchLidHygieneTests: XCTestCase {
         XCTAssertEqual(commands.first, .engage)
         XCTAssertTrue(commands.contains(.applyBrightnessFloor))
         XCTAssertTrue(commands.contains(.requestKeyboardBacklightOff))
-        XCTAssertFalse(commands.contains(.requestDisplaySleep))
         XCTAssertTrue(engine.lidHygieneApplied)
     }
 
@@ -64,7 +62,6 @@ final class WatchLidHygieneTests: XCTestCase {
         XCTAssertTrue(engine.leftoverAdopted)
         XCTAssertEqual(commands, [.applyBrightnessFloor, .requestKeyboardBacklightOff])
         XCTAssertFalse(commands.contains(.engage))
-        XCTAssertFalse(commands.contains(.requestDisplaySleep))
     }
 
     func testDefaultDoesNotForceDisplaySleep() {
@@ -85,7 +82,6 @@ final class WatchLidHygieneTests: XCTestCase {
         _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
         let cmds = engine.lidDidClose(now: t0.addingTimeInterval(1))
         XCTAssertEqual(cmds, [.applyBrightnessFloor, .requestKeyboardBacklightOff])
-        XCTAssertFalse(cmds.contains(.requestDisplaySleep))
     }
 
     func testAgentsModeStaysArmedAcrossLidCloseOpen() {

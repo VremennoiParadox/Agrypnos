@@ -9,7 +9,6 @@ final class WatchEngineTests: XCTestCase {
         let commands = engine.userSetEngaged(true, now: t0, lidClosed: false)
         XCTAssertTrue(engine.engaged)
         XCTAssertEqual(commands, [.engage])
-        XCTAssertFalse(commands.contains(.requestDisplaySleep))
         XCTAssertFalse(commands.contains(.requestKeyboardBacklightOff))
         XCTAssertFalse(commands.contains(.applyBrightnessFloor))
         XCTAssertFalse(engine.lidHygieneApplied)
@@ -113,7 +112,6 @@ final class WatchEngineTests: XCTestCase {
         _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
         let cmds = engine.lidDidClose(now: t0.addingTimeInterval(1))
         XCTAssertEqual(cmds, [.applyBrightnessFloor, .requestKeyboardBacklightOff])
-        XCTAssertFalse(cmds.contains(.requestDisplaySleep))
         XCTAssertFalse(cmds.contains(.engage))
         XCTAssertTrue(engine.lidHygieneApplied)
     }

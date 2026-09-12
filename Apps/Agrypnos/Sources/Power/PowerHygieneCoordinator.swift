@@ -27,8 +27,6 @@ enum PowerHygieneCoordinator {
                 if canSetBuiltInBrightness {
                     BrightnessFloorController.set(preferences.brightnessFloor)
                 }
-            case .requestDisplaySleep:
-                break
             case .requestKeyboardBacklightOff:
                 KeyboardBacklightController.setOff()
             case .rampBrightnessRestore:
