@@ -1,0 +1,25 @@
+import XCTest
+@testable import AgrypnosCore
+
+final class ProcessTableParserTests: XCTestCase {
+    func testParsesPidCpuAndSpacedCommand() {
+        let stdout = """
+          1234  3.2 Cursor Helper (GPU)
+           221 12.50 claude
+            18   0.0 WindowServer
+        """
+        let rows = ProcessTableParser.parse(stdout: stdout)
+        XCTAssertEqual(rows.count, 3)
+        XCTAssertEqual(rows[0], ProcessRecord(pid: 1234, cpuPercent: 3.2, name: "Cursor Helper (GPU)"))
+        XCTAssertEqual(rows[1], ProcessRecord(pid: 221, cpuPercent: 12.5, name: "claude"))
+        XCTAssertEqual(rows[2], ProcessRecord(pid: 18, cpuPercent: 0, name: "WindowServer"))
+    }
+
+    func testSkipsGarbageLines() {
+        let stdout = """
+        PID CPU COMMAND
+        not-a-row
+        """
+        XCTAssertTrue(ProcessTableParser.parse(stdout: stdout).isEmpty)
+    }
+}

@@ -1,0 +1,418 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		45A1276B1F4DD217A323DE4F /* AgentProbeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBF2CB7D5165F5AC6740623A /* AgentProbeService.swift */; };
+		514C76ED0DB9CC93ED528F15 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83A43E56C10CD6D41E834FFE /* AppDelegate.swift */; };
+		E7745E8B7473D56F15599102 /* AppMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD5204D1B4D62DE6D2D8B414 /* AppMain.swift */; };
+		98EC0A7215FC0C16A38106EC /* GlobalHotkeyCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D41CC191CF99AEA8CAC87F99 /* GlobalHotkeyCenter.swift */; };
+		F87EF19E80616F394A8108B0 /* LaunchAtLoginController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1531989688A32A6FF3BE1EF7 /* LaunchAtLoginController.swift */; };
+		EE4DE2012E8891D5E35D9C27 /* PopoverChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = F94178055CD17CB0C1E4EBE4 /* PopoverChrome.swift */; };
+		40DF44DBC43DE8B05319E1F5 /* PopoverController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 329EC7D50E7C6B456084BE11 /* PopoverController.swift */; };
+		EC7A8AAC019F71CCB4D3623D /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8607BE8FEC94DD9191D5842B /* StatusItemController.swift */; };
+		B54A11BE04F7B909BA1DAA45 /* BrightnessFloorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 664053E9C3461C2FA95B19F5 /* BrightnessFloorController.swift */; };
+		847F151530C271DCD704269E /* DisplaySleepController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C86B7F2BD74F5C1D6174B1F1 /* DisplaySleepController.swift */; };
+		3E912B96C1EA4A6340DF6B81 /* KeyboardBacklightController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2F4F53E617135F5861F4EE6 /* KeyboardBacklightController.swift */; };
+		6E57FD31DE821FECC35C0D54 /* MachineSensors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3745B28123B3800EBD46C435 /* MachineSensors.swift */; };
+		2AECF1A258D31B94B7028546 /* PowerHygieneCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D443A71D05E57A14624F2175 /* PowerHygieneCoordinator.swift */; };
+		CE82BC78031023E280DBD432 /* SleepDisabledController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A325704A38E6F231B4A961F1 /* SleepDisabledController.swift */; };
+		31DBD3069D96D292DC184EDD /* PreferencesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 986AF8E920E5E71D993DED12 /* PreferencesStore.swift */; };
+		436DA0943AEB42FDD30C5580 /* GrantAndNotify.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD7C3F5A1565378FE3CC9B8A /* GrantAndNotify.swift */; };
+		E62F9714A04AB0D4F946A4FE /* ProcessRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D433AFEE00C6137709B3A3C /* ProcessRunner.swift */; };
+		1A07C28A481816CBE4F20A60 /* WatchRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41663A701EAD0DB8779BE8A5 /* WatchRuntime.swift */; };
+		095E19E7CB28F7EE95D82908 /* AgrypnosCore in Frameworks */ = {isa = PBXBuildFile; productRef = C81CD5F22406E4B780AC870D /* AgrypnosCore */; };
+		6B8001DABC00C7B45D3BFA0C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8B40A3F1CAC9ADB66B78DD5C /* Assets.xcassets */; };
+		BBE0CDF003CDB2E92B81738B /* grant.sh in Resources */ = {isa = PBXBuildFile; fileRef = 9A657A8A538B844742E8496C /* grant.sh */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		294174BE4BF2511F5691ABCD /* Agrypnos.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Agrypnos.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BBF2CB7D5165F5AC6740623A /* AgentProbeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentProbeService.swift; sourceTree = "<group>"; };
+		83A43E56C10CD6D41E834FFE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		AD5204D1B4D62DE6D2D8B414 /* AppMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMain.swift; sourceTree = "<group>"; };
+		D41CC191CF99AEA8CAC87F99 /* GlobalHotkeyCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotkeyCenter.swift; sourceTree = "<group>"; };
+		1531989688A32A6FF3BE1EF7 /* LaunchAtLoginController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginController.swift; sourceTree = "<group>"; };
+		F94178055CD17CB0C1E4EBE4 /* PopoverChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverChrome.swift; sourceTree = "<group>"; };
+		329EC7D50E7C6B456084BE11 /* PopoverController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverController.swift; sourceTree = "<group>"; };
+		8607BE8FEC94DD9191D5842B /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
+		664053E9C3461C2FA95B19F5 /* BrightnessFloorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessFloorController.swift; sourceTree = "<group>"; };
+		C86B7F2BD74F5C1D6174B1F1 /* DisplaySleepController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplaySleepController.swift; sourceTree = "<group>"; };
+		B2F4F53E617135F5861F4EE6 /* KeyboardBacklightController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardBacklightController.swift; sourceTree = "<group>"; };
+		3745B28123B3800EBD46C435 /* MachineSensors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MachineSensors.swift; sourceTree = "<group>"; };
+		D443A71D05E57A14624F2175 /* PowerHygieneCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerHygieneCoordinator.swift; sourceTree = "<group>"; };
+		A325704A38E6F231B4A961F1 /* SleepDisabledController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepDisabledController.swift; sourceTree = "<group>"; };
+		986AF8E920E5E71D993DED12 /* PreferencesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesStore.swift; sourceTree = "<group>"; };
+		BD7C3F5A1565378FE3CC9B8A /* GrantAndNotify.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrantAndNotify.swift; sourceTree = "<group>"; };
+		1D433AFEE00C6137709B3A3C /* ProcessRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessRunner.swift; sourceTree = "<group>"; };
+		41663A701EAD0DB8779BE8A5 /* WatchRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRuntime.swift; sourceTree = "<group>"; };
+		38ED30322495D02C679CFD76 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		0111024D5CF6358695630612 /* Agrypnos.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Agrypnos.entitlements; sourceTree = "<group>"; };
+		8B40A3F1CAC9ADB66B78DD5C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		9A657A8A538B844742E8496C /* grant.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = grant.sh; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		7B8633C7EB6F5CB13673C25D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				095E19E7CB28F7EE95D82908 /* AgrypnosCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		11ECAFA879DDC6BF3438A697 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				83A43E56C10CD6D41E834FFE /* AppDelegate.swift */,
+				AD5204D1B4D62DE6D2D8B414 /* AppMain.swift */,
+				41663A701EAD0DB8779BE8A5 /* WatchRuntime.swift */,
+				7BC2CAB9094C6A3F6E6AF09E /* Agent */,
+				3E81BE9F451039AECD508BDD /* Hotkey */,
+				88B94530079532860173BE0F /* Launch */,
+				E7C22297E41D96897BEBC32C /* MenuBar */,
+				3A741AA2944FECC4DD57D0E6 /* Power */,
+				E00B57B6F57F8169DF300C19 /* Preferences */,
+				B2ADD567ADCD61F91327283F /* Support */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		7BC2CAB9094C6A3F6E6AF09E /* Agent */ = {
+			isa = PBXGroup;
+			children = (
+				BBF2CB7D5165F5AC6740623A /* AgentProbeService.swift */,
+			);
+			path = Agent;
+			sourceTree = "<group>";
+		};
+		3E81BE9F451039AECD508BDD /* Hotkey */ = {
+			isa = PBXGroup;
+			children = (
+				D41CC191CF99AEA8CAC87F99 /* GlobalHotkeyCenter.swift */,
+			);
+			path = Hotkey;
+			sourceTree = "<group>";
+		};
+		88B94530079532860173BE0F /* Launch */ = {
+			isa = PBXGroup;
+			children = (
+				1531989688A32A6FF3BE1EF7 /* LaunchAtLoginController.swift */,
+			);
+			path = Launch;
+			sourceTree = "<group>";
+		};
+		E7C22297E41D96897BEBC32C /* MenuBar */ = {
+			isa = PBXGroup;
+			children = (
+				F94178055CD17CB0C1E4EBE4 /* PopoverChrome.swift */,
+				329EC7D50E7C6B456084BE11 /* PopoverController.swift */,
+				8607BE8FEC94DD9191D5842B /* StatusItemController.swift */,
+			);
+			path = MenuBar;
+			sourceTree = "<group>";
+		};
+		3A741AA2944FECC4DD57D0E6 /* Power */ = {
+			isa = PBXGroup;
+			children = (
+				664053E9C3461C2FA95B19F5 /* BrightnessFloorController.swift */,
+				C86B7F2BD74F5C1D6174B1F1 /* DisplaySleepController.swift */,
+				B2F4F53E617135F5861F4EE6 /* KeyboardBacklightController.swift */,
+				3745B28123B3800EBD46C435 /* MachineSensors.swift */,
+				D443A71D05E57A14624F2175 /* PowerHygieneCoordinator.swift */,
+				A325704A38E6F231B4A961F1 /* SleepDisabledController.swift */,
+			);
+			path = Power;
+			sourceTree = "<group>";
+		};
+		E00B57B6F57F8169DF300C19 /* Preferences */ = {
+			isa = PBXGroup;
+			children = (
+				986AF8E920E5E71D993DED12 /* PreferencesStore.swift */,
+			);
+			path = Preferences;
+			sourceTree = "<group>";
+		};
+		B2ADD567ADCD61F91327283F /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				BD7C3F5A1565378FE3CC9B8A /* GrantAndNotify.swift */,
+				1D433AFEE00C6137709B3A3C /* ProcessRunner.swift */,
+			);
+			path = Support;
+			sourceTree = "<group>";
+		};
+		2817F7FC23A5630698DF296E /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				8B40A3F1CAC9ADB66B78DD5C /* Assets.xcassets */,
+				38ED30322495D02C679CFD76 /* Info.plist */,
+				0111024D5CF6358695630612 /* Agrypnos.entitlements */,
+				9A657A8A538B844742E8496C /* grant.sh */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		6A0CAE9633B498EA2A91E7E3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				294174BE4BF2511F5691ABCD /* Agrypnos.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6CFC827E67DCAE34C72B9CED = {
+			isa = PBXGroup;
+			children = (
+				11ECAFA879DDC6BF3438A697 /* Sources */,
+				2817F7FC23A5630698DF296E /* Resources */,
+				6A0CAE9633B498EA2A91E7E3 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		0E8A3AD980EC179856012B7E /* Agrypnos */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7D6FD5968245D38AAFD570B5 /* Build configuration list for PBXNativeTarget "Agrypnos" */;
+			buildPhases = (
+				E4F78730D65EE9F55E2BAC2F /* Sources */,
+				7B8633C7EB6F5CB13673C25D /* Frameworks */,
+				C52ABA055DA4D0050382EB56 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Agrypnos;
+			packageProductDependencies = (
+				C81CD5F22406E4B780AC870D /* AgrypnosCore */,
+			);
+			productName = Agrypnos;
+			productReference = 294174BE4BF2511F5691ABCD /* Agrypnos.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		98F54143AB4E86B28C3AFEE0 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+			};
+			buildConfigurationList = C5A8B79996CDCB687FCFCBE6 /* Build configuration list for PBXProject "Agrypnos" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 6CFC827E67DCAE34C72B9CED;
+			packageReferences = (
+				0B2C5848BF186D63E30F5575 /* XCLocalSwiftPackageReference "../.." */,
+			);
+			productRefGroup = 6A0CAE9633B498EA2A91E7E3 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				0E8A3AD980EC179856012B7E /* Agrypnos */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C52ABA055DA4D0050382EB56 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6B8001DABC00C7B45D3BFA0C /* Assets.xcassets in Resources */,
+				BBE0CDF003CDB2E92B81738B /* grant.sh in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E4F78730D65EE9F55E2BAC2F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45A1276B1F4DD217A323DE4F /* AgentProbeService.swift in Sources */,
+				514C76ED0DB9CC93ED528F15 /* AppDelegate.swift in Sources */,
+				E7745E8B7473D56F15599102 /* AppMain.swift in Sources */,
+				98EC0A7215FC0C16A38106EC /* GlobalHotkeyCenter.swift in Sources */,
+				F87EF19E80616F394A8108B0 /* LaunchAtLoginController.swift in Sources */,
+				EE4DE2012E8891D5E35D9C27 /* PopoverChrome.swift in Sources */,
+				40DF44DBC43DE8B05319E1F5 /* PopoverController.swift in Sources */,
+				EC7A8AAC019F71CCB4D3623D /* StatusItemController.swift in Sources */,
+				B54A11BE04F7B909BA1DAA45 /* BrightnessFloorController.swift in Sources */,
+				847F151530C271DCD704269E /* DisplaySleepController.swift in Sources */,
+				3E912B96C1EA4A6340DF6B81 /* KeyboardBacklightController.swift in Sources */,
+				6E57FD31DE821FECC35C0D54 /* MachineSensors.swift in Sources */,
+				2AECF1A258D31B94B7028546 /* PowerHygieneCoordinator.swift in Sources */,
+				CE82BC78031023E280DBD432 /* SleepDisabledController.swift in Sources */,
+				31DBD3069D96D292DC184EDD /* PreferencesStore.swift in Sources */,
+				436DA0943AEB42FDD30C5580 /* GrantAndNotify.swift in Sources */,
+				E62F9714A04AB0D4F946A4FE /* ProcessRunner.swift in Sources */,
+				1A07C28A481816CBE4F20A60 /* WatchRuntime.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		C6181AE73EB95E424D80A5C0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		998A37D93C19C736263CA477 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		F77B8DEEF07F8FA84F0A0E8A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Resources/Agrypnos.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.agrypnos.Agrypnos;
+				PRODUCT_NAME = Agrypnos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 5.0;
+
+			};
+			name = Debug;
+		};
+		4D70308C1D7F09613EE71368 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Resources/Agrypnos.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.agrypnos.Agrypnos;
+				PRODUCT_NAME = Agrypnos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 5.0;
+
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C5A8B79996CDCB687FCFCBE6 /* Build configuration list for PBXProject "Agrypnos" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C6181AE73EB95E424D80A5C0 /* Debug */,
+				998A37D93C19C736263CA477 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7D6FD5968245D38AAFD570B5 /* Build configuration list for PBXNativeTarget "Agrypnos" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F77B8DEEF07F8FA84F0A0E8A /* Debug */,
+				4D70308C1D7F09613EE71368 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		0B2C5848BF186D63E30F5575 /* XCLocalSwiftPackageReference "../.." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../..;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		C81CD5F22406E4B780AC870D /* AgrypnosCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0B2C5848BF186D63E30F5575 /* XCLocalSwiftPackageReference "../.." */;
+			productName = AgrypnosCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 98F54143AB4E86B28C3AFEE0 /* Project object */;
+}
