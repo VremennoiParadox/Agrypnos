@@ -16,6 +16,10 @@ final class GlobalHotkeyCenter {
 
     @discardableResult
     func register(_ chord: HotkeyChord) -> Bool {
+        guard chord.isBindable else {
+            NSLog("Agrypnos: hotkey chord is not bindable. Global hotkey is not active.")
+            return false
+        }
         unregister()
         var hotKeyID = EventHotKeyID(signature: 0x41475259, id: 1)
         var ref: EventHotKeyRef?

@@ -7,7 +7,7 @@ final class DurationOptionTests: XCTestCase {
         XCTAssertEqual(DurationOption.oneHour.minutes, 60)
         XCTAssertEqual(DurationOption.threeHours.minutes, 180)
         XCTAssertNil(DurationOption.untilAgentsSettle.minutes)
-        XCTAssertEqual(DurationOption.allCases.count, 4)
+        XCTAssertEqual(DurationOption.presets.count, 4)
     }
 }
 
@@ -211,9 +211,11 @@ final class AgrypnosCopyTests: XCTestCase {
             AgrypnosCopy.leftoverCaption(floor: 15),
             AgrypnosCopy.hotkeyHint(.defaultToggle, registered: true),
             AgrypnosCopy.hotkeyHint(.defaultToggle, registered: false),
+            AgrypnosCopy.hotkeyHint(HotkeyChord(keyCode: 0, option: false, command: false), registered: false),
             AgrypnosCopy.durationHint(option: .untilAgentsSettle, engaged: false, remainingSeconds: nil),
             AgrypnosCopy.durationHint(option: .indefinite, engaged: false, remainingSeconds: nil),
             AgrypnosCopy.durationHint(option: .oneHour, engaged: false, remainingSeconds: nil),
+            AgrypnosCopy.durationHint(option: .customMinutes(33), engaged: false, remainingSeconds: nil),
             AgrypnosCopy.notification(for: .user),
             AgrypnosCopy.notification(for: .timerExpired),
             AgrypnosCopy.notification(for: .batteryFloor),

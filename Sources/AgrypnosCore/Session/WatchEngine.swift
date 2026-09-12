@@ -117,10 +117,10 @@ public struct WatchEngine: Equatable, Sendable {
         case .indefinite:
             mode = .indefinite
             timerEnd = nil
-        case .oneHour, .threeHours:
+        case .oneHour, .threeHours, .custom:
             mode = .timed
             let minutes = preferences.duration.minutes ?? 60
-            timerEnd = now.addingTimeInterval(TimeInterval(minutes * 60))
+            timerEnd = now.addingTimeInterval(TimeInterval(minutes) * 60)
         case .untilAgentsSettle:
             mode = .untilAgentsSettle
             timerEnd = nil
