@@ -6,6 +6,10 @@ public enum PopoverCopyLayout: Sendable {
     public static let lineHeightPoints = 16
     public static let durationHintHeightPoints = 48
     public static let captionHeightPoints = 48
+    /// Custom-minutes field. The "Minutes" label is wider so it does not share this slot.
+    public static let minutesFieldWidthPoints = 56
+    /// Right-aligned on the How long row, extending left into the gap past the 56pt field.
+    public static let minutesLabelWidthPoints = 80
 }
 
 public enum CopyWrap: Sendable {

@@ -2,12 +2,23 @@ import XCTest
 @testable import AgrypnosCore
 
 final class DurationPickerChromeTests: XCTestCase {
+    func testMinutesLabelSlotIsWiderThanTheFieldSoMinutesDoesNotClip() {
+        XCTAssertEqual(AgrypnosCopy.minutesLabel, "Minutes")
+        XCTAssertEqual(PopoverCopyLayout.minutesFieldWidthPoints, 56)
+        XCTAssertGreaterThan(
+            PopoverCopyLayout.minutesLabelWidthPoints,
+            PopoverCopyLayout.minutesFieldWidthPoints
+        )
+        // 13pt Latin budget (~9pt/glyph) plus cell padding — 56pt was the clip.
+        let needed = AgrypnosCopy.minutesLabel.count * 9 + 8
+        XCTAssertGreaterThanOrEqual(PopoverCopyLayout.minutesLabelWidthPoints, needed)
+    }
+
     func testCustomMinutesFillsTheFieldAndLeavesPresetsUnselected() {
         let chrome = DurationPickerChrome.make(duration: .customMinutes(33))
         XCTAssertEqual(chrome.segmentTitles, ["∞", "1h", "3h", "Agents"])
         XCTAssertEqual(chrome.segmentTitles, DurationOption.presets.map(\.segmentTitle))
         XCTAssertEqual(chrome.selectedSegment, -1)
-        XCTAssertTrue(chrome.customSelected)
         XCTAssertEqual(chrome.minutesText, "33")
         XCTAssertFalse(DurationOption.presets.indices.contains(chrome.selectedSegment))
     }
@@ -16,7 +27,6 @@ final class DurationPickerChromeTests: XCTestCase {
         let idle = DurationPickerChrome.make(duration: .indefinite)
         XCTAssertEqual(idle.segmentTitles, ["∞", "1h", "3h", "Agents"])
         XCTAssertEqual(idle.selectedSegment, 0)
-        XCTAssertFalse(idle.customSelected)
         XCTAssertEqual(idle.minutesText, "")
 
         let hour = DurationPickerChrome.make(duration: .oneHour)

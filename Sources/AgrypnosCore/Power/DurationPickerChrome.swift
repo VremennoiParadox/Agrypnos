@@ -2,18 +2,15 @@ public struct DurationPickerChrome: Equatable, Sendable {
     public var segmentTitles: [String]
     public var selectedSegment: Int
     public var minutesText: String
-    public var customSelected: Bool
 
     public init(
         segmentTitles: [String],
         selectedSegment: Int,
-        minutesText: String,
-        customSelected: Bool
+        minutesText: String
     ) {
         self.segmentTitles = segmentTitles
         self.selectedSegment = selectedSegment
         self.minutesText = minutesText
-        self.customSelected = customSelected
     }
 
     public static func make(duration: DurationOption) -> DurationPickerChrome {
@@ -24,16 +21,14 @@ public struct DurationPickerChrome: Equatable, Sendable {
             return DurationPickerChrome(
                 segmentTitles: titles,
                 selectedSegment: -1,
-                minutesText: "\(value)",
-                customSelected: true
+                minutesText: "\(value)"
             )
         default:
             let index = DurationOption.presets.firstIndex(of: duration) ?? 0
             return DurationPickerChrome(
                 segmentTitles: titles,
                 selectedSegment: index,
-                minutesText: "",
-                customSelected: false
+                minutesText: ""
             )
         }
     }

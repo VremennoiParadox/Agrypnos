@@ -205,7 +205,6 @@ final class AgrypnosCopyTests: XCTestCase {
             AgrypnosCopy.durationLabel,
             AgrypnosCopy.minutesLabel,
             AgrypnosCopy.minutesPlaceholder,
-            AgrypnosCopy.minutesSegmentIdle,
             AgrypnosCopy.shortcutLabel,
             AgrypnosCopy.hotkeyRecording,
             AgrypnosCopy.hotkeyRecordingHint,
