@@ -4,7 +4,6 @@ public enum AgrypnosCopy: Sendable {
     public static let durationLabel = "How long"
     public static let minutesLabel = "Minutes"
     public static let minutesPlaceholder = "33"
-    public static let minutesSegmentIdle = "min"
     public static let shortcutLabel = "Shortcut"
     public static let hotkeyRecording = "Listening…"
     public static let hotkeyRecordingHint = "Press a chord. Esc cancels."

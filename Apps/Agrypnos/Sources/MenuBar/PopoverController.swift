@@ -183,11 +183,12 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         let durationLabel = LabelFactory.make(AgrypnosCopy.durationLabel, font: .systemFont(ofSize: 13), color: .labelColor)
         durationLabel.frame = NSRect(x: ci, y: 8, width: 86, height: 22)
         g2.addSubview(durationLabel)
-        let fieldW: CGFloat = 56
+        let fieldW = CGFloat(PopoverCopyLayout.minutesFieldWidthPoints)
+        let minutesLabelW = CGFloat(PopoverCopyLayout.minutesLabelWidthPoints)
         let fieldGap: CGFloat = 8
         let minutesLabel = LabelFactory.make(AgrypnosCopy.minutesLabel, font: .systemFont(ofSize: 13), color: .labelColor)
         minutesLabel.alignment = .right
-        minutesLabel.frame = NSRect(x: contentW - ci - fieldW, y: 8, width: fieldW, height: 22)
+        minutesLabel.frame = NSRect(x: contentW - ci - minutesLabelW, y: 8, width: minutesLabelW, height: 22)
         g2.addSubview(minutesLabel)
         minutesField = NSTextField(string: "")
         minutesField.placeholderString = AgrypnosCopy.minutesPlaceholder
