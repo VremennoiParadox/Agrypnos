@@ -37,7 +37,7 @@ public enum AgrypnosCopy: Sendable {
         switch option {
         case .untilAgentsSettle:
             return agentsHint
-        case .oneHour, .threeHours:
+        case .oneHour, .threeHours, .custom:
             if engaged, let remaining = remainingSeconds {
                 let clamped = max(0, remaining)
                 return String(format: "Auto-off in %d:%02d", clamped / 60, clamped % 60)
