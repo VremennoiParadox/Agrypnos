@@ -1,12 +1,9 @@
-import AppKit
-
 #if canImport(AgrypnosCore)
 import AgrypnosCore
 #endif
 
 enum PowerHygieneCoordinator {
-    /// Extra screens: do not drive `CGMainDisplayID()` — that is often the external in clamshell.
-    static var canSetBuiltInBrightness: Bool { NSScreen.screens.count <= 1 }
+    static var canSetBuiltInBrightness: Bool { BrightnessFloorController.canSetBuiltIn() }
 
     static func apply(
         _ commands: [WatchCommand],
