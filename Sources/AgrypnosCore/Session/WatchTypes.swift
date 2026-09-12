@@ -1,9 +1,10 @@
 public enum WatchCommand: Equatable, Sendable {
     case engage
     case disengage(DisengageReason)
-    case requestDisplaySleep
     case requestKeyboardBacklightOff
     case applyBrightnessFloor
+    case restoreKeyboardBacklight
+    case rampBrightnessRestore
 }
 
 public enum WatchMode: Equatable, Sendable {

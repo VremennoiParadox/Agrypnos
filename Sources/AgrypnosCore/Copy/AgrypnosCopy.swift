@@ -2,8 +2,6 @@ public enum AgrypnosCopy: Sendable {
     public static let appName = "Agrypnos"
     public static let keepWatch = "Keep the watch"
     public static let durationLabel = "How long"
-    public static let displaySleep = "Built-in display asleep"
-    public static let displaySleepHelp = "Asleep, not dim. Skips when an external display is connected."
     public static let keyboardDark = "Keyboard backlight off"
     public static let brightnessFloor = "Brightness floor"
     public static let batteryFloor = "Auto-off at low battery"
@@ -19,7 +17,7 @@ public enum AgrypnosCopy: Sendable {
     public static let lpmEnded = "Low Power Mode. The watch stands down."
 
     public static func captionOn(floor: Int) -> String {
-        "Lid can fall. Built-in display sleeps for real — not dim. Turns off at \(floor)% battery."
+        "Armed. Lid close floors brightness and keys. Turns off at \(floor)% battery."
     }
 
     public static func hotkeyHint(_ chord: HotkeyChord, registered: Bool = true) -> String {

@@ -3,31 +3,41 @@ import AgrypnosCore
 #endif
 
 enum PowerHygieneCoordinator {
+    static var canSetBuiltInBrightness: Bool { BrightnessFloorController.canSetBuiltIn() }
+
     static func apply(
         _ commands: [WatchCommand],
         preferences: UserPreferences,
         savedBrightness: inout Double?,
-        savedKeyboard: inout Double?
+        savedKeyboard: inout Double?,
+        ramp: BrightnessRampController
     ) {
         for command in commands {
             switch command {
             case .engage, .disengage:
                 break
             case .applyBrightnessFloor:
-                if savedBrightness == nil {
-                    savedBrightness = BrightnessFloorController.current()
+                ramp.cancel()
+                if let saved = savedBrightness {
+                    savedBrightness = max(saved, preferences.brightnessFloor)
                 }
-                savedBrightness = max(
-                    savedBrightness ?? preferences.brightnessFloor,
-                    preferences.brightnessFloor
-                )
-            case .requestDisplaySleep:
-                DisplaySleepController.sleepNow()
+                if canSetBuiltInBrightness {
+                    BrightnessFloorController.set(preferences.brightnessFloor)
+                }
             case .requestKeyboardBacklightOff:
-                if savedKeyboard == nil {
-                    savedKeyboard = KeyboardBacklightController.current()
-                }
                 KeyboardBacklightController.setOff()
+            case .rampBrightnessRestore:
+                guard canSetBuiltInBrightness else { break }
+                let target = HygieneRestore.displayBrightnessToRestore(
+                    captured: savedBrightness,
+                    floor: preferences.brightnessFloor
+                )
+                let from = BrightnessFloorController.current() ?? preferences.brightnessFloor
+                ramp.start(from: from, to: target, duration: HygieneRestore.lidOpenRampDuration)
+            case .restoreKeyboardBacklight:
+                if let brightness = HygieneRestore.keyboardBrightnessToRestore(captured: savedKeyboard) {
+                    KeyboardBacklightController.setBrightness(brightness)
+                }
             }
         }
     }
@@ -35,9 +45,11 @@ enum PowerHygieneCoordinator {
     static func restoreAfterDisengage(
         preferences: UserPreferences,
         savedBrightness: inout Double?,
-        savedKeyboard: inout Double?
+        savedKeyboard: inout Double?,
+        ramp: BrightnessRampController
     ) {
-        if preferences.applyBrightnessFloor {
+        ramp.cancel()
+        if preferences.applyBrightnessFloor, canSetBuiltInBrightness {
             BrightnessFloorController.restoreAtLeastFloor(
                 saved: savedBrightness,
                 floor: preferences.brightnessFloor

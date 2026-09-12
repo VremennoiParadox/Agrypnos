@@ -4,14 +4,14 @@ import XCTest
 final class WatchEngineTests: XCTestCase {
     let t0 = Date(timeIntervalSince1970: 10_000)
 
-    func testToggleOnEmitsEngageAndHygieneOnce() {
+    func testToggleOnArmsWithoutBlankingThePanel() {
         var engine = WatchEngine(preferences: .default)
-        let commands = engine.userSetEngaged(true, now: t0)
+        let commands = engine.userSetEngaged(true, now: t0, lidClosed: false)
         XCTAssertTrue(engine.engaged)
-        XCTAssertEqual(commands.first, .engage)
-        XCTAssertTrue(commands.contains(.requestDisplaySleep))
-        XCTAssertTrue(commands.contains(.requestKeyboardBacklightOff))
-        XCTAssertTrue(commands.contains(.applyBrightnessFloor))
+        XCTAssertEqual(commands, [.engage])
+        XCTAssertFalse(commands.contains(.requestKeyboardBacklightOff))
+        XCTAssertFalse(commands.contains(.applyBrightnessFloor))
+        XCTAssertFalse(engine.lidHygieneApplied)
 
         let secondTick = engine.tick(
             now: t0.addingTimeInterval(5),
@@ -19,6 +19,7 @@ final class WatchEngineTests: XCTestCase {
             agents: .idle
         )
         XCTAssertTrue(secondTick.isEmpty)
+        XCTAssertTrue(engine.engaged)
     }
 
     func testToggleOffIsUserDisengage() {
@@ -76,27 +77,24 @@ final class WatchEngineTests: XCTestCase {
         )
     }
 
-    func testAdoptLeftoverEmitsHygieneAndMarksState() {
+    func testAdoptLeftoverArmsWithoutBlankingWhenLidIsOpen() {
         var engine = WatchEngine(preferences: .default)
-        let commands = engine.adoptLeftoverKernel(now: t0)
+        let commands = engine.adoptLeftoverKernel(now: t0, lidClosed: false)
         XCTAssertTrue(engine.engaged)
         XCTAssertTrue(engine.leftoverAdopted)
-        XCTAssertEqual(commands.first, .engage)
-        XCTAssertTrue(commands.contains(.requestDisplaySleep))
-        XCTAssertTrue(commands.contains(.requestKeyboardBacklightOff))
-        XCTAssertTrue(commands.contains(.applyBrightnessFloor))
+        XCTAssertEqual(commands, [.engage])
+        XCTAssertFalse(engine.lidHygieneApplied)
     }
 
-    func testAdoptLeftoverReappliesHygieneIfAlreadyEngaged() {
+    func testAdoptLeftoverWhileEngagedWithLidOpenDoesNotBlank() {
         var engine = WatchEngine(preferences: .default)
-        _ = engine.userSetEngaged(true, now: t0)
+        _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
         XCTAssertFalse(engine.leftoverAdopted)
-        let commands = engine.adoptLeftoverKernel(now: t0.addingTimeInterval(1))
+        let commands = engine.adoptLeftoverKernel(now: t0.addingTimeInterval(1), lidClosed: false)
         XCTAssertTrue(engine.leftoverAdopted)
         XCTAssertTrue(engine.engaged)
-        XCTAssertFalse(commands.contains(.engage))
-        XCTAssertTrue(commands.contains(.requestDisplaySleep))
-        XCTAssertTrue(commands.contains(.requestKeyboardBacklightOff))
+        XCTAssertTrue(commands.isEmpty)
+        XCTAssertFalse(engine.lidHygieneApplied)
     }
 
     func testUserEngageClearsLeftoverFlag() {
@@ -108,15 +106,14 @@ final class WatchEngineTests: XCTestCase {
         XCTAssertFalse(engine.engaged)
     }
 
-    func testLidCloseReappliesHygieneWhileEngaged() {
+    func testLidCloseFloorsBrightnessAndKillsKeyboardWithoutDisplaySleep() {
         var engine = WatchEngine(preferences: .default)
         XCTAssertTrue(engine.lidDidClose(now: t0).isEmpty)
-        _ = engine.userSetEngaged(true, now: t0)
+        _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
         let cmds = engine.lidDidClose(now: t0.addingTimeInterval(1))
-        XCTAssertTrue(cmds.contains(.requestDisplaySleep))
-        XCTAssertTrue(cmds.contains(.requestKeyboardBacklightOff))
-        XCTAssertTrue(cmds.contains(.applyBrightnessFloor))
+        XCTAssertEqual(cmds, [.applyBrightnessFloor, .requestKeyboardBacklightOff])
         XCTAssertFalse(cmds.contains(.engage))
+        XCTAssertTrue(engine.lidHygieneApplied)
     }
 
     func testBatteryFloorDisengages() {
