@@ -16,6 +16,8 @@ enum PowerHygieneCoordinator {
             switch command {
             case .engage, .disengage:
                 break
+            case .requestSleep:
+                _ = ProcessRunner.run("/usr/bin/pmset", ["sleepnow"])
             case .applyBrightnessFloor:
                 ramp.cancel()
                 if let saved = savedBrightness {

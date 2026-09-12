@@ -165,11 +165,13 @@ final class WatchRuntime {
         )
         let agents = AgentProbeService.snapshot(now: Date(), freshness: engine.preferences.sessionFreshness)
         let commands = engine.tick(now: Date(), safety: safety, agents: agents)
+        var applyCommands = commands
         for command in commands {
             if case .disengage(let reason) = command {
                 if !disarmKernel() {
                     _ = engine.userSetEngaged(true, now: Date(), lidClosed: LidStateReader.isClosed())
                     UserNotify.post("Couldn't drop SleepDisabled. The watch stays up.")
+                    applyCommands = []
                     break
                 }
                 restoreHygiene()
@@ -178,7 +180,7 @@ final class WatchRuntime {
                 }
             }
         }
-        apply(commands)
+        apply(applyCommands)
         delegate?.watchRuntimeDidChange(self)
     }
 

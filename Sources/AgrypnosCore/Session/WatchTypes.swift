@@ -5,6 +5,8 @@ public enum WatchCommand: Equatable, Sendable {
     case applyBrightnessFloor
     case restoreKeyboardBacklight
     case rampBrightnessRestore
+    /// Lid already shut: dropping SleepDisabled does not start sleep; ask the Mac to.
+    case requestSleep
 }
 
 public enum WatchMode: Equatable, Sendable {
