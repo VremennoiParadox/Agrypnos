@@ -6,7 +6,7 @@ Agrypnos is a native Swift menu-bar extra for Mac. It keeps the machine awake wi
 
 The name is Greek: *agrypnos*, sleepless. The tone is a night watch that likes you, not a caffeine joke and not a watt brochure.
 
-> We have not published a wall-watt study. We will not borrow someone else’s. Agrypnos wins on **what the hardware is doing** (display sleep + keyboard dark + brightness floor), not on a number we did not measure.
+> We don’t claim StillOn’s measured watts until we run the same protocol on this Mac. Agrypnos wins on **what the hardware is doing** (display sleep + keyboard dark + brightness floor), not on a number we did not measure.
 
 ## The wedge (measurable, no lab coat required)
 
@@ -107,7 +107,7 @@ Linux contributors (and overnight agents): `./Scripts/verify-linux.sh` runs `swi
 ## Not this project
 
 - Killing Wi-Fi or Bluetooth
-- “We beat 1.76 W”
+- Claiming StillOn’s measured watts, or any watt figure we did not measure on this Mac
 - Every agent vendor
 - A Dock app, a dashboard, or a remote-control product
 - Files over 600 lines

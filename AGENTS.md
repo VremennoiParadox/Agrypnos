@@ -32,7 +32,7 @@ No giant god-objects. No “just one more helper” that becomes AppDelegate 2.
 - **No file over 600 lines.** Split *before* you hit the wall. Prefer ~250.
 - **Menu-bar only.** No Dock-first UI, no settings window unless V2 asks. `LSUIElement`.
 - **Open source** (MIT). No telemetry. No stealth network.
-- **Do not claim watt numbers you did not measure.** Do not cite StillOn’s 1.76 W. Do not say we beat it.
+- **Do not claim watt numbers you did not measure.** Do not cite StillOn’s measured watts. Do not say we beat them.
 - **Do not promise every agent provider.** V1 is Cursor, Claude Code, and Codex, local heuristics, correctness over coverage.
 - **Do not kill Wi-Fi or Bluetooth.** Out of scope forever unless a later spec says otherwise.
 - **Dim ≠ asleep.** Forcing brightness to 0 is not display sleep. V1 forces real display sleep and turns the keyboard backlight off.
