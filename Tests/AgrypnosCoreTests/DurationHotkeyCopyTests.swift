@@ -211,6 +211,7 @@ final class AgrypnosCopyTests: XCTestCase {
             AgrypnosCopy.leftoverCaption(floor: 15),
             AgrypnosCopy.hotkeyHint(.defaultToggle, registered: true),
             AgrypnosCopy.hotkeyHint(.defaultToggle, registered: false),
+            AgrypnosCopy.hotkeyHint(HotkeyChord(keyCode: 0, option: false, command: false), registered: false),
             AgrypnosCopy.durationHint(option: .untilAgentsSettle, engaged: false, remainingSeconds: nil),
             AgrypnosCopy.durationHint(option: .indefinite, engaged: false, remainingSeconds: nil),
             AgrypnosCopy.durationHint(option: .oneHour, engaged: false, remainingSeconds: nil),

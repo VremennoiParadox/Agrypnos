@@ -58,14 +58,20 @@ final class WatchRuntime {
     }
 
     func setHotkey(_ chord: HotkeyChord) {
-        guard engine.preferences.applyHotkeyRemap(chord) else {
+        let previous = engine.preferences.hotkey
+        guard chord.isBindable else {
+            UserNotify.post(AgrypnosCopy.hotkeyHint(chord, registered: false))
             delegate?.watchRuntimeDidChange(self)
             return
         }
-        store.save(engine.preferences)
         let registered = bindHotkey?(chord) ?? false
-        hotkeyRegistered = registered
-        if !registered {
+        let resolved = HotkeyBindPolicy.resolve(attempted: chord, previous: previous, registered: registered)
+        if resolved.shouldPersist {
+            _ = engine.preferences.applyHotkeyRemap(resolved.chord)
+            store.save(engine.preferences)
+            hotkeyRegistered = true
+        } else {
+            hotkeyRegistered = bindHotkey?(previous) ?? false
             UserNotify.post(AgrypnosCopy.hotkeyHint(chord, registered: false))
         }
         delegate?.watchRuntimeDidChange(self)

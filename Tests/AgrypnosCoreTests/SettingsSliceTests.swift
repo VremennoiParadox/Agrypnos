@@ -114,7 +114,7 @@ final class SettingsSliceTests: XCTestCase {
     func testTimedHintTreatsCustomMinutesLikeOtherTimers() {
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .customMinutes(33), engaged: false, remainingSeconds: nil),
-            AgrypnosCopy.timedHint
+            "33 minutes, then the watch stands down."
         )
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .customMinutes(33), engaged: true, remainingSeconds: 125),
@@ -149,6 +149,44 @@ final class SettingsSliceTests: XCTestCase {
         XCTAssertFalse(prefs.applyHotkeyRemap(naked))
         XCTAssertFalse(prefs.applyHotkeyRemap(shiftOnly))
         XCTAssertEqual(prefs.hotkey, .defaultToggle)
+        XCTAssertEqual(UserPreferences(hotkey: naked).hotkey, .defaultToggle)
+        XCTAssertEqual(
+            AgrypnosCopy.hotkeyHint(naked, registered: false),
+            "That chord needs Option, Command, or Control."
+        )
+    }
+
+    func testDecodedNakedHotkeyFallsBackToDefault() throws {
+        let json = fixtureJSON(
+            batteryFloorPercent: 15,
+            duration: "indefinite",
+            hotkey: #"{"keyCode":0,"option":false,"command":false,"shift":false,"control":false}"#
+        )
+        let decoded = try JSONDecoder().decode(UserPreferences.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.hotkey, .defaultToggle)
+    }
+
+    func testFailedOSBindKeepsPreviousChordAndDoesNotPersistTheAttempt() {
+        let previous = HotkeyChord.defaultToggle
+        let attempted = HotkeyChord(keyCode: 1, option: true, command: true)
+        let failed = HotkeyBindPolicy.resolve(attempted: attempted, previous: previous, registered: false)
+        XCTAssertEqual(failed.chord, previous)
+        XCTAssertFalse(failed.registered)
+        XCTAssertFalse(failed.shouldPersist)
+
+        let live = HotkeyBindPolicy.resolve(attempted: attempted, previous: previous, registered: true)
+        XCTAssertEqual(live.chord, attempted)
+        XCTAssertTrue(live.registered)
+        XCTAssertTrue(live.shouldPersist)
+
+        let rejected = HotkeyBindPolicy.resolve(
+            attempted: HotkeyChord(keyCode: 0, option: false, command: false),
+            previous: previous,
+            registered: true
+        )
+        XCTAssertEqual(rejected.chord, previous)
+        XCTAssertFalse(rejected.shouldPersist)
+        XCTAssertFalse(rejected.registered)
     }
 
     func testBindFailureCopyDoesNotClaimTheChordIsLive() {
@@ -175,9 +213,13 @@ final class SettingsSliceTests: XCTestCase {
         return try JSONDecoder().decode(UserPreferences.self, from: data)
     }
 
-    private func fixtureJSON(batteryFloorPercent: Int, duration: String) -> String {
+    private func fixtureJSON(
+        batteryFloorPercent: Int,
+        duration: String,
+        hotkey: String = #"{"keyCode":0,"option":true,"command":true,"shift":false,"control":false}"#
+    ) -> String {
         """
-        {"batteryFloorPercent":\(batteryFloorPercent),"duration":"\(duration)","keyboardBacklightOff":true,"applyBrightnessFloor":true,"brightnessFloor":0.15,"agentSettleGrace":90,"sessionFreshness":45,"hotkey":{"keyCode":0,"option":true,"command":true,"shift":false,"control":false}}
+        {"batteryFloorPercent":\(batteryFloorPercent),"duration":"\(duration)","keyboardBacklightOff":true,"applyBrightnessFloor":true,"brightnessFloor":0.15,"agentSettleGrace":90,"sessionFreshness":45,"hotkey":\(hotkey)}
         """
     }
 }

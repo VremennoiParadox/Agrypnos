@@ -27,6 +27,9 @@ public enum AgrypnosCopy: Sendable {
     }
 
     public static func hotkeyHint(_ chord: HotkeyChord, registered: Bool = true) -> String {
+        if !chord.isBindable {
+            return "That chord needs Option, Command, or Control."
+        }
         if registered {
             return "\(chord.display) toggles the watch"
         }
@@ -37,12 +40,18 @@ public enum AgrypnosCopy: Sendable {
         switch option {
         case .untilAgentsSettle:
             return agentsHint
-        case .oneHour, .threeHours, .custom:
+        case .oneHour, .threeHours:
             if engaged, let remaining = remainingSeconds {
                 let clamped = max(0, remaining)
                 return String(format: "Auto-off in %d:%02d", clamped / 60, clamped % 60)
             }
             return timedHint
+        case .custom(let minutes):
+            if engaged, let remaining = remainingSeconds {
+                let clamped = max(0, remaining)
+                return String(format: "Auto-off in %d:%02d", clamped / 60, clamped % 60)
+            }
+            return "\(max(minutes, 1)) minutes, then the watch stands down."
         case .indefinite:
             return indefiniteHint
         }

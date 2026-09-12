@@ -29,7 +29,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         self.brightnessFloor = min(max(brightnessFloor, 0.05), 0.4)
         self.agentSettleGrace = agentSettleGrace
         self.sessionFreshness = sessionFreshness
-        self.hotkey = hotkey
+        self.hotkey = hotkey.isBindable ? hotkey : .defaultToggle
     }
 
     public static let `default` = UserPreferences()
