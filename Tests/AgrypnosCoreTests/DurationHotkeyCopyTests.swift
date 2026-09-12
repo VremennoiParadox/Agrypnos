@@ -32,8 +32,6 @@ final class AgrypnosCopyTests: XCTestCase {
 
     func testCoreCopySurfaceDoesNotClaimForcedDisplaySleep() {
         let blob = [
-            AgrypnosCopy.displaySleep,
-            AgrypnosCopy.displaySleepHelp,
             AgrypnosCopy.captionOn(floor: 15),
             AgrypnosCopy.captionOff,
             AgrypnosCopy.keyboardDark,

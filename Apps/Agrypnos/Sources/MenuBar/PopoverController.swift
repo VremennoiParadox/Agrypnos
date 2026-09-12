@@ -6,7 +6,7 @@ import AgrypnosCore
 
 enum PopoverMetrics {
     static let width: CGFloat = 328
-    static let height: CGFloat = 548
+    static let height: CGFloat = 516
     static let pad: CGFloat = 16
     static let inset: CGFloat = 12
 }
@@ -24,7 +24,6 @@ final class PopoverController: NSObject {
     private var headerMark: NSImageView!
     private var durationControl: NSSegmentedControl!
     private var durationHint: NSTextField!
-    private var displaySwitch: NSSwitch!
     private var keyboardSwitch: NSSwitch!
     private var floorSwitch: NSSwitch!
     private var batterySlider: NSSlider!
@@ -62,13 +61,11 @@ final class PopoverController: NSObject {
         )
         durationControl?.selectedSegment = segment(for: runtime.preferences.duration)
         durationHint?.stringValue = hint(for: runtime)
-        displaySwitch?.state = runtime.preferences.forceDisplaySleep ? .on : .off
         keyboardSwitch?.state = runtime.preferences.keyboardBacklightOff ? .on : .off
         floorSwitch?.state = runtime.preferences.applyBrightnessFloor ? .on : .off
         batterySlider?.doubleValue = Double(runtime.preferences.batteryFloorPercent)
         batteryValue?.stringValue = "\(runtime.preferences.batteryFloorPercent)%"
         loginSwitch?.state = LaunchAtLoginController.isEnabled ? .on : .off
-        displaySwitch?.toolTip = AgrypnosCopy.displaySleepHelp
         hotkeyHint?.stringValue = AgrypnosCopy.hotkeyHint(
             runtime.preferences.hotkey,
             registered: runtime.hotkeyRegistered
@@ -161,12 +158,11 @@ final class PopoverController: NSObject {
         durationHint.maximumNumberOfLines = 2
         g2.addSubview(durationHint)
 
-        let g3 = card(NSRect(x: pad, y: 220, width: contentW, height: 108))
-        addHygieneRow(g3, y: 10, title: AgrypnosCopy.displaySleep, switchSlot: &displaySwitch, action: #selector(displayToggled(_:)), contentW: contentW, ci: ci, cw: cw, swW: swW, swH: swH)
-        addHygieneRow(g3, y: 42, title: AgrypnosCopy.keyboardDark, switchSlot: &keyboardSwitch, action: #selector(keyboardToggled(_:)), contentW: contentW, ci: ci, cw: cw, swW: swW, swH: swH)
-        addHygieneRow(g3, y: 74, title: AgrypnosCopy.brightnessFloor, switchSlot: &floorSwitch, action: #selector(floorToggled(_:)), contentW: contentW, ci: ci, cw: cw, swW: swW, swH: swH)
+        let g3 = card(NSRect(x: pad, y: 220, width: contentW, height: 76))
+        addHygieneRow(g3, y: 10, title: AgrypnosCopy.keyboardDark, switchSlot: &keyboardSwitch, action: #selector(keyboardToggled(_:)), contentW: contentW, ci: ci, cw: cw, swW: swW, swH: swH)
+        addHygieneRow(g3, y: 42, title: AgrypnosCopy.brightnessFloor, switchSlot: &floorSwitch, action: #selector(floorToggled(_:)), contentW: contentW, ci: ci, cw: cw, swW: swW, swH: swH)
 
-        let g4 = card(NSRect(x: pad, y: 338, width: contentW, height: 88))
+        let g4 = card(NSRect(x: pad, y: 306, width: contentW, height: 88))
         let batt = LabelFactory.make(AgrypnosCopy.batteryFloor, font: .systemFont(ofSize: 13), color: .labelColor)
         batt.frame = NSRect(x: ci, y: ci, width: cw - 54, height: 18)
         g4.addSubview(batt)
@@ -186,7 +182,7 @@ final class PopoverController: NSObject {
         maxHint.frame = NSRect(x: contentW - ci - 34, y: ci + 50, width: 34, height: 13)
         g4.addSubview(maxHint)
 
-        let g5 = card(NSRect(x: pad, y: 436, width: contentW, height: 44))
+        let g5 = card(NSRect(x: pad, y: 404, width: contentW, height: 44))
         let login = LabelFactory.make(AgrypnosCopy.launchAtLogin, font: .systemFont(ofSize: 13), color: .labelColor)
         login.frame = NSRect(x: ci, y: 11, width: cw - swW - 8, height: 22)
         g5.addSubview(login)
@@ -200,14 +196,14 @@ final class PopoverController: NSObject {
         hotkeyHint.usesSingleLineMode = false
         hotkeyHint.maximumNumberOfLines = 2
         hotkeyHint.lineBreakMode = .byWordWrapping
-        hotkeyHint.frame = NSRect(x: pad, y: 484, width: contentW, height: 28)
+        hotkeyHint.frame = NSRect(x: pad, y: 452, width: contentW, height: 28)
         root.addSubview(hotkeyHint)
 
         let quit = NSButton(title: AgrypnosCopy.quit, target: self, action: #selector(quitApp))
         quit.bezelStyle = .rounded
         quit.controlSize = .regular
         quit.sizeToFit()
-        quit.frame = NSRect(x: W - pad - quit.frame.width, y: 512, width: quit.frame.width, height: quit.frame.height)
+        quit.frame = NSRect(x: W - pad - quit.frame.width, y: 480, width: quit.frame.width, height: quit.frame.height)
         root.addSubview(quit)
 
         let vc = NSViewController()
@@ -275,10 +271,6 @@ final class PopoverController: NSObject {
         let option = DurationOption.allCases[sender.selectedSegment]
         runtime?.setDuration(option)
         refresh()
-    }
-
-    @objc private func displayToggled(_ sender: NSSwitch) {
-        runtime?.setHygiene(display: sender.state == .on)
     }
 
     @objc private func keyboardToggled(_ sender: NSSwitch) {

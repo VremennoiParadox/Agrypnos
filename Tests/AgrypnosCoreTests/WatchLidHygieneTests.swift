@@ -64,26 +64,6 @@ final class WatchLidHygieneTests: XCTestCase {
         XCTAssertFalse(commands.contains(.engage))
     }
 
-    func testDefaultDoesNotForceDisplaySleep() {
-        XCTAssertFalse(UserPreferences.default.forceDisplaySleep)
-    }
-
-    func testForceDisplaySleepFlagDoesNotBlankOnArm() {
-        var prefs = UserPreferences.default
-        prefs.forceDisplaySleep = true
-        var engine = WatchEngine(preferences: prefs)
-        XCTAssertEqual(engine.userSetEngaged(true, now: t0, lidClosed: false), [.engage])
-    }
-
-    func testForceDisplaySleepFlagDoesNotBlankOnLidClose() {
-        var prefs = UserPreferences.default
-        prefs.forceDisplaySleep = true
-        var engine = WatchEngine(preferences: prefs)
-        _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
-        let cmds = engine.lidDidClose(now: t0.addingTimeInterval(1))
-        XCTAssertEqual(cmds, [.applyBrightnessFloor, .requestKeyboardBacklightOff])
-    }
-
     func testAgentsModeStaysArmedAcrossLidCloseOpen() {
         var prefs = UserPreferences.default
         prefs.duration = .untilAgentsSettle
@@ -131,6 +111,17 @@ final class WatchLidHygieneTests: XCTestCase {
             engine.tick(now: t0.addingTimeInterval(3600), safety: .acPower, agents: .idle),
             [.disengage(.timerExpired)]
         )
+    }
+
+    func testPreferencesDecodeIgnoresUnknownForceDisplaySleepKey() throws {
+        let json = """
+        {"batteryFloorPercent":20,"duration":"oneHour","forceDisplaySleep":true,"keyboardBacklightOff":false,"applyBrightnessFloor":true,"brightnessFloor":0.2,"agentSettleGrace":90,"sessionFreshness":45,"hotkey":{"keyCode":0,"option":true,"command":true,"shift":false,"control":false}}
+        """
+        let prefs = try JSONDecoder().decode(UserPreferences.self, from: Data(json.utf8))
+        XCTAssertEqual(prefs.batteryFloorPercent, 20)
+        XCTAssertEqual(prefs.duration, .oneHour)
+        XCTAssertFalse(prefs.keyboardBacklightOff)
+        XCTAssertEqual(prefs.brightnessFloor, 0.2)
     }
 }
 

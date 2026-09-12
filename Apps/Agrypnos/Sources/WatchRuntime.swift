@@ -52,8 +52,7 @@ final class WatchRuntime {
         delegate?.watchRuntimeDidChange(self)
     }
 
-    func setHygiene(display: Bool? = nil, keyboard: Bool? = nil, floor: Bool? = nil) {
-        if let display { engine.preferences.forceDisplaySleep = display }
+    func setHygiene(keyboard: Bool? = nil, floor: Bool? = nil) {
         if let keyboard { engine.preferences.keyboardBacklightOff = keyboard }
         if let floor { engine.preferences.applyBrightnessFloor = floor }
         store.save(engine.preferences)
