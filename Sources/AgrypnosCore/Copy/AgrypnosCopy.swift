@@ -19,7 +19,7 @@ public enum AgrypnosCopy: Sendable {
     public static let lpmEnded = "Low Power Mode. The watch stands down."
 
     public static func captionOn(floor: Int) -> String {
-        "Lid can fall. Built-in display sleeps for real — not dim. Turns off at \(floor)% battery."
+        "Armed. Lid close floors brightness and keys. Turns off at \(floor)% battery."
     }
 
     public static func hotkeyHint(_ chord: HotkeyChord, registered: Bool = true) -> String {

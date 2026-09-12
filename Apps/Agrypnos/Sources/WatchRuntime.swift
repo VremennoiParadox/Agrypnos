@@ -18,6 +18,8 @@ final class WatchRuntime {
     private var savedBrightness: Double?
     private var savedKeyboard: Double?
     private var lastLidClosed = false
+    private let brightnessRamp = BrightnessRampController()
+    private var lidTimer: Timer?
     weak var delegate: WatchRuntimeDelegate?
 
     var preferences: UserPreferences { engine.preferences }
@@ -63,16 +65,20 @@ final class WatchRuntime {
     }
 
     func setEngaged(_ on: Bool) {
+        let lidClosed = LidStateReader.isClosed()
+        lastLidClosed = lidClosed
         if on {
             guard armKernel() else { return }
-            apply(engine.userSetEngaged(true, now: Date()))
+            apply(engine.userSetEngaged(true, now: Date(), lidClosed: lidClosed))
+            startLidPulse()
         } else {
+            stopLidPulse()
             guard disarmKernel() else {
                 UserNotify.post("Couldn't drop SleepDisabled. The kernel flag is still on.")
                 delegate?.watchRuntimeDidChange(self)
                 return
             }
-            apply(engine.userSetEngaged(false, now: Date()))
+            apply(engine.userSetEngaged(false, now: Date(), lidClosed: lidClosed))
             restoreHygiene()
         }
         delegate?.watchRuntimeDidChange(self)
@@ -80,12 +86,7 @@ final class WatchRuntime {
 
     func poll() {
         reconcileKernel(preferClearLeftover: false)
-
-        let lidClosed = LidStateReader.isClosed()
-        if engine.engaged, lidClosed, !lastLidClosed {
-            apply(engine.lidDidClose(now: Date()))
-        }
-        lastLidClosed = lidClosed
+        pollLid()
 
         let battery = BatteryMonitor.reading()
         let safety = SafetyInputs(
@@ -99,7 +100,7 @@ final class WatchRuntime {
         for command in commands {
             if case .disengage(let reason) = command {
                 if !disarmKernel() {
-                    _ = engine.userSetEngaged(true, now: Date())
+                    _ = engine.userSetEngaged(true, now: Date(), lidClosed: LidStateReader.isClosed())
                     UserNotify.post("Couldn't drop SleepDisabled. The watch stays up.")
                     break
                 }
@@ -118,16 +119,57 @@ final class WatchRuntime {
             commands,
             preferences: engine.preferences,
             savedBrightness: &savedBrightness,
-            savedKeyboard: &savedKeyboard
+            savedKeyboard: &savedKeyboard,
+            ramp: brightnessRamp
         )
     }
 
     func restoreHygiene() {
+        stopLidPulse()
         PowerHygieneCoordinator.restoreAfterDisengage(
             preferences: engine.preferences,
             savedBrightness: &savedBrightness,
-            savedKeyboard: &savedKeyboard
+            savedKeyboard: &savedKeyboard,
+            ramp: brightnessRamp
         )
+    }
+
+    func pollLid() {
+        let lidClosed = LidStateReader.isClosed()
+        if engine.engaged {
+            if lidClosed, !lastLidClosed {
+                apply(engine.lidDidClose(now: Date()))
+            } else if !lidClosed, lastLidClosed {
+                apply(engine.lidDidOpen(now: Date()))
+            } else if !lidClosed, !engine.lidHygieneApplied, !brightnessRamp.isRunning {
+                recaptureOpenLidHygiene()
+            }
+            startLidPulse()
+        } else {
+            stopLidPulse()
+        }
+        lastLidClosed = lidClosed
+    }
+
+    func recaptureOpenLidHygiene() {
+        if let current = BrightnessFloorController.current() {
+            savedBrightness = current
+        }
+        if let current = KeyboardBacklightController.current() {
+            savedKeyboard = current
+        }
+    }
+
+    func startLidPulse() {
+        guard engine.engaged, lidTimer == nil else { return }
+        lidTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.pollLid() }
+        }
+    }
+
+    func stopLidPulse() {
+        lidTimer?.invalidate()
+        lidTimer = nil
     }
 
     @discardableResult
@@ -164,11 +206,14 @@ final class WatchRuntime {
                 _ = SleepDisabledController.set(false)
             }
             if SleepDisabledController.read() {
-                apply(engine.adoptLeftoverKernel(now: Date()))
+                let lidClosed = LidStateReader.isClosed()
+                lastLidClosed = lidClosed
+                apply(engine.adoptLeftoverKernel(now: Date(), lidClosed: lidClosed))
+                startLidPulse()
                 UserNotify.post(AgrypnosCopy.leftoverNotify)
             }
         } else if !kernel, engine.engaged {
-            _ = engine.userSetEngaged(false, now: Date())
+            _ = engine.userSetEngaged(false, now: Date(), lidClosed: LidStateReader.isClosed())
             restoreHygiene()
         }
     }

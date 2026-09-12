@@ -7,8 +7,9 @@ public struct WatchEngine: Equatable, Sendable {
     public private(set) var timerEnd: Date?
     public private(set) var settle: AgentSettleTracker
     public private(set) var userForcedThisSession: Bool
-
     public private(set) var leftoverAdopted: Bool
+    public private(set) var lidClosed: Bool
+    public private(set) var lidHygieneApplied: Bool
 
     public init(preferences: UserPreferences = .default) {
         self.preferences = preferences
@@ -18,26 +19,32 @@ public struct WatchEngine: Equatable, Sendable {
         self.settle = AgentSettleTracker(grace: preferences.agentSettleGrace)
         self.userForcedThisSession = false
         self.leftoverAdopted = false
+        self.lidClosed = false
+        self.lidHygieneApplied = false
     }
 
-    public mutating func userSetEngaged(_ on: Bool, now: Date) -> [WatchCommand] {
+    public mutating func userSetEngaged(_ on: Bool, now: Date, lidClosed: Bool = false) -> [WatchCommand] {
         leftoverAdopted = false
+        self.lidClosed = lidClosed
         if on {
             return engage(now: now, forcedByUser: true)
         }
         return disengage(.user)
     }
 
-    /// Kernel `SleepDisabled` was already on and could not be cleared. Adopt visibly and re-apply hygiene.
-    public mutating func adoptLeftoverKernel(now: Date) -> [WatchCommand] {
-        let commands: [WatchCommand]
-        if engaged {
-            commands = hygieneCommands()
-        } else {
-            commands = engage(now: now, forcedByUser: false)
-        }
+    /// Kernel `SleepDisabled` was already on and could not be cleared. Adopt visibly.
+    /// Lid-open adopt must not blank the panel; lid-closed adopt reapplies floor + keys.
+    public mutating func adoptLeftoverKernel(now: Date, lidClosed: Bool = false) -> [WatchCommand] {
+        self.lidClosed = lidClosed
         leftoverAdopted = true
-        return commands
+        if engaged {
+            if lidClosed {
+                lidHygieneApplied = true
+                return lidCloseHygieneCommands()
+            }
+            return []
+        }
+        return engage(now: now, forcedByUser: false)
     }
 
     public mutating func userSetDuration(_ option: DurationOption, now: Date) -> [WatchCommand] {
@@ -73,9 +80,21 @@ public struct WatchEngine: Equatable, Sendable {
     }
 
     public mutating func lidDidClose(now: Date) -> [WatchCommand] {
-        guard engaged else { return [] }
+        lidClosed = true
         _ = now
-        return hygieneCommands()
+        guard engaged else { return [] }
+        guard !lidHygieneApplied else { return [] }
+        lidHygieneApplied = true
+        return lidCloseHygieneCommands()
+    }
+
+    public mutating func lidDidOpen(now: Date) -> [WatchCommand] {
+        lidClosed = false
+        _ = now
+        guard engaged else { return [] }
+        guard lidHygieneApplied else { return [] }
+        lidHygieneApplied = false
+        return lidOpenRestoreCommands()
     }
 
     mutating func engage(now: Date, forcedByUser: Bool) -> [WatchCommand] {
@@ -84,7 +103,12 @@ public struct WatchEngine: Equatable, Sendable {
         settle = AgentSettleTracker(grace: preferences.agentSettleGrace)
         applyDuration(now: now)
         var commands: [WatchCommand] = [.engage]
-        commands.append(contentsOf: hygieneCommands())
+        if lidClosed {
+            commands.append(contentsOf: lidCloseHygieneCommands())
+            lidHygieneApplied = true
+        } else {
+            lidHygieneApplied = false
+        }
         return commands
     }
 
@@ -109,20 +133,30 @@ public struct WatchEngine: Equatable, Sendable {
         timerEnd = nil
         userForcedThisSession = false
         leftoverAdopted = false
+        lidHygieneApplied = false
         settle.reset()
         return [.disengage(reason)]
     }
 
-    func hygieneCommands() -> [WatchCommand] {
+    /// Lid close only: brightness floor + keyboard off. Never `displaysleepnow`.
+    func lidCloseHygieneCommands() -> [WatchCommand] {
         var commands: [WatchCommand] = []
         if preferences.applyBrightnessFloor {
             commands.append(.applyBrightnessFloor)
         }
-        if preferences.forceDisplaySleep {
-            commands.append(.requestDisplaySleep)
-        }
         if preferences.keyboardBacklightOff {
             commands.append(.requestKeyboardBacklightOff)
+        }
+        return commands
+    }
+
+    func lidOpenRestoreCommands() -> [WatchCommand] {
+        var commands: [WatchCommand] = []
+        if preferences.applyBrightnessFloor {
+            commands.append(.rampBrightnessRestore)
+        }
+        if preferences.keyboardBacklightOff {
+            commands.append(.restoreKeyboardBacklight)
         }
         return commands
     }

@@ -21,36 +21,29 @@ final class HotkeyChordTests: XCTestCase {
 }
 
 final class AgrypnosCopyTests: XCTestCase {
-    func testWedgeLanguageDoesNotClaimWattsOrDimAsSleep() {
+    func testWedgeLanguageDoesNotClaimWattsOrForcedDisplaySleep() {
         let caption = AgrypnosCopy.captionOn(floor: 15)
         XCTAssertFalse(caption.lowercased().contains("watt"))
         XCTAssertFalse(caption.lowercased().contains("1.76"))
-        XCTAssertTrue(caption.lowercased().contains("not dim") || AgrypnosCopy.displaySleepHelp.lowercased().contains("not dim"))
         XCTAssertTrue(AgrypnosCopy.agentsHint.lowercased().contains("busy"))
         XCTAssertEqual(AgrypnosCopy.quit, "Quit Agrypnos")
         XCTAssertEqual(AgrypnosCopy.hotkeyHint(.defaultToggle), "⌥⌘A toggles the watch")
     }
 
-    func testDisplaySleepCopyMatchesBuiltInOnlyBehavior() {
-        XCTAssertEqual(AgrypnosCopy.displaySleep, "Built-in display asleep")
+    func testCaptionOnDoesNotClaimForcedDisplaySleep() {
+        let caption = AgrypnosCopy.captionOn(floor: 15)
+        let lower = caption.lowercased()
         XCTAssertEqual(
-            AgrypnosCopy.displaySleepHelp,
-            "Asleep, not dim. Skips when an external display is connected."
+            caption,
+            "Armed. Lid close floors brightness and keys. Turns off at 15% battery."
         )
-        XCTAssertEqual(
-            AgrypnosCopy.captionOn(floor: 15),
-            "Lid can fall. Built-in display sleeps for real — not dim. Turns off at 15% battery."
-        )
-        XCTAssertFalse(AgrypnosCopy.displaySleep.lowercased().contains("force"))
-        let help = AgrypnosCopy.displaySleepHelp.lowercased()
-        let caption = AgrypnosCopy.captionOn(floor: 15).lowercased()
-        XCTAssertTrue(help.contains("not dim"))
-        XCTAssertTrue(help.contains("external"))
-        XCTAssertTrue(help.contains("skip"))
-        XCTAssertTrue(caption.contains("built-in"))
-        XCTAssertTrue(caption.contains("not dim"))
-        XCTAssertFalse(caption.contains("watt"))
-        XCTAssertFalse(caption.contains("1.76"))
+        XCTAssertFalse(lower.contains("not dim"))
+        XCTAssertFalse(lower.contains("sleeps for real"))
+        XCTAssertFalse(lower.contains("force"))
+        XCTAssertFalse(lower.contains("asleep"))
+        XCTAssertFalse(lower.contains("watt"))
+        XCTAssertFalse(lower.contains("1.76"))
+        XCTAssertTrue(lower.contains("armed"))
     }
 
     func testLeftoverAdoptCopyIsVisibleAndDoesNotClaimWatts() {
