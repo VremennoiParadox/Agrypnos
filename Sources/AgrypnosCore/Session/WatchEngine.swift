@@ -8,6 +8,8 @@ public struct WatchEngine: Equatable, Sendable {
     public private(set) var settle: AgentSettleTracker
     public private(set) var userForcedThisSession: Bool
 
+    public private(set) var leftoverAdopted: Bool
+
     public init(preferences: UserPreferences = .default) {
         self.preferences = preferences
         self.engaged = false
@@ -15,13 +17,27 @@ public struct WatchEngine: Equatable, Sendable {
         self.timerEnd = nil
         self.settle = AgentSettleTracker(grace: preferences.agentSettleGrace)
         self.userForcedThisSession = false
+        self.leftoverAdopted = false
     }
 
     public mutating func userSetEngaged(_ on: Bool, now: Date) -> [WatchCommand] {
+        leftoverAdopted = false
         if on {
             return engage(now: now, forcedByUser: true)
         }
         return disengage(.user)
+    }
+
+    /// Kernel `SleepDisabled` was already on and could not be cleared. Adopt visibly and re-apply hygiene.
+    public mutating func adoptLeftoverKernel(now: Date) -> [WatchCommand] {
+        let commands: [WatchCommand]
+        if engaged {
+            commands = hygieneCommands()
+        } else {
+            commands = engage(now: now, forcedByUser: false)
+        }
+        leftoverAdopted = true
+        return commands
     }
 
     public mutating func userSetDuration(_ option: DurationOption, now: Date) -> [WatchCommand] {
@@ -92,6 +108,7 @@ public struct WatchEngine: Equatable, Sendable {
         mode = .idle
         timerEnd = nil
         userForcedThisSession = false
+        leftoverAdopted = false
         settle.reset()
         return [.disengage(reason)]
     }

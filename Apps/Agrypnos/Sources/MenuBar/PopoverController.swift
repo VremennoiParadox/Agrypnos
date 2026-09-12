@@ -55,9 +55,11 @@ final class PopoverController: NSObject {
         watchSwitch?.state = on ? .on : .off
         mainCard?.active = on
         headerMark?.contentTintColor = on ? AgrypnosPalette.gold : .labelColor
-        caption?.stringValue = on
-            ? AgrypnosCopy.captionOn(floor: runtime.preferences.batteryFloorPercent)
-            : AgrypnosCopy.captionOff
+        caption?.stringValue = AgrypnosCopy.watchCaption(
+            engaged: on,
+            leftover: runtime.adoptedLeftover,
+            floor: runtime.preferences.batteryFloorPercent
+        )
         durationControl?.selectedSegment = segment(for: runtime.preferences.duration)
         durationHint?.stringValue = hint(for: runtime)
         displaySwitch?.state = runtime.preferences.forceDisplaySleep ? .on : .off

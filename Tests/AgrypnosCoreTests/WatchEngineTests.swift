@@ -76,6 +76,38 @@ final class WatchEngineTests: XCTestCase {
         )
     }
 
+    func testAdoptLeftoverEmitsHygieneAndMarksState() {
+        var engine = WatchEngine(preferences: .default)
+        let commands = engine.adoptLeftoverKernel(now: t0)
+        XCTAssertTrue(engine.engaged)
+        XCTAssertTrue(engine.leftoverAdopted)
+        XCTAssertEqual(commands.first, .engage)
+        XCTAssertTrue(commands.contains(.requestDisplaySleep))
+        XCTAssertTrue(commands.contains(.requestKeyboardBacklightOff))
+        XCTAssertTrue(commands.contains(.applyBrightnessFloor))
+    }
+
+    func testAdoptLeftoverReappliesHygieneIfAlreadyEngaged() {
+        var engine = WatchEngine(preferences: .default)
+        _ = engine.userSetEngaged(true, now: t0)
+        XCTAssertFalse(engine.leftoverAdopted)
+        let commands = engine.adoptLeftoverKernel(now: t0.addingTimeInterval(1))
+        XCTAssertTrue(engine.leftoverAdopted)
+        XCTAssertTrue(engine.engaged)
+        XCTAssertFalse(commands.contains(.engage))
+        XCTAssertTrue(commands.contains(.requestDisplaySleep))
+        XCTAssertTrue(commands.contains(.requestKeyboardBacklightOff))
+    }
+
+    func testUserEngageClearsLeftoverFlag() {
+        var engine = WatchEngine(preferences: .default)
+        _ = engine.adoptLeftoverKernel(now: t0)
+        XCTAssertTrue(engine.leftoverAdopted)
+        _ = engine.userSetEngaged(false, now: t0.addingTimeInterval(1))
+        XCTAssertFalse(engine.leftoverAdopted)
+        XCTAssertFalse(engine.engaged)
+    }
+
     func testLidCloseReappliesHygieneWhileEngaged() {
         var engine = WatchEngine(preferences: .default)
         XCTAssertTrue(engine.lidDidClose(now: t0).isEmpty)

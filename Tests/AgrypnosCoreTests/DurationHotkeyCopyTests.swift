@@ -53,6 +53,26 @@ final class AgrypnosCopyTests: XCTestCase {
         XCTAssertFalse(caption.contains("1.76"))
     }
 
+    func testLeftoverAdoptCopyIsVisibleAndDoesNotClaimWatts() {
+        let caption = AgrypnosCopy.leftoverCaption(floor: 15)
+        let notify = AgrypnosCopy.leftoverNotify
+        XCTAssertTrue(caption.lowercased().contains("leftover"))
+        XCTAssertTrue(caption.lowercased().contains("adopt"))
+        XCTAssertTrue(notify.lowercased().contains("leftover") || notify.lowercased().contains("already on"))
+        XCTAssertTrue(notify.lowercased().contains("adopt"))
+        XCTAssertFalse(caption.lowercased().contains("watt"))
+        XCTAssertFalse(notify.lowercased().contains("1.76"))
+        XCTAssertEqual(
+            AgrypnosCopy.watchCaption(engaged: true, leftover: true, floor: 15),
+            caption
+        )
+        XCTAssertEqual(
+            AgrypnosCopy.watchCaption(engaged: true, leftover: false, floor: 15),
+            AgrypnosCopy.captionOn(floor: 15)
+        )
+        XCTAssertEqual(AgrypnosCopy.watchCaption(engaged: false, leftover: true, floor: 15), AgrypnosCopy.captionOff)
+    }
+
     func testHotkeyHintDoesNotClaimActiveWhenRegistrationFailed() {
         let failed = AgrypnosCopy.hotkeyHint(.defaultToggle, registered: false)
         XCTAssertTrue(failed.contains("⌥⌘A"))

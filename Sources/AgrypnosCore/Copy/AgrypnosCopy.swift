@@ -40,7 +40,17 @@ public enum AgrypnosCopy: Sendable {
         }
     }
 
-    public static let menuTooltipOff = "Agrypnos: watch down. Sleeps with the lid."
-    public static let menuTooltipOn = "Agrypnos: on watch. Lid can fall."
-    public static let menuTooltipArmed = "Agrypnos: on watch, battery. Safety nets live."
+    public static let leftoverNotify =
+        "SleepDisabled was already on. Agrypnos adopted it and re-applied the watch."
+    public static let menuTooltipLeftover = "Agrypnos: adopted leftover SleepDisabled."
+
+    public static func leftoverCaption(floor: Int) -> String {
+        "Leftover SleepDisabled. Watch adopted it. Turns off at \(floor)% battery."
+    }
+
+    public static func watchCaption(engaged: Bool, leftover: Bool, floor: Int) -> String {
+        if !engaged { return captionOff }
+        if leftover { return leftoverCaption(floor: floor) }
+        return captionOn(floor: floor)
+    }
 }

@@ -40,7 +40,9 @@ final class StatusItemController: NSObject {
         var tooltip = AgrypnosCopy.menuTooltipOff
         if on {
             glyph = battery.onBatteryDischarging ? armedGlyph : onGlyph
-            tooltip = battery.onBatteryDischarging ? AgrypnosCopy.menuTooltipArmed : AgrypnosCopy.menuTooltipOn
+            tooltip = runtime.adoptedLeftover
+                ? AgrypnosCopy.menuTooltipLeftover
+                : (battery.onBatteryDischarging ? AgrypnosCopy.menuTooltipArmed : AgrypnosCopy.menuTooltipOn)
             if runtime.preferences.duration == .untilAgentsSettle, runtime.engine.settle.sawBusy {
                 glyph = busyGlyph
             }

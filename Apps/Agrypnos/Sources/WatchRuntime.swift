@@ -23,6 +23,7 @@ final class WatchRuntime {
     var preferences: UserPreferences { engine.preferences }
     var engaged: Bool { engine.engaged }
     var hotkeyRegistered = false
+    var adoptedLeftover: Bool { engine.leftoverAdopted }
 
     init() {
         engine = WatchEngine(preferences: store.load())
@@ -163,7 +164,8 @@ final class WatchRuntime {
                 _ = SleepDisabledController.set(false)
             }
             if SleepDisabledController.read() {
-                _ = engine.userSetEngaged(true, now: Date())
+                apply(engine.adoptLeftoverKernel(now: Date()))
+                UserNotify.post(AgrypnosCopy.leftoverNotify)
             }
         } else if !kernel, engine.engaged {
             _ = engine.userSetEngaged(false, now: Date())
