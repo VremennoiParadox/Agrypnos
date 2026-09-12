@@ -42,6 +42,9 @@ public enum AgrypnosCopy: Sendable {
 
     public static let leftoverNotify =
         "SleepDisabled was already on. Agrypnos adopted it and re-applied the watch."
+    public static let menuTooltipOff = "Agrypnos: watch is down."
+    public static let menuTooltipOn = "Agrypnos: lid can fall. Machine stays up."
+    public static let menuTooltipArmed = "Agrypnos: lid can fall. On battery."
     public static let menuTooltipLeftover = "Agrypnos: adopted leftover SleepDisabled."
 
     public static func leftoverCaption(floor: Int) -> String {

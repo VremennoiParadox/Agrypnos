@@ -45,7 +45,7 @@ enum AgrypnosGlyph {
 
 enum GlyphFactory {
     static func image(_ glyph: AgrypnosGlyph) -> NSImage {
-        let config = NSImage.SymbolConfiguration(pointSize: 15, weight: .regular).applying(.init(scale: .medium))
+        let config = NSImage.SymbolConfiguration(pointSize: 16, weight: .medium).applying(.init(scale: .medium))
         let name: String
         switch glyph {
         case .off: name = "eye.slash"

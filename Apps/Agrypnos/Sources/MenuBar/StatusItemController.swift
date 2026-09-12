@@ -7,6 +7,8 @@ import AgrypnosCore
 
 @MainActor
 final class StatusItemController: NSObject {
+    static let autosaveName = "Agrypnos"
+
     private let item: NSStatusItem
     private let runtime: WatchRuntime
     private let popover: PopoverController
@@ -18,10 +20,22 @@ final class StatusItemController: NSObject {
     init(runtime: WatchRuntime, popover: PopoverController) {
         self.runtime = runtime
         self.popover = popover
-        item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        // Notch Macs clip extras that land near the camera. Register a trailing
+        // preferred position before creating the item so SystemUIServer parks us
+        // with Wi‑Fi/Battery instead of under the notch.
+        UserDefaults.standard.register(defaults: [
+            "NSStatusItem Preferred Position \(Self.autosaveName)": 9999,
+            "NSStatusItem Visible \(Self.autosaveName)": true
+        ])
+        item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        item.autosaveName = Self.autosaveName
+        item.isVisible = true
         super.init()
         if let button = item.button {
             button.image = offGlyph
+            button.imagePosition = .imageOnly
+            button.imageScaling = .scaleProportionallyDown
+            button.setAccessibilityTitle(AgrypnosCopy.appName)
             button.target = self
             button.action = #selector(clicked)
         }
