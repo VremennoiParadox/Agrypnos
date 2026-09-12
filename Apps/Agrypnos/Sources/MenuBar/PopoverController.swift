@@ -6,9 +6,11 @@ import AgrypnosCore
 
 enum PopoverMetrics {
     static let width: CGFloat = 328
-    static let height: CGFloat = 516
+    static let height: CGFloat = 564
     static let pad: CGFloat = 16
     static let inset: CGFloat = 12
+    static let captionHeight = CGFloat(PopoverCopyLayout.captionHeightPoints)
+    static let durationHintHeight = CGFloat(PopoverCopyLayout.durationHintHeightPoints)
 }
 
 @MainActor
@@ -57,10 +59,11 @@ final class PopoverController: NSObject {
         caption?.stringValue = AgrypnosCopy.watchCaption(
             engaged: on,
             leftover: runtime.adoptedLeftover,
-            floor: runtime.preferences.batteryFloorPercent
+            floor: runtime.preferences.batteryFloorPercent,
+            lidClosed: runtime.engine.lidClosed
         )
         durationControl?.selectedSegment = segment(for: runtime.preferences.duration)
-        durationHint?.stringValue = hint(for: runtime)
+        durationHint?.stringValue = hintCopy(for: runtime)
         keyboardSwitch?.state = runtime.preferences.keyboardBacklightOff ? .on : .off
         floorSwitch?.state = runtime.preferences.applyBrightnessFloor ? .on : .off
         batterySlider?.doubleValue = Double(runtime.preferences.batteryFloorPercent)
@@ -124,7 +127,7 @@ final class PopoverController: NSObject {
         let swW = sw.width > 0 ? sw.width : 38
         let swH = sw.height > 0 ? sw.height : 21
 
-        let g1 = card(NSRect(x: pad, y: 42, width: contentW, height: 80))
+        let g1 = card(NSRect(x: pad, y: 42, width: contentW, height: 96))
         mainCard = g1
         let keep = LabelFactory.make(AgrypnosCopy.keepWatch, font: .systemFont(ofSize: 13), color: .labelColor)
         keep.frame = NSRect(x: ci, y: ci, width: cw - swW - 8, height: 22)
@@ -134,14 +137,17 @@ final class PopoverController: NSObject {
         watchSwitch.action = #selector(watchToggled(_:))
         watchSwitch.frame = NSRect(x: contentW - ci - swW, y: ci + 1, width: swW, height: swH)
         g1.addSubview(watchSwitch)
-        caption = LabelFactory.make("", font: .systemFont(ofSize: 12), color: .secondaryLabelColor)
-        caption.frame = NSRect(x: ci, y: ci + 28, width: cw, height: 36)
-        caption.usesSingleLineMode = false
-        caption.maximumNumberOfLines = 2
-        caption.lineBreakMode = .byWordWrapping
+        caption = LabelFactory.wrapping(
+            "",
+            font: .systemFont(ofSize: 12),
+            color: .secondaryLabelColor,
+            lines: PopoverCopyLayout.captionMaxLines
+        )
+        caption.frame = NSRect(x: ci, y: ci + 28, width: cw, height: PopoverMetrics.captionHeight)
+        caption.preferredMaxLayoutWidth = cw
         g1.addSubview(caption)
 
-        let g2 = card(NSRect(x: pad, y: 132, width: contentW, height: 78))
+        let g2 = card(NSRect(x: pad, y: 148, width: contentW, height: 104))
         let durationLabel = LabelFactory.make(AgrypnosCopy.durationLabel, font: .systemFont(ofSize: 13), color: .labelColor)
         durationLabel.frame = NSRect(x: ci, y: ci + 2, width: 90, height: 22)
         g2.addSubview(durationLabel)
@@ -152,17 +158,21 @@ final class PopoverController: NSObject {
         let segW = min(max(durationControl.frame.width, 168), cw - 4)
         durationControl.frame = NSRect(x: contentW - ci - segW, y: ci, width: segW, height: 24)
         g2.addSubview(durationControl)
-        durationHint = LabelFactory.make("", font: .systemFont(ofSize: 12), color: .secondaryLabelColor)
-        durationHint.frame = NSRect(x: ci, y: ci + 36, width: cw, height: 26)
-        durationHint.usesSingleLineMode = false
-        durationHint.maximumNumberOfLines = 2
+        durationHint = LabelFactory.wrapping(
+            "",
+            font: .systemFont(ofSize: 12),
+            color: .secondaryLabelColor,
+            lines: PopoverCopyLayout.durationHintMaxLines
+        )
+        durationHint.frame = NSRect(x: ci, y: ci + 36, width: cw, height: PopoverMetrics.durationHintHeight)
+        durationHint.preferredMaxLayoutWidth = cw
         g2.addSubview(durationHint)
 
-        let g3 = card(NSRect(x: pad, y: 220, width: contentW, height: 76))
+        let g3 = card(NSRect(x: pad, y: 262, width: contentW, height: 76))
         addHygieneRow(g3, y: 10, title: AgrypnosCopy.keyboardDark, switchSlot: &keyboardSwitch, action: #selector(keyboardToggled(_:)), contentW: contentW, ci: ci, cw: cw, swW: swW, swH: swH)
         addHygieneRow(g3, y: 42, title: AgrypnosCopy.brightnessFloor, switchSlot: &floorSwitch, action: #selector(floorToggled(_:)), contentW: contentW, ci: ci, cw: cw, swW: swW, swH: swH)
 
-        let g4 = card(NSRect(x: pad, y: 306, width: contentW, height: 88))
+        let g4 = card(NSRect(x: pad, y: 348, width: contentW, height: 88))
         let batt = LabelFactory.make(AgrypnosCopy.batteryFloor, font: .systemFont(ofSize: 13), color: .labelColor)
         batt.frame = NSRect(x: ci, y: ci, width: cw - 54, height: 18)
         g4.addSubview(batt)
@@ -182,7 +192,7 @@ final class PopoverController: NSObject {
         maxHint.frame = NSRect(x: contentW - ci - 34, y: ci + 50, width: 34, height: 13)
         g4.addSubview(maxHint)
 
-        let g5 = card(NSRect(x: pad, y: 404, width: contentW, height: 44))
+        let g5 = card(NSRect(x: pad, y: 446, width: contentW, height: 44))
         let login = LabelFactory.make(AgrypnosCopy.launchAtLogin, font: .systemFont(ofSize: 13), color: .labelColor)
         login.frame = NSRect(x: ci, y: 11, width: cw - swW - 8, height: 22)
         g5.addSubview(login)
@@ -192,18 +202,15 @@ final class PopoverController: NSObject {
         loginSwitch.frame = NSRect(x: contentW - ci - swW, y: 12, width: swW, height: swH)
         g5.addSubview(loginSwitch)
 
-        hotkeyHint = LabelFactory.make("", font: .systemFont(ofSize: 11), color: .tertiaryLabelColor)
-        hotkeyHint.usesSingleLineMode = false
-        hotkeyHint.maximumNumberOfLines = 2
-        hotkeyHint.lineBreakMode = .byWordWrapping
-        hotkeyHint.frame = NSRect(x: pad, y: 452, width: contentW, height: 28)
+        hotkeyHint = LabelFactory.wrapping("", font: .systemFont(ofSize: 11), color: .tertiaryLabelColor, lines: 2)
+        hotkeyHint.frame = NSRect(x: pad, y: 494, width: contentW, height: 28)
         root.addSubview(hotkeyHint)
 
         let quit = NSButton(title: AgrypnosCopy.quit, target: self, action: #selector(quitApp))
         quit.bezelStyle = .rounded
         quit.controlSize = .regular
         quit.sizeToFit()
-        quit.frame = NSRect(x: W - pad - quit.frame.width, y: 480, width: quit.frame.width, height: quit.frame.height)
+        quit.frame = NSRect(x: W - pad - quit.frame.width, y: 526, width: quit.frame.width, height: quit.frame.height)
         root.addSubview(quit)
 
         let vc = NSViewController()
@@ -238,21 +245,16 @@ final class PopoverController: NSObject {
         DurationOption.allCases.firstIndex(of: option) ?? 0
     }
 
-    private func hint(for runtime: WatchRuntime) -> String {
-        switch runtime.preferences.duration {
-        case .untilAgentsSettle:
-            return AgrypnosCopy.agentsHint
-        case .oneHour, .threeHours:
-            if let end = runtime.engine.timerEnd, runtime.engaged {
-                let remaining = max(0, Int(end.timeIntervalSinceNow.rounded()))
-                let m = remaining / 60
-                let s = remaining % 60
-                return String(format: "Auto-off in %d:%02d", m, s)
-            }
-            return "Then the watch stands down."
-        case .indefinite:
-            return "Until you say otherwise — plus safety nets."
+    private func hintCopy(for runtime: WatchRuntime) -> String {
+        var remaining: Int?
+        if let end = runtime.engine.timerEnd, runtime.engaged {
+            remaining = max(0, Int(end.timeIntervalSinceNow.rounded()))
         }
+        return AgrypnosCopy.durationHint(
+            option: runtime.preferences.duration,
+            engaged: runtime.engaged,
+            remainingSeconds: remaining
+        )
     }
 
     private func startCountdown() {
