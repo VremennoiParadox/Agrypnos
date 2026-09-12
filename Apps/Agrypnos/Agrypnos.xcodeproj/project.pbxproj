@@ -12,6 +12,7 @@
 		E7745E8B7473D56F15599102 /* AppMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD5204D1B4D62DE6D2D8B414 /* AppMain.swift */; };
 		98EC0A7215FC0C16A38106EC /* GlobalHotkeyCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D41CC191CF99AEA8CAC87F99 /* GlobalHotkeyCenter.swift */; };
 		F87EF19E80616F394A8108B0 /* LaunchAtLoginController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1531989688A32A6FF3BE1EF7 /* LaunchAtLoginController.swift */; };
+		31713455EC90405270582CED /* HotkeyRecorderControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71AB415778ADE64BF7D1B20 /* HotkeyRecorderControl.swift */; };
 		EE4DE2012E8891D5E35D9C27 /* PopoverChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = F94178055CD17CB0C1E4EBE4 /* PopoverChrome.swift */; };
 		40DF44DBC43DE8B05319E1F5 /* PopoverController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 329EC7D50E7C6B456084BE11 /* PopoverController.swift */; };
 		EC7A8AAC019F71CCB4D3623D /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8607BE8FEC94DD9191D5842B /* StatusItemController.swift */; };
@@ -37,6 +38,7 @@
 		AD5204D1B4D62DE6D2D8B414 /* AppMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMain.swift; sourceTree = "<group>"; };
 		D41CC191CF99AEA8CAC87F99 /* GlobalHotkeyCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotkeyCenter.swift; sourceTree = "<group>"; };
 		1531989688A32A6FF3BE1EF7 /* LaunchAtLoginController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginController.swift; sourceTree = "<group>"; };
+		A71AB415778ADE64BF7D1B20 /* HotkeyRecorderControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyRecorderControl.swift; sourceTree = "<group>"; };
 		F94178055CD17CB0C1E4EBE4 /* PopoverChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverChrome.swift; sourceTree = "<group>"; };
 		329EC7D50E7C6B456084BE11 /* PopoverController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverController.swift; sourceTree = "<group>"; };
 		8607BE8FEC94DD9191D5842B /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
@@ -112,6 +114,7 @@
 		E7C22297E41D96897BEBC32C /* MenuBar */ = {
 			isa = PBXGroup;
 			children = (
+				A71AB415778ADE64BF7D1B20 /* HotkeyRecorderControl.swift */,
 				F94178055CD17CB0C1E4EBE4 /* PopoverChrome.swift */,
 				329EC7D50E7C6B456084BE11 /* PopoverController.swift */,
 				8607BE8FEC94DD9191D5842B /* StatusItemController.swift */,
@@ -253,6 +256,7 @@
 				E7745E8B7473D56F15599102 /* AppMain.swift in Sources */,
 				98EC0A7215FC0C16A38106EC /* GlobalHotkeyCenter.swift in Sources */,
 				F87EF19E80616F394A8108B0 /* LaunchAtLoginController.swift in Sources */,
+				31713455EC90405270582CED /* HotkeyRecorderControl.swift in Sources */,
 				EE4DE2012E8891D5E35D9C27 /* PopoverChrome.swift in Sources */,
 				40DF44DBC43DE8B05319E1F5 /* PopoverController.swift in Sources */,
 				EC7A8AAC019F71CCB4D3623D /* StatusItemController.swift in Sources */,

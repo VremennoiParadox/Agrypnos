@@ -17,7 +17,7 @@ The name is Greek: *agrypnos*, sleepless. The tone is a night watch that likes y
 | Lid open mid-watch | ~2s gradual brightness ramp + keyboard backlight on |
 | Lid closed keep-awake | Kernel `SleepDisabled` via `pmset disablesleep` |
 | Agents | Busy stays awake; settled idle allows sleep |
-| You | Menu bar + `⌥⌘A` |
+| You | Menu bar + remappable shortcut (default `⌥⌘A`) |
 
 When watched agents go quiet for a grace period, Agrypnos drops the watch and allows sleep. The product difference is power hygiene under the lid — floored brightness and a dark keyboard — plus keep-awake that survives shutting the notebook.
 
@@ -53,10 +53,11 @@ From Terminal, equivalent grant:
 
 1. Click the **eye** in the menu bar (or press **⌥⌘A**).
 2. Flip **Keep the watch** (arms the watch — screen stays usable).
-3. Pick how long: **∞**, **1h**, **3h**, or **Agents**.
-4. Close the lid when ready. Brightness floors; keyboard goes dark; the Mac stays up.
-5. Open mid-watch if you need the panel — ~2s brightness ramp + keyboard back on.
-6. Walk away until the timer or Agents settle ends the watch.
+3. Pick how long: **∞**, **1h**, **3h**, **Agents**, or type minutes (33 is a fine watch).
+4. Click **Shortcut** and press a chord to remap the hotkey (default **⌥⌘A**). If that chord cannot register, Agrypnos says so and keeps the last live bind.
+5. Close the lid when ready. Brightness floors; keyboard goes dark; the Mac stays up.
+6. Open mid-watch if you need the panel — ~2s brightness ramp + keyboard back on.
+7. Walk away until the timer or Agents settle ends the watch.
 
 **Agents** mode: Agrypnos polls local processes and session files for Cursor, Claude Code, and Codex. If they look busy, the watch holds. After they look idle for a grace period, Agrypnos *allows sleep* (drops `SleepDisabled`). It does not try to be every provider on earth.
 

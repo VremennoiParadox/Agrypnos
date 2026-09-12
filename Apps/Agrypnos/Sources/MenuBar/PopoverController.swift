@@ -6,7 +6,7 @@ import AgrypnosCore
 
 enum PopoverMetrics {
     static let width: CGFloat = 328
-    static let height: CGFloat = 564
+    static let height: CGFloat = 636
     static let pad: CGFloat = 16
     static let inset: CGFloat = 12
     static let captionHeight = CGFloat(PopoverCopyLayout.captionHeightPoints)
@@ -14,7 +14,7 @@ enum PopoverMetrics {
 }
 
 @MainActor
-final class PopoverController: NSObject {
+final class PopoverController: NSObject, NSTextFieldDelegate {
     let popover = NSPopover()
     private weak var runtime: WatchRuntime?
     private var clickMonitor: Any?
@@ -25,6 +25,7 @@ final class PopoverController: NSObject {
     private var mainCard: CardView!
     private var headerMark: NSImageView!
     private var durationControl: NSSegmentedControl!
+    private var minutesField: NSTextField!
     private var durationHint: NSTextField!
     private var keyboardSwitch: NSSwitch!
     private var floorSwitch: NSSwitch!
@@ -32,6 +33,9 @@ final class PopoverController: NSObject {
     private var batteryValue: NSTextField!
     private var loginSwitch: NSSwitch!
     private var hotkeyHint: NSTextField!
+    private let recorder = HotkeyRecorderControl()
+    private var hotkeyButtonY: CGFloat = 0
+    private var contentWidth: CGFloat = 0
 
     init(runtime: WatchRuntime) {
         self.runtime = runtime
@@ -39,6 +43,16 @@ final class PopoverController: NSObject {
         popover.behavior = .applicationDefined
         popover.animates = true
         popover.contentSize = NSSize(width: PopoverMetrics.width, height: PopoverMetrics.height)
+        recorder.onChord = { [weak self] chord in
+            self?.runtime?.setHotkey(chord)
+            self?.refresh()
+        }
+        recorder.onSessionChanged = { [weak self] in
+            if self?.recorder.isRecording == true {
+                self?.runtime?.prepareHotkeyRemap()
+            }
+            self?.refresh()
+        }
         popover.contentViewController = makeController()
     }
 
@@ -62,17 +76,24 @@ final class PopoverController: NSObject {
             floor: runtime.preferences.batteryFloorPercent,
             lidClosed: runtime.engine.lidClosed
         )
-        durationControl?.selectedSegment = segment(for: runtime.preferences.duration)
+        applyDuration(DurationPickerChrome.make(duration: runtime.preferences.duration))
         durationHint?.stringValue = hintCopy(for: runtime)
         keyboardSwitch?.state = runtime.preferences.keyboardBacklightOff ? .on : .off
         floorSwitch?.state = runtime.preferences.applyBrightnessFloor ? .on : .off
         batterySlider?.doubleValue = Double(runtime.preferences.batteryFloorPercent)
         batteryValue?.stringValue = "\(runtime.preferences.batteryFloorPercent)%"
         loginSwitch?.state = LaunchAtLoginController.isEnabled ? .on : .off
-        hotkeyHint?.stringValue = AgrypnosCopy.hotkeyHint(
-            runtime.preferences.hotkey,
-            registered: runtime.hotkeyRegistered
+        let hotkey = HotkeyRecorderChrome.make(
+            liveChord: runtime.preferences.hotkey,
+            registered: runtime.hotkeyRegistered,
+            isRecording: recorder.isRecording,
+            failedAttempt: runtime.lastFailedHotkey
         )
+        recorder.apply(title: hotkey.buttonTitle)
+        layoutHotkeyButton()
+        hotkeyHint?.stringValue = hotkey.hint
+        let bindFailed = !hotkey.isRecording && (runtime.lastFailedHotkey != nil || !runtime.hotkeyRegistered)
+        hotkeyHint?.textColor = bindFailed ? .labelColor : .tertiaryLabelColor
     }
 
     func open(relativeTo button: NSView) {
@@ -87,6 +108,7 @@ final class PopoverController: NSObject {
     }
 
     func close() {
+        recorder.stop()
         popover.performClose(nil)
         countdown?.invalidate()
         countdown = nil
@@ -101,6 +123,7 @@ final class PopoverController: NSObject {
         let pad = PopoverMetrics.pad
         let ci = PopoverMetrics.inset
         let contentW = W - pad * 2
+        contentWidth = contentW
         let cw = contentW - ci * 2
         let root = GlassView(frame: NSRect(x: 0, y: 0, width: W, height: PopoverMetrics.height))
         root.material = .popover
@@ -147,16 +170,34 @@ final class PopoverController: NSObject {
         caption.preferredMaxLayoutWidth = cw
         g1.addSubview(caption)
 
-        let g2 = card(NSRect(x: pad, y: 148, width: contentW, height: 104))
+        let g2 = card(NSRect(x: pad, y: 148, width: contentW, height: 136))
         let durationLabel = LabelFactory.make(AgrypnosCopy.durationLabel, font: .systemFont(ofSize: 13), color: .labelColor)
-        durationLabel.frame = NSRect(x: ci, y: ci + 2, width: 90, height: 22)
+        durationLabel.frame = NSRect(x: ci, y: 8, width: 86, height: 22)
         g2.addSubview(durationLabel)
-        let titles = DurationOption.presets.map(\.segmentTitle)
-        durationControl = NSSegmentedControl(labels: titles, trackingMode: .selectOne, target: self, action: #selector(durationChanged(_:)))
+        let minutesLabel = LabelFactory.make(AgrypnosCopy.minutesLabel, font: .systemFont(ofSize: 13), color: .labelColor)
+        minutesLabel.frame = NSRect(x: ci + 90, y: 8, width: 72, height: 22)
+        g2.addSubview(minutesLabel)
+        minutesField = NSTextField(string: "")
+        minutesField.placeholderString = AgrypnosCopy.minutesPlaceholder
+        minutesField.font = .systemFont(ofSize: 13)
+        minutesField.alignment = .right
+        minutesField.delegate = self
+        minutesField.target = self
+        minutesField.action = #selector(minutesCommitted(_:))
+        minutesField.cell?.sendsActionOnEndEditing = true
+        minutesField.setAccessibilityLabel(AgrypnosCopy.minutesLabel)
+        minutesField.frame = NSRect(x: contentW - ci - 56, y: 8, width: 56, height: 22)
+        g2.addSubview(minutesField)
+        let chrome = DurationPickerChrome.make(duration: .indefinite)
+        durationControl = NSSegmentedControl(
+            labels: chrome.segmentTitles,
+            trackingMode: .selectOne,
+            target: self,
+            action: #selector(durationChanged(_:))
+        )
+        durationControl.segmentDistribution = .fillEqually
         durationControl.selectedSegment = 0
-        durationControl.sizeToFit()
-        let segW = min(max(durationControl.frame.width, 168), cw - 4)
-        durationControl.frame = NSRect(x: contentW - ci - segW, y: ci, width: segW, height: 24)
+        durationControl.frame = NSRect(x: ci, y: 36, width: cw, height: 24)
         g2.addSubview(durationControl)
         durationHint = LabelFactory.wrapping(
             "",
@@ -164,15 +205,15 @@ final class PopoverController: NSObject {
             color: .secondaryLabelColor,
             lines: PopoverCopyLayout.durationHintMaxLines
         )
-        durationHint.frame = NSRect(x: ci, y: ci + 36, width: cw, height: PopoverMetrics.durationHintHeight)
+        durationHint.frame = NSRect(x: ci, y: 68, width: cw, height: PopoverMetrics.durationHintHeight)
         durationHint.preferredMaxLayoutWidth = cw
         g2.addSubview(durationHint)
 
-        let g3 = card(NSRect(x: pad, y: 262, width: contentW, height: 76))
+        let g3 = card(NSRect(x: pad, y: 294, width: contentW, height: 76))
         addHygieneRow(g3, y: 10, title: AgrypnosCopy.keyboardDark, switchSlot: &keyboardSwitch, action: #selector(keyboardToggled(_:)), contentW: contentW, ci: ci, cw: cw, swW: swW, swH: swH)
         addHygieneRow(g3, y: 42, title: AgrypnosCopy.brightnessFloor, switchSlot: &floorSwitch, action: #selector(floorToggled(_:)), contentW: contentW, ci: ci, cw: cw, swW: swW, swH: swH)
 
-        let g4 = card(NSRect(x: pad, y: 348, width: contentW, height: 88))
+        let g4 = card(NSRect(x: pad, y: 380, width: contentW, height: 88))
         let batt = LabelFactory.make(AgrypnosCopy.batteryFloor, font: .systemFont(ofSize: 13), color: .labelColor)
         batt.frame = NSRect(x: ci, y: ci, width: cw - 54, height: 18)
         g4.addSubview(batt)
@@ -192,7 +233,7 @@ final class PopoverController: NSObject {
         maxHint.frame = NSRect(x: contentW - ci - 40, y: ci + 50, width: 40, height: 13)
         g4.addSubview(maxHint)
 
-        let g5 = card(NSRect(x: pad, y: 446, width: contentW, height: 44))
+        let g5 = card(NSRect(x: pad, y: 478, width: contentW, height: 44))
         let login = LabelFactory.make(AgrypnosCopy.launchAtLogin, font: .systemFont(ofSize: 13), color: .labelColor)
         login.frame = NSRect(x: ci, y: 11, width: cw - swW - 8, height: 22)
         g5.addSubview(login)
@@ -202,8 +243,15 @@ final class PopoverController: NSObject {
         loginSwitch.frame = NSRect(x: contentW - ci - swW, y: 12, width: swW, height: swH)
         g5.addSubview(loginSwitch)
 
+        let shortcut = LabelFactory.make(AgrypnosCopy.shortcutLabel, font: .systemFont(ofSize: 13), color: .labelColor)
+        shortcut.frame = NSRect(x: pad, y: 532, width: 90, height: 22)
+        root.addSubview(shortcut)
+        hotkeyButtonY = 530
+        root.addSubview(recorder.button)
+        layoutHotkeyButton()
+
         hotkeyHint = LabelFactory.wrapping("", font: .systemFont(ofSize: 11), color: .tertiaryLabelColor, lines: 2)
-        hotkeyHint.frame = NSRect(x: pad, y: 494, width: contentW, height: 28)
+        hotkeyHint.frame = NSRect(x: pad, y: 558, width: contentW, height: 32)
         hotkeyHint.preferredMaxLayoutWidth = contentW
         root.addSubview(hotkeyHint)
 
@@ -211,7 +259,7 @@ final class PopoverController: NSObject {
         quit.bezelStyle = .rounded
         quit.controlSize = .regular
         quit.sizeToFit()
-        quit.frame = NSRect(x: W - pad - quit.frame.width, y: 526, width: quit.frame.width, height: quit.frame.height)
+        quit.frame = NSRect(x: W - pad - quit.frame.width, y: 600, width: quit.frame.width, height: quit.frame.height)
         root.addSubview(quit)
 
         let vc = NSViewController()
@@ -242,8 +290,27 @@ final class PopoverController: NSObject {
         switchSlot = toggle
     }
 
-    private func segment(for option: DurationOption) -> Int {
-        DurationOption.presets.firstIndex(of: option) ?? -1
+    private func applyDuration(_ chrome: DurationPickerChrome) {
+        guard let durationControl else { return }
+        for (index, title) in chrome.segmentTitles.enumerated() where index < durationControl.segmentCount {
+            durationControl.setLabel(title, forSegment: index)
+        }
+        durationControl.selectedSegment = chrome.selectedSegment
+        if minutesField?.currentEditor() == nil {
+            minutesField?.stringValue = chrome.minutesText
+        }
+    }
+
+    private func layoutHotkeyButton() {
+        let pad = PopoverMetrics.pad
+        recorder.button.sizeToFit()
+        let width = min(max(recorder.button.frame.width + 12, 96), contentWidth - 100)
+        recorder.button.frame = NSRect(
+            x: pad + contentWidth - width,
+            y: hotkeyButtonY,
+            width: width,
+            height: 24
+        )
     }
 
     private func hintCopy(for runtime: WatchRuntime) -> String {
@@ -265,16 +332,45 @@ final class PopoverController: NSObject {
         }
     }
 
+    private func stopRecordingIfNeeded() {
+        if recorder.isRecording {
+            recorder.stop()
+        }
+    }
+
     @objc private func watchToggled(_ sender: NSSwitch) {
+        stopRecordingIfNeeded()
         runtime?.setEngaged(sender.state == .on)
         refresh()
     }
 
     @objc private func durationChanged(_ sender: NSSegmentedControl) {
-        guard DurationOption.presets.indices.contains(sender.selectedSegment) else { return }
-        let option = DurationOption.presets[sender.selectedSegment]
+        stopRecordingIfNeeded()
+        let typed = minutesField?.stringValue ?? ""
+        guard let option = DurationPickerChrome.duration(
+            selectingSegment: sender.selectedSegment,
+            minutesText: typed
+        ) else {
+            minutesField?.window?.makeFirstResponder(minutesField)
+            refresh()
+            return
+        }
         runtime?.setDuration(option)
         refresh()
+    }
+
+    @objc private func minutesCommitted(_ sender: NSTextField) {
+        stopRecordingIfNeeded()
+        guard let minutes = DurationPickerChrome.parseMinutes(sender.stringValue) else {
+            refresh()
+            return
+        }
+        runtime?.setCustomMinutes(minutes)
+        refresh()
+    }
+
+    func controlTextDidBeginEditing(_ obj: Notification) {
+        stopRecordingIfNeeded()
     }
 
     @objc private func keyboardToggled(_ sender: NSSwitch) {

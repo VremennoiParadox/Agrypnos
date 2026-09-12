@@ -27,6 +27,7 @@ final class WatchRuntime {
     var hotkeyRegistered = false
     var adoptedLeftover: Bool { engine.leftoverAdopted }
     var bindHotkey: ((HotkeyChord) -> Bool)?
+    private(set) var lastFailedHotkey: HotkeyChord?
 
     init() {
         engine = WatchEngine(preferences: store.load())
@@ -58,8 +59,10 @@ final class WatchRuntime {
     }
 
     func setHotkey(_ chord: HotkeyChord) {
+        lastFailedHotkey = nil
         let previous = engine.preferences.hotkey
         guard chord.isBindable else {
+            lastFailedHotkey = chord
             UserNotify.post(AgrypnosCopy.hotkeyHint(chord, registered: false))
             delegate?.watchRuntimeDidChange(self)
             return
@@ -71,9 +74,15 @@ final class WatchRuntime {
             store.save(engine.preferences)
             hotkeyRegistered = true
         } else {
+            lastFailedHotkey = chord
             hotkeyRegistered = bindHotkey?(previous) ?? false
             UserNotify.post(AgrypnosCopy.hotkeyHint(chord, registered: false))
         }
+        delegate?.watchRuntimeDidChange(self)
+    }
+
+    func prepareHotkeyRemap() {
+        lastFailedHotkey = nil
         delegate?.watchRuntimeDidChange(self)
     }
 
