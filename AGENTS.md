@@ -1,6 +1,6 @@
 # Agrypnos — agent bar
 
-Agrypnos is a native Swift macOS **menu-bar extra**. It keeps a Mac awake with the lid closed while coding agents work, then lets the machine sleep when the watch ends. Personality: playful with the human, still professional. Greek *agrypnos* = sleepless. It is not a Sleepless clone and it is not a watt-marketing page.
+Agrypnos is a native Swift macOS **menu-bar extra**. It keeps a Mac awake with the lid closed while coding agents work, then lets the machine sleep when the watch ends. Personality: warm and direct — playful tone is fine, mysterious capability copy is not. Greek *agrypnos* = sleepless. It is not a Sleepless clone and it is not a watt-marketing page.
 
 This file is the project bar. Follow it. If a request fights this file, stop and say so.
 
@@ -43,7 +43,7 @@ Ship these, and stop:
 
 | Piece | Behavior |
 |---|---|
-| Menu-bar extra + popover | Cards, toggles, duration (presets + custom minutes), remappable hotkey, low-battery slider (5–100%), brightness floor %, Agents settle grace, lid-open ramp 1/2/3s, launch-at-login, quit. Agrypnos copy + eye glyph (not a coffee cup). Copy must say the watch is **prepared / waiting for lid**, not that the screen goes dark on toggle. **No separate settings window** — controls stay in the popover. |
+| Menu-bar extra + popover | Cards, toggles, duration (presets + custom minutes), remappable hotkey, low-battery slider (5–100%), brightness floor %, Agents settle grace, lid-open ramp 1/2/3s, launch-at-login, quit. Agrypnos glyph (eye, not a coffee cup). **Plain captions only** — every control says what it does (armed / waiting for lid close → brightness floor + keyboard backlight off). No poetry. **No separate settings window** — controls stay in the popover. |
 | Global hotkey | Activate/toggle the watch. Default `⌥⌘A`. **Remappable** in the popover (conflict-safe). Required V1. Surface bind failure honestly when the chord cannot register. |
 | Keep the watch (armed) | ON = **armed** while the lid is open. Machine may already be held awake (`pmset disablesleep` / SleepDisabled) as needed for the watch, but **no** display blank, **no** `displaysleepnow`, **no** keyboard backlight off on toggle. |
 | Lid-closed keep-awake | With the watch armed, lid close keeps the Mac awake via `pmset disablesleep` (SleepDisabled). IOKit assertions do **not** survive lid close; use them only as extra idle prevention, never as the lid story. |
@@ -53,6 +53,7 @@ Ship these, and stop:
 | Auto-off timer | Segmented presets `∞` / `1h` / `3h` / `Agents`, plus **custom minutes** (e.g. 33) the user can set. |
 | Auto-off low battery | Slider **5–100%**, default 15%, on discharging battery. |
 | Thermal auto-off | `ProcessInfo.thermalState` `.serious` or `.critical`. |
+| Low Power Mode | Auto-off when LPM is on and discharging **unless** the user deliberately armed this session (forced watch). **Copy honesty:** do not show “ended / standing down” copy while the Mac is still held awake by that forced watch. |
 | Agent watch | Busy → stay awake. Settled idle after **user settle grace** → allow sleep. Cursor + Claude Code + Codex first. Process list + session-file mtimes. |
 | Safety | Reboot clears SleepDisabled. Launch-at-login never re-arms the watch. One-time scoped sudoers grant for *exactly* two `pmset disablesleep` commands. |
 
@@ -110,17 +111,23 @@ Commit and push when the work is a coherent slice. Do not ask the user for permi
 | **Rules** | `AGENTS.md`, this bar, scope fights | Feature code |
 | **Swift core** | `AgrypnosCore`, heuristics, watch engine, lid/hygiene, safety | AppKit chrome |
 | **UI** | Menu bar, popover, personality copy, glyph | Kernel sleep flag |
-| **Review** | Gates. File size, TDD, no watt fiction, no god files, no false display-sleep claims | Shipping unreviewed slop |
+| **Review** | Gates. File size, TDD, no watt fiction, no god files, no false display-sleep claims, plain popover copy, no false ended-copy under LPM forced-watch | Shipping unreviewed slop |
 | **Boss** | Sequence, merge order, “stop, this is V2” | Writing all the code |
 
 Parallel foundations are forbidden. One track. If you find a second scaffold, delete yours or stop.
 
-## Personality
+## Personality / popover copy
 
-Talk to the user like a night watch that likes them. Not a mascot. Not a clone of anyone’s coffee cup.
+Warm and direct. Not a mascot. Not a coffee-cup clone. Light personality in **tone** is fine; capability captions must be **plain**.
 
-Good: “Armed. Close the lid when you’re ready — I’ll drop the panel and kill the keys until the watch ends.”
+**Hard:** every popover caption says what the control does. Ban mysterious metaphors for real behavior — no “kill the keys,” “floor the panel,” “sleeps with you,” or vague “when they settle” as the only explanation. (Internal/product terms like *settle grace* in this file are fine; user-facing strings must spell out idle → allow sleep.)
+
+Good: “Armed. Waiting for lid close — then brightness floor + keyboard backlight off. Auto-off at 15% battery.”
+Good: “Stays awake while agents are busy. Allows sleep after they go idle.”
+Good: “Keeps the Mac awake with the lid closed.”
+Bad: “Sleeps with you when the lid closes.” / “I’ll floor the panel and kill the keys.” / “When they settle, sleep may return.”
 Bad: “World-class AI-powered sleep prevention maximizing battery.” / “We force the display asleep on toggle.”
+Bad: ended/standing-down copy while Low Power Mode forced-watch is still holding the Mac awake.
 
 ## OSS
 
