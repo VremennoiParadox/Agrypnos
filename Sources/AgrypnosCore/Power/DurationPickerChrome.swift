@@ -57,4 +57,8 @@ public struct DurationPickerChrome: Equatable, Sendable {
         }
         return nil
     }
+
+    public static func shouldCommit(minutes: Int, current: DurationOption) -> Bool {
+        current != .customMinutes(minutes)
+    }
 }

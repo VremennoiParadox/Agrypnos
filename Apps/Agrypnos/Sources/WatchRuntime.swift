@@ -27,7 +27,9 @@ final class WatchRuntime {
     var hotkeyRegistered = false
     var adoptedLeftover: Bool { engine.leftoverAdopted }
     var bindHotkey: ((HotkeyChord) -> Bool)?
+    var unbindHotkey: (() -> Void)?
     private(set) var lastFailedHotkey: HotkeyChord?
+    private var hotkeySuspendedForRecord = false
 
     init() {
         engine = WatchEngine(preferences: store.load())
@@ -60,6 +62,7 @@ final class WatchRuntime {
 
     func setHotkey(_ chord: HotkeyChord) {
         lastFailedHotkey = nil
+        hotkeySuspendedForRecord = false
         let previous = engine.preferences.hotkey
         guard chord.isBindable else {
             lastFailedHotkey = chord
@@ -83,6 +86,17 @@ final class WatchRuntime {
 
     func prepareHotkeyRemap() {
         lastFailedHotkey = nil
+        if !hotkeySuspendedForRecord {
+            unbindHotkey?()
+            hotkeySuspendedForRecord = true
+        }
+        delegate?.watchRuntimeDidChange(self)
+    }
+
+    func restoreSuspendedHotkey() {
+        guard hotkeySuspendedForRecord else { return }
+        hotkeySuspendedForRecord = false
+        hotkeyRegistered = bindHotkey?(engine.preferences.hotkey) ?? false
         delegate?.watchRuntimeDidChange(self)
     }
 

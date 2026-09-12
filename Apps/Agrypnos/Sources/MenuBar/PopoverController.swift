@@ -48,10 +48,14 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
             self?.refresh()
         }
         recorder.onSessionChanged = { [weak self] in
-            if self?.recorder.isRecording == true {
-                self?.runtime?.prepareHotkeyRemap()
+            guard let self else { return }
+            if self.recorder.isRecording {
+                self.minutesField?.window?.makeFirstResponder(nil)
+                self.runtime?.prepareHotkeyRemap()
+            } else {
+                self.runtime?.restoreSuspendedHotkey()
             }
-            self?.refresh()
+            self.refresh()
         }
         popover.contentViewController = makeController()
     }
@@ -108,7 +112,9 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     }
 
     func close() {
+        commitMinutesIfChanged()
         recorder.stop()
+        runtime?.restoreSuspendedHotkey()
         popover.performClose(nil)
         countdown?.invalidate()
         countdown = nil
@@ -335,7 +341,17 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     private func stopRecordingIfNeeded() {
         if recorder.isRecording {
             recorder.stop()
+            runtime?.restoreSuspendedHotkey()
         }
+    }
+
+    private func commitMinutesIfChanged() {
+        guard let runtime else { return }
+        guard let minutes = DurationPickerChrome.parseMinutes(minutesField?.stringValue ?? "") else { return }
+        guard DurationPickerChrome.shouldCommit(minutes: minutes, current: runtime.preferences.duration) else {
+            return
+        }
+        runtime.setCustomMinutes(minutes)
     }
 
     @objc private func watchToggled(_ sender: NSSwitch) {
@@ -361,11 +377,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
 
     @objc private func minutesCommitted(_ sender: NSTextField) {
         stopRecordingIfNeeded()
-        guard let minutes = DurationPickerChrome.parseMinutes(sender.stringValue) else {
-            refresh()
-            return
-        }
-        runtime?.setCustomMinutes(minutes)
+        commitMinutesIfChanged()
         refresh()
     }
 

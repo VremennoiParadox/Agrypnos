@@ -54,6 +54,13 @@ final class DurationPickerChromeTests: XCTestCase {
         XCTAssertNil(DurationPickerChrome.duration(selectingSegment: 4, minutesText: "abc"))
         XCTAssertNil(DurationPickerChrome.duration(selectingSegment: 9, minutesText: "33"))
     }
+
+    func testSameCustomMinutesDoNotCountAsANewCommit() {
+        XCTAssertFalse(DurationPickerChrome.shouldCommit(minutes: 33, current: .customMinutes(33)))
+        XCTAssertTrue(DurationPickerChrome.shouldCommit(minutes: 40, current: .customMinutes(33)))
+        XCTAssertTrue(DurationPickerChrome.shouldCommit(minutes: 33, current: .indefinite))
+        XCTAssertTrue(DurationPickerChrome.shouldCommit(minutes: 60, current: .oneHour))
+    }
 }
 
 final class HotkeyRecorderChromeTests: XCTestCase {
@@ -89,8 +96,13 @@ final class HotkeyRecorderChromeTests: XCTestCase {
         )
         XCTAssertEqual(chrome.buttonTitle, "⌥⌘A")
         XCTAssertTrue(chrome.hint.contains("⌥⌘S"))
+        XCTAssertTrue(chrome.hint.contains("⌥⌘A"))
         XCTAssertFalse(chrome.hint.lowercased().contains("toggles the watch"))
-        XCTAssertEqual(chrome.hint, AgrypnosCopy.hotkeyHint(attempted, registered: false))
+        XCTAssertFalse(chrome.hint.lowercased().contains("menu bar"))
+        XCTAssertEqual(
+            chrome.hint,
+            AgrypnosCopy.hotkeyRemapFailed(attempted: attempted, live: .defaultToggle)
+        )
     }
 
     func testRecordingCopyAsksForAChord() {
@@ -144,5 +156,9 @@ final class HotkeyRecorderChromeTests: XCTestCase {
         } else {
             XCTFail("naked key should still capture so bind failure can be shown")
         }
+        XCTAssertEqual(
+            HotkeyCapture.from(keyCode: 57, option: false, command: false, shift: false, control: false),
+            .ignore
+        )
     }
 }

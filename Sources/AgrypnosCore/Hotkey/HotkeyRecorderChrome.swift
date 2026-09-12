@@ -5,7 +5,7 @@ public enum HotkeyCapture: Equatable, Sendable {
 
     /// Carbon virtual key codes for modifier keys and Escape.
     private static let escapeKey: UInt32 = 53
-    private static let modifierKeys: Set<UInt32> = [54, 55, 56, 58, 59, 60, 61, 62, 63]
+    private static let modifierKeys: Set<UInt32> = [54, 55, 56, 57, 58, 59, 60, 61, 62, 63]
 
     public static func from(
         keyCode: UInt32,
@@ -55,7 +55,7 @@ public struct HotkeyRecorderChrome: Equatable, Sendable {
         if let failedAttempt {
             return HotkeyRecorderChrome(
                 buttonTitle: liveChord.display,
-                hint: AgrypnosCopy.hotkeyHint(failedAttempt, registered: false),
+                hint: AgrypnosCopy.hotkeyRemapFailed(attempted: failedAttempt, live: liveChord),
                 isRecording: false
             )
         }

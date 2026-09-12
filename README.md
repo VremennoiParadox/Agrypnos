@@ -51,7 +51,7 @@ From Terminal, equivalent grant:
 
 ## Using it
 
-1. Click the **eye** in the menu bar (or press **⌥⌘A**).
+1. Click the **eye** in the menu bar (or press the shortcut — default **⌥⌘A**).
 2. Flip **Keep the watch** (arms the watch — screen stays usable).
 3. Pick how long: **∞**, **1h**, **3h**, **Agents**, or type minutes (33 is a fine watch).
 4. Click **Shortcut** and press a chord to remap the hotkey (default **⌥⌘A**). If that chord cannot register, Agrypnos says so and keeps the last live bind.
