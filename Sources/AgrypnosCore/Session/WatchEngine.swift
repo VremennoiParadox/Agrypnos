@@ -58,6 +58,11 @@ public struct WatchEngine: Equatable, Sendable {
         return []
     }
 
+    public mutating func userSetAgentSettleGrace(_ seconds: TimeInterval) {
+        preferences.agentSettleGrace = UserPreferences.clampAgentSettleGrace(seconds)
+        settle.grace = preferences.agentSettleGrace
+    }
+
     public mutating func tick(now: Date, safety: SafetyInputs, agents: AgentSnapshot) -> [WatchCommand] {
         guard engaged else { return [] }
         if let reason = AutoOffEvaluator.reason(

@@ -1,0 +1,234 @@
+import XCTest
+@testable import AgrypnosCore
+
+final class CorePrefsMathTests: XCTestCase {
+    let t0 = Date(timeIntervalSince1970: 10_000)
+
+    func testBrightnessFloorDefaultIsLowestPercent() {
+        XCTAssertEqual(UserPreferences.brightnessFloorPercentRange, 5...40)
+        XCTAssertEqual(
+            UserPreferences.default.brightnessFloorPercent,
+            UserPreferences.brightnessFloorPercentRange.lowerBound
+        )
+        XCTAssertEqual(UserPreferences.default.brightnessFloorPercent, 5)
+        XCTAssertEqual(UserPreferences.default.brightnessFloor, 0.05, accuracy: 0.0001)
+    }
+
+    func testBrightnessFloorPercentClampsAndMapsToUnit() {
+        XCTAssertEqual(UserPreferences.clampBrightnessFloor(4), 5)
+        XCTAssertEqual(UserPreferences.clampBrightnessFloor(5), 5)
+        XCTAssertEqual(UserPreferences.clampBrightnessFloor(20), 20)
+        XCTAssertEqual(UserPreferences.clampBrightnessFloor(40), 40)
+        XCTAssertEqual(UserPreferences.clampBrightnessFloor(41), 40)
+        XCTAssertEqual(UserPreferences(brightnessFloorPercent: 4).brightnessFloorPercent, 5)
+        XCTAssertEqual(UserPreferences(brightnessFloorPercent: 20).brightnessFloorPercent, 20)
+        XCTAssertEqual(UserPreferences(brightnessFloorPercent: 99).brightnessFloorPercent, 40)
+        XCTAssertEqual(UserPreferences(brightnessFloorPercent: 20).brightnessFloor, 0.20, accuracy: 0.0001)
+        XCTAssertNotEqual(UserPreferences(brightnessFloorPercent: 20).brightnessFloor, 0.05)
+    }
+
+    func testBrightnessFloorPercentPersistsAndLegacyFractionDecodes() throws {
+        let prefs = UserPreferences(brightnessFloorPercent: 20)
+        let loaded = try roundTrip(prefs)
+        XCTAssertEqual(loaded.brightnessFloorPercent, 20)
+        XCTAssertEqual(loaded.brightnessFloor, 0.20, accuracy: 0.0001)
+
+        let overshoot = try JSONDecoder().decode(
+            UserPreferences.self,
+            from: Data(fixtureJSON(brightnessFloorPercent: 80).utf8)
+        )
+        XCTAssertEqual(overshoot.brightnessFloorPercent, 40)
+
+        let legacy = try JSONDecoder().decode(
+            UserPreferences.self,
+            from: Data(legacyFractionJSON(brightnessFloor: 0.2).utf8)
+        )
+        XCTAssertEqual(legacy.brightnessFloorPercent, 20)
+        XCTAssertEqual(legacy.brightnessFloor, 0.20, accuracy: 0.0001)
+    }
+
+    func testAgentSettleGraceDefaultIsNinetySecondsAndClamps() {
+        XCTAssertEqual(UserPreferences.agentSettleGraceRange, 15...900)
+        XCTAssertEqual(UserPreferences.default.agentSettleGrace, 90)
+        XCTAssertEqual(UserPreferences.clampAgentSettleGrace(5), 15)
+        XCTAssertEqual(UserPreferences.clampAgentSettleGrace(15), 15)
+        XCTAssertEqual(UserPreferences.clampAgentSettleGrace(90), 90)
+        XCTAssertEqual(UserPreferences.clampAgentSettleGrace(900), 900)
+        XCTAssertEqual(UserPreferences.clampAgentSettleGrace(12_000), 900)
+        XCTAssertEqual(UserPreferences.clampAgentSettleGrace(minutes: 0), 15)
+        XCTAssertEqual(UserPreferences.clampAgentSettleGrace(minutes: 2), 120)
+        XCTAssertEqual(UserPreferences.clampAgentSettleGrace(minutes: 20), 900)
+        XCTAssertEqual(UserPreferences(agentSettleGrace: 5).agentSettleGrace, 15)
+        XCTAssertEqual(UserPreferences(agentSettleGrace: 120).agentSettleGrace, 120)
+        XCTAssertEqual(UserPreferences(agentSettleGrace: 9_999).agentSettleGrace, 900)
+    }
+
+    func testAgentSettleGracePersistsAndDecodedOvershootClamps() throws {
+        let prefs = UserPreferences(agentSettleGrace: 120)
+        let loaded = try roundTrip(prefs)
+        XCTAssertEqual(loaded.agentSettleGrace, 120)
+
+        let decoded = try JSONDecoder().decode(
+            UserPreferences.self,
+            from: Data(fixtureJSON(agentSettleGrace: 5_000).utf8)
+        )
+        XCTAssertEqual(decoded.agentSettleGrace, 900)
+    }
+
+    func testMissingRampKeyDecodesToDefaultTwoSeconds() throws {
+        let decoded = try JSONDecoder().decode(
+            UserPreferences.self,
+            from: Data(legacyFractionJSON(brightnessFloor: 0.15).utf8)
+        )
+        XCTAssertEqual(decoded.lidOpenRampSeconds, 2)
+        XCTAssertEqual(decoded.agentSettleGrace, 90)
+        XCTAssertEqual(decoded.brightnessFloorPercent, 15)
+    }
+
+    func testLidOpenRampDefaultIsTwoSecondsAndClampsToOneTwoThree() {
+        XCTAssertEqual(UserPreferences.lidOpenRampRange, 1...3)
+        XCTAssertEqual(UserPreferences.default.lidOpenRampSeconds, 2)
+        XCTAssertEqual(UserPreferences.clampLidOpenRamp(0), 1)
+        XCTAssertEqual(UserPreferences.clampLidOpenRamp(1), 1)
+        XCTAssertEqual(UserPreferences.clampLidOpenRamp(2), 2)
+        XCTAssertEqual(UserPreferences.clampLidOpenRamp(3), 3)
+        XCTAssertEqual(UserPreferences.clampLidOpenRamp(9), 3)
+        XCTAssertEqual(UserPreferences(lidOpenRampSeconds: 1).lidOpenRampSeconds, 1)
+        XCTAssertEqual(UserPreferences(lidOpenRampSeconds: 3).lidOpenRampSeconds, 3)
+        XCTAssertEqual(UserPreferences(lidOpenRampSeconds: 0).lidOpenRampSeconds, 1)
+        XCTAssertEqual(UserPreferences(lidOpenRampSeconds: 4).lidOpenRampSeconds, 3)
+        XCTAssertEqual(HygieneRestore.lidOpenRampDuration, 2)
+        XCTAssertEqual(HygieneRestore.lidOpenRampDuration(seconds: 1), 1)
+        XCTAssertEqual(HygieneRestore.lidOpenRampDuration(seconds: 2), 2)
+        XCTAssertEqual(HygieneRestore.lidOpenRampDuration(seconds: 3), 3)
+        XCTAssertEqual(HygieneRestore.lidOpenRampDuration(seconds: 0), 1)
+        XCTAssertEqual(HygieneRestore.lidOpenRampDuration(seconds: 9), 3)
+    }
+
+    func testLidOpenRampPersistsAndDecodedOvershootClamps() throws {
+        let prefs = UserPreferences(lidOpenRampSeconds: 3)
+        let loaded = try roundTrip(prefs)
+        XCTAssertEqual(loaded.lidOpenRampSeconds, 3)
+
+        let decoded = try JSONDecoder().decode(
+            UserPreferences.self,
+            from: Data(fixtureJSON(lidOpenRampSeconds: 11).utf8)
+        )
+        XCTAssertEqual(decoded.lidOpenRampSeconds, 3)
+    }
+
+    func testBundleRoundTripKeepsFloorGraceAndRamp() throws {
+        var prefs = UserPreferences(
+            brightnessFloorPercent: 20,
+            agentSettleGrace: 120,
+            lidOpenRampSeconds: 1
+        )
+        XCTAssertTrue(prefs.applyHotkeyRemap(HotkeyChord(keyCode: 13, option: true, command: true)))
+        prefs.duration = .customMinutes(33)
+        prefs.batteryFloorPercent = 80
+        let loaded = try roundTrip(prefs)
+        XCTAssertEqual(loaded.brightnessFloorPercent, 20)
+        XCTAssertEqual(loaded.brightnessFloor, 0.20, accuracy: 0.0001)
+        XCTAssertEqual(loaded.agentSettleGrace, 120)
+        XCTAssertEqual(loaded.lidOpenRampSeconds, 1)
+        XCTAssertEqual(loaded.batteryFloorPercent, 80)
+        XCTAssertEqual(loaded.duration, .custom(minutes: 33))
+        XCTAssertEqual(loaded.hotkey.display, "⌥⌘W")
+    }
+
+    func testAgentsSettleUsesPreferenceGraceNotHardcodedNinety() {
+        var prefs = UserPreferences.default
+        prefs.duration = .untilAgentsSettle
+        prefs.agentSettleGrace = 30
+        var engine = WatchEngine(preferences: prefs)
+        _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
+        XCTAssertTrue(
+            engine.tick(now: t0, safety: .acPower, agents: .busy).isEmpty
+        )
+        XCTAssertTrue(
+            engine.tick(now: t0.addingTimeInterval(29), safety: .acPower, agents: .idle).isEmpty
+        )
+        XCTAssertEqual(
+            engine.tick(now: t0.addingTimeInterval(30), safety: .acPower, agents: .idle),
+            [.disengage(.agentsSettled)]
+        )
+    }
+
+    func testShorteningSettleGraceWhileArmedUsesTheNewWindow() {
+        var prefs = UserPreferences.default
+        prefs.duration = .untilAgentsSettle
+        var engine = WatchEngine(preferences: prefs)
+        _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
+        XCTAssertTrue(engine.tick(now: t0, safety: .acPower, agents: .busy).isEmpty)
+        XCTAssertTrue(
+            engine.tick(now: t0.addingTimeInterval(40), safety: .acPower, agents: .idle).isEmpty
+        )
+        engine.userSetAgentSettleGrace(30)
+        XCTAssertEqual(engine.preferences.agentSettleGrace, 30)
+        XCTAssertEqual(
+            engine.tick(now: t0.addingTimeInterval(40), safety: .acPower, agents: .idle),
+            [.disengage(.agentsSettled)]
+        )
+    }
+
+    func testCorePrefsChromeMatchesClamps() {
+        XCTAssertEqual(BrightnessFloorPercentChrome.minPercent, 5)
+        XCTAssertEqual(BrightnessFloorPercentChrome.maxPercent, 40)
+        XCTAssertEqual(BrightnessFloorPercentChrome.minLabel, "5%")
+        XCTAssertEqual(BrightnessFloorPercentChrome.maxLabel, "40%")
+        XCTAssertEqual(AgentSettleGraceChrome.minSeconds, 15)
+        XCTAssertEqual(AgentSettleGraceChrome.maxSeconds, 900)
+        XCTAssertEqual(AgentSettleGraceChrome.minLabel, "15s")
+        XCTAssertEqual(AgentSettleGraceChrome.maxLabel, "15m")
+        XCTAssertEqual(LidOpenRampChrome.titles, ["1s", "2s", "3s"])
+        XCTAssertEqual(LidOpenRampChrome.selectedSegment(seconds: 2), 1)
+        XCTAssertEqual(LidOpenRampChrome.seconds(selectingSegment: 0), 1)
+        XCTAssertEqual(LidOpenRampChrome.seconds(selectingSegment: 2), 3)
+        XCTAssertNil(LidOpenRampChrome.seconds(selectingSegment: 3))
+        XCTAssertEqual(AgrypnosCopy.settleGrace, "Agents settle grace")
+        XCTAssertEqual(AgrypnosCopy.lidOpenRamp, "Lid-open ramp")
+    }
+
+    private func roundTrip(_ prefs: UserPreferences) throws -> UserPreferences {
+        let data = try JSONEncoder().encode(prefs)
+        return try JSONDecoder().decode(UserPreferences.self, from: data)
+    }
+
+    private func fixtureJSON(
+        brightnessFloorPercent: Int = 5,
+        agentSettleGrace: TimeInterval = 90,
+        lidOpenRampSeconds: Int = 2
+    ) -> String {
+        """
+        {"batteryFloorPercent":15,"duration":"indefinite","keyboardBacklightOff":true,"applyBrightnessFloor":true,"brightnessFloorPercent":\(brightnessFloorPercent),"agentSettleGrace":\(Int(agentSettleGrace)),"sessionFreshness":45,"lidOpenRampSeconds":\(lidOpenRampSeconds),"hotkey":{"keyCode":0,"option":true,"command":true,"shift":false,"control":false}}
+        """
+    }
+
+    private func legacyFractionJSON(brightnessFloor: Double) -> String {
+        """
+        {"batteryFloorPercent":15,"duration":"indefinite","keyboardBacklightOff":true,"applyBrightnessFloor":true,"brightnessFloor":\(brightnessFloor),"agentSettleGrace":90,"sessionFreshness":45,"hotkey":{"keyCode":0,"option":true,"command":true,"shift":false,"control":false}}
+        """
+    }
+}
+
+private extension SafetyInputs {
+    static let acPower = SafetyInputs(
+        batteryPercent: 90,
+        onBatteryDischarging: false,
+        thermalSerious: false,
+        lowPowerMode: false
+    )
+}
+
+private extension AgentSnapshot {
+    static let idle = AgentSnapshot(reports: [])
+    static let busy = AgentSnapshot(reports: [
+        AgentReport(
+            kind: .claudeCode,
+            processRunning: true,
+            cpuBusy: true,
+            recentSessionWrite: true,
+            isBusy: true
+        )
+    ])
+}

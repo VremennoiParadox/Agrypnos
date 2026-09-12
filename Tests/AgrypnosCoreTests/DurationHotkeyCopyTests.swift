@@ -210,6 +210,8 @@ final class AgrypnosCopyTests: XCTestCase {
             AgrypnosCopy.hotkeyRecordingHint,
             AgrypnosCopy.keyboardDark,
             AgrypnosCopy.brightnessFloor,
+            AgrypnosCopy.settleGrace,
+            AgrypnosCopy.lidOpenRamp,
             AgrypnosCopy.batteryFloor,
             AgrypnosCopy.launchAtLogin,
             AgrypnosCopy.quit,

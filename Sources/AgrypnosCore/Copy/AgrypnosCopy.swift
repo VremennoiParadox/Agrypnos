@@ -9,6 +9,8 @@ public enum AgrypnosCopy: Sendable {
     public static let hotkeyRecordingHint = "Press a chord. Esc cancels."
     public static let keyboardDark = "Keyboard backlight off"
     public static let brightnessFloor = "Brightness floor"
+    public static let settleGrace = "Agents settle grace"
+    public static let lidOpenRamp = "Lid-open ramp"
     public static let batteryFloor = "Auto-off at low battery"
     public static let launchAtLogin = "Launch at login"
     public static let quit = "Quit Agrypnos"

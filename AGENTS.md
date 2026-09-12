@@ -63,12 +63,13 @@ Ship these, and stop:
 - Remappable global hotkey (default still `⌥⌘A`)
 - Custom duration in minutes (beyond fixed presets)
 - Low-battery auto-off threshold **5–100%** (default 15%)
+- Brightness floor **%** (Core math + persist; default lowest 5%; range 5–40; lid-close uses this floor)
+- Agents settle grace (Core math + persist; 15s–15m, default 90s)
+- Lid-open ramp duration **1 / 2 / 3 s** (Core math + persist; default **2s**)
 
-**Core prefs math slice** (Boss unlocked — implement next, popover only):
+**Popover chrome next** (still popover only — no settings window):
 
-- Brightness floor **%** (user-settable; default = lowest)
-- Agents settle grace (user-settable seconds/minutes before idle → allow sleep)
-- Lid-open ramp duration **1 / 2 / 3 s** (default **2s**)
+- Controls for floor %, settle grace, and ramp (Core already reads prefs)
 
 Still **locked** until Boss unlocks after Mac prove:
 

@@ -60,6 +60,24 @@ final class WatchRuntime {
         delegate?.watchRuntimeDidChange(self)
     }
 
+    func setBrightnessFloorPercent(_ percent: Int) {
+        engine.preferences.brightnessFloorPercent = UserPreferences.clampBrightnessFloor(percent)
+        store.save(engine.preferences)
+        delegate?.watchRuntimeDidChange(self)
+    }
+
+    func setAgentSettleGrace(_ seconds: TimeInterval) {
+        engine.userSetAgentSettleGrace(seconds)
+        store.save(engine.preferences)
+        delegate?.watchRuntimeDidChange(self)
+    }
+
+    func setLidOpenRampSeconds(_ seconds: Int) {
+        engine.preferences.lidOpenRampSeconds = UserPreferences.clampLidOpenRamp(seconds)
+        store.save(engine.preferences)
+        delegate?.watchRuntimeDidChange(self)
+    }
+
     func setHotkey(_ chord: HotkeyChord) {
         lastFailedHotkey = nil
         hotkeySuspendedForRecord = false

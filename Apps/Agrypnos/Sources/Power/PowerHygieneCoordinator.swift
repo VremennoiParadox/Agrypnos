@@ -33,7 +33,11 @@ enum PowerHygieneCoordinator {
                     floor: preferences.brightnessFloor
                 )
                 let from = BrightnessFloorController.current() ?? preferences.brightnessFloor
-                ramp.start(from: from, to: target, duration: HygieneRestore.lidOpenRampDuration)
+                ramp.start(
+                    from: from,
+                    to: target,
+                    duration: HygieneRestore.lidOpenRampDuration(seconds: preferences.lidOpenRampSeconds)
+                )
             case .restoreKeyboardBacklight:
                 if let brightness = HygieneRestore.keyboardBrightnessToRestore(captured: savedKeyboard) {
                     KeyboardBacklightController.setBrightness(brightness)

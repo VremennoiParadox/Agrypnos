@@ -64,7 +64,7 @@ From Terminal, equivalent grant:
 **Popover settings** (no separate window):
 
 - **Landed:** remappable hotkey (default **⌥⌘A**), custom duration in minutes, low-battery auto-off **5–100%** (default 15%).
-- **User-settable next (still popover):** brightness floor **%** (default lowest), Agents settle grace, lid-open ramp **1 / 2 / 3 s** (default **2s**).
+- **Landed in Core (popover chrome next):** brightness floor **%** (default lowest, 5–40), Agents settle grace (15s–15m, default 90s), lid-open ramp **1 / 2 / 3 s** (default **2s**). Persistence and lid/settle/ramp math read these prefs; the sliders/segments in the popover follow.
 
 Safety nets, always:
 
@@ -103,10 +103,12 @@ Linux contributors: `./Scripts/verify-linux.sh` runs `swift test` and the 600-li
 | Agent busy/settle rules | Yes | — |
 | Timer / battery / thermal state machine | Yes | — |
 | Copy, hotkey chord encoding | Yes | — |
+| Floor % / settle grace / ramp prefs (clamp, default, decode) | Yes | — |
 | Menu-bar popover | — | Render + click |
+| Popover chrome for floor % / grace / ramp | — | Not in this slice |
 | Armed with lid open (no blank) | — | Flip Keep the watch |
 | `SleepDisabled` lid-close | — | Close the lid |
-| Brightness floor + keyboard off on lid close | — | Close the lid, eyeball |
+| User brightness floor % + keyboard off on lid close | — | Close the lid, eyeball |
 | Ramp from prefs (1/2/3s, default 2s) + keyboard on lid open mid-watch | — | Open mid-watch |
 | `⌥⌘A` | — | Press it |
 | Launch at login | — | Log out/in |
