@@ -16,8 +16,9 @@ public enum AgrypnosCopy: Sendable {
     public static let quit = "Quit Agrypnos"
     public static let agentsHint = "Stays awake while agents are busy. Allows sleep after they go idle."
     public static let timedHint = "Runs for the selected time, then turns the watch off."
+    // User-armed watches do not auto-off on Low Power Mode, so it is not listed here.
     public static let indefiniteHint =
-        "Stays on until you turn it off (battery / thermal / Low Power Mode safety still apply)."
+        "Stays on until you turn it off (battery / thermal still apply)."
     public static let captionOff = "Keeps the Mac awake with the lid closed."
     public static let grantNeeded = "The lid-close grant isn’t installed yet. macOS will ask once."
     public static let timerEnded = "Timer ended. Watch turned off."
@@ -86,10 +87,15 @@ public enum AgrypnosCopy: Sendable {
     public static let menuTooltipLidClosed =
         "Agrypnos: lid closed. Brightness floor + keyboard backlight off."
     public static let menuTooltipLeftover =
-        "Agrypnos: adopted leftover SleepDisabled. Lid close: brightness floor + keyboard backlight off."
+        "Agrypnos: adopted leftover SleepDisabled. Waiting for lid close — then brightness floor + keyboard backlight off."
+    public static let menuTooltipLeftoverLidClosed =
+        "Agrypnos: adopted leftover SleepDisabled. Lid closed. Brightness floor + keyboard backlight off."
 
-    public static func leftoverCaption(floor: Int) -> String {
-        "Leftover adopted. Lid close — then brightness floor, keyboard backlight off. Auto-off at \(floor)% battery."
+    public static func leftoverCaption(floor: Int, lidClosed: Bool = false) -> String {
+        if lidClosed {
+            return "Leftover SleepDisabled. Lid closed. Brightness floor, keyboard backlight off. Auto-off at \(floor)% battery."
+        }
+        return "Leftover SleepDisabled. Lid close — then brightness floor, keyboard backlight off. Auto-off at \(floor)%."
     }
 
     public static func watchCaption(
@@ -99,7 +105,7 @@ public enum AgrypnosCopy: Sendable {
         lidClosed: Bool
     ) -> String {
         if !engaged { return captionOff }
-        if leftover { return leftoverCaption(floor: floor) }
+        if leftover { return leftoverCaption(floor: floor, lidClosed: lidClosed) }
         if lidClosed { return captionLidClosed(floor: floor) }
         return captionPrepared(floor: floor)
     }
@@ -111,7 +117,9 @@ public enum AgrypnosCopy: Sendable {
         lidClosed: Bool
     ) -> String {
         if !engaged { return menuTooltipOff }
-        if leftover { return menuTooltipLeftover }
+        if leftover {
+            return lidClosed ? menuTooltipLeftoverLidClosed : menuTooltipLeftover
+        }
         if lidClosed { return menuTooltipLidClosed }
         return onBattery ? menuTooltipArmed : menuTooltipOn
     }

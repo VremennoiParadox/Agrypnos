@@ -107,7 +107,7 @@ final class AgrypnosCopyTests: XCTestCase {
         assertFitsCaption(AgrypnosCopy.captionOff)
     }
 
-    func testWatchCaptionUsesLidOpenPreparedAndLidClosedHolding() {
+    func testWatchCaptionUsesLidOpenArmedAndLidClosedHolding() {
         XCTAssertEqual(
             AgrypnosCopy.watchCaption(engaged: true, leftover: false, floor: 15, lidClosed: false),
             AgrypnosCopy.captionPrepared(floor: 15)
@@ -146,7 +146,11 @@ final class AgrypnosCopyTests: XCTestCase {
         )
         XCTAssertEqual(
             AgrypnosCopy.menuTooltipLeftover,
-            "Agrypnos: adopted leftover SleepDisabled. Lid close: brightness floor + keyboard backlight off."
+            "Agrypnos: adopted leftover SleepDisabled. Waiting for lid close — then brightness floor + keyboard backlight off."
+        )
+        XCTAssertEqual(
+            AgrypnosCopy.menuTooltip(engaged: true, leftover: true, onBattery: false, lidClosed: true),
+            "Agrypnos: adopted leftover SleepDisabled. Lid closed. Brightness floor + keyboard backlight off."
         )
     }
 
@@ -161,8 +165,9 @@ final class AgrypnosCopyTests: XCTestCase {
         )
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .indefinite, engaged: false, remainingSeconds: nil),
-            "Stays on until you turn it off (battery / thermal / Low Power Mode safety still apply)."
+            "Stays on until you turn it off (battery / thermal still apply)."
         )
+        XCTAssertFalse(AgrypnosCopy.indefiniteHint.lowercased().contains("low power"))
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .oneHour, engaged: false, remainingSeconds: nil),
             "Runs for the selected time, then turns the watch off."
@@ -233,6 +238,7 @@ final class AgrypnosCopyTests: XCTestCase {
             AgrypnosCopy.watchCaption(engaged: true, leftover: false, floor: 15, lidClosed: false),
             AgrypnosCopy.watchCaption(engaged: true, leftover: false, floor: 15, lidClosed: true),
             AgrypnosCopy.watchCaption(engaged: true, leftover: true, floor: 15, lidClosed: false),
+            AgrypnosCopy.watchCaption(engaged: true, leftover: true, floor: 15, lidClosed: true),
             AgrypnosCopy.durationHint(option: .indefinite, engaged: true, remainingSeconds: nil),
             AgrypnosCopy.durationHint(option: .oneHour, engaged: true, remainingSeconds: 125),
         ]
@@ -246,35 +252,46 @@ final class AgrypnosCopyTests: XCTestCase {
     }
 
     func testLeftoverAdoptCopyIsVisibleAndDoesNotClaimWatts() {
-        let caption = AgrypnosCopy.leftoverCaption(floor: 15)
+        let open = AgrypnosCopy.leftoverCaption(floor: 15, lidClosed: false)
+        let closed = AgrypnosCopy.leftoverCaption(floor: 15, lidClosed: true)
         let notify = AgrypnosCopy.leftoverNotify
         XCTAssertEqual(
-            caption,
-            "Leftover adopted. Lid close — then brightness floor, keyboard backlight off. Auto-off at 15% battery."
+            open,
+            "Leftover SleepDisabled. Lid close — then brightness floor, keyboard backlight off. Auto-off at 15%."
         )
+        XCTAssertEqual(
+            closed,
+            "Leftover SleepDisabled. Lid closed. Brightness floor, keyboard backlight off. Auto-off at 15% battery."
+        )
+        XCTAssertTrue(open.lowercased().contains("then"))
+        XCTAssertFalse(closed.lowercased().contains("then"))
+        XCTAssertTrue(closed.lowercased().contains("lid closed"))
         XCTAssertEqual(
             notify,
             "SleepDisabled was already on. Agrypnos adopted it. Lid close still uses brightness floor + keyboard backlight off."
         )
-        XCTAssertTrue(caption.lowercased().contains("leftover"))
-        XCTAssertTrue(caption.lowercased().contains("adopt"))
+        XCTAssertTrue(open.lowercased().contains("leftover"))
+        XCTAssertTrue(open.lowercased().contains("sleepdisabled"))
         XCTAssertTrue(notify.lowercased().contains("already on"))
         XCTAssertTrue(notify.lowercased().contains("adopt"))
         XCTAssertTrue(notify.lowercased().contains("brightness floor"))
         XCTAssertTrue(notify.lowercased().contains("keyboard"))
-        XCTAssertFalse(caption.lowercased().contains("watt"))
+        XCTAssertFalse(open.lowercased().contains("watt"))
         XCTAssertFalse(notify.lowercased().contains("1.76"))
-        assertFitsCaption(caption)
-        assertFitsCaption(AgrypnosCopy.leftoverCaption(floor: 50))
-        assertFitsCaption(AgrypnosCopy.leftoverCaption(floor: 100))
+        assertFitsCaption(open)
+        assertFitsCaption(closed)
+        assertFitsCaption(AgrypnosCopy.leftoverCaption(floor: 50, lidClosed: false))
+        assertFitsCaption(AgrypnosCopy.leftoverCaption(floor: 100, lidClosed: false))
+        assertFitsCaption(AgrypnosCopy.leftoverCaption(floor: 50, lidClosed: true))
+        assertFitsCaption(AgrypnosCopy.leftoverCaption(floor: 100, lidClosed: true))
         assertFitsCaption(AgrypnosCopy.captionPrepared(floor: 50))
         XCTAssertEqual(
             AgrypnosCopy.watchCaption(engaged: true, leftover: true, floor: 15, lidClosed: false),
-            caption
+            open
         )
         XCTAssertEqual(
             AgrypnosCopy.watchCaption(engaged: true, leftover: true, floor: 15, lidClosed: true),
-            caption
+            closed
         )
         XCTAssertEqual(
             AgrypnosCopy.watchCaption(engaged: true, leftover: false, floor: 15, lidClosed: false),
@@ -326,12 +343,15 @@ final class AgrypnosCopyTests: XCTestCase {
             AgrypnosCopy.menuTooltipArmed,
             AgrypnosCopy.menuTooltipLidClosed,
             AgrypnosCopy.menuTooltipLeftover,
+            AgrypnosCopy.menuTooltipLeftoverLidClosed,
             AgrypnosCopy.captionPrepared(floor: 15),
             AgrypnosCopy.captionPrepared(floor: 100),
             AgrypnosCopy.captionLidClosed(floor: 15),
             AgrypnosCopy.captionLidClosed(floor: 100),
-            AgrypnosCopy.leftoverCaption(floor: 15),
-            AgrypnosCopy.leftoverCaption(floor: 100),
+            AgrypnosCopy.leftoverCaption(floor: 15, lidClosed: false),
+            AgrypnosCopy.leftoverCaption(floor: 100, lidClosed: false),
+            AgrypnosCopy.leftoverCaption(floor: 15, lidClosed: true),
+            AgrypnosCopy.leftoverCaption(floor: 100, lidClosed: true),
             AgrypnosCopy.hotkeyHint(.defaultToggle, registered: true),
             AgrypnosCopy.hotkeyHint(.defaultToggle, registered: false),
             AgrypnosCopy.hotkeyHint(HotkeyChord(keyCode: 0, option: false, command: false), registered: false),
