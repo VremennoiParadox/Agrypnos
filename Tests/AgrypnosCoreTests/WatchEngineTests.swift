@@ -142,6 +142,35 @@ final class WatchEngineTests: XCTestCase {
         )
     }
 
+    func testUserForcedWatchDoesNotAutoOffOnLowPowerMode() {
+        var engine = WatchEngine(preferences: .default)
+        _ = engine.userSetEngaged(true, now: t0)
+        XCTAssertTrue(engine.userForcedThisSession)
+        XCTAssertTrue(
+            engine.tick(
+                now: t0.addingTimeInterval(1),
+                safety: .lowPowerDischarging,
+                agents: .idle
+            ).isEmpty
+        )
+        XCTAssertTrue(engine.engaged)
+    }
+
+    func testLeftoverWatchAutoOffsOnLowPowerMode() {
+        var engine = WatchEngine(preferences: .default)
+        _ = engine.adoptLeftoverKernel(now: t0)
+        XCTAssertFalse(engine.userForcedThisSession)
+        XCTAssertEqual(
+            engine.tick(
+                now: t0.addingTimeInterval(1),
+                safety: .lowPowerDischarging,
+                agents: .idle
+            ),
+            [.disengage(.lowPowerMode)]
+        )
+        XCTAssertFalse(engine.engaged)
+    }
+
     func testChangingDurationWhileOnResetsTimer() {
         var engine = WatchEngine(preferences: .default)
         _ = engine.userSetEngaged(true, now: t0)
@@ -159,6 +188,13 @@ private extension SafetyInputs {
         onBatteryDischarging: false,
         thermalSerious: false,
         lowPowerMode: false
+    )
+
+    static let lowPowerDischarging = SafetyInputs(
+        batteryPercent: 50,
+        onBatteryDischarging: true,
+        thermalSerious: false,
+        lowPowerMode: true
     )
 }
 
