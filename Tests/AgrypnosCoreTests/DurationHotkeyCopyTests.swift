@@ -18,6 +18,22 @@ final class HotkeyChordTests: XCTestCase {
         XCTAssertEqual(chord.keyCode, 0)
         XCTAssertEqual(chord.carbonModifiers, (1 << 11) | (1 << 8))
     }
+
+    func testRecorderKeysThatUsedToBeQuestionMarkHaveLabels() {
+        let expected: [(UInt32, String)] = [
+            (24, "="), (27, "-"), (30, "]"), (33, "["),
+            (36, "Return"), (39, "'"), (41, ";"), (42, "\\"),
+            (43, ","), (44, "/"), (47, "."), (48, "Tab"),
+            (50, "`"), (51, "Delete"),
+            (122, "F1"), (123, "←"), (124, "→"), (125, "↓"), (126, "↑"),
+        ]
+        for (code, label) in expected {
+            XCTAssertEqual(HotkeyChord.keyLabel(code), label, "keyCode \(code)")
+            let chord = HotkeyChord(keyCode: code, option: true, command: true)
+            XCTAssertTrue(chord.display.hasSuffix(label), chord.display)
+            XCTAssertFalse(chord.display.contains("?"))
+        }
+    }
 }
 
 final class AgrypnosCopyTests: XCTestCase {
@@ -218,10 +234,6 @@ final class AgrypnosCopyTests: XCTestCase {
             AgrypnosCopy.hotkeyHint(.defaultToggle, registered: true),
             AgrypnosCopy.hotkeyHint(.defaultToggle, registered: false),
             AgrypnosCopy.hotkeyHint(HotkeyChord(keyCode: 0, option: false, command: false), registered: false),
-            AgrypnosCopy.hotkeyRemapFailed(
-                attempted: HotkeyChord(keyCode: 1, option: true, command: true),
-                live: .defaultToggle
-            ),
             AgrypnosCopy.durationHint(option: .untilAgentsSettle, engaged: false, remainingSeconds: nil),
             AgrypnosCopy.durationHint(option: .indefinite, engaged: false, remainingSeconds: nil),
             AgrypnosCopy.durationHint(option: .oneHour, engaged: false, remainingSeconds: nil),

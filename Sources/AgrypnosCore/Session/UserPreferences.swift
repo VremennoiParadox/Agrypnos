@@ -83,3 +83,10 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         try container.encode(hotkey, forKey: .hotkey)
     }
 }
+
+public enum BatteryFloorChrome: Sendable {
+    public static var minPercent: Int { UserPreferences.batteryFloorRange.lowerBound }
+    public static var maxPercent: Int { UserPreferences.batteryFloorRange.upperBound }
+    public static var minLabel: String { "\(minPercent)%" }
+    public static var maxLabel: String { "\(maxPercent)%" }
+}

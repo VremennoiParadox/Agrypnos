@@ -223,18 +223,28 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         let batt = LabelFactory.make(AgrypnosCopy.batteryFloor, font: .systemFont(ofSize: 13), color: .labelColor)
         batt.frame = NSRect(x: ci, y: ci, width: cw - 54, height: 18)
         g4.addSubview(batt)
-        batteryValue = LabelFactory.make("15%", font: .systemFont(ofSize: 13, weight: .semibold), color: .secondaryLabelColor)
+        batteryValue = LabelFactory.make(
+            "\(UserPreferences.default.batteryFloorPercent)%",
+            font: .systemFont(ofSize: 13, weight: .semibold),
+            color: .secondaryLabelColor
+        )
         batteryValue.alignment = .right
         batteryValue.frame = NSRect(x: contentW - ci - 54, y: ci, width: 54, height: 18)
         g4.addSubview(batteryValue)
-        batterySlider = NSSlider(value: 15, minValue: 5, maxValue: 100, target: self, action: #selector(batteryChanged(_:)))
+        batterySlider = NSSlider(
+            value: Double(UserPreferences.default.batteryFloorPercent),
+            minValue: Double(BatteryFloorChrome.minPercent),
+            maxValue: Double(BatteryFloorChrome.maxPercent),
+            target: self,
+            action: #selector(batteryChanged(_:))
+        )
         batterySlider.isContinuous = true
         batterySlider.frame = NSRect(x: ci, y: ci + 26, width: cw, height: 20)
         g4.addSubview(batterySlider)
-        let minHint = LabelFactory.make("5%", font: .systemFont(ofSize: 10), color: .tertiaryLabelColor)
+        let minHint = LabelFactory.make(BatteryFloorChrome.minLabel, font: .systemFont(ofSize: 10), color: .tertiaryLabelColor)
         minHint.frame = NSRect(x: ci, y: ci + 50, width: 34, height: 13)
         g4.addSubview(minHint)
-        let maxHint = LabelFactory.make("100%", font: .systemFont(ofSize: 10), color: .tertiaryLabelColor)
+        let maxHint = LabelFactory.make(BatteryFloorChrome.maxLabel, font: .systemFont(ofSize: 10), color: .tertiaryLabelColor)
         maxHint.alignment = .right
         maxHint.frame = NSRect(x: contentW - ci - 40, y: ci + 50, width: 40, height: 13)
         g4.addSubview(maxHint)

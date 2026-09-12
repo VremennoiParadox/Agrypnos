@@ -42,13 +42,6 @@ public enum AgrypnosCopy: Sendable {
         return "\(chord.display) is not registered. Use the menu bar."
     }
 
-    public static func hotkeyRemapFailed(attempted: HotkeyChord, live: HotkeyChord) -> String {
-        if !attempted.isBindable {
-            return "That chord needs Option, Command, or Control. Still \(live.display)."
-        }
-        return "\(attempted.display) isn’t registered. Still \(live.display)."
-    }
-
     public static func durationHint(option: DurationOption, engaged: Bool, remainingSeconds: Int?) -> String {
         switch option {
         case .untilAgentsSettle:

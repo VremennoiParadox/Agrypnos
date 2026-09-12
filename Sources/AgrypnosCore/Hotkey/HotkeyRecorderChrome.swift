@@ -55,7 +55,7 @@ public struct HotkeyRecorderChrome: Equatable, Sendable {
         if let failedAttempt {
             return HotkeyRecorderChrome(
                 buttonTitle: liveChord.display,
-                hint: AgrypnosCopy.hotkeyRemapFailed(attempted: failedAttempt, live: liveChord),
+                hint: AgrypnosCopy.hotkeyHint(failedAttempt, registered: false),
                 isRecording: false
             )
         }

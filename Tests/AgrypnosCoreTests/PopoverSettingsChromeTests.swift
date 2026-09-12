@@ -61,6 +61,14 @@ final class DurationPickerChromeTests: XCTestCase {
         XCTAssertTrue(DurationPickerChrome.shouldCommit(minutes: 33, current: .indefinite))
         XCTAssertTrue(DurationPickerChrome.shouldCommit(minutes: 60, current: .oneHour))
     }
+
+    func testBatterySliderChromeReadsThePreferencesRange() {
+        XCTAssertEqual(BatteryFloorChrome.minPercent, UserPreferences.batteryFloorRange.lowerBound)
+        XCTAssertEqual(BatteryFloorChrome.maxPercent, UserPreferences.batteryFloorRange.upperBound)
+        XCTAssertEqual(BatteryFloorChrome.minLabel, "\(UserPreferences.batteryFloorRange.lowerBound)%")
+        XCTAssertEqual(BatteryFloorChrome.maxLabel, "\(UserPreferences.batteryFloorRange.upperBound)%")
+        XCTAssertEqual(UserPreferences.batteryFloorRange, 5...100)
+    }
 }
 
 final class HotkeyRecorderChromeTests: XCTestCase {
@@ -96,13 +104,8 @@ final class HotkeyRecorderChromeTests: XCTestCase {
         )
         XCTAssertEqual(chrome.buttonTitle, "⌥⌘A")
         XCTAssertTrue(chrome.hint.contains("⌥⌘S"))
-        XCTAssertTrue(chrome.hint.contains("⌥⌘A"))
         XCTAssertFalse(chrome.hint.lowercased().contains("toggles the watch"))
-        XCTAssertFalse(chrome.hint.lowercased().contains("menu bar"))
-        XCTAssertEqual(
-            chrome.hint,
-            AgrypnosCopy.hotkeyRemapFailed(attempted: attempted, live: .defaultToggle)
-        )
+        XCTAssertEqual(chrome.hint, AgrypnosCopy.hotkeyHint(attempted, registered: false))
     }
 
     func testRecordingCopyAsksForAChord() {
@@ -160,5 +163,25 @@ final class HotkeyRecorderChromeTests: XCTestCase {
             HotkeyCapture.from(keyCode: 57, option: false, command: false, shift: false, control: false),
             .ignore
         )
+    }
+
+    func testCapturedChordsDoNotDisplayQuestionMark() {
+        for code in UInt32(0)...UInt32(127) {
+            switch HotkeyCapture.from(
+                keyCode: code,
+                option: true,
+                command: true,
+                shift: false,
+                control: false
+            ) {
+            case .ignore, .cancel:
+                continue
+            case .chord(let chord):
+                XCTAssertFalse(
+                    chord.display.contains("?"),
+                    "keyCode \(code) displayed \(chord.display)"
+                )
+            }
+        }
     }
 }
