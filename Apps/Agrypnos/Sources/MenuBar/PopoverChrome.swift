@@ -82,4 +82,16 @@ enum LabelFactory {
         field.drawsBackground = false
         return field
     }
+
+    static func wrapping(_ text: String, font: NSFont, color: NSColor, lines: Int) -> NSTextField {
+        let field = make(text, font: font, color: color)
+        field.usesSingleLineMode = false
+        field.maximumNumberOfLines = lines
+        field.lineBreakMode = .byWordWrapping
+        if let cell = field.cell as? NSTextFieldCell {
+            cell.wraps = true
+            cell.truncatesLastVisibleLine = false
+        }
+        return field
+    }
 }
