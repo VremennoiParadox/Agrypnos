@@ -1,8 +1,13 @@
+import AppKit
+
 #if canImport(AgrypnosCore)
 import AgrypnosCore
 #endif
 
 enum PowerHygieneCoordinator {
+    /// Extra screens: do not drive `CGMainDisplayID()` — that is often the external in clamshell.
+    static var canSetBuiltInBrightness: Bool { NSScreen.screens.count <= 1 }
+
     static func apply(
         _ commands: [WatchCommand],
         preferences: UserPreferences,
@@ -12,40 +17,27 @@ enum PowerHygieneCoordinator {
     ) {
         for command in commands {
             switch command {
-            case .engage:
-                if savedBrightness == nil {
-                    savedBrightness = BrightnessFloorController.current()
-                }
-                if savedKeyboard == nil {
-                    savedKeyboard = KeyboardBacklightController.current()
-                }
-            case .disengage:
+            case .engage, .disengage:
                 break
             case .applyBrightnessFloor:
                 ramp.cancel()
-                if savedBrightness == nil {
-                    savedBrightness = BrightnessFloorController.current()
+                if let saved = savedBrightness {
+                    savedBrightness = max(saved, preferences.brightnessFloor)
                 }
-                savedBrightness = max(
-                    savedBrightness ?? preferences.brightnessFloor,
-                    preferences.brightnessFloor
-                )
-                BrightnessFloorController.set(preferences.brightnessFloor)
+                if canSetBuiltInBrightness {
+                    BrightnessFloorController.set(preferences.brightnessFloor)
+                }
             case .requestDisplaySleep:
-                // Armed-watch V1: lid close floors brightness. Do not blank the panel.
                 break
             case .requestKeyboardBacklightOff:
-                if savedKeyboard == nil {
-                    savedKeyboard = KeyboardBacklightController.current()
-                }
                 KeyboardBacklightController.setOff()
             case .rampBrightnessRestore:
+                guard canSetBuiltInBrightness else { break }
                 let target = HygieneRestore.displayBrightnessToRestore(
                     captured: savedBrightness,
                     floor: preferences.brightnessFloor
                 )
-                let from = preferences.brightnessFloor
-                BrightnessFloorController.set(from)
+                let from = BrightnessFloorController.current() ?? preferences.brightnessFloor
                 ramp.start(from: from, to: target, duration: HygieneRestore.lidOpenRampDuration)
             case .restoreKeyboardBacklight:
                 if let brightness = HygieneRestore.keyboardBrightnessToRestore(captured: savedKeyboard) {
@@ -62,7 +54,7 @@ enum PowerHygieneCoordinator {
         ramp: BrightnessRampController
     ) {
         ramp.cancel()
-        if preferences.applyBrightnessFloor {
+        if preferences.applyBrightnessFloor, canSetBuiltInBrightness {
             BrightnessFloorController.restoreAtLeastFloor(
                 saved: savedBrightness,
                 floor: preferences.brightnessFloor

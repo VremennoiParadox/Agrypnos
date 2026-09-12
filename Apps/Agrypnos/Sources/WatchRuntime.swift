@@ -70,14 +70,17 @@ final class WatchRuntime {
         if on {
             guard armKernel() else { return }
             apply(engine.userSetEngaged(true, now: Date(), lidClosed: lidClosed))
+            if !lidClosed {
+                recaptureOpenLidHygiene()
+            }
             startLidPulse()
         } else {
-            stopLidPulse()
             guard disarmKernel() else {
                 UserNotify.post("Couldn't drop SleepDisabled. The kernel flag is still on.")
                 delegate?.watchRuntimeDidChange(self)
                 return
             }
+            stopLidPulse()
             apply(engine.userSetEngaged(false, now: Date(), lidClosed: lidClosed))
             restoreHygiene()
         }
@@ -209,6 +212,9 @@ final class WatchRuntime {
                 let lidClosed = LidStateReader.isClosed()
                 lastLidClosed = lidClosed
                 apply(engine.adoptLeftoverKernel(now: Date(), lidClosed: lidClosed))
+                if !lidClosed {
+                    recaptureOpenLidHygiene()
+                }
                 startLidPulse()
                 UserNotify.post(AgrypnosCopy.leftoverNotify)
             }

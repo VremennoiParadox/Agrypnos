@@ -30,6 +30,28 @@ final class AgrypnosCopyTests: XCTestCase {
         XCTAssertEqual(AgrypnosCopy.hotkeyHint(.defaultToggle), "⌥⌘A toggles the watch")
     }
 
+    func testCoreCopySurfaceDoesNotClaimForcedDisplaySleep() {
+        let blob = [
+            AgrypnosCopy.displaySleep,
+            AgrypnosCopy.displaySleepHelp,
+            AgrypnosCopy.captionOn(floor: 15),
+            AgrypnosCopy.captionOff,
+            AgrypnosCopy.keyboardDark,
+            AgrypnosCopy.brightnessFloor,
+            AgrypnosCopy.leftoverNotify,
+            AgrypnosCopy.leftoverCaption(floor: 15),
+            AgrypnosCopy.agentsHint,
+            AgrypnosCopy.menuTooltipOn,
+            AgrypnosCopy.menuTooltipArmed,
+        ].joined(separator: "\n").lowercased()
+        XCTAssertFalse(blob.contains("not dim"))
+        XCTAssertFalse(blob.contains("sleeps for real"))
+        XCTAssertFalse(blob.contains("displaysleepnow"))
+        XCTAssertFalse(blob.contains("force display"))
+        XCTAssertFalse(blob.contains("built-in display asleep"))
+        XCTAssertFalse(blob.contains("asleep, not dim"))
+    }
+
     func testCaptionOnDoesNotClaimForcedDisplaySleep() {
         let caption = AgrypnosCopy.captionOn(floor: 15)
         let lower = caption.lowercased()

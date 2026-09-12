@@ -1,6 +1,6 @@
 # Security
 
-Agrypnos asks for one privileged trick: lid-close keep-awake via `pmset disablesleep`. Everything else (display sleep now, reading battery, polling processes in your account, reading session files in your home) runs as you.
+Agrypnos asks for one privileged trick: lid-close keep-awake via `pmset disablesleep`. Everything else (brightness floor, keyboard backlight, reading battery, polling processes in your account, reading session files in your home) runs as you.
 
 ## Sudoers grant
 

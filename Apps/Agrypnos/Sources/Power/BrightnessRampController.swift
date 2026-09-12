@@ -27,4 +27,8 @@ final class BrightnessRampController {
         RunLoop.main.add(timer, forMode: .common)
         self.timer = timer
     }
+
+    deinit {
+        cancel()
+    }
 }

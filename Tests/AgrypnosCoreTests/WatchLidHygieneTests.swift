@@ -78,6 +78,29 @@ final class WatchLidHygieneTests: XCTestCase {
         XCTAssertEqual(engine.userSetEngaged(true, now: t0, lidClosed: false), [.engage])
     }
 
+    func testForceDisplaySleepFlagDoesNotBlankOnLidClose() {
+        var prefs = UserPreferences.default
+        prefs.forceDisplaySleep = true
+        var engine = WatchEngine(preferences: prefs)
+        _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
+        let cmds = engine.lidDidClose(now: t0.addingTimeInterval(1))
+        XCTAssertEqual(cmds, [.applyBrightnessFloor, .requestKeyboardBacklightOff])
+        XCTAssertFalse(cmds.contains(.requestDisplaySleep))
+    }
+
+    func testAgentsModeStaysArmedAcrossLidCloseOpen() {
+        var prefs = UserPreferences.default
+        prefs.duration = .untilAgentsSettle
+        var engine = WatchEngine(preferences: prefs)
+        _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
+        _ = engine.lidDidClose(now: t0.addingTimeInterval(1))
+        _ = engine.lidDidOpen(now: t0.addingTimeInterval(2))
+        XCTAssertTrue(engine.engaged)
+        XCTAssertTrue(
+            engine.tick(now: t0.addingTimeInterval(10), safety: .acPower, agents: .idle).isEmpty
+        )
+    }
+
     func testLidHygieneHonorsPreferenceToggles() {
         var prefs = UserPreferences.default
         prefs.applyBrightnessFloor = false
