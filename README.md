@@ -13,13 +13,13 @@ The name is Greek: *agrypnos*, sleepless. The tone is a night watch that likes y
 | You can check | What Agrypnos does |
 |---|---|
 | Keep the watch | **Armed** while the lid is open — screen stays usable; no blanking on toggle |
-| Lid close | Brightness → floor (lowest) + keyboard backlight off |
-| Lid open mid-watch | ~2s gradual brightness ramp + keyboard backlight on |
+| Lid close | Brightness → user floor % (default lowest) + keyboard backlight off |
+| Lid open mid-watch | Gradual brightness ramp **1 / 2 / 3 s** (default **2s**) + keyboard backlight on |
 | Lid closed keep-awake | Kernel `SleepDisabled` via `pmset disablesleep` |
-| Agents | Busy stays awake; settled idle allows sleep |
+| Agents | Busy stays awake; settled idle after user settle grace allows sleep |
 | You | Menu bar + remappable shortcut (default `⌥⌘A`) |
 
-When watched agents go quiet for a grace period, Agrypnos drops the watch and allows sleep. The product difference is power hygiene under the lid — floored brightness and a dark keyboard — plus keep-awake that survives shutting the notebook.
+When watched agents go quiet for the settle grace, Agrypnos drops the watch and allows sleep. The product difference is power hygiene under the lid — floored brightness and a dark keyboard — plus keep-awake that survives shutting the notebook. V1 knobs stay in the **popover** (no separate settings window).
 
 ## Install / build
 
@@ -52,14 +52,19 @@ From Terminal, equivalent grant:
 ## Using it
 
 1. Click the **eye** in the menu bar (or press the shortcut — default **⌥⌘A**).
-2. Flip **Keep the watch** (arms the watch — screen stays usable).
+2. Flip **Keep the watch** (arms the watch — screen stays usable; nothing blanks on toggle).
 3. Pick how long: **∞**, **1h**, **3h**, **Agents**, or type minutes (33 is a fine watch).
 4. Click **Shortcut** and press a chord to remap the hotkey (default **⌥⌘A**). If that chord cannot register, Agrypnos says so and keeps the last live bind.
-5. Close the lid when ready. Brightness floors; keyboard goes dark; the Mac stays up.
-6. Open mid-watch if you need the panel — ~2s brightness ramp + keyboard back on.
+5. Close the lid when ready. Brightness goes to the floor % (default lowest); keyboard goes dark; the Mac stays up.
+6. Open mid-watch if you need the panel — brightness ramps over **1 / 2 / 3 s** (default **2s**) + keyboard back on.
 7. Walk away until the timer or Agents settle ends the watch.
 
-**Agents** mode: Agrypnos polls local processes and session files for Cursor, Claude Code, and Codex. If they look busy, the watch holds. After they look idle for a grace period, Agrypnos *allows sleep* (drops `SleepDisabled`). It does not try to be every provider on earth.
+**Agents** mode: Agrypnos polls local processes and session files for Cursor, Claude Code, and Codex. If they look busy, the watch holds. After they look idle for the settle grace, Agrypnos *allows sleep* (drops `SleepDisabled`). It does not try to be every provider on earth.
+
+**Popover settings** (no separate window):
+
+- **Landed:** remappable hotkey (default **⌥⌘A**), custom duration in minutes, low-battery auto-off **5–100%** (default 15%).
+- **User-settable next (still popover):** brightness floor **%** (default lowest), Agents settle grace, lid-open ramp **1 / 2 / 3 s** (default **2s**).
 
 Safety nets, always:
 
@@ -102,7 +107,7 @@ Linux contributors: `./Scripts/verify-linux.sh` runs `swift test` and the 600-li
 | Armed with lid open (no blank) | — | Flip Keep the watch |
 | `SleepDisabled` lid-close | — | Close the lid |
 | Brightness floor + keyboard off on lid close | — | Close the lid, eyeball |
-| ~2s ramp + keyboard on lid open mid-watch | — | Open mid-watch |
+| Ramp from prefs (1/2/3s, default 2s) + keyboard on lid open mid-watch | — | Open mid-watch |
 | `⌥⌘A` | — | Press it |
 | Launch at login | — | Log out/in |
 
