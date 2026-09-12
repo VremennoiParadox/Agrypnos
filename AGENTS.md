@@ -43,20 +43,30 @@ Ship these, and stop:
 
 | Piece | Behavior |
 |---|---|
-| Menu-bar extra + popover | Cards, toggles, segmented duration, low-battery slider, launch-at-login, quit. Agrypnos copy + eye glyph (not a coffee cup). Copy must say the watch is **prepared / waiting for lid**, not that the screen goes dark on toggle. |
-| Global hotkey | Activate/toggle the watch. Default `⌥⌘A`. Required V1. |
+| Menu-bar extra + popover | Cards, toggles, duration (presets + custom minutes), remappable hotkey, low-battery slider (5–100%), launch-at-login, quit. Agrypnos copy + eye glyph (not a coffee cup). Copy must say the watch is **prepared / waiting for lid**, not that the screen goes dark on toggle. **No separate settings window** — controls stay in the popover. |
+| Global hotkey | Activate/toggle the watch. Default `⌥⌘A`. **Remappable** in the popover (conflict-safe). Required V1. Surface bind failure honestly when the chord cannot register. |
 | Keep the watch (armed) | ON = **armed** while the lid is open. Machine may already be held awake (`pmset disablesleep` / SleepDisabled) as needed for the watch, but **no** display blank, **no** `displaysleepnow`, **no** keyboard backlight off on toggle. |
 | Lid-closed keep-awake | With the watch armed, lid close keeps the Mac awake via `pmset disablesleep` (SleepDisabled). IOKit assertions do **not** survive lid close; use them only as extra idle prevention, never as the lid story. |
 | Lid-close hygiene | On lid **close** (not on toggle): set brightness to the floor (lowest) and turn **keyboard backlight off**. Do **not** use `displaysleepnow` for this path. |
 | Lid-open restore | If the lid opens again while the watch is still armed (timer/agents not finished): **~2s gradual** brightness ramp up + keyboard backlight on. |
 | Hold until end | Stay armed until the selected timer ends or Agents mode settles idle (then allow sleep). |
-| Auto-off timer | Segmented: `∞` / `1h` / `3h` / `Agents`. |
-| Auto-off low battery | Slider 5–50%, default 15%, on discharging battery. |
+| Auto-off timer | Segmented presets `∞` / `1h` / `3h` / `Agents`, plus **custom minutes** (e.g. 33) the user can set. |
+| Auto-off low battery | Slider **5–100%**, default 15%, on discharging battery. |
 | Thermal auto-off | `ProcessInfo.thermalState` `.serious` or `.critical`. |
 | Agent watch | Busy → stay awake. Settled idle after grace → allow sleep. Cursor + Claude Code + Codex first. Process list + session-file mtimes. |
 | Safety | Reboot clears SleepDisabled. Launch-at-login never re-arms the watch. One-time scoped sudoers grant for *exactly* two `pmset disablesleep` commands. |
 
-Out of V1: App Store sandbox, notarization pipeline, every provider, fake benchmarks, Wi-Fi/BT kill, Dock UI, `displaysleepnow` on engage, claiming display sleep when we only floored brightness.
+### V1 settings (popover only)
+
+Locked for this slice (implement after this bar lands):
+
+- Remappable global hotkey (default still `⌥⌘A`)
+- Custom duration in minutes (beyond fixed presets)
+- Low-battery auto-off threshold **5–100%** (default 15%)
+
+Further knobs (floor %, settle grace, ramp length, status-item remaining, per-tool Agents include) stay **out** until Boss unlocks them.
+
+Out of V1: App Store sandbox, notarization pipeline, every provider, fake benchmarks, Wi-Fi/BT kill, Dock UI, separate settings window, `displaysleepnow` on engage, claiming display sleep when we only floored brightness.
 
 ## Layout
 
