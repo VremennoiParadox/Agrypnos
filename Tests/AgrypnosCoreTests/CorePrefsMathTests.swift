@@ -4,17 +4,20 @@ import XCTest
 final class CorePrefsMathTests: XCTestCase {
     let t0 = Date(timeIntervalSince1970: 10_000)
 
-    func testBrightnessFloorDefaultIsLowestPercent() {
+    func testBrightnessFloorDefaultIsFifteenPercentNeverZero() {
         XCTAssertEqual(UserPreferences.brightnessFloorPercentRange, 5...40)
-        XCTAssertEqual(
-            UserPreferences.default.brightnessFloorPercent,
-            UserPreferences.brightnessFloorPercentRange.lowerBound
-        )
-        XCTAssertEqual(UserPreferences.default.brightnessFloorPercent, 5)
-        XCTAssertEqual(UserPreferences.default.brightnessFloor, 0.05, accuracy: 0.0001)
+        XCTAssertEqual(UserPreferences.default.brightnessFloorPercent, 15)
+        XCTAssertEqual(UserPreferences.defaultBrightnessFloorPercent, 15)
+        XCTAssertEqual(UserPreferences.default.brightnessFloor, 0.15, accuracy: 0.0001)
+        XCTAssertNotEqual(UserPreferences.default.brightnessFloorPercent, 0)
+        XCTAssertGreaterThan(UserPreferences.default.brightnessFloor, 0)
+        XCTAssertEqual(UserPreferences.clampBrightnessFloor(0), 5)
+        XCTAssertEqual(UserPreferences(brightnessFloorPercent: 0).brightnessFloorPercent, 5)
+        XCTAssertNotEqual(UserPreferences(brightnessFloorPercent: 0).brightnessFloor, 0)
     }
 
     func testBrightnessFloorPercentClampsAndMapsToUnit() {
+        XCTAssertEqual(UserPreferences.clampBrightnessFloor(0), 5)
         XCTAssertEqual(UserPreferences.clampBrightnessFloor(4), 5)
         XCTAssertEqual(UserPreferences.clampBrightnessFloor(5), 5)
         XCTAssertEqual(UserPreferences.clampBrightnessFloor(20), 20)
@@ -89,6 +92,17 @@ final class CorePrefsMathTests: XCTestCase {
         XCTAssertEqual(decoded.lidOpenRampSeconds, 2)
         XCTAssertEqual(decoded.agentSettleGrace, 90)
         XCTAssertEqual(decoded.brightnessFloorPercent, 15)
+    }
+
+    func testMissingBrightnessFloorKeysDecodeToDefaultFifteenPercent() throws {
+        let json = """
+        {"batteryFloorPercent":15,"duration":"indefinite","keyboardBacklightOff":true,"applyBrightnessFloor":true,"agentSettleGrace":90,"sessionFreshness":45,"hotkey":{"keyCode":0,"option":true,"command":true,"shift":false,"control":false}}
+        """
+        let decoded = try JSONDecoder().decode(UserPreferences.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.brightnessFloorPercent, 15)
+        XCTAssertEqual(decoded.brightnessFloor, 0.15, accuracy: 0.0001)
+        XCTAssertEqual(decoded.lidOpenRampSeconds, 2)
+        XCTAssertEqual(decoded.agentSettleGrace, 90)
     }
 
     func testLidOpenRampDefaultIsTwoSecondsAndClampsToOneTwoThree() {
@@ -201,7 +215,7 @@ final class CorePrefsMathTests: XCTestCase {
     }
 
     private func fixtureJSON(
-        brightnessFloorPercent: Int = 5,
+        brightnessFloorPercent: Int = 15,
         agentSettleGrace: TimeInterval = 90,
         lidOpenRampSeconds: Int = 2
     ) -> String {

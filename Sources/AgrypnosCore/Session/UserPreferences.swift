@@ -2,8 +2,9 @@ import Foundation
 
 public struct UserPreferences: Equatable, Sendable, Codable {
     public static let batteryFloorRange = 5...100
-    /// Lid-close brightness floor as percent. Lowest is the default; 0% is not a sleep trick.
+    /// Lid-close brightness floor as percent. Default 15%; clamp 5–40. Never 0% — that is not a sleep trick.
     public static let brightnessFloorPercentRange = 5...40
+    public static let defaultBrightnessFloorPercent = 15
     /// Quiet seconds after last busy before Agents mode allows sleep.
     public static let agentSettleGraceRange = 15...900
     /// Lid-open brightness ramp, seconds.
@@ -29,7 +30,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         duration: DurationOption = .indefinite,
         keyboardBacklightOff: Bool = true,
         applyBrightnessFloor: Bool = true,
-        brightnessFloorPercent: Int = 5,
+        brightnessFloorPercent: Int = UserPreferences.defaultBrightnessFloorPercent,
         agentSettleGrace: TimeInterval = 90,
         sessionFreshness: TimeInterval = 45,
         hotkey: HotkeyChord = .defaultToggle,
@@ -100,7 +101,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         } else if let fraction = try container.decodeIfPresent(Double.self, forKey: .brightnessFloor) {
             brightnessPercent = Int((fraction * 100).rounded())
         } else {
-            brightnessPercent = Self.brightnessFloorPercentRange.lowerBound
+            brightnessPercent = Self.defaultBrightnessFloorPercent
         }
         self.init(
             batteryFloorPercent: try container.decode(Int.self, forKey: .batteryFloorPercent),
