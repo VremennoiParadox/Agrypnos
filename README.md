@@ -1,25 +1,25 @@
 # Agrypnos
 
-**Lid down. Display actually asleep. Agents still working.**
+**Lid down. Agents still working. Panel dark when it should be.**
 
-Agrypnos is a native Swift menu-bar extra for Mac. It keeps the machine awake with the lid closed while your coding agents run, forces the **display** into real sleep (dim is not sleep), turns the **keyboard backlight** off, and — when you ask it to watch agents — lets the Mac sleep after Cursor, Claude Code, or Codex settle.
+Agrypnos is a native Swift menu-bar extra for Mac. Arm the watch, close the lid, and it keeps the machine awake while your coding agents run — brightness floored and keyboard backlight off under the lid, then back when you open mid-watch.
 
 The name is Greek: *agrypnos*, sleepless. The tone is a night watch that likes you, not a caffeine joke and not a watt brochure.
 
-> We don’t claim StillOn’s measured watts until we run the same protocol on this Mac. Agrypnos wins on **what the hardware is doing** (display sleep + keyboard dark + brightness floor), not on a number we did not measure.
+> We do not publish watt numbers we have not measured on this Mac. Agrypnos wins on **what the hardware is doing** (brightness floor + keyboard dark under a closed lid, lid-closed keep-awake), not on a lab claim we did not run.
 
 ## The wedge (measurable, no lab coat required)
 
-| You can check | What Agrypnos does | What “dim the screen” apps often do |
-|---|---|---|
-| Display | `pmset displaysleepnow` — panel power-off | Brightness 0, panel still on |
-| Keyboard | Backlight set to off on engage | Left glowing under a closed lid |
-| Brightness floor | Clamp restore brightness so 0% is never the sleep trick | Leave the panel at 0 and call it done |
-| Lid closed | Kernel `SleepDisabled` via `pmset disablesleep` | `caffeinate` / IOKit idle assertions, which **do not** survive lid close |
-| Agents | Busy stays awake; settled idle allows sleep | Always-on until you remember to toggle |
-| You | Menu bar + `⌥⌘A` | Dig through a window |
+| You can check | What Agrypnos does |
+|---|---|
+| Keep the watch | **Armed** while the lid is open — screen stays usable; no blanking on toggle |
+| Lid close | Brightness → floor (lowest) + keyboard backlight off |
+| Lid open mid-watch | ~2s gradual brightness ramp + keyboard backlight on |
+| Lid closed keep-awake | Kernel `SleepDisabled` via `pmset disablesleep` |
+| Agents | Busy stays awake; settled idle allows sleep |
+| You | Menu bar + `⌥⌘A` |
 
-StillOn already markets agent-finish sleep. Agrypnos treats that as table stakes for the *sleep trigger*: when the watched agents go quiet for a grace period, we drop the watch. The product difference is power hygiene — real display sleep and a dark keyboard — plus a lid-closed keep-awake that actually survives shutting the notebook.
+When watched agents go quiet for a grace period, Agrypnos drops the watch and allows sleep. The product difference is power hygiene under the lid — floored brightness and a dark keyboard — plus keep-awake that survives shutting the notebook.
 
 ## Install / build
 
@@ -52,10 +52,11 @@ From Terminal, equivalent grant:
 ## Using it
 
 1. Click the **eye** in the menu bar (or press **⌥⌘A**).
-2. Flip **Keep the watch**.
+2. Flip **Keep the watch** (arms the watch — screen stays usable).
 3. Pick how long: **∞**, **1h**, **3h**, or **Agents**.
-4. Close the lid. The Mac should stay up; the display should be asleep; the keys should be dark.
-5. Walk away.
+4. Close the lid when ready. Brightness floors; keyboard goes dark; the Mac stays up.
+5. Open mid-watch if you need the panel — ~2s brightness ramp + keyboard back on.
+6. Walk away until the timer or Agents settle ends the watch.
 
 **Agents** mode: Agrypnos polls local processes and session files for Cursor, Claude Code, and Codex. If they look busy, the watch holds. After they look idle for a grace period, Agrypnos *allows sleep* (drops `SleepDisabled`). It does not try to be every provider on earth.
 
@@ -87,7 +88,7 @@ prd/v1-scope.md           Product scope this code is built against
 AGENTS.md                 Bar for coding agents
 ```
 
-Linux contributors (and overnight agents): `./Scripts/verify-linux.sh` runs `swift test` and the 600-line file cap. That does **not** prove lid-close or display sleep.
+Linux contributors: `./Scripts/verify-linux.sh` runs `swift test` and the 600-line file cap. That does **not** prove lid-close or brightness/keyboard hygiene.
 
 ## What is verified vs what needs a Mac
 
@@ -97,19 +98,21 @@ Linux contributors (and overnight agents): `./Scripts/verify-linux.sh` runs `swi
 | Timer / battery / thermal state machine | Yes | — |
 | Copy, hotkey chord encoding | Yes | — |
 | Menu-bar popover | — | Render + click |
+| Armed with lid open (no blank) | — | Flip Keep the watch |
 | `SleepDisabled` lid-close | — | Close the lid |
-| Display sleep vs dim | — | `pmset -g assertions` / eyeball the panel |
-| Keyboard backlight | — | Eyeball the keys |
-| Brightness floor | — | Open lid, check brightness |
+| Brightness floor + keyboard off on lid close | — | Close the lid, eyeball |
+| ~2s ramp + keyboard on lid open mid-watch | — | Open mid-watch |
 | `⌥⌘A` | — | Press it |
 | Launch at login | — | Log out/in |
 
 ## Not this project
 
 - Killing Wi-Fi or Bluetooth
-- Claiming StillOn’s measured watts, or any watt figure we did not measure on this Mac
+- Claiming watt figures we did not measure on this Mac
+- Naming competing products in docs or commits
 - Every agent vendor
 - A Dock app, a dashboard, or a remote-control product
 - Files over 600 lines
+- Blanking the screen on toggle (`displaysleepnow` on engage)
 
 MIT. No telemetry.
