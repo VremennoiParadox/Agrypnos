@@ -35,7 +35,7 @@ No giant god-objects. No “just one more helper” that becomes AppDelegate 2.
 - **Do not claim watt numbers you did not measure.** Do not cite StillOn’s measured watts. Do not say we beat them.
 - **Do not promise every agent provider.** V1 is Cursor, Claude Code, and Codex, local heuristics, correctness over coverage.
 - **Do not kill Wi-Fi or Bluetooth.** Out of scope forever unless a later spec says otherwise.
-- **Dim ≠ asleep.** Forcing brightness to 0 is not display sleep. V1 forces real display sleep and turns the keyboard backlight off.
+- **Armed ≠ black screen.** Toggling Keep the watch must **not** call `displaysleepnow`, blank the panel, or kill the keyboard backlight while the lid is open. Do not claim “we force display asleep” or “dim ≠ asleep / real display sleep” for this path — V1 honesty is **brightness floor + keyboard off on lid close**.
 
 ## V1 scope
 
@@ -43,19 +43,20 @@ Ship these, and stop:
 
 | Piece | Behavior |
 |---|---|
-| Menu-bar extra + popover | Cards, toggles, segmented duration, low-battery slider, launch-at-login, quit. Agrypnos copy + eye glyph (not a coffee cup). |
+| Menu-bar extra + popover | Cards, toggles, segmented duration, low-battery slider, launch-at-login, quit. Agrypnos copy + eye glyph (not a coffee cup). Copy must say the watch is **prepared / waiting for lid**, not that the screen goes dark on toggle. |
 | Global hotkey | Activate/toggle the watch. Default `⌥⌘A`. Required V1. |
-| Lid-closed keep-awake | `pmset disablesleep` (SleepDisabled). IOKit assertions do **not** survive lid close; use them only as extra idle prevention, never as the lid story. |
-| Force display asleep | `pmset displaysleepnow` (and IOKit idle request as fallback). Not brightness 0. |
-| Keyboard backlight | Off on engage. Restore on disengage when we can. |
-| Brightness floor | On lid close / engage, clamp restored brightness to a floor so we never leave the panel at 0 as fake sleep. |
+| Keep the watch (armed) | ON = **armed** while the lid is open. Machine may already be held awake (`pmset disablesleep` / SleepDisabled) as needed for the watch, but **no** display blank, **no** `displaysleepnow`, **no** keyboard backlight off on toggle. |
+| Lid-closed keep-awake | With the watch armed, lid close keeps the Mac awake via `pmset disablesleep` (SleepDisabled). IOKit assertions do **not** survive lid close; use them only as extra idle prevention, never as the lid story. |
+| Lid-close hygiene | On lid **close** (not on toggle): set brightness to the floor (lowest) and turn **keyboard backlight off**. Do **not** use `displaysleepnow` for this path. |
+| Lid-open restore | If the lid opens again while the watch is still armed (timer/agents not finished): **~2s gradual** brightness ramp up + keyboard backlight on. |
+| Hold until end | Stay armed until the selected timer ends or Agents mode settles idle (then allow sleep). |
 | Auto-off timer | Segmented: `∞` / `1h` / `3h` / `Agents`. |
 | Auto-off low battery | Slider 5–50%, default 15%, on discharging battery. |
 | Thermal auto-off | `ProcessInfo.thermalState` `.serious` or `.critical`. |
 | Agent watch | Busy → stay awake. Settled idle after grace → allow sleep. Cursor + Claude Code + Codex first. Process list + session-file mtimes. |
 | Safety | Reboot clears SleepDisabled. Launch-at-login never re-arms the watch. One-time scoped sudoers grant for *exactly* two `pmset disablesleep` commands. |
 
-Out of V1: App Store sandbox, notarization pipeline, every provider, fake benchmarks, Wi-Fi/BT kill, Dock UI.
+Out of V1: App Store sandbox, notarization pipeline, every provider, fake benchmarks, Wi-Fi/BT kill, Dock UI, `displaysleepnow` on engage, claiming display sleep when we only floored brightness.
 
 ## Layout
 
@@ -67,13 +68,13 @@ Scripts/                  verify-linux.sh, check-file-sizes.sh, Mac build.sh
 prd/                      Product scope. Implement against it.
 ```
 
-`AgrypnosCore` decides. Mac adapters execute (pmset, IOKit, NSStatusItem, Carbon hotkey).
+`AgrypnosCore` decides. Mac adapters execute (pmset, IOKit, NSStatusItem, Carbon hotkey, lid events).
 
 ## Tests and verification
 
 - Pure logic gets tests first. Watch the test fail, then implement.
 - On Linux: `swift test` and `Scripts/verify-linux.sh`. That is real evidence for Core.
-- On a Mac: build the app, flip the watch, close the lid, confirm display sleep, keyboard dark, agent settle → sleep. Until that happens, say so. Do not claim Mac runtime you did not run.
+- On a Mac: build the app, arm Keep the watch with the lid **open** (screen stays usable), close the lid (brightness floor + keyboard dark), reopen mid-watch (≈2s ramp + keyboard on), then confirm timer/Agents end allows sleep. Until that happens, say so. Do not claim Mac runtime you did not run.
 - Before you call a PR done: line-count check, Core tests, and an honest “works vs needs a Mac” list.
 
 ## Git
@@ -85,9 +86,9 @@ Commit and push when the work is a coherent slice. Do not ask the user for permi
 | Role | Owns | Does not own |
 |---|---|---|
 | **Rules** | `AGENTS.md`, this bar, scope fights | Feature code |
-| **Swift core** | `AgrypnosCore`, heuristics, watch engine, safety | AppKit chrome |
+| **Swift core** | `AgrypnosCore`, heuristics, watch engine, lid/hygiene, safety | AppKit chrome |
 | **UI** | Menu bar, popover, personality copy, glyph | Kernel sleep flag |
-| **Review** | Gates. File size, TDD, no watt fiction, no god files | Shipping unreviewed slop |
+| **Review** | Gates. File size, TDD, no watt fiction, no god files, no false display-sleep claims | Shipping unreviewed slop |
 | **Boss** | Sequence, merge order, “stop, this is V2” | Writing all the code |
 
 Parallel foundations are forbidden. One track. If you find a second scaffold, delete yours or stop.
@@ -96,8 +97,8 @@ Parallel foundations are forbidden. One track. If you find a second scaffold, de
 
 Talk to the user like a night watch that likes them. Not a mascot. Not a clone of anyone’s coffee cup.
 
-Good: “Lid can fall. I’ll keep the panel asleep and the machine awake.”
-Bad: “World-class AI-powered sleep prevention maximizing battery.”
+Good: “Armed. Close the lid when you’re ready — I’ll drop the panel and kill the keys until the watch ends.”
+Bad: “World-class AI-powered sleep prevention maximizing battery.” / “We force the display asleep on toggle.”
 
 ## OSS
 
