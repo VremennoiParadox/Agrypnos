@@ -47,13 +47,13 @@ Ship these, and stop:
 | Global hotkey | Activate/toggle the watch. Default `⌥⌘A`. **Remappable** in the popover (conflict-safe). Required V1. Surface bind failure honestly when the chord cannot register. |
 | Keep the watch (armed) | ON = **armed** while the lid is open. Machine may already be held awake (`pmset disablesleep` / SleepDisabled) as needed for the watch, but **no** display blank, **no** `displaysleepnow`, **no** keyboard backlight off on toggle. |
 | Lid-closed keep-awake | With the watch armed, lid close keeps the Mac awake via `pmset disablesleep` (SleepDisabled). IOKit assertions do **not** survive lid close; use them only as extra idle prevention, never as the lid story. |
-| Lid-close hygiene | On lid **close** (not on toggle): set brightness to the **user floor %** (default lowest) and turn **keyboard backlight off**. Do **not** use `displaysleepnow` for this path. |
+| Lid-close hygiene | On lid **close** (not on toggle): set brightness to the **user floor %** (range **5–40%**, default **15%**; never treat “lowest” as **0%**) and turn **keyboard backlight off**. Do **not** use `displaysleepnow` for this path. |
 | Lid-open restore | If the lid opens again while the watch is still armed (timer/agents not finished): gradual brightness ramp (**1 / 2 / 3 s**, default **2s**) + keyboard backlight on. |
 | Hold until end | Stay armed until the selected timer ends or Agents mode settles idle (then allow sleep). |
 | Auto-off timer | Segmented presets `∞` / `1h` / `3h` / `Agents`, plus **custom minutes** (e.g. 33) the user can set. |
 | Auto-off low battery | Slider **5–100%**, default 15%, on discharging battery. |
 | Thermal auto-off | `ProcessInfo.thermalState` `.serious` or `.critical`. |
-| Agent watch | Busy → stay awake. Settled idle after **user settle grace** → allow sleep. Cursor + Claude Code + Codex first. Process list + session-file mtimes. |
+| Agent watch | Busy → stay awake. Settled idle after **user settle grace** (default **90s**) → allow sleep. Cursor + Claude Code + Codex first. Process list + session-file mtimes. |
 | Safety | Reboot clears SleepDisabled. Launch-at-login never re-arms the watch. One-time scoped sudoers grant for *exactly* two `pmset disablesleep` commands. |
 
 ### V1 settings (popover only)
@@ -66,9 +66,9 @@ Ship these, and stop:
 
 **Core prefs math slice** (Boss unlocked — implement next, popover only):
 
-- Brightness floor **%** (user-settable; default = lowest)
-- Agents settle grace (user-settable seconds/minutes before idle → allow sleep)
-- Lid-open ramp duration **1 / 2 / 3 s** (default **2s**)
+- Brightness floor **%** — range **5–40%**, default **15%**. Do **not** use 0% as “lowest”; 0 reads as black and fights the armed≠blank honesty bar.
+- Agents settle grace — user-settable seconds before idle → allow sleep; default **90s**.
+- Lid-open ramp duration **1 / 2 / 3 s**, default **2s**.
 
 Still **locked** until Boss unlocks after Mac prove:
 
