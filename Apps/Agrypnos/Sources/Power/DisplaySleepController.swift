@@ -3,7 +3,8 @@ import Foundation
 import IOKit
 
 enum DisplaySleepController {
-    /// Real display sleep. Dim-to-zero is not this. Skip when an external screen is the console.
+    /// Real display sleep for the built-in panel. Dim-to-zero is not this.
+    /// Extra screens stay on — popover copy must not claim otherwise.
     static func sleepNow() {
         if NSScreen.screens.count > 1 { return }
         _ = ProcessRunner.run("/usr/bin/pmset", ["displaysleepnow"])

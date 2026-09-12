@@ -17,3 +17,25 @@ final class SudoersGrantTests: XCTestCase {
         XCTAssertNil(SudoersGrant.line(username: ""))
     }
 }
+
+final class GrantLaunchTests: XCTestCase {
+    func testSafeUsernameProducesOsascript() {
+        let source = GrantLaunch.osascriptSource(username: "ada", scriptPath: "/tmp/grant.sh")
+        XCTAssertNotNil(source)
+        XCTAssertTrue(source?.contains("AGRYPNOS_USER='ada'") == true)
+        XCTAssertTrue(source?.contains("/tmp/grant.sh") == true)
+        XCTAssertTrue(source?.contains("with administrator privileges") == true)
+    }
+
+    func testUnsafeUsernameDoesNotBuildOsascript() {
+        XCTAssertNil(GrantLaunch.osascriptSource(username: "ada; rm -rf /", scriptPath: "/tmp/grant.sh"))
+        XCTAssertNil(GrantLaunch.osascriptSource(username: "ada' ; true", scriptPath: "/tmp/grant.sh"))
+        XCTAssertNil(GrantLaunch.osascriptSource(username: "ada ALL=(root) NOPASSWD: /bin/sh", scriptPath: "/tmp/grant.sh"))
+        XCTAssertNil(GrantLaunch.osascriptSource(username: "", scriptPath: "/tmp/grant.sh"))
+    }
+
+    func testQuotedScriptPathRejected() {
+        XCTAssertNil(GrantLaunch.osascriptSource(username: "ada", scriptPath: "/tmp/gra'nt.sh"))
+        XCTAssertNil(GrantLaunch.osascriptSource(username: "ada", scriptPath: "/tmp/gra\"nt.sh"))
+    }
+}

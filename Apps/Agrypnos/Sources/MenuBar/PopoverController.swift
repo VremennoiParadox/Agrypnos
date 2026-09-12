@@ -30,6 +30,7 @@ final class PopoverController: NSObject {
     private var batterySlider: NSSlider!
     private var batteryValue: NSTextField!
     private var loginSwitch: NSSwitch!
+    private var hotkeyHint: NSTextField!
 
     init(runtime: WatchRuntime) {
         self.runtime = runtime
@@ -66,6 +67,10 @@ final class PopoverController: NSObject {
         batteryValue?.stringValue = "\(runtime.preferences.batteryFloorPercent)%"
         loginSwitch?.state = LaunchAtLoginController.isEnabled ? .on : .off
         displaySwitch?.toolTip = AgrypnosCopy.displaySleepHelp
+        hotkeyHint?.stringValue = AgrypnosCopy.hotkeyHint(
+            runtime.preferences.hotkey,
+            registered: runtime.hotkeyRegistered
+        )
     }
 
     func open(relativeTo button: NSView) {
@@ -189,9 +194,12 @@ final class PopoverController: NSObject {
         loginSwitch.frame = NSRect(x: contentW - ci - swW, y: 12, width: swW, height: swH)
         g5.addSubview(loginSwitch)
 
-        let hotkey = LabelFactory.make(AgrypnosCopy.hotkeyHint(.defaultToggle), font: .systemFont(ofSize: 11), color: .tertiaryLabelColor)
-        hotkey.frame = NSRect(x: pad, y: 490, width: contentW - 100, height: 16)
-        root.addSubview(hotkey)
+        hotkeyHint = LabelFactory.make("", font: .systemFont(ofSize: 11), color: .tertiaryLabelColor)
+        hotkeyHint.usesSingleLineMode = false
+        hotkeyHint.maximumNumberOfLines = 2
+        hotkeyHint.lineBreakMode = .byWordWrapping
+        hotkeyHint.frame = NSRect(x: pad, y: 484, width: contentW, height: 28)
+        root.addSubview(hotkeyHint)
 
         let quit = NSButton(title: AgrypnosCopy.quit, target: self, action: #selector(quitApp))
         quit.bezelStyle = .rounded

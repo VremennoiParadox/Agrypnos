@@ -14,7 +14,8 @@ final class GlobalHotkeyCenter {
         unregister()
     }
 
-    func register(_ chord: HotkeyChord) {
+    @discardableResult
+    func register(_ chord: HotkeyChord) -> Bool {
         unregister()
         var hotKeyID = EventHotKeyID(signature: 0x41475259, id: 1)
         var ref: EventHotKeyRef?
@@ -26,12 +27,15 @@ final class GlobalHotkeyCenter {
             0,
             &ref
         )
-        guard status == noErr else { return }
+        guard status == noErr, let ref else {
+            NSLog("Agrypnos: RegisterEventHotKey failed (%d). Global hotkey is not active.", status)
+            return false
+        }
         hotKeyRef = ref
 
         var spec = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
         let userInfo = Unmanaged.passUnretained(self).toOpaque()
-        InstallEventHandler(
+        let handlerStatus = InstallEventHandler(
             GetApplicationEventTarget(),
             { _, _, userData in
                 guard let userData else { return noErr }
@@ -46,6 +50,12 @@ final class GlobalHotkeyCenter {
             userInfo,
             &handler
         )
+        guard handlerStatus == noErr else {
+            NSLog("Agrypnos: InstallEventHandler failed (%d). Global hotkey is not active.", handlerStatus)
+            unregister()
+            return false
+        }
+        return true
     }
 
     func unregister() {

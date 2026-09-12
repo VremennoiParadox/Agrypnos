@@ -43,8 +43,9 @@ enum PowerHygieneCoordinator {
                 floor: preferences.brightnessFloor
             )
         }
-        if preferences.keyboardBacklightOff {
-            KeyboardBacklightController.setBrightness(savedKeyboard ?? 0)
+        if preferences.keyboardBacklightOff,
+           let brightness = HygieneRestore.keyboardBrightnessToRestore(captured: savedKeyboard) {
+            KeyboardBacklightController.setBrightness(brightness)
         }
         savedBrightness = nil
         savedKeyboard = nil

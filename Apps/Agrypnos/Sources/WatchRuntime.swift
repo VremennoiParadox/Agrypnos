@@ -22,6 +22,7 @@ final class WatchRuntime {
 
     var preferences: UserPreferences { engine.preferences }
     var engaged: Bool { engine.engaged }
+    var hotkeyRegistered = false
 
     init() {
         engine = WatchEngine(preferences: store.load())

@@ -13,14 +13,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WatchRuntimeDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        hotkey.onTrigger = { [weak self] in
+            self?.runtime.toggle()
+        }
+        let registered = hotkey.register(runtime.preferences.hotkey)
+        runtime.hotkeyRegistered = registered
+        if !registered {
+            UserNotify.post(AgrypnosCopy.hotkeyHint(runtime.preferences.hotkey, registered: false))
+        }
         popover = PopoverController(runtime: runtime)
         statusItem = StatusItemController(runtime: runtime, popover: popover)
         runtime.delegate = self
         runtime.start()
-        hotkey.onTrigger = { [weak self] in
-            self?.runtime.toggle()
-        }
-        hotkey.register(runtime.preferences.hotkey)
     }
 
     func applicationWillTerminate(_ notification: Notification) {
