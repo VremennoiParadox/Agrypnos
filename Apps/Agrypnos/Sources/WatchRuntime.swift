@@ -64,22 +64,22 @@ final class WatchRuntime {
         lastFailedHotkey = nil
         hotkeySuspendedForRecord = false
         let previous = engine.preferences.hotkey
-        guard chord.isBindable else {
-            lastFailedHotkey = chord
-            UserNotify.post(AgrypnosCopy.hotkeyHint(chord, registered: false))
-            delegate?.watchRuntimeDidChange(self)
-            return
-        }
-        let registered = bindHotkey?(chord) ?? false
-        let resolved = HotkeyBindPolicy.resolve(attempted: chord, previous: previous, registered: registered)
-        if resolved.shouldPersist {
-            _ = engine.preferences.applyHotkeyRemap(resolved.chord)
+        let registered = chord.isBindable ? (bindHotkey?(chord) ?? false) : false
+        let plan = HotkeyRemapPlan.make(
+            attempted: chord,
+            previous: previous,
+            osRegistered: registered
+        )
+        if plan.persist {
+            _ = engine.preferences.applyHotkeyRemap(plan.chordToRegister)
             store.save(engine.preferences)
             hotkeyRegistered = true
         } else {
-            lastFailedHotkey = chord
-            hotkeyRegistered = bindHotkey?(previous) ?? false
-            UserNotify.post(AgrypnosCopy.hotkeyHint(chord, registered: false))
+            lastFailedHotkey = plan.failedAttempt
+            hotkeyRegistered = bindHotkey?(plan.chordToRegister) ?? false
+            if let hint = plan.hint {
+                UserNotify.post(hint)
+            }
         }
         delegate?.watchRuntimeDidChange(self)
     }

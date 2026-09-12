@@ -75,6 +75,7 @@ final class HotkeyRecorderControl: NSObject {
             return nil
         case .chord(let chord):
             stop()
+            onSessionChanged?()
             onChord?(chord)
             return nil
         }

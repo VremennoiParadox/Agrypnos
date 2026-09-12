@@ -108,6 +108,41 @@ final class HotkeyRecorderChromeTests: XCTestCase {
         XCTAssertEqual(chrome.hint, AgrypnosCopy.hotkeyHint(attempted, registered: false))
     }
 
+    func testFailedPlanAlwaysRebindsPreviousAndUsesHotkeyHintRegisteredFalse() {
+        let previous = HotkeyChord.defaultToggle
+        let naked = HotkeyChord(keyCode: 0, option: false, command: false)
+        let nakedPlan = HotkeyRemapPlan.make(
+            attempted: naked,
+            previous: previous,
+            osRegistered: false
+        )
+        XCTAssertFalse(nakedPlan.persist)
+        XCTAssertEqual(nakedPlan.chordToRegister, previous)
+        XCTAssertEqual(nakedPlan.failedAttempt, naked)
+        XCTAssertEqual(nakedPlan.hint, AgrypnosCopy.hotkeyHint(naked, registered: false))
+
+        let taken = HotkeyChord(keyCode: 1, option: true, command: true)
+        let osFail = HotkeyRemapPlan.make(
+            attempted: taken,
+            previous: previous,
+            osRegistered: false
+        )
+        XCTAssertFalse(osFail.persist)
+        XCTAssertEqual(osFail.chordToRegister, previous)
+        XCTAssertEqual(osFail.failedAttempt, taken)
+        XCTAssertEqual(osFail.hint, AgrypnosCopy.hotkeyHint(taken, registered: false))
+
+        let ok = HotkeyRemapPlan.make(
+            attempted: taken,
+            previous: previous,
+            osRegistered: true
+        )
+        XCTAssertTrue(ok.persist)
+        XCTAssertEqual(ok.chordToRegister, taken)
+        XCTAssertNil(ok.failedAttempt)
+        XCTAssertNil(ok.hint)
+    }
+
     func testRecordingCopyAsksForAChord() {
         let chrome = HotkeyRecorderChrome.make(
             liveChord: .defaultToggle,

@@ -84,6 +84,9 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         durationHint?.stringValue = hintCopy(for: runtime)
         keyboardSwitch?.state = runtime.preferences.keyboardBacklightOff ? .on : .off
         floorSwitch?.state = runtime.preferences.applyBrightnessFloor ? .on : .off
+        let batteryRange = UserPreferences.batteryFloorRange
+        batterySlider?.minValue = Double(batteryRange.lowerBound)
+        batterySlider?.maxValue = Double(batteryRange.upperBound)
         batterySlider?.doubleValue = Double(runtime.preferences.batteryFloorPercent)
         batteryValue?.stringValue = "\(runtime.preferences.batteryFloorPercent)%"
         loginSwitch?.state = LaunchAtLoginController.isEnabled ? .on : .off
@@ -180,19 +183,26 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         let durationLabel = LabelFactory.make(AgrypnosCopy.durationLabel, font: .systemFont(ofSize: 13), color: .labelColor)
         durationLabel.frame = NSRect(x: ci, y: 8, width: 86, height: 22)
         g2.addSubview(durationLabel)
+        let fieldW: CGFloat = 56
+        let fieldGap: CGFloat = 8
         let minutesLabel = LabelFactory.make(AgrypnosCopy.minutesLabel, font: .systemFont(ofSize: 13), color: .labelColor)
-        minutesLabel.frame = NSRect(x: ci + 90, y: 8, width: 72, height: 22)
+        minutesLabel.alignment = .right
+        minutesLabel.frame = NSRect(x: contentW - ci - fieldW, y: 8, width: fieldW, height: 22)
         g2.addSubview(minutesLabel)
         minutesField = NSTextField(string: "")
         minutesField.placeholderString = AgrypnosCopy.minutesPlaceholder
         minutesField.font = .systemFont(ofSize: 13)
         minutesField.alignment = .right
+        minutesField.isBezeled = true
+        minutesField.bezelStyle = .roundedBezel
+        minutesField.isEditable = true
+        minutesField.isSelectable = true
         minutesField.delegate = self
         minutesField.target = self
         minutesField.action = #selector(minutesCommitted(_:))
         minutesField.cell?.sendsActionOnEndEditing = true
         minutesField.setAccessibilityLabel(AgrypnosCopy.minutesLabel)
-        minutesField.frame = NSRect(x: contentW - ci - 56, y: 8, width: 56, height: 22)
+        minutesField.frame = NSRect(x: contentW - ci - fieldW, y: 36, width: fieldW, height: 24)
         g2.addSubview(minutesField)
         let chrome = DurationPickerChrome.make(duration: .indefinite)
         durationControl = NSSegmentedControl(
@@ -203,7 +213,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         )
         durationControl.segmentDistribution = .fillEqually
         durationControl.selectedSegment = 0
-        durationControl.frame = NSRect(x: ci, y: 36, width: cw, height: 24)
+        durationControl.frame = NSRect(x: ci, y: 36, width: cw - fieldW - fieldGap, height: 24)
         g2.addSubview(durationControl)
         durationHint = LabelFactory.wrapping(
             "",
