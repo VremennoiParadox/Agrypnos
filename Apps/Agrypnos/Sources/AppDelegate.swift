@@ -16,6 +16,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WatchRuntimeDelegate {
         hotkey.onTrigger = { [weak self] in
             self?.runtime.toggle()
         }
+        runtime.bindHotkey = { [weak self] chord in
+            self?.hotkey.register(chord) ?? false
+        }
         let registered = hotkey.register(runtime.preferences.hotkey)
         runtime.hotkeyRegistered = registered
         if !registered {

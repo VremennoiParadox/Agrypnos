@@ -151,7 +151,7 @@ final class PopoverController: NSObject {
         let durationLabel = LabelFactory.make(AgrypnosCopy.durationLabel, font: .systemFont(ofSize: 13), color: .labelColor)
         durationLabel.frame = NSRect(x: ci, y: ci + 2, width: 90, height: 22)
         g2.addSubview(durationLabel)
-        let titles = DurationOption.allCases.map(\.segmentTitle)
+        let titles = DurationOption.presets.map(\.segmentTitle)
         durationControl = NSSegmentedControl(labels: titles, trackingMode: .selectOne, target: self, action: #selector(durationChanged(_:)))
         durationControl.selectedSegment = 0
         durationControl.sizeToFit()
@@ -180,16 +180,16 @@ final class PopoverController: NSObject {
         batteryValue.alignment = .right
         batteryValue.frame = NSRect(x: contentW - ci - 54, y: ci, width: 54, height: 18)
         g4.addSubview(batteryValue)
-        batterySlider = NSSlider(value: 15, minValue: 5, maxValue: 50, target: self, action: #selector(batteryChanged(_:)))
+        batterySlider = NSSlider(value: 15, minValue: 5, maxValue: 100, target: self, action: #selector(batteryChanged(_:)))
         batterySlider.isContinuous = true
         batterySlider.frame = NSRect(x: ci, y: ci + 26, width: cw, height: 20)
         g4.addSubview(batterySlider)
         let minHint = LabelFactory.make("5%", font: .systemFont(ofSize: 10), color: .tertiaryLabelColor)
         minHint.frame = NSRect(x: ci, y: ci + 50, width: 34, height: 13)
         g4.addSubview(minHint)
-        let maxHint = LabelFactory.make("50%", font: .systemFont(ofSize: 10), color: .tertiaryLabelColor)
+        let maxHint = LabelFactory.make("100%", font: .systemFont(ofSize: 10), color: .tertiaryLabelColor)
         maxHint.alignment = .right
-        maxHint.frame = NSRect(x: contentW - ci - 34, y: ci + 50, width: 34, height: 13)
+        maxHint.frame = NSRect(x: contentW - ci - 40, y: ci + 50, width: 40, height: 13)
         g4.addSubview(maxHint)
 
         let g5 = card(NSRect(x: pad, y: 446, width: contentW, height: 44))
@@ -243,7 +243,7 @@ final class PopoverController: NSObject {
     }
 
     private func segment(for option: DurationOption) -> Int {
-        DurationOption.allCases.firstIndex(of: option) ?? 0
+        DurationOption.presets.firstIndex(of: option) ?? -1
     }
 
     private func hintCopy(for runtime: WatchRuntime) -> String {
@@ -271,7 +271,8 @@ final class PopoverController: NSObject {
     }
 
     @objc private func durationChanged(_ sender: NSSegmentedControl) {
-        let option = DurationOption.allCases[sender.selectedSegment]
+        guard DurationOption.presets.indices.contains(sender.selectedSegment) else { return }
+        let option = DurationOption.presets[sender.selectedSegment]
         runtime?.setDuration(option)
         refresh()
     }

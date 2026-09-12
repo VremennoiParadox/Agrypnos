@@ -62,7 +62,7 @@ From Terminal, equivalent grant:
 
 Safety nets, always:
 
-- Auto-off at your battery floor (default 15%, slider 5–50%) while discharging
+- Auto-off at your battery floor (default 15%, slider 5–100%) while discharging
 - Auto-off on serious/critical thermal pressure
 - Auto-off when Low Power Mode is on and you are on battery (a deliberate flip this session still honors the hard battery floor)
 

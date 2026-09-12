@@ -26,6 +26,7 @@ final class WatchRuntime {
     var engaged: Bool { engine.engaged }
     var hotkeyRegistered = false
     var adoptedLeftover: Bool { engine.leftoverAdopted }
+    var bindHotkey: ((HotkeyChord) -> Bool)?
 
     init() {
         engine = WatchEngine(preferences: store.load())
@@ -46,9 +47,27 @@ final class WatchRuntime {
         delegate?.watchRuntimeDidChange(self)
     }
 
+    func setCustomMinutes(_ minutes: Int) {
+        setDuration(.customMinutes(minutes))
+    }
+
     func setBatteryFloor(_ percent: Int) {
-        engine.preferences.batteryFloorPercent = min(max(percent, 5), 50)
+        engine.preferences.batteryFloorPercent = UserPreferences.clampBatteryFloor(percent)
         store.save(engine.preferences)
+        delegate?.watchRuntimeDidChange(self)
+    }
+
+    func setHotkey(_ chord: HotkeyChord) {
+        guard engine.preferences.applyHotkeyRemap(chord) else {
+            delegate?.watchRuntimeDidChange(self)
+            return
+        }
+        store.save(engine.preferences)
+        let registered = bindHotkey?(chord) ?? false
+        hotkeyRegistered = registered
+        if !registered {
+            UserNotify.post(AgrypnosCopy.hotkeyHint(chord, registered: false))
+        }
         delegate?.watchRuntimeDidChange(self)
     }
 
