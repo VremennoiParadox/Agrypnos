@@ -98,14 +98,14 @@ public struct WatchEngine: Equatable, Sendable {
 
     func hygieneCommands() -> [WatchCommand] {
         var commands: [WatchCommand] = []
+        if preferences.applyBrightnessFloor {
+            commands.append(.applyBrightnessFloor)
+        }
         if preferences.forceDisplaySleep {
             commands.append(.requestDisplaySleep)
         }
         if preferences.keyboardBacklightOff {
             commands.append(.requestKeyboardBacklightOff)
-        }
-        if preferences.applyBrightnessFloor {
-            commands.append(.applyBrightnessFloor)
         }
         return commands
     }

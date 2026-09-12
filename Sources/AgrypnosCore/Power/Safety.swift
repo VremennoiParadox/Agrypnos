@@ -46,9 +46,10 @@ public enum AutoOffEvaluator: Sendable {
             return .batteryFloor
         }
         if let timerEnd, now >= timerEnd { return .timerExpired }
-        if safety.lowPowerMode, safety.onBatteryDischarging, !userForcedThisSession {
+        if safety.lowPowerMode, safety.onBatteryDischarging {
             return .lowPowerMode
         }
+        _ = userForcedThisSession
         return nil
     }
 }

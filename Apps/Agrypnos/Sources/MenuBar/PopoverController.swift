@@ -65,6 +65,7 @@ final class PopoverController: NSObject {
         batterySlider?.doubleValue = Double(runtime.preferences.batteryFloorPercent)
         batteryValue?.stringValue = "\(runtime.preferences.batteryFloorPercent)%"
         loginSwitch?.state = LaunchAtLoginController.isEnabled ? .on : .off
+        displaySwitch?.toolTip = AgrypnosCopy.displaySleepHelp
     }
 
     func open(relativeTo button: NSView) {

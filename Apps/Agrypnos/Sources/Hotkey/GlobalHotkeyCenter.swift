@@ -35,7 +35,10 @@ final class GlobalHotkeyCenter {
             GetApplicationEventTarget(),
             { _, _, userData in
                 guard let userData else { return noErr }
-                Unmanaged<GlobalHotkeyCenter>.fromOpaque(userData).takeUnretainedValue().onTrigger?()
+                let center = Unmanaged<GlobalHotkeyCenter>.fromOpaque(userData).takeUnretainedValue()
+                DispatchQueue.main.async {
+                    center.onTrigger?()
+                }
                 return noErr
             },
             1,

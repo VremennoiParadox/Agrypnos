@@ -2,7 +2,7 @@
 """Emit a compact Xcode project that compiles the menu-bar app against AgrypnosCore."""
 from pathlib import Path
 
-ROOT = Path("/workspace")
+ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / "Apps/Agrypnos"
 SOURCES = sorted((APP / "Sources").rglob("*.swift"))
 rel_sources = [str(p.relative_to(APP)) for p in SOURCES]

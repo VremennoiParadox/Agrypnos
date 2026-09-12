@@ -100,6 +100,19 @@ final class WatchEngineTests: XCTestCase {
         )
     }
 
+    func testThermalTickDisengages() {
+        var engine = WatchEngine(preferences: .default)
+        _ = engine.userSetEngaged(true, now: t0)
+        XCTAssertEqual(
+            engine.tick(
+                now: t0.addingTimeInterval(1),
+                safety: SafetyInputs(batteryPercent: 90, onBatteryDischarging: false, thermalSerious: true, lowPowerMode: false),
+                agents: .idle
+            ),
+            [.disengage(.thermal)]
+        )
+    }
+
     func testChangingDurationWhileOnResetsTimer() {
         var engine = WatchEngine(preferences: .default)
         _ = engine.userSetEngaged(true, now: t0)

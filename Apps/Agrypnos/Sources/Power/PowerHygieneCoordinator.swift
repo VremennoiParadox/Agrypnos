@@ -3,31 +3,50 @@ import AgrypnosCore
 #endif
 
 enum PowerHygieneCoordinator {
-    static func apply(_ commands: [WatchCommand], preferences: UserPreferences, savedBrightness: inout Double?) {
+    static func apply(
+        _ commands: [WatchCommand],
+        preferences: UserPreferences,
+        savedBrightness: inout Double?,
+        savedKeyboard: inout Double?
+    ) {
         for command in commands {
             switch command {
             case .engage, .disengage:
                 break
-            case .requestDisplaySleep:
-                DisplaySleepController.sleepNow()
-            case .requestKeyboardBacklightOff:
-                KeyboardBacklightController.setOff()
             case .applyBrightnessFloor:
                 if savedBrightness == nil {
                     savedBrightness = BrightnessFloorController.current()
                 }
-                BrightnessFloorController.applyFloor(preferences.brightnessFloor)
+                savedBrightness = max(
+                    savedBrightness ?? preferences.brightnessFloor,
+                    preferences.brightnessFloor
+                )
+            case .requestDisplaySleep:
+                DisplaySleepController.sleepNow()
+            case .requestKeyboardBacklightOff:
+                if savedKeyboard == nil {
+                    savedKeyboard = KeyboardBacklightController.current()
+                }
+                KeyboardBacklightController.setOff()
             }
         }
     }
 
-    static func restoreAfterDisengage(preferences: UserPreferences, savedBrightness: inout Double?) {
+    static func restoreAfterDisengage(
+        preferences: UserPreferences,
+        savedBrightness: inout Double?,
+        savedKeyboard: inout Double?
+    ) {
         if preferences.applyBrightnessFloor {
             BrightnessFloorController.restoreAtLeastFloor(
                 saved: savedBrightness,
                 floor: preferences.brightnessFloor
             )
         }
+        if preferences.keyboardBacklightOff {
+            KeyboardBacklightController.setBrightness(savedKeyboard ?? 0)
+        }
         savedBrightness = nil
+        savedKeyboard = nil
     }
 }

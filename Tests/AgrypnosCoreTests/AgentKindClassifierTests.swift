@@ -22,6 +22,15 @@ final class AgentKindClassifierTests: XCTestCase {
         XCTAssertNil(AgentKindClassifier.classify(processName: "WindowServer"))
     }
 
+    func testClassifiesBasenameOfPathAndTruncatedComm() {
+        XCTAssertEqual(AgentKindClassifier.classify(processName: "/opt/homebrew/bin/claude"), .claudeCode)
+        XCTAssertEqual(
+            AgentKindClassifier.classify(processName: "/Applications/Cursor.app/Contents/MacOS/Cursor"),
+            .cursor
+        )
+        XCTAssertEqual(AgentKindClassifier.classify(processName: "Cursor Helper (G"), .cursor)
+    }
+
     func testCursorCPUIsNeverABusySignal() {
         XCTAssertFalse(AgentKindClassifier.cpuCountsTowardBusy(processName: "Cursor"))
         XCTAssertFalse(AgentKindClassifier.cpuCountsTowardBusy(processName: "Cursor Helper (GPU)"))

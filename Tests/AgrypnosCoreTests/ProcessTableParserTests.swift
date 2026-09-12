@@ -22,4 +22,10 @@ final class ProcessTableParserTests: XCTestCase {
         """
         XCTAssertTrue(ProcessTableParser.parse(stdout: stdout).isEmpty)
     }
+
+    func testParsesAbsoluteCommandPath() {
+        let rows = ProcessTableParser.parse(stdout: "  4421  6.1 /opt/homebrew/bin/claude\n")
+        XCTAssertEqual(rows.first?.name, "/opt/homebrew/bin/claude")
+        XCTAssertEqual(AgentKindClassifier.classify(processName: rows[0].name), .claudeCode)
+    }
 }

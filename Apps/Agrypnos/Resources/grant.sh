@@ -13,6 +13,12 @@ if [ -z "$USER_NAME" ] || [ "$USER_NAME" = "root" ]; then
   exit 1
 fi
 
+# Refuse anything that is not a macOS short name so the line cannot grow extra sudoers verbs.
+if ! printf '%s' "$USER_NAME" | grep -Eq '^[A-Za-z0-9._-]+$'; then
+  echo "error: refusing unsafe username for sudoers: $USER_NAME" >&2
+  exit 1
+fi
+
 SUDO="sudo"
 [ "$(id -u)" -eq 0 ] && SUDO=""
 
@@ -37,5 +43,13 @@ if ! $SUDO visudo -cf "$TMP" >/dev/null; then
 fi
 $SUDO install -m 0440 -o root -g wheel "$TMP" "$DST"
 rm -f "$TMP"
+
+INSTALLED="$($SUDO cat "$DST")"
+if [ "$INSTALLED" != "$GRANT" ]; then
+  echo "error: installed sudoers did not match the two-command grant; removing." >&2
+  $SUDO rm -f "$DST"
+  exit 1
+fi
+
 $SUDO visudo -c >/dev/null
 echo "Grant installed ($DST). Reboot still clears SleepDisabled."

@@ -16,18 +16,19 @@ final class WatchRuntime {
     private(set) var engine: WatchEngine
     private var pollTimer: Timer?
     private var savedBrightness: Double?
+    private var savedKeyboard: Double?
     private var lastLidClosed = false
     weak var delegate: WatchRuntimeDelegate?
 
     var preferences: UserPreferences { engine.preferences }
     var engaged: Bool { engine.engaged }
-    var kernelAwake: Bool { SleepDisabledController.read() }
 
     init() {
         engine = WatchEngine(preferences: store.load())
     }
 
     func start() {
+        reconcileKernel(preferClearLeftover: true)
         pollTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.poll() }
         }
@@ -61,43 +62,22 @@ final class WatchRuntime {
 
     func setEngaged(_ on: Bool) {
         if on {
-            var result = SleepDisabledController.set(true)
-            if result == .grantMissing {
-                if GrantInstaller.installViaNativeAuth() {
-                    result = SleepDisabledController.set(true)
-                }
-            }
-            guard result == .ok else {
-                if case .failed(let message) = result {
-                    UserNotify.post("Couldn't keep the watch. \(message)")
-                } else {
-                    UserNotify.post(AgrypnosCopy.grantNeeded)
-                }
+            guard armKernel() else { return }
+            apply(engine.userSetEngaged(true, now: Date()))
+        } else {
+            guard disarmKernel() else {
+                UserNotify.post("Couldn't drop SleepDisabled. The kernel flag is still on.")
+                delegate?.watchRuntimeDidChange(self)
                 return
             }
-            let commands = engine.userSetEngaged(true, now: Date())
-            apply(commands)
-        } else {
-            _ = SleepDisabledController.set(false)
-            let commands = engine.userSetEngaged(false, now: Date())
-            apply(commands)
-            PowerHygieneCoordinator.restoreAfterDisengage(
-                preferences: engine.preferences,
-                savedBrightness: &savedBrightness
-            )
+            apply(engine.userSetEngaged(false, now: Date()))
+            restoreHygiene()
         }
         delegate?.watchRuntimeDidChange(self)
     }
 
     func poll() {
-        let kernel = SleepDisabledController.read()
-        if engine.engaged, !kernel {
-            _ = engine.userSetEngaged(false, now: Date())
-            PowerHygieneCoordinator.restoreAfterDisengage(
-                preferences: engine.preferences,
-                savedBrightness: &savedBrightness
-            )
-        }
+        reconcileKernel(preferClearLeftover: false)
 
         let lidClosed = LidStateReader.isClosed()
         if engine.engaged, lidClosed, !lastLidClosed {
@@ -116,11 +96,12 @@ final class WatchRuntime {
         let commands = engine.tick(now: Date(), safety: safety, agents: agents)
         for command in commands {
             if case .disengage(let reason) = command {
-                _ = SleepDisabledController.set(false)
-                PowerHygieneCoordinator.restoreAfterDisengage(
-                    preferences: engine.preferences,
-                    savedBrightness: &savedBrightness
-                )
+                if !disarmKernel() {
+                    _ = engine.userSetEngaged(true, now: Date())
+                    UserNotify.post("Couldn't drop SleepDisabled. The watch stays up.")
+                    break
+                }
+                restoreHygiene()
                 if reason != .user {
                     UserNotify.post(reason: reason)
                 }
@@ -131,6 +112,61 @@ final class WatchRuntime {
     }
 
     func apply(_ commands: [WatchCommand]) {
-        PowerHygieneCoordinator.apply(commands, preferences: engine.preferences, savedBrightness: &savedBrightness)
+        PowerHygieneCoordinator.apply(
+            commands,
+            preferences: engine.preferences,
+            savedBrightness: &savedBrightness,
+            savedKeyboard: &savedKeyboard
+        )
+    }
+
+    func restoreHygiene() {
+        PowerHygieneCoordinator.restoreAfterDisengage(
+            preferences: engine.preferences,
+            savedBrightness: &savedBrightness,
+            savedKeyboard: &savedKeyboard
+        )
+    }
+
+    @discardableResult
+    func armKernel() -> Bool {
+        var result = SleepDisabledController.set(true)
+        if result == .grantMissing {
+            if GrantInstaller.installViaNativeAuth() {
+                result = SleepDisabledController.set(true)
+            }
+        }
+        guard result == .ok, SleepDisabledController.read() else {
+            if case .failed(let message) = result {
+                UserNotify.post("Couldn't keep the watch. \(message)")
+            } else if result == .grantMissing {
+                UserNotify.post(AgrypnosCopy.grantNeeded)
+            } else {
+                UserNotify.post("pmset ran but SleepDisabled did not read back as on.")
+            }
+            return false
+        }
+        return true
+    }
+
+    @discardableResult
+    func disarmKernel() -> Bool {
+        _ = SleepDisabledController.set(false)
+        return !SleepDisabledController.read()
+    }
+
+    func reconcileKernel(preferClearLeftover: Bool) {
+        let kernel = SleepDisabledController.read()
+        if kernel, !engine.engaged {
+            if preferClearLeftover {
+                _ = SleepDisabledController.set(false)
+            }
+            if SleepDisabledController.read() {
+                _ = engine.userSetEngaged(true, now: Date())
+            }
+        } else if !kernel, engine.engaged {
+            _ = engine.userSetEngaged(false, now: Date())
+            restoreHygiene()
+        }
     }
 }
