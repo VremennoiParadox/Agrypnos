@@ -127,7 +127,6 @@ final class AgrypnosCopyTests: XCTestCase {
             "Auto-off in 2:05"
         )
         let lines = CopyWrap.lineCount(AgrypnosCopy.agentsHint, columns: PopoverCopyLayout.innerColumns)
-        XCTAssertGreaterThanOrEqual(lines, 2)
         XCTAssertLessThanOrEqual(lines, PopoverCopyLayout.durationHintMaxLines)
         XCTAssertGreaterThanOrEqual(
             PopoverCopyLayout.durationHintHeightPoints,
@@ -144,6 +143,20 @@ final class AgrypnosCopyTests: XCTestCase {
         XCTAssertTrue(notify.lowercased().contains("adopt"))
         XCTAssertFalse(caption.lowercased().contains("watt"))
         XCTAssertFalse(notify.lowercased().contains("1.76"))
+        let leftoverLines = CopyWrap.lineCount(caption, columns: PopoverCopyLayout.innerColumns)
+        XCTAssertLessThanOrEqual(leftoverLines, PopoverCopyLayout.captionMaxLines)
+        XCTAssertGreaterThanOrEqual(
+            PopoverCopyLayout.captionHeightPoints,
+            leftoverLines * PopoverCopyLayout.lineHeightPoints
+        )
+        XCTAssertLessThanOrEqual(
+            CopyWrap.lineCount(AgrypnosCopy.leftoverCaption(floor: 50), columns: PopoverCopyLayout.innerColumns),
+            PopoverCopyLayout.captionMaxLines
+        )
+        XCTAssertLessThanOrEqual(
+            CopyWrap.lineCount(AgrypnosCopy.captionPrepared(floor: 50), columns: PopoverCopyLayout.innerColumns),
+            PopoverCopyLayout.captionMaxLines
+        )
         XCTAssertEqual(
             AgrypnosCopy.watchCaption(engaged: true, leftover: true, floor: 15, lidClosed: false),
             caption

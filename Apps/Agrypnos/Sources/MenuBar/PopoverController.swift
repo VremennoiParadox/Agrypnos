@@ -204,6 +204,7 @@ final class PopoverController: NSObject {
 
         hotkeyHint = LabelFactory.wrapping("", font: .systemFont(ofSize: 11), color: .tertiaryLabelColor, lines: 2)
         hotkeyHint.frame = NSRect(x: pad, y: 494, width: contentW, height: 28)
+        hotkeyHint.preferredMaxLayoutWidth = contentW
         root.addSubview(hotkeyHint)
 
         let quit = NSButton(title: AgrypnosCopy.quit, target: self, action: #selector(quitApp))

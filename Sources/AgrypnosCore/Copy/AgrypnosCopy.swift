@@ -75,7 +75,7 @@ public enum AgrypnosCopy: Sendable {
         engaged: Bool,
         leftover: Bool,
         floor: Int,
-        lidClosed: Bool = false
+        lidClosed: Bool
     ) -> String {
         if !engaged { return captionOff }
         if leftover { return leftoverCaption(floor: floor) }

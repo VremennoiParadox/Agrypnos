@@ -138,11 +138,14 @@ final class WatchRuntime {
 
     func pollLid() {
         let lidClosed = LidStateReader.isClosed()
+        var lidChanged = false
         if engine.engaged {
             if lidClosed, !lastLidClosed {
                 apply(engine.lidDidClose(now: Date()))
+                lidChanged = true
             } else if !lidClosed, lastLidClosed {
                 apply(engine.lidDidOpen(now: Date()))
+                lidChanged = true
             } else if !lidClosed, !engine.lidHygieneApplied, !brightnessRamp.isRunning {
                 recaptureOpenLidHygiene()
             }
@@ -151,6 +154,9 @@ final class WatchRuntime {
             stopLidPulse()
         }
         lastLidClosed = lidClosed
+        if lidChanged {
+            delegate?.watchRuntimeDidChange(self)
+        }
     }
 
     func recaptureOpenLidHygiene() {
