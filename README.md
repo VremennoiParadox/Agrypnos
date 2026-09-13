@@ -63,8 +63,12 @@ From Terminal, equivalent grant:
 
 **Popover settings** (no separate window):
 
-- **Landed:** remappable hotkey (default **⌥⌘A**), custom duration in minutes, low-battery auto-off **5–100%** (default 15%).
-- **Landed in Core (popover chrome next):** brightness floor **%** (default **15%**, range 5–40, never 0%), Agents settle grace (15s–15m, default 90s), lid-open ramp **1 / 2 / 3 s** (default **2s**). Persistence and lid/settle/ramp math read these prefs; the sliders/segments in the popover follow.
+- Remappable hotkey (default **⌥⌘A**)
+- Custom duration in minutes
+- Low-battery auto-off **5–100%** (default 15%)
+- Brightness floor **%** (default **15%**, range 5–40, never 0%) — toggle plus lid-close percent
+- Wait after agents go idle (15s–15m, default 90s)
+- Brightness return when the lid opens **1 / 2 / 3 s** (default **2s**)
 
 Safety nets, always:
 
@@ -107,9 +111,9 @@ Linux contributors: `./Scripts/verify-linux.sh` runs `swift test` and the 600-li
 | LPM auto-off vs forced-watch | Yes | Arm, then LPM on while discharging: watch stays up; battery/thermal still end it |
 | Lid-closed auto-off sleep request | Yes | Auto-off with lid already closed: confirm sleep is requested, not only keep-awake cleared |
 | Copy, hotkey chord encoding | Yes | — |
-| Floor % / settle grace / ramp prefs (clamp, default, decode) | Yes | — |
-| Menu-bar popover | — | Render + click |
-| Popover chrome for floor % / grace / ramp | — | Not in this slice |
+| Floor % / idle wait / brightness-return prefs (clamp, default, decode) | Yes | — |
+| Menu-bar popover | Layout math + copy wrap | Render + click |
+| Popover chrome for floor % / idle wait / 1–3s brightness return | Ranges, wrap, stack | Render + click |
 | Armed with lid open (no blank) | — | Flip Keep the watch |
 | `SleepDisabled` lid-close | — | Close the lid |
 | User brightness floor % + keyboard off on lid close | — | Close the lid, eyeball |

@@ -205,8 +205,8 @@ final class CorePrefsMathTests: XCTestCase {
         XCTAssertEqual(LidOpenRampChrome.seconds(selectingSegment: 0), 1)
         XCTAssertEqual(LidOpenRampChrome.seconds(selectingSegment: 2), 3)
         XCTAssertNil(LidOpenRampChrome.seconds(selectingSegment: 3))
-        XCTAssertEqual(AgrypnosCopy.settleGrace, "Agents settle grace")
-        XCTAssertEqual(AgrypnosCopy.lidOpenRamp, "Lid-open ramp")
+        XCTAssertFalse(AgrypnosCopy.settleGrace.lowercased().contains("settle grace"))
+        XCTAssertFalse(AgrypnosCopy.lidOpenRamp.lowercased().contains("lid-open ramp"))
     }
 
     private func roundTrip(_ prefs: UserPreferences) throws -> UserPreferences {

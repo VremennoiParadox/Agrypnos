@@ -9,8 +9,14 @@ public enum AgrypnosCopy: Sendable {
     public static let hotkeyRecordingHint = "Press a chord. Esc cancels."
     public static let keyboardDark = "Keyboard backlight off"
     public static let brightnessFloor = "Brightness floor"
-    public static let settleGrace = "Agents settle grace"
-    public static let lidOpenRamp = "Lid-open ramp"
+    public static let brightnessFloorHelp =
+        "When the lid closes, brightness drops to this percent."
+    public static let settleGrace = "Wait after agents go idle"
+    public static let settleGraceHelp =
+        "How long to wait after they go quiet before allowing sleep."
+    public static let lidOpenRamp = "Brightness return when lid opens"
+    public static let lidOpenRampHelp =
+        "How long brightness takes to come back when the lid opens."
     public static let batteryFloor = "Auto-off at low battery"
     public static let launchAtLogin = "Launch at login"
     public static let quit = "Quit Agrypnos"
@@ -95,7 +101,7 @@ public enum AgrypnosCopy: Sendable {
         if lidClosed {
             return "Leftover SleepDisabled. Lid closed. Brightness floor, keyboard backlight off. Auto-off at \(floor)% battery."
         }
-        return "Leftover SleepDisabled. Lid close — then brightness floor, keyboard backlight off. Auto-off at \(floor)%."
+        return "Leftover SleepDisabled. Lid close — then brightness floor, keyboard backlight off. Auto-off at \(floor)% battery."
     }
 
     public static func watchCaption(

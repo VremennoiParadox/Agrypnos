@@ -150,6 +150,19 @@ public enum AgentSettleGraceChrome: Sendable {
     public static var maxSeconds: Int { UserPreferences.agentSettleGraceRange.upperBound }
     public static var minLabel: String { "\(minSeconds)s" }
     public static var maxLabel: String { "\(maxSeconds / 60)m" }
+
+    public static func valueLabel(seconds: TimeInterval) -> String {
+        let clamped = Int(UserPreferences.clampAgentSettleGrace(seconds).rounded())
+        if clamped < 60 { return "\(clamped)s" }
+        let minutes = clamped / 60
+        let remainder = clamped % 60
+        if remainder == 0 { return "\(minutes)m" }
+        return "\(minutes)m \(remainder)s"
+    }
+
+    public static func seconds(sliderValue: Double) -> TimeInterval {
+        UserPreferences.clampAgentSettleGrace(sliderValue.rounded())
+    }
 }
 
 public enum LidOpenRampChrome: Sendable {
