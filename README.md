@@ -4,7 +4,7 @@
 
 Agrypnos is a native Swift menu-bar extra for Mac. Arm the watch, close the lid, and it keeps the machine awake while your coding agents run — brightness floored and keyboard backlight off under the lid, then back when you open mid-watch.
 
-The name is Greek: *agrypnos*, sleepless. The tone is a night watch that likes you, not a caffeine joke and not a watt brochure.
+The name is Greek: *agrypnos*, sleepless. Warm and direct — not a caffeine joke and not a watt brochure.
 
 > We do not publish watt numbers we have not measured on this Mac. Agrypnos wins on **what the hardware is doing** (brightness floor + keyboard dark under a closed lid, lid-closed keep-awake), not on a lab claim we did not run.
 
@@ -59,7 +59,7 @@ From Terminal, equivalent grant:
 6. Open mid-watch if you need the panel — brightness ramps over **1 / 2 / 3 s** (default **2s**) + keyboard back on.
 7. Walk away until the timer or Agents settle ends the watch.
 
-**Agents** mode: Agrypnos polls local processes and session files for Cursor, Claude Code, and Codex. If they look busy, the watch holds. After they look idle for the settle grace, Agrypnos *allows sleep* (drops `SleepDisabled`). It does not try to be every provider on earth.
+**Agents** mode: Agrypnos polls local processes and session files for Cursor, Claude Code, and Codex. If they look busy, the watch holds. After they look idle for the settle grace, Agrypnos drops the watch (clears `SleepDisabled`). If the lid is already closed, that auto-off also requests sleep. It does not try to be every provider on earth.
 
 **Popover settings** (no separate window):
 
@@ -70,7 +70,9 @@ Safety nets, always:
 
 - Auto-off at your battery floor (default 15%, slider 5–100%) while discharging
 - Auto-off on serious/critical thermal pressure
-- Auto-off when Low Power Mode is on and you are on battery (a deliberate flip this session still honors the hard battery floor)
+- Auto-off when Low Power Mode is on and you are discharging, **unless** you deliberately armed the watch this session (forced watch). Forced watch keeps the Mac awake through LPM; that is not the watch ending. Battery floor and thermal still auto-off.
+
+When timer, battery, thermal, LPM, or Agents-settle auto-off fires with the lid already closed, Agrypnos **requests sleep**. Turning keep-awake off is not enough — a closed-lid Mac will not sleep on its own.
 
 ## What “busy” means (honest heuristics)
 
@@ -101,7 +103,9 @@ Linux contributors: `./Scripts/verify-linux.sh` runs `swift test` and the 600-li
 | | Linux `swift test` | Needs a Mac |
 |---|---|---|
 | Agent busy/settle rules | Yes | — |
-| Timer / battery / thermal state machine | Yes | — |
+| Timer / battery / thermal / LPM state machine | Yes | — |
+| LPM auto-off vs forced-watch | Yes | LPM on battery: auto-off unless you armed this session; battery/thermal still end it |
+| Lid-closed auto-off sleep request | Yes | Auto-off with lid closed: sleep is requested, not only keep-awake cleared |
 | Copy, hotkey chord encoding | Yes | — |
 | Floor % / settle grace / ramp prefs (clamp, default, decode) | Yes | — |
 | Menu-bar popover | — | Render + click |
