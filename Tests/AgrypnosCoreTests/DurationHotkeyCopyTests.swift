@@ -50,6 +50,53 @@ final class AgrypnosCopyTests: XCTestCase {
         assertNoDisplaySleepFiction(allUserFacingCopy().joined(separator: "\n"))
     }
 
+    func testCorePrefsLabelsAndHintsArePlainAndFit() {
+        XCTAssertEqual(AgrypnosCopy.brightnessFloor, "Brightness floor")
+        XCTAssertEqual(AgrypnosCopy.brightnessFloorPercent, "Brightness floor %")
+        XCTAssertEqual(
+            AgrypnosCopy.brightnessFloorHint,
+            "Lowest built-in brightness while the lid is closed (5–40%)."
+        )
+        XCTAssertEqual(AgrypnosCopy.settleGrace, "Wait after agents go idle")
+        XCTAssertEqual(
+            AgrypnosCopy.settleGraceHint,
+            "How long agents must stay idle before sleep is allowed again."
+        )
+        XCTAssertEqual(AgrypnosCopy.lidOpenRamp, "Brightness ramp when lid opens")
+        XCTAssertEqual(
+            AgrypnosCopy.lidOpenRampHint,
+            "How long brightness takes to restore when the lid opens (1, 2, or 3 seconds)."
+        )
+
+        for label in [
+            AgrypnosCopy.brightnessFloor,
+            AgrypnosCopy.brightnessFloorPercent,
+            AgrypnosCopy.settleGrace,
+            AgrypnosCopy.lidOpenRamp,
+        ] {
+            XCTAssertEqual(
+                CopyWrap.lineCount(label, columns: PopoverCopyLayout.innerColumns),
+                1,
+                "label should fit one row: \(label)"
+            )
+        }
+
+        assertFitsDurationHint(AgrypnosCopy.brightnessFloorHint)
+        assertFitsDurationHint(AgrypnosCopy.settleGraceHint)
+        assertFitsDurationHint(AgrypnosCopy.lidOpenRampHint)
+        assertNoDisplaySleepFiction(
+            [
+                AgrypnosCopy.brightnessFloor,
+                AgrypnosCopy.brightnessFloorPercent,
+                AgrypnosCopy.brightnessFloorHint,
+                AgrypnosCopy.settleGrace,
+                AgrypnosCopy.settleGraceHint,
+                AgrypnosCopy.lidOpenRamp,
+                AgrypnosCopy.lidOpenRampHint,
+            ].joined(separator: "\n")
+        )
+    }
+
     func testUserFacingCopyHasNoBannedPoetry() {
         let blob = allUserFacingCopy().joined(separator: "\n").lowercased()
         let banned = [
@@ -61,6 +108,8 @@ final class AgrypnosCopyTests: XCTestCase {
             "safety nets",
             "sleep may return",
             "busy stays awake",
+            "agents settle grace",
+            "lid-open ramp",
         ]
         for phrase in banned {
             XCTAssertFalse(blob.contains(phrase), "banned phrase still in copy: \(phrase)")
@@ -322,8 +371,12 @@ final class AgrypnosCopyTests: XCTestCase {
             AgrypnosCopy.hotkeyRecordingHint,
             AgrypnosCopy.keyboardDark,
             AgrypnosCopy.brightnessFloor,
+            AgrypnosCopy.brightnessFloorPercent,
+            AgrypnosCopy.brightnessFloorHint,
             AgrypnosCopy.settleGrace,
+            AgrypnosCopy.settleGraceHint,
             AgrypnosCopy.lidOpenRamp,
+            AgrypnosCopy.lidOpenRampHint,
             AgrypnosCopy.batteryFloor,
             AgrypnosCopy.launchAtLogin,
             AgrypnosCopy.quit,

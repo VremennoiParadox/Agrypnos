@@ -9,8 +9,15 @@ public enum AgrypnosCopy: Sendable {
     public static let hotkeyRecordingHint = "Press a chord. Esc cancels."
     public static let keyboardDark = "Keyboard backlight off"
     public static let brightnessFloor = "Brightness floor"
-    public static let settleGrace = "Agents settle grace"
-    public static let lidOpenRamp = "Lid-open ramp"
+    public static let brightnessFloorPercent = "Brightness floor %"
+    public static let brightnessFloorHint =
+        "Lowest built-in brightness while the lid is closed (5–40%)."
+    public static let settleGrace = "Wait after agents go idle"
+    public static let settleGraceHint =
+        "How long agents must stay idle before sleep is allowed again."
+    public static let lidOpenRamp = "Brightness ramp when lid opens"
+    public static let lidOpenRampHint =
+        "How long brightness takes to restore when the lid opens (1, 2, or 3 seconds)."
     public static let batteryFloor = "Auto-off at low battery"
     public static let launchAtLogin = "Launch at login"
     public static let quit = "Quit Agrypnos"

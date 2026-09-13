@@ -205,8 +205,10 @@ final class CorePrefsMathTests: XCTestCase {
         XCTAssertEqual(LidOpenRampChrome.seconds(selectingSegment: 0), 1)
         XCTAssertEqual(LidOpenRampChrome.seconds(selectingSegment: 2), 3)
         XCTAssertNil(LidOpenRampChrome.seconds(selectingSegment: 3))
-        XCTAssertEqual(AgrypnosCopy.settleGrace, "Agents settle grace")
-        XCTAssertEqual(AgrypnosCopy.lidOpenRamp, "Lid-open ramp")
+        XCTAssertEqual(AgrypnosCopy.brightnessFloor, "Brightness floor")
+        XCTAssertEqual(AgrypnosCopy.brightnessFloorPercent, "Brightness floor %")
+        XCTAssertEqual(AgrypnosCopy.settleGrace, "Wait after agents go idle")
+        XCTAssertEqual(AgrypnosCopy.lidOpenRamp, "Brightness ramp when lid opens")
     }
 
     private func roundTrip(_ prefs: UserPreferences) throws -> UserPreferences {
