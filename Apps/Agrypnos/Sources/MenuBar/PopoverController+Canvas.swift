@@ -47,14 +47,18 @@ extension PopoverController {
 
         let g1 = PopoverForm.card(in: document, slot: layout.watch, pad: pad, width: contentW)
         mainCard = g1
-        let keep = LabelFactory.make(AgrypnosCopy.keepWatch, font: .systemFont(ofSize: 13), color: .labelColor)
-        keep.frame = NSRect(x: ci, y: ci, width: cw - swW - 8, height: 22)
-        g1.addSubview(keep)
-        watchSwitch = NSSwitch()
-        watchSwitch.target = self
-        watchSwitch.action = #selector(watchToggled(_:))
-        watchSwitch.frame = NSRect(x: contentW - ci - swW, y: ci + 1, width: swW, height: swH)
-        g1.addSubview(watchSwitch)
+        watchSwitch = PopoverForm.switchRow(
+            in: g1,
+            y: ci,
+            title: AgrypnosCopy.keepWatch,
+            contentW: contentW,
+            ci: ci,
+            cw: cw,
+            swW: swW,
+            swH: swH,
+            target: self,
+            action: #selector(watchToggled(_:))
+        )
         caption = LabelFactory.wrapping(
             "",
             font: .systemFont(ofSize: 12),
@@ -203,14 +207,18 @@ extension PopoverController {
         gRamp.addSubview(rampControl)
 
         let gLogin = PopoverForm.card(in: document, slot: layout.login, pad: pad, width: contentW)
-        let login = LabelFactory.make(AgrypnosCopy.launchAtLogin, font: .systemFont(ofSize: 13), color: .labelColor)
-        login.frame = NSRect(x: ci, y: 11, width: cw - swW - 8, height: 22)
-        gLogin.addSubview(login)
-        loginSwitch = NSSwitch()
-        loginSwitch.target = self
-        loginSwitch.action = #selector(loginToggled(_:))
-        loginSwitch.frame = NSRect(x: contentW - ci - swW, y: 12, width: swW, height: swH)
-        gLogin.addSubview(loginSwitch)
+        loginSwitch = PopoverForm.switchRow(
+            in: gLogin,
+            y: CGFloat(PopoverStackLayout.loginSwitchRowY),
+            title: AgrypnosCopy.launchAtLogin,
+            contentW: contentW,
+            ci: ci,
+            cw: cw,
+            swW: swW,
+            swH: swH,
+            target: self,
+            action: #selector(loginToggled(_:))
+        )
 
         let shortcut = LabelFactory.make(AgrypnosCopy.shortcutLabel, font: .systemFont(ofSize: 13), color: .labelColor)
         shortcut.frame = NSRect(x: pad, y: CGFloat(layout.shortcutY), width: 90, height: 22)

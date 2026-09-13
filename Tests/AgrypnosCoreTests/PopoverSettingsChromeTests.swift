@@ -210,6 +210,20 @@ final class PopoverStackLayoutTests: XCTestCase {
         XCTAssertEqual(layout.popoverHeight, PopoverStackLayout.maxVisibleHeight)
     }
 
+    func testLoginSwitchRowCentersTheLabelInTheLoginCard() {
+        let layout = PopoverStackLayout.make()
+        XCTAssertEqual(layout.login.height, PopoverStackLayout.loginCardHeight)
+        let y = PopoverStackLayout.loginSwitchRowY
+        let below = PopoverStackLayout.loginCardHeight - y - PopoverStackLayout.switchRowLabelHeight
+        XCTAssertEqual(y, below)
+    }
+
+    func testSwitchControlSitsOnTheLabelMidline() {
+        XCTAssertEqual(PopoverStackLayout.switchControlY(labelY: 11, switchHeight: 21), 11.5)
+        XCTAssertEqual(PopoverStackLayout.switchControlY(labelY: 10, switchHeight: 22), 10)
+        XCTAssertEqual(PopoverStackLayout.switchControlY(labelY: 11, switchHeight: 25), 9.5)
+    }
+
     func testTimeValueSlotFitsOneMinuteThirty() {
         let needed = "1m 30s".count * 9 + 8
         XCTAssertGreaterThan(
