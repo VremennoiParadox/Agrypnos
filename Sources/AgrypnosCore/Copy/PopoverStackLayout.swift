@@ -29,6 +29,15 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static let durationCardHeight = 136
     public static let batteryCardHeight = 88
     public static let loginCardHeight = 44
+    public static let switchRowLabelHeight = 22
+
+    public static var loginSwitchRowY: Int {
+        (loginCardHeight - switchRowLabelHeight) / 2
+    }
+
+    public static func switchControlY(labelY: Double, switchHeight: Double) -> Double {
+        labelY + (Double(switchRowLabelHeight) - switchHeight) / 2
+    }
 
     public static let hygieneKeyboardY = 10
     public static var hygieneFloorY: Int { hygieneKeyboardY + switchRowHeight }
