@@ -14,23 +14,25 @@ public enum AgrypnosCopy: Sendable {
     public static let batteryFloor = "Auto-off at low battery"
     public static let launchAtLogin = "Launch at login"
     public static let quit = "Quit Agrypnos"
-    public static let agentsHint = "Busy stays awake. When they settle, sleep may return."
-    public static let timedHint = "Then the watch stands down."
-    public static let indefiniteHint = "Until you say otherwise — plus safety nets."
-    public static let captionOff = "Sleeps with you when the lid closes."
+    public static let agentsHint = "Stays awake while agents are busy. Allows sleep after they go idle."
+    public static let timedHint = "Runs for the selected time, then turns the watch off."
+    // User-armed watches do not auto-off on Low Power Mode, so it is not listed here.
+    public static let indefiniteHint =
+        "Stays on until you turn it off (battery / thermal still apply)."
+    public static let captionOff = "Keeps the Mac awake with the lid closed."
     public static let grantNeeded = "The lid-close grant isn’t installed yet. macOS will ask once."
-    public static let timerEnded = "Timer ended. The watch stands down."
-    public static let batteryEnded = "Battery floor. The watch stands down."
-    public static let thermalEnded = "Thermal pressure. The watch stands down."
-    public static let agentsEnded = "Agents settled. Sleep can return."
-    public static let lpmEnded = "Low Power Mode. The watch stands down."
+    public static let timerEnded = "Timer ended. Watch turned off."
+    public static let batteryEnded = "Battery floor reached. Watch turned off."
+    public static let thermalEnded = "Thermal pressure. Watch turned off."
+    public static let agentsEnded = "Agents idle. Watch turned off."
+    public static let lpmEnded = "Low Power Mode. Watch turned off."
 
     public static func captionPrepared(floor: Int) -> String {
-        "Prepared. Waiting for the lid — I'll floor the panel and kill the keys. Turns off at \(floor)% battery."
+        "Armed. Waiting for lid close — then brightness floor, keyboard backlight off. Auto-off at \(floor)% battery."
     }
 
     public static func captionLidClosed(floor: Int) -> String {
-        "Lid's down. Brightness floored, keys dark. Turns off at \(floor)% battery."
+        "Lid closed. Brightness floor + keyboard backlight off. Auto-off at \(floor)% battery."
     }
 
     public static func hotkeyHint(_ chord: HotkeyChord, registered: Bool = true) -> String {
@@ -58,7 +60,7 @@ public enum AgrypnosCopy: Sendable {
                 let clamped = max(0, remaining)
                 return String(format: "Auto-off in %d:%02d", clamped / 60, clamped % 60)
             }
-            return "\(max(minutes, 1)) minutes, then the watch stands down."
+            return "\(max(minutes, 1)) minutes, then the watch turns off."
         case .indefinite:
             return indefiniteHint
         }
@@ -66,7 +68,7 @@ public enum AgrypnosCopy: Sendable {
 
     public static func notification(for reason: DisengageReason) -> String {
         switch reason {
-        case .user: return "Watch down."
+        case .user: return "Watch turned off."
         case .timerExpired: return timerEnded
         case .batteryFloor: return batteryEnded
         case .thermal: return thermalEnded
@@ -76,15 +78,24 @@ public enum AgrypnosCopy: Sendable {
     }
 
     public static let leftoverNotify =
-        "SleepDisabled was already on. Agrypnos adopted it and re-applied the watch."
-    public static let menuTooltipOff = "Agrypnos: watch is down."
-    public static let menuTooltipOn = "Agrypnos: prepared. Waiting for the lid."
-    public static let menuTooltipArmed = "Agrypnos: prepared. Waiting for the lid. On battery."
-    public static let menuTooltipLidClosed = "Agrypnos: lid down. Brightness floored, keys dark."
-    public static let menuTooltipLeftover = "Agrypnos: adopted leftover SleepDisabled."
+        "SleepDisabled was already on. Agrypnos adopted it. Lid close still uses brightness floor + keyboard backlight off."
+    public static let menuTooltipOff = "Agrypnos: watch is off."
+    public static let menuTooltipOn =
+        "Agrypnos: armed. Waiting for lid close — then brightness floor + keyboard backlight off."
+    public static let menuTooltipArmed =
+        "Agrypnos: armed. Waiting for lid close — then brightness floor + keyboard backlight off. On battery."
+    public static let menuTooltipLidClosed =
+        "Agrypnos: lid closed. Brightness floor + keyboard backlight off."
+    public static let menuTooltipLeftover =
+        "Agrypnos: adopted leftover SleepDisabled. Waiting for lid close — then brightness floor + keyboard backlight off."
+    public static let menuTooltipLeftoverLidClosed =
+        "Agrypnos: adopted leftover SleepDisabled. Lid closed. Brightness floor + keyboard backlight off."
 
-    public static func leftoverCaption(floor: Int) -> String {
-        "Leftover SleepDisabled. Watch adopted it. Turns off at \(floor)% battery."
+    public static func leftoverCaption(floor: Int, lidClosed: Bool = false) -> String {
+        if lidClosed {
+            return "Leftover SleepDisabled. Lid closed. Brightness floor, keyboard backlight off. Auto-off at \(floor)% battery."
+        }
+        return "Leftover SleepDisabled. Lid close — then brightness floor, keyboard backlight off. Auto-off at \(floor)%."
     }
 
     public static func watchCaption(
@@ -94,7 +105,7 @@ public enum AgrypnosCopy: Sendable {
         lidClosed: Bool
     ) -> String {
         if !engaged { return captionOff }
-        if leftover { return leftoverCaption(floor: floor) }
+        if leftover { return leftoverCaption(floor: floor, lidClosed: lidClosed) }
         if lidClosed { return captionLidClosed(floor: floor) }
         return captionPrepared(floor: floor)
     }
@@ -106,7 +117,9 @@ public enum AgrypnosCopy: Sendable {
         lidClosed: Bool
     ) -> String {
         if !engaged { return menuTooltipOff }
-        if leftover { return menuTooltipLeftover }
+        if leftover {
+            return lidClosed ? menuTooltipLeftoverLidClosed : menuTooltipLeftover
+        }
         if lidClosed { return menuTooltipLidClosed }
         return onBattery ? menuTooltipArmed : menuTooltipOn
     }
