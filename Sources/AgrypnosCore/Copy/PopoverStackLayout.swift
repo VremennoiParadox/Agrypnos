@@ -18,6 +18,8 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static let cardGap = 10
     public static let firstCardY = 42
     /// Tall enough for 14" Macs; 13" still gets a scroller instead of clipped quit.
+    /// AppKit must use a flipped NSClipView and scroll the document to (0, 0) on open,
+    /// or an unflipped clip shows Quit first.
     public static let maxVisibleHeight = 720
     public static let quitReserve = 36
     public static let switchRowHeight = 32

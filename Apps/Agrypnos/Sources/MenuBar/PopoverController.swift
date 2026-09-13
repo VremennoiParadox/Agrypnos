@@ -40,6 +40,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     let recorder = HotkeyRecorderControl()
     var hotkeyButtonY: CGFloat = 0
     var contentWidth: CGFloat = 0
+    var popoverScroll: NSScrollView!
 
     init(runtime: WatchRuntime) {
         self.runtime = runtime
@@ -131,6 +132,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         NSApp.activate(ignoringOtherApps: true)
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         popover.contentViewController?.view.window?.makeKey()
+        popoverScroll?.documentView?.scroll(.zero)
         startCountdown()
         clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             self?.close()

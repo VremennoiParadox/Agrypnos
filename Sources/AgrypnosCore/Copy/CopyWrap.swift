@@ -15,6 +15,9 @@ public enum PopoverCopyLayout: Sendable {
     public static let minutesFieldWidthPoints = 56
     /// Right-aligned on the How long row, extending left into the gap past the 56pt field.
     public static let minutesLabelWidthPoints = 80
+    public static let percentValueWidthPoints = 54
+    /// "1m 30s" at 13pt — wider than a percent so the idle-wait value does not clip.
+    public static let timeValueWidthPoints = 72
 }
 
 public enum CopyWrap: Sendable {

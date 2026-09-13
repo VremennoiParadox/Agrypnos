@@ -20,12 +20,16 @@ extension PopoverController {
 
         let document = FlippedView(frame: NSRect(x: 0, y: 0, width: W, height: CGFloat(layout.contentHeight)))
         let scroll = NSScrollView(frame: root.bounds)
+        let clip = FlippedClipView(frame: scroll.contentView.frame)
+        clip.drawsBackground = false
+        scroll.contentView = clip
         scroll.drawsBackground = false
         scroll.hasVerticalScroller = true
         scroll.autohidesScrollers = true
         scroll.borderType = .noBorder
         scroll.horizontalScrollElasticity = .none
         scroll.documentView = document
+        popoverScroll = scroll
         root.addSubview(scroll)
 
         let mark = NSImageView(frame: NSRect(x: pad, y: 14, width: 18, height: 18))
@@ -87,21 +91,24 @@ extension PopoverController {
             swW: swW,
             swH: swH,
             target: self,
-            action: #selector(floorToggled(_:))
+            action: #selector(floorToggled(_:)),
+            trailing: PopoverForm.percentValueWidth + 8
+        )
+        floorPercentValue = PopoverForm.valueLabel(
+            in: g3,
+            y: CGFloat(PopoverStackLayout.hygieneFloorY),
+            contentW: contentW,
+            ci: ci,
+            text: "\(UserPreferences.default.brightnessFloorPercent)%",
+            width: PopoverForm.percentValueWidth,
+            besideSwitch: swW
         )
         _ = PopoverForm.help(
             AgrypnosCopy.brightnessFloorHelp,
             in: g3,
             y: CGFloat(PopoverStackLayout.hygieneHelpY),
             x: ci,
-            width: cw - PopoverForm.valueWidth - 8
-        )
-        floorPercentValue = PopoverForm.valueLabel(
-            in: g3,
-            y: CGFloat(PopoverStackLayout.hygieneHelpY),
-            contentW: contentW,
-            ci: ci,
-            text: "\(UserPreferences.default.brightnessFloorPercent)%"
+            width: cw
         )
         let floorRange = UserPreferences.brightnessFloorPercentRange
         floorPercentSlider = PopoverForm.slider(
@@ -130,14 +137,15 @@ extension PopoverController {
             AgrypnosCopy.settleGrace,
             in: gSettle,
             ci: ci,
-            width: cw - PopoverForm.valueWidth - 8
+            width: cw - PopoverForm.timeValueWidth - 8
         )
         settleValue = PopoverForm.valueLabel(
             in: gSettle,
             y: CGFloat(PopoverStackLayout.prefTitleY),
             contentW: contentW,
             ci: ci,
-            text: AgentSettleGraceChrome.valueLabel(seconds: UserPreferences.default.agentSettleGrace)
+            text: AgentSettleGraceChrome.valueLabel(seconds: UserPreferences.default.agentSettleGrace),
+            width: PopoverForm.timeValueWidth
         )
         _ = PopoverForm.help(
             AgrypnosCopy.settleGraceHelp,
@@ -299,7 +307,7 @@ extension PopoverController {
 
     private func addBatteryCard(_ g4: CardView, contentW: CGFloat, ci: CGFloat, cw: CGFloat) {
         let batt = LabelFactory.make(AgrypnosCopy.batteryFloor, font: .systemFont(ofSize: 13), color: .labelColor)
-        batt.frame = NSRect(x: ci, y: ci, width: cw - PopoverForm.valueWidth, height: 18)
+        batt.frame = NSRect(x: ci, y: ci, width: cw - PopoverForm.percentValueWidth, height: 18)
         g4.addSubview(batt)
         let batteryRange = UserPreferences.batteryFloorRange
         batteryValue = PopoverForm.valueLabel(

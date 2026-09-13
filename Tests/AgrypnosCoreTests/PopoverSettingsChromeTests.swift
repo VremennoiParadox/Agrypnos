@@ -205,6 +205,18 @@ final class PopoverStackLayoutTests: XCTestCase {
         XCTAssertEqual(layout.battery.height, 88)
         XCTAssertEqual(layout.login.height, 44)
         XCTAssertEqual(layout.hotkeyHint.height, PopoverCopyLayout.hotkeyHintHeightPoints)
+        XCTAssertGreaterThan(layout.contentHeight, PopoverStackLayout.maxVisibleHeight)
+        XCTAssertTrue(layout.needsScroll)
+        XCTAssertEqual(layout.popoverHeight, PopoverStackLayout.maxVisibleHeight)
+    }
+
+    func testTimeValueSlotFitsOneMinuteThirty() {
+        let needed = "1m 30s".count * 9 + 8
+        XCTAssertGreaterThan(
+            PopoverCopyLayout.timeValueWidthPoints,
+            PopoverCopyLayout.percentValueWidthPoints
+        )
+        XCTAssertGreaterThanOrEqual(PopoverCopyLayout.timeValueWidthPoints, needed)
     }
 }
 

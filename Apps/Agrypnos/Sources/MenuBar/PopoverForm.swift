@@ -6,7 +6,8 @@ import AgrypnosCore
 
 @MainActor
 enum PopoverForm {
-    static let valueWidth: CGFloat = 54
+    static var percentValueWidth: CGFloat { CGFloat(PopoverCopyLayout.percentValueWidthPoints) }
+    static var timeValueWidth: CGFloat { CGFloat(PopoverCopyLayout.timeValueWidthPoints) }
 
     static func card(in root: NSView, slot: PopoverSlot, pad: CGFloat, width: CGFloat) -> CardView {
         let view = CardView(frame: NSRect(
@@ -30,10 +31,11 @@ enum PopoverForm {
         swW: CGFloat,
         swH: CGFloat,
         target: AnyObject,
-        action: Selector
+        action: Selector,
+        trailing: CGFloat = 0
     ) -> NSSwitch {
         let label = LabelFactory.make(title, font: .systemFont(ofSize: 13), color: .labelColor)
-        label.frame = NSRect(x: ci, y: y, width: cw - swW - 8, height: 22)
+        label.frame = NSRect(x: ci, y: y, width: cw - swW - 8 - trailing, height: 22)
         card.addSubview(label)
         let toggle = NSSwitch()
         toggle.target = target
@@ -67,14 +69,28 @@ enum PopoverForm {
         return field
     }
 
-    static func valueLabel(in card: NSView, y: CGFloat, contentW: CGFloat, ci: CGFloat, text: String) -> NSTextField {
+    static func valueLabel(
+        in card: NSView,
+        y: CGFloat,
+        contentW: CGFloat,
+        ci: CGFloat,
+        text: String,
+        width: CGFloat = CGFloat(PopoverCopyLayout.percentValueWidthPoints),
+        besideSwitch swW: CGFloat? = nil
+    ) -> NSTextField {
         let field = LabelFactory.make(
             text,
             font: .systemFont(ofSize: 13, weight: .semibold),
             color: .secondaryLabelColor
         )
         field.alignment = .right
-        field.frame = NSRect(x: contentW - ci - valueWidth, y: y, width: valueWidth, height: 18)
+        let x: CGFloat
+        if let swW {
+            x = contentW - ci - swW - 8 - width
+        } else {
+            x = contentW - ci - width
+        }
+        field.frame = NSRect(x: x, y: y, width: width, height: 18)
         card.addSubview(field)
         return field
     }
