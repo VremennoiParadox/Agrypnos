@@ -9,6 +9,11 @@ final class FlippedView: NSView {
     override var isFlipped: Bool { true }
 }
 
+/// Clip view must match the flipped document. A stock NSClipView shows Quit first.
+final class FlippedClipView: NSClipView {
+    override var isFlipped: Bool { true }
+}
+
 final class GlassView: NSVisualEffectView {
     override var isFlipped: Bool { true }
 }

@@ -2,14 +2,22 @@ public enum PopoverCopyLayout: Sendable {
     /// Inner label width in the popover (~272pt at 12pt). Conservative glyph budget.
     public static let innerColumns = 36
     public static let durationHintMaxLines = 3
-    public static let captionMaxLines = 3
+    /// Leftover + “battery” wraps to 4 lines at the conservative column budget.
+    public static let captionMaxLines = 4
+    public static let helpMaxLines = 2
+    public static let hotkeyHintMaxLines = 2
     public static let lineHeightPoints = 16
     public static let durationHintHeightPoints = 48
-    public static let captionHeightPoints = 48
+    public static let captionHeightPoints = captionMaxLines * lineHeightPoints
+    public static let helpHeightPoints = helpMaxLines * lineHeightPoints
+    public static let hotkeyHintHeightPoints = hotkeyHintMaxLines * lineHeightPoints
     /// Custom-minutes field. The "Minutes" label is wider so it does not share this slot.
     public static let minutesFieldWidthPoints = 56
     /// Right-aligned on the How long row, extending left into the gap past the 56pt field.
     public static let minutesLabelWidthPoints = 80
+    public static let percentValueWidthPoints = 54
+    /// "1m 30s" at 13pt — wider than a percent so the idle-wait value does not clip.
+    public static let timeValueWidthPoints = 72
 }
 
 public enum CopyWrap: Sendable {

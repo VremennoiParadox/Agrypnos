@@ -14,7 +14,9 @@
 		F87EF19E80616F394A8108B0 /* LaunchAtLoginController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1531989688A32A6FF3BE1EF7 /* LaunchAtLoginController.swift */; };
 		31713455EC90405270582CED /* HotkeyRecorderControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71AB415778ADE64BF7D1B20 /* HotkeyRecorderControl.swift */; };
 		EE4DE2012E8891D5E35D9C27 /* PopoverChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = F94178055CD17CB0C1E4EBE4 /* PopoverChrome.swift */; };
+		87299C24812BC138E73D77BC /* PopoverController+Canvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50D9BE7A9730D85A15B6E96E /* PopoverController+Canvas.swift */; };
 		40DF44DBC43DE8B05319E1F5 /* PopoverController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 329EC7D50E7C6B456084BE11 /* PopoverController.swift */; };
+		6ED04DCF9683E5F466136641 /* PopoverForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E6799E8B24D782B3151D901 /* PopoverForm.swift */; };
 		EC7A8AAC019F71CCB4D3623D /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8607BE8FEC94DD9191D5842B /* StatusItemController.swift */; };
 		B54A11BE04F7B909BA1DAA45 /* BrightnessFloorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 664053E9C3461C2FA95B19F5 /* BrightnessFloorController.swift */; };
 		B90D244D2FCD3BF4C0C2FA52 /* BrightnessRampController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AEA59356C52ACE1D2FD1C57 /* BrightnessRampController.swift */; };
@@ -40,7 +42,9 @@
 		1531989688A32A6FF3BE1EF7 /* LaunchAtLoginController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginController.swift; sourceTree = "<group>"; };
 		A71AB415778ADE64BF7D1B20 /* HotkeyRecorderControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyRecorderControl.swift; sourceTree = "<group>"; };
 		F94178055CD17CB0C1E4EBE4 /* PopoverChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverChrome.swift; sourceTree = "<group>"; };
+		50D9BE7A9730D85A15B6E96E /* PopoverController+Canvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverController+Canvas.swift; sourceTree = "<group>"; };
 		329EC7D50E7C6B456084BE11 /* PopoverController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverController.swift; sourceTree = "<group>"; };
+		6E6799E8B24D782B3151D901 /* PopoverForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverForm.swift; sourceTree = "<group>"; };
 		8607BE8FEC94DD9191D5842B /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
 		664053E9C3461C2FA95B19F5 /* BrightnessFloorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessFloorController.swift; sourceTree = "<group>"; };
 		2AEA59356C52ACE1D2FD1C57 /* BrightnessRampController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessRampController.swift; sourceTree = "<group>"; };
@@ -116,7 +120,9 @@
 			children = (
 				A71AB415778ADE64BF7D1B20 /* HotkeyRecorderControl.swift */,
 				F94178055CD17CB0C1E4EBE4 /* PopoverChrome.swift */,
+				50D9BE7A9730D85A15B6E96E /* PopoverController+Canvas.swift */,
 				329EC7D50E7C6B456084BE11 /* PopoverController.swift */,
+				6E6799E8B24D782B3151D901 /* PopoverForm.swift */,
 				8607BE8FEC94DD9191D5842B /* StatusItemController.swift */,
 			);
 			path = MenuBar;
@@ -258,7 +264,9 @@
 				F87EF19E80616F394A8108B0 /* LaunchAtLoginController.swift in Sources */,
 				31713455EC90405270582CED /* HotkeyRecorderControl.swift in Sources */,
 				EE4DE2012E8891D5E35D9C27 /* PopoverChrome.swift in Sources */,
+				87299C24812BC138E73D77BC /* PopoverController+Canvas.swift in Sources */,
 				40DF44DBC43DE8B05319E1F5 /* PopoverController.swift in Sources */,
+				6ED04DCF9683E5F466136641 /* PopoverForm.swift in Sources */,
 				EC7A8AAC019F71CCB4D3623D /* StatusItemController.swift in Sources */,
 				B54A11BE04F7B909BA1DAA45 /* BrightnessFloorController.swift in Sources */,
 				B90D244D2FCD3BF4C0C2FA52 /* BrightnessRampController.swift in Sources */,

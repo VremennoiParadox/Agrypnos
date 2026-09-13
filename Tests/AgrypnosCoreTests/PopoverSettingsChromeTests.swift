@@ -69,6 +69,157 @@ final class DurationPickerChromeTests: XCTestCase {
     }
 }
 
+final class PopoverPrefChromeTests: XCTestCase {
+    func testBrightnessFloorPercentChromeMatchesPreferencesRange() {
+        XCTAssertEqual(
+            BrightnessFloorPercentChrome.minPercent,
+            UserPreferences.brightnessFloorPercentRange.lowerBound
+        )
+        XCTAssertEqual(
+            BrightnessFloorPercentChrome.maxPercent,
+            UserPreferences.brightnessFloorPercentRange.upperBound
+        )
+        XCTAssertEqual(UserPreferences.brightnessFloorPercentRange, 5...40)
+        XCTAssertEqual(UserPreferences.defaultBrightnessFloorPercent, 15)
+        XCTAssertEqual(BrightnessFloorPercentChrome.minLabel, "5%")
+        XCTAssertEqual(BrightnessFloorPercentChrome.maxLabel, "40%")
+        XCTAssertNotEqual(BrightnessFloorPercentChrome.minPercent, 0)
+    }
+
+    func testSettleGraceChromeMatchesPreferencesRange() {
+        XCTAssertEqual(AgentSettleGraceChrome.minSeconds, UserPreferences.agentSettleGraceRange.lowerBound)
+        XCTAssertEqual(AgentSettleGraceChrome.maxSeconds, UserPreferences.agentSettleGraceRange.upperBound)
+        XCTAssertEqual(UserPreferences.agentSettleGraceRange, 15...900)
+        XCTAssertEqual(UserPreferences.default.agentSettleGrace, 90)
+        XCTAssertEqual(AgentSettleGraceChrome.minLabel, "15s")
+        XCTAssertEqual(AgentSettleGraceChrome.maxLabel, "15m")
+        XCTAssertEqual(AgentSettleGraceChrome.valueLabel(seconds: 15), "15s")
+        XCTAssertEqual(AgentSettleGraceChrome.valueLabel(seconds: 90), "1m 30s")
+        XCTAssertEqual(AgentSettleGraceChrome.valueLabel(seconds: 120), "2m")
+        XCTAssertEqual(AgentSettleGraceChrome.valueLabel(seconds: 900), "15m")
+        XCTAssertEqual(AgentSettleGraceChrome.seconds(sliderValue: 5), 15)
+        XCTAssertEqual(AgentSettleGraceChrome.seconds(sliderValue: 90), 90)
+        XCTAssertEqual(AgentSettleGraceChrome.seconds(sliderValue: 9_999), 900)
+    }
+
+    func testLidOpenRampChromeMapsOneTwoThreeSeconds() {
+        XCTAssertEqual(LidOpenRampChrome.titles, ["1s", "2s", "3s"])
+        XCTAssertEqual(LidOpenRampChrome.options, [1, 2, 3])
+        XCTAssertEqual(LidOpenRampChrome.selectedSegment(seconds: 1), 0)
+        XCTAssertEqual(LidOpenRampChrome.selectedSegment(seconds: 2), 1)
+        XCTAssertEqual(LidOpenRampChrome.selectedSegment(seconds: 3), 2)
+        XCTAssertEqual(LidOpenRampChrome.selectedSegment(seconds: 0), 0)
+        XCTAssertEqual(LidOpenRampChrome.selectedSegment(seconds: 9), 2)
+        XCTAssertEqual(LidOpenRampChrome.seconds(selectingSegment: 0), 1)
+        XCTAssertEqual(LidOpenRampChrome.seconds(selectingSegment: 1), 2)
+        XCTAssertEqual(LidOpenRampChrome.seconds(selectingSegment: 2), 3)
+        XCTAssertNil(LidOpenRampChrome.seconds(selectingSegment: -1))
+        XCTAssertNil(LidOpenRampChrome.seconds(selectingSegment: 3))
+    }
+
+    func testPrefRowTitlesAreNotJargon() {
+        XCTAssertNotEqual(AgrypnosCopy.settleGrace, "Agents settle grace")
+        XCTAssertNotEqual(AgrypnosCopy.lidOpenRamp, "Lid-open ramp")
+        XCTAssertFalse(AgrypnosCopy.settleGrace.lowercased().contains("settle grace"))
+        XCTAssertFalse(AgrypnosCopy.lidOpenRamp.lowercased().contains("lid-open ramp"))
+        XCTAssertFalse(AgrypnosCopy.settleGraceHelp.lowercased().contains("settle grace"))
+        XCTAssertFalse(AgrypnosCopy.lidOpenRampHelp.lowercased().contains("lid-open ramp"))
+    }
+}
+
+final class PopoverStackLayoutTests: XCTestCase {
+    func testCardsStackTopToBottomWithoutOverlap() {
+        let layout = PopoverStackLayout.make()
+        let cards = [
+            layout.watch,
+            layout.duration,
+            layout.hygiene,
+            layout.battery,
+            layout.settle,
+            layout.ramp,
+            layout.login,
+        ]
+        XCTAssertEqual(layout.watch.y, PopoverStackLayout.firstCardY)
+        for (index, card) in cards.enumerated() {
+            XCTAssertGreaterThan(card.height, 0, "card \(index)")
+            if index > 0 {
+                XCTAssertEqual(
+                    card.y,
+                    cards[index - 1].maxY + PopoverStackLayout.cardGap,
+                    "card \(index) smashed into the previous card"
+                )
+            }
+        }
+        XCTAssertGreaterThanOrEqual(layout.shortcutY, layout.login.maxY)
+        XCTAssertGreaterThanOrEqual(layout.hotkeyHint.y, layout.shortcutY)
+        XCTAssertGreaterThanOrEqual(layout.quitY, layout.hotkeyHint.maxY)
+        XCTAssertEqual(layout.contentHeight, layout.quitY + PopoverStackLayout.quitReserve)
+        XCTAssertEqual(
+            layout.popoverHeight,
+            min(layout.contentHeight, PopoverStackLayout.maxVisibleHeight)
+        )
+        XCTAssertEqual(layout.needsScroll, layout.contentHeight > layout.popoverHeight)
+        XCTAssertLessThanOrEqual(layout.popoverHeight, PopoverStackLayout.maxVisibleHeight)
+    }
+
+    func testWatchCaptionSlotHoldsLeftoverBatteryWrap() {
+        let layout = PopoverStackLayout.make()
+        XCTAssertGreaterThanOrEqual(
+            PopoverCopyLayout.captionMaxLines,
+            CopyWrap.lineCount(
+                AgrypnosCopy.leftoverCaption(floor: 100, lidClosed: false),
+                columns: PopoverCopyLayout.innerColumns
+            )
+        )
+        XCTAssertGreaterThanOrEqual(
+            layout.watch.height,
+            PopoverStackLayout.inset + 28 + PopoverCopyLayout.captionHeightPoints + PopoverStackLayout.inset
+        )
+        XCTAssertEqual(
+            PopoverCopyLayout.captionHeightPoints,
+            PopoverCopyLayout.captionMaxLines * PopoverCopyLayout.lineHeightPoints
+        )
+    }
+
+    func testHygieneSettleAndRampSlotsFitNativeControls() {
+        let layout = PopoverStackLayout.make()
+        XCTAssertGreaterThanOrEqual(
+            layout.hygiene.height,
+            2 * PopoverStackLayout.switchRowHeight
+                + PopoverCopyLayout.helpHeightPoints
+                + PopoverStackLayout.sliderBlockHeight
+        )
+        XCTAssertGreaterThanOrEqual(
+            layout.settle.height,
+            PopoverStackLayout.titleRowHeight
+                + PopoverCopyLayout.helpHeightPoints
+                + PopoverStackLayout.sliderBlockHeight
+        )
+        XCTAssertGreaterThanOrEqual(
+            layout.ramp.height,
+            PopoverStackLayout.titleRowHeight
+                + PopoverCopyLayout.helpHeightPoints
+                + PopoverStackLayout.segmentRowHeight
+        )
+        XCTAssertEqual(layout.duration.height, 136)
+        XCTAssertEqual(layout.battery.height, 88)
+        XCTAssertEqual(layout.login.height, 44)
+        XCTAssertEqual(layout.hotkeyHint.height, PopoverCopyLayout.hotkeyHintHeightPoints)
+        XCTAssertGreaterThan(layout.contentHeight, PopoverStackLayout.maxVisibleHeight)
+        XCTAssertTrue(layout.needsScroll)
+        XCTAssertEqual(layout.popoverHeight, PopoverStackLayout.maxVisibleHeight)
+    }
+
+    func testTimeValueSlotFitsOneMinuteThirty() {
+        let needed = "1m 30s".count * 9 + 8
+        XCTAssertGreaterThan(
+            PopoverCopyLayout.timeValueWidthPoints,
+            PopoverCopyLayout.percentValueWidthPoints
+        )
+        XCTAssertGreaterThanOrEqual(PopoverCopyLayout.timeValueWidthPoints, needed)
+    }
+}
+
 final class HotkeyRecorderChromeTests: XCTestCase {
     func testIdleShowsLiveChordAndDoesNotClaimADeadBind() {
         let live = HotkeyRecorderChrome.make(

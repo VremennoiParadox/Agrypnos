@@ -257,7 +257,7 @@ final class AgrypnosCopyTests: XCTestCase {
         let notify = AgrypnosCopy.leftoverNotify
         XCTAssertEqual(
             open,
-            "Leftover SleepDisabled. Lid close — then brightness floor, keyboard backlight off. Auto-off at 15%."
+            "Leftover SleepDisabled. Lid close — then brightness floor, keyboard backlight off. Auto-off at 15% battery."
         )
         XCTAssertEqual(
             closed,
@@ -303,6 +303,56 @@ final class AgrypnosCopyTests: XCTestCase {
         )
     }
 
+    func testLeftoverOpenAndClosedCaptionsBothSayBattery() {
+        for lidClosed in [false, true] {
+            for floor in [5, 15, 100] {
+                let caption = AgrypnosCopy.leftoverCaption(floor: floor, lidClosed: lidClosed)
+                XCTAssertTrue(
+                    caption.lowercased().contains("battery"),
+                    "leftover lidClosed=\(lidClosed) floor=\(floor) dropped battery: \(caption)"
+                )
+                XCTAssertTrue(caption.contains("\(floor)%"))
+                assertFitsCaption(caption)
+            }
+        }
+    }
+
+    func testPrefRowCopyIsPlainAndFits() {
+        XCTAssertFalse(AgrypnosCopy.settleGrace.lowercased().contains("settle grace"))
+        XCTAssertFalse(AgrypnosCopy.lidOpenRamp.lowercased().contains("lid-open ramp"))
+        XCTAssertFalse(AgrypnosCopy.settleGraceHelp.lowercased().contains("settle grace"))
+        XCTAssertFalse(AgrypnosCopy.lidOpenRampHelp.lowercased().contains("lid-open ramp"))
+        XCTAssertTrue(AgrypnosCopy.settleGrace.lowercased().contains("idle"))
+        XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("sleep"))
+        XCTAssertTrue(AgrypnosCopy.lidOpenRamp.lowercased().contains("brightness"))
+        XCTAssertTrue(AgrypnosCopy.lidOpenRampHelp.lowercased().contains("lid"))
+        XCTAssertTrue(AgrypnosCopy.brightnessFloorHelp.lowercased().contains("lid"))
+        XCTAssertTrue(AgrypnosCopy.brightnessFloorHelp.lowercased().contains("percent"))
+        assertFitsHelp(AgrypnosCopy.settleGraceHelp)
+        assertFitsHelp(AgrypnosCopy.lidOpenRampHelp)
+        assertFitsHelp(AgrypnosCopy.brightnessFloorHelp)
+        XCTAssertLessThanOrEqual(
+            CopyWrap.lineCount(AgrypnosCopy.settleGrace, columns: PopoverCopyLayout.innerColumns),
+            2
+        )
+        XCTAssertLessThanOrEqual(
+            CopyWrap.lineCount(AgrypnosCopy.lidOpenRamp, columns: PopoverCopyLayout.innerColumns),
+            2
+        )
+    }
+
+    func testHotkeyHintsFitTheHintSlot() {
+        assertFitsHotkeyHint(AgrypnosCopy.hotkeyHint(.defaultToggle, registered: true))
+        assertFitsHotkeyHint(AgrypnosCopy.hotkeyHint(.defaultToggle, registered: false))
+        assertFitsHotkeyHint(AgrypnosCopy.hotkeyRecordingHint)
+        assertFitsHotkeyHint(
+            AgrypnosCopy.hotkeyHint(
+                HotkeyChord(keyCode: 0, option: false, command: false),
+                registered: false
+            )
+        )
+    }
+
     func testHotkeyHintDoesNotClaimActiveWhenRegistrationFailed() {
         let failed = AgrypnosCopy.hotkeyHint(.defaultToggle, registered: false)
         XCTAssertTrue(failed.contains("⌥⌘A"))
@@ -322,8 +372,11 @@ final class AgrypnosCopyTests: XCTestCase {
             AgrypnosCopy.hotkeyRecordingHint,
             AgrypnosCopy.keyboardDark,
             AgrypnosCopy.brightnessFloor,
+            AgrypnosCopy.brightnessFloorHelp,
             AgrypnosCopy.settleGrace,
+            AgrypnosCopy.settleGraceHelp,
             AgrypnosCopy.lidOpenRamp,
+            AgrypnosCopy.lidOpenRampHelp,
             AgrypnosCopy.batteryFloor,
             AgrypnosCopy.launchAtLogin,
             AgrypnosCopy.quit,
@@ -386,6 +439,28 @@ final class AgrypnosCopyTests: XCTestCase {
         XCTAssertLessThanOrEqual(lines, PopoverCopyLayout.durationHintMaxLines, file: file, line: line)
         XCTAssertGreaterThanOrEqual(
             PopoverCopyLayout.durationHintHeightPoints,
+            lines * PopoverCopyLayout.lineHeightPoints,
+            file: file,
+            line: line
+        )
+    }
+
+    private func assertFitsHelp(_ text: String, file: StaticString = #filePath, line: UInt = #line) {
+        let lines = CopyWrap.lineCount(text, columns: PopoverCopyLayout.innerColumns)
+        XCTAssertLessThanOrEqual(lines, PopoverCopyLayout.helpMaxLines, file: file, line: line)
+        XCTAssertGreaterThanOrEqual(
+            PopoverCopyLayout.helpHeightPoints,
+            lines * PopoverCopyLayout.lineHeightPoints,
+            file: file,
+            line: line
+        )
+    }
+
+    private func assertFitsHotkeyHint(_ text: String, file: StaticString = #filePath, line: UInt = #line) {
+        let lines = CopyWrap.lineCount(text, columns: PopoverCopyLayout.innerColumns)
+        XCTAssertLessThanOrEqual(lines, PopoverCopyLayout.hotkeyHintMaxLines, file: file, line: line)
+        XCTAssertGreaterThanOrEqual(
+            PopoverCopyLayout.hotkeyHintHeightPoints,
             lines * PopoverCopyLayout.lineHeightPoints,
             file: file,
             line: line
