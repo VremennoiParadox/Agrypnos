@@ -1,6 +1,6 @@
 # Agrypnos
 
-**Lid down. Agents still working. Panel dark when it should be.**
+**Lid down. Agents still working. Brightness floored, keyboard dark.**
 
 Agrypnos is a native Swift menu-bar extra for Mac. Arm the watch, close the lid, and it keeps the machine awake while your coding agents run — brightness floored and keyboard backlight off under the lid, then back when you open mid-watch.
 
@@ -16,10 +16,10 @@ The name is Greek: *agrypnos*, sleepless. Warm and direct — not a caffeine jok
 | Lid close | Brightness → user floor % (default **15%**, range 5–40; never 0%) + keyboard backlight off |
 | Lid open mid-watch | Gradual brightness ramp **1 / 2 / 3 s** (default **2s**) + keyboard backlight on |
 | Lid closed keep-awake | Kernel `SleepDisabled` via `pmset disablesleep` |
-| Agents | Busy stays awake; settled idle after user settle grace allows sleep |
+| Agents | Busy stays awake; settled idle drops the watch; lid already closed → also requests sleep |
 | You | Menu bar + remappable shortcut (default `⌥⌘A`) |
 
-When watched agents go quiet for the settle grace, Agrypnos drops the watch and allows sleep. The product difference is power hygiene under the lid — floored brightness and a dark keyboard — plus keep-awake that survives shutting the notebook. V1 knobs stay in the **popover** (no separate settings window).
+When watched agents go quiet for the settle grace, Agrypnos drops the watch. If the lid is already closed, that auto-off also requests sleep. The product difference is power hygiene under the lid — floored brightness and a dark keyboard — plus keep-awake that survives shutting the notebook. V1 knobs stay in the **popover** (no separate settings window).
 
 ## Install / build
 
@@ -104,8 +104,8 @@ Linux contributors: `./Scripts/verify-linux.sh` runs `swift test` and the 600-li
 |---|---|---|
 | Agent busy/settle rules | Yes | — |
 | Timer / battery / thermal / LPM state machine | Yes | — |
-| LPM auto-off vs forced-watch | Yes | LPM on battery: auto-off unless you armed this session; battery/thermal still end it |
-| Lid-closed auto-off sleep request | Yes | Auto-off with lid closed: sleep is requested, not only keep-awake cleared |
+| LPM auto-off vs forced-watch | Yes | Arm, then LPM on while discharging: watch stays up; battery/thermal still end it |
+| Lid-closed auto-off sleep request | Yes | Auto-off with lid already closed: confirm sleep is requested, not only keep-awake cleared |
 | Copy, hotkey chord encoding | Yes | — |
 | Floor % / settle grace / ramp prefs (clamp, default, decode) | Yes | — |
 | Menu-bar popover | — | Render + click |
