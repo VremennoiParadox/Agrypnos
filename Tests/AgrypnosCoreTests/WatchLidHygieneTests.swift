@@ -4,10 +4,23 @@ import XCTest
 final class WatchLidHygieneTests: XCTestCase {
     let t0 = Date(timeIntervalSince1970: 10_000)
 
+    func testLidCloseReassertsSleepDisabledThenHygiene() {
+        var engine = WatchEngine(preferences: .default)
+        _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
+        XCTAssertEqual(
+            engine.lidDidClose(now: t0.addingTimeInterval(1)),
+            [.assertSleepDisabled, .applyBrightnessFloor, .requestKeyboardBacklightOff]
+        )
+        XCTAssertFalse(engine.lidDidClose(now: t0.addingTimeInterval(2)).contains(.requestSleep))
+    }
+
     func testArmWithLidAlreadyClosedAppliesFloorAndKeyboard() {
         var engine = WatchEngine(preferences: .default)
         let commands = engine.userSetEngaged(true, now: t0, lidClosed: true)
-        XCTAssertEqual(commands, [.engage, .applyBrightnessFloor, .requestKeyboardBacklightOff])
+        XCTAssertEqual(
+            commands,
+            [.engage, .assertSleepDisabled, .applyBrightnessFloor, .requestKeyboardBacklightOff]
+        )
         XCTAssertTrue(engine.lidHygieneApplied)
     }
 
@@ -16,7 +29,7 @@ final class WatchLidHygieneTests: XCTestCase {
         _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
         XCTAssertEqual(
             engine.lidDidClose(now: t0.addingTimeInterval(1)),
-            [.applyBrightnessFloor, .requestKeyboardBacklightOff]
+            [.assertSleepDisabled, .applyBrightnessFloor, .requestKeyboardBacklightOff]
         )
         XCTAssertTrue(engine.lidDidClose(now: t0.addingTimeInterval(2)).isEmpty)
         XCTAssertTrue(engine.lidHygieneApplied)
@@ -50,6 +63,7 @@ final class WatchLidHygieneTests: XCTestCase {
         XCTAssertTrue(engine.engaged)
         XCTAssertTrue(engine.leftoverAdopted)
         XCTAssertEqual(commands.first, .engage)
+        XCTAssertTrue(commands.contains(.assertSleepDisabled))
         XCTAssertTrue(commands.contains(.applyBrightnessFloor))
         XCTAssertTrue(commands.contains(.requestKeyboardBacklightOff))
         XCTAssertTrue(engine.lidHygieneApplied)
@@ -83,7 +97,10 @@ final class WatchLidHygieneTests: XCTestCase {
         prefs.keyboardBacklightOff = false
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
-        XCTAssertTrue(engine.lidDidClose(now: t0.addingTimeInterval(1)).isEmpty)
+        XCTAssertEqual(
+            engine.lidDidClose(now: t0.addingTimeInterval(1)),
+            [.assertSleepDisabled]
+        )
         XCTAssertTrue(engine.lidDidOpen(now: t0.addingTimeInterval(2)).isEmpty)
     }
 

@@ -163,8 +163,14 @@ final class WatchRuntime {
             thermalSerious: ThermalMonitor.isSerious(),
             lowPowerMode: ProcessInfo.processInfo.isLowPowerModeEnabled
         )
+        let kernel = SleepDisabledController.read()
         let agents = AgentProbeService.snapshot(now: Date(), freshness: engine.preferences.sessionFreshness)
-        let commands = engine.tick(now: Date(), safety: safety, agents: agents)
+        let commands = engine.tick(
+            now: Date(),
+            safety: safety,
+            agents: agents,
+            kernelSleepDisabled: kernel
+        )
         var applyCommands = commands
         for command in commands {
             if case .disengage(let reason) = command {
@@ -185,6 +191,11 @@ final class WatchRuntime {
     }
 
     func apply(_ commands: [WatchCommand]) {
+        for command in commands {
+            if case .assertSleepDisabled = command {
+                _ = armKernel()
+            }
+        }
         PowerHygieneCoordinator.apply(
             commands,
             preferences: engine.preferences,
@@ -291,9 +302,6 @@ final class WatchRuntime {
                 startLidPulse()
                 UserNotify.post(AgrypnosCopy.leftoverNotify)
             }
-        } else if !kernel, engine.engaged {
-            _ = engine.userSetEngaged(false, now: Date(), lidClosed: LidStateReader.isClosed())
-            restoreHygiene()
         }
     }
 }

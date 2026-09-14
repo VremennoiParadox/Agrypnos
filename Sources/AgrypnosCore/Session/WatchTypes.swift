@@ -1,5 +1,6 @@
 public enum WatchCommand: Equatable, Sendable {
     case engage
+    case assertSleepDisabled
     case disengage(DisengageReason)
     case requestKeyboardBacklightOff
     case applyBrightnessFloor

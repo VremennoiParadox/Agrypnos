@@ -14,7 +14,7 @@ enum PowerHygieneCoordinator {
     ) {
         for command in commands {
             switch command {
-            case .engage, .disengage:
+            case .engage, .disengage, .assertSleepDisabled:
                 break
             case .requestSleep:
                 _ = ProcessRunner.run("/usr/bin/pmset", ["sleepnow"])

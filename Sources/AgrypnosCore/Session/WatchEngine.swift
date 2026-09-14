@@ -63,7 +63,12 @@ public struct WatchEngine: Equatable, Sendable {
         settle.grace = preferences.agentSettleGrace
     }
 
-    public mutating func tick(now: Date, safety: SafetyInputs, agents: AgentSnapshot) -> [WatchCommand] {
+    public mutating func tick(
+        now: Date,
+        safety: SafetyInputs,
+        agents: AgentSnapshot,
+        kernelSleepDisabled: Bool = true
+    ) -> [WatchCommand] {
         guard engaged else { return [] }
         if let reason = AutoOffEvaluator.reason(
             engaged: true,
@@ -81,6 +86,9 @@ public struct WatchEngine: Equatable, Sendable {
                 return disengage(.agentsSettled)
             }
         }
+        if !kernelSleepDisabled {
+            return [.assertSleepDisabled]
+        }
         return []
     }
 
@@ -90,7 +98,7 @@ public struct WatchEngine: Equatable, Sendable {
         guard engaged else { return [] }
         guard !lidHygieneApplied else { return [] }
         lidHygieneApplied = true
-        return lidCloseHygieneCommands()
+        return [.assertSleepDisabled] + lidCloseHygieneCommands()
     }
 
     public mutating func lidDidOpen(now: Date) -> [WatchCommand] {
@@ -109,6 +117,7 @@ public struct WatchEngine: Equatable, Sendable {
         applyDuration(now: now)
         var commands: [WatchCommand] = [.engage]
         if lidClosed {
+            commands.append(.assertSleepDisabled)
             commands.append(contentsOf: lidCloseHygieneCommands())
             lidHygieneApplied = true
         } else {

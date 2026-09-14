@@ -77,6 +77,51 @@ final class WatchEngineTests: XCTestCase {
         )
     }
 
+    func testDroppedKernelWhileEngagedReassertsAndStaysOn() {
+        var engine = WatchEngine(preferences: .default)
+        _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
+        let commands = engine.tick(
+            now: t0.addingTimeInterval(5),
+            safety: .acPower,
+            agents: .idle,
+            kernelSleepDisabled: false
+        )
+        XCTAssertEqual(commands, [.assertSleepDisabled])
+        XCTAssertTrue(engine.engaged)
+    }
+
+    func testAgentsStillSettleWhenKernelIsHeld() {
+        var prefs = UserPreferences.default
+        prefs.duration = .untilAgentsSettle
+        var engine = WatchEngine(preferences: prefs)
+        _ = engine.userSetEngaged(true, now: t0)
+        XCTAssertTrue(
+            engine.tick(
+                now: t0,
+                safety: .acPower,
+                agents: AgentSnapshot(reports: [
+                    AgentReport(
+                        kind: .claudeCode,
+                        processRunning: true,
+                        cpuBusy: true,
+                        recentSessionWrite: true,
+                        isBusy: true
+                    )
+                ]),
+                kernelSleepDisabled: true
+            ).isEmpty
+        )
+        XCTAssertEqual(
+            engine.tick(
+                now: t0.addingTimeInterval(90),
+                safety: .acPower,
+                agents: .idle,
+                kernelSleepDisabled: true
+            ),
+            [.disengage(.agentsSettled)]
+        )
+    }
+
     func testAdoptLeftoverArmsWithoutBlankingWhenLidIsOpen() {
         var engine = WatchEngine(preferences: .default)
         let commands = engine.adoptLeftoverKernel(now: t0, lidClosed: false)
@@ -111,7 +156,11 @@ final class WatchEngineTests: XCTestCase {
         XCTAssertTrue(engine.lidDidClose(now: t0).isEmpty)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
         let cmds = engine.lidDidClose(now: t0.addingTimeInterval(1))
-        XCTAssertEqual(cmds, [.applyBrightnessFloor, .requestKeyboardBacklightOff])
+        XCTAssertEqual(
+            cmds,
+            [.assertSleepDisabled, .applyBrightnessFloor, .requestKeyboardBacklightOff]
+        )
+        XCTAssertFalse(cmds.contains(.requestSleep))
         XCTAssertFalse(cmds.contains(.engage))
         XCTAssertTrue(engine.lidHygieneApplied)
     }
