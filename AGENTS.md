@@ -30,7 +30,7 @@ No giant god-objects. No “just one more helper” that becomes AppDelegate 2.
 ## Hard limits
 
 - **No file over 600 lines.** Split *before* you hit the wall. Prefer ~250.
-- **Menu-bar only.** No Dock-first UI, no settings window unless V2 asks. `LSUIElement`.
+- **Menu-bar only.** No Dock-first UI. **No separate settings window** (no traffic-lights titled prefs). V1 sections stay in the popover. When V2 **Notif** ships, it stays in the popover too — **do not** add a Notif segment in V1. `LSUIElement`.
 - **Open source** (MIT). No telemetry. No stealth network.
 - **Do not claim watt numbers you did not measure.** Do not cite other products’ watt studies or invent comparisons. Agrypnos stands alone — do not name competitors in product docs or commits.
 - **Do not promise every agent provider.** V1 is Cursor, Claude Code, and Codex, local heuristics, correctness over coverage.
@@ -43,7 +43,7 @@ Ship these, and stop:
 
 | Piece | Behavior |
 |---|---|
-| Menu-bar extra + popover | Cards, toggles, duration (presets + custom minutes), remappable hotkey, low-battery slider (5–100%), brightness floor %, idle wait, brightness return 1/2/3s, launch-at-login, quit. Agrypnos glyph (eye, not a coffee cup). **Plain captions only** — every control says what it does (armed / waiting for lid close → brightness floor + keyboard backlight off). No poetry. **No separate settings window** — controls stay in the popover. |
+| Menu-bar extra + popover | Cards, toggles, duration (presets + custom minutes), remappable hotkey, low-battery slider (5–100%), brightness floor %, idle wait, brightness return 1/2/3s, launch-at-login, quit. Agrypnos glyph (eye, not a coffee cup). **Plain captions only** — every control says what it does (armed / waiting for lid close → brightness floor + keyboard backlight off). No poetry. **No separate settings window** — controls stay in the popover behind the V1 section switcher (**Watch** · **Power** · **Agents** · **General**). |
 | Global hotkey | Activate/toggle the watch. Default `⌥⌘A`. **Remappable** in the popover (conflict-safe). Required V1. Surface bind failure honestly when the chord cannot register. |
 | Keep the watch (armed) | ON = **armed** while the lid is open. Machine may already be held awake (`pmset disablesleep` / SleepDisabled) as needed for the watch, but **no** display blank, **no** `displaysleepnow`, **no** keyboard backlight off on toggle. |
 | Lid-closed keep-awake | With the watch armed, lid close keeps the Mac awake via `pmset disablesleep` (SleepDisabled). IOKit assertions do **not** survive lid close; use them only as extra idle prevention, never as the lid story. |
@@ -57,6 +57,21 @@ Ship these, and stop:
 | Agent watch | Busy → stay awake. Settled idle after **user settle grace** → allow sleep. Cursor + Claude Code + Codex first. Process list + session-file mtimes. |
 | Safety | Reboot clears SleepDisabled. Launch-at-login never re-arms the watch. One-time scoped sudoers grant for *exactly* two `pmset disablesleep` commands. |
 
+### V1 popover sections (unlocked — implement next)
+
+**Agrypnos UI** implements this after the bar lands. Still **no** settings window.
+
+- Top of the popover: slim section switcher. Prefer native segmented control / quiet text. Toolbar *position* like macOS prefs is fine; **do not** copy icon+blue-tile prefs chrome.
+- Exact names: **Watch** · **Power** · **Agents** · **General**. Default open **Watch**.
+- Card map:
+  - **Watch:** Keep the watch (arm) + duration presets/custom + arming caption
+  - **Power:** brightness floor % + keyboard backlight off (existing controls), battery auto-off, brightness return ramp
+  - **Agents:** idle wait after agents go quiet (per-tool include still locked until Mac prove)
+  - **General:** remappable hotkey, launch at login, quit
+- No **Licence** tab. No **About** as a toolbar tab. No **Notif** segment in V1.
+- Goal: shorter height per section; reduce long scroll when possible.
+- Plain captions only (personality rules below).
+
 ### V1 settings (popover only)
 
 **Landed** (popover only — no settings window; README should name them):
@@ -68,12 +83,26 @@ Ship these, and stop:
 - Idle wait after agents go quiet — Core + popover control; 15s–15m, default **90s**; then allow sleep
 - Brightness return when the lid opens — Core + popover control; **1 / 2 / 3 s**, default **2s**
 
+**V1 UI next (Agrypnos UI):** section switcher + card map above. Landed controls move into those sections; do not add a settings window to do it.
+
 Still **locked** until Boss unlocks after Mac prove:
 
 - Status-item remaining time
 - Per-tool Agents include list
 
-Out of V1: App Store sandbox, notarization pipeline, every provider, fake benchmarks, Wi-Fi/BT kill, Dock UI, separate settings window, `displaysleepnow` on engage, claiming display sleep when we only floored brightness.
+**Gated:** donate — no donate control until there is a live URL.
+
+### V2 park (do not implement)
+
+**Notif** section/tab for opt-in Discord webhook / user Telegram bot (token + chat id). One-shot POST on agents idle-while-armed (after the idle wait). Default off. Secrets in Keychain. No shared Agrypnos bot. No companion app. No stealth network / telemetry.
+
+Plain copy: POST to *your* webhook. Not “we notify your phone”. Not “agent stopped” — only idle after wait.
+
+Two-way remote commands and rich status (task text / finish ETA) stay idea-only. Do not invent them as V2 scope beyond one-way outbound notify.
+
+### Out of V1
+
+App Store sandbox, notarization pipeline, every provider, fake benchmarks, Wi-Fi/BT kill, Dock UI, separate settings window, **Licence** tab, **About** as a toolbar tab, **Notif**, donate without a live URL, `displaysleepnow` on engage, claiming display sleep when we only floored brightness.
 
 ## Layout
 
@@ -106,8 +135,8 @@ Commit and push when the work is a coherent slice. Do not ask the user for permi
 |---|---|---|
 | **Rules** | `AGENTS.md`, this bar, scope fights | Feature code |
 | **Swift core** | `AgrypnosCore`, heuristics, watch engine, lid/hygiene, safety | AppKit chrome |
-| **UI** | Menu bar, popover, personality copy, glyph | Kernel sleep flag |
-| **Review** | Gates. File size, TDD, no watt fiction, no god files, no false display-sleep claims, plain popover copy, no false ended-copy under LPM forced-watch | Shipping unreviewed slop |
+| **UI** | Menu bar, popover (section switcher + cards), personality copy, glyph | Kernel sleep flag |
+| **Review** | Gates. File size, TDD, no watt fiction, no god files, no false display-sleep claims, plain popover copy, no false ended-copy under LPM forced-watch, no settings window, no Licence/About tabs, Notif is V2, donate gated on live URL | Shipping unreviewed slop |
 | **Boss** | Sequence, merge order, “stop, this is V2” | Writing all the code |
 
 Parallel foundations are forbidden. One track. If you find a second scaffold, delete yours or stop.
@@ -124,6 +153,7 @@ Good: “Keeps the Mac awake with the lid closed.”
 Bad: “Sleeps with you when the lid closes.” / “I’ll floor the panel and kill the keys.” / “When they settle, sleep may return.”
 Bad: “World-class AI-powered sleep prevention maximizing battery.” / “We force the display asleep on toggle.”
 Bad: ended/standing-down copy while Low Power Mode forced-watch is still holding the Mac awake.
+Bad: “We notify your phone.” / “Agent stopped.” (Notif is V2; event is idle after wait; POST to *your* webhook.)
 
 ## OSS
 
