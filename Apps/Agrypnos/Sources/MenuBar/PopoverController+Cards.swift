@@ -152,17 +152,17 @@ extension PopoverController {
         card.addSubview(rampControl)
     }
 
-    func addDurationCard(_ g2: CardView, contentW: CGFloat, ci: CGFloat, cw: CGFloat) {
+    func addDurationCard(_ card: CardView, contentW: CGFloat, ci: CGFloat, cw: CGFloat) {
         let durationLabel = LabelFactory.make(AgrypnosCopy.durationLabel, font: .systemFont(ofSize: 13), color: .labelColor)
         durationLabel.frame = NSRect(x: ci, y: 8, width: 86, height: 22)
-        g2.addSubview(durationLabel)
+        card.addSubview(durationLabel)
         let fieldW = CGFloat(PopoverCopyLayout.minutesFieldWidthPoints)
         let minutesLabelW = CGFloat(PopoverCopyLayout.minutesLabelWidthPoints)
         let fieldGap: CGFloat = 8
         let minutesLabel = LabelFactory.make(AgrypnosCopy.minutesLabel, font: .systemFont(ofSize: 13), color: .labelColor)
         minutesLabel.alignment = .right
         minutesLabel.frame = NSRect(x: contentW - ci - minutesLabelW, y: 8, width: minutesLabelW, height: 22)
-        g2.addSubview(minutesLabel)
+        card.addSubview(minutesLabel)
         minutesField = NSTextField(string: "")
         minutesField.placeholderString = AgrypnosCopy.minutesPlaceholder
         minutesField.font = .systemFont(ofSize: 13)
@@ -177,7 +177,7 @@ extension PopoverController {
         minutesField.cell?.sendsActionOnEndEditing = true
         minutesField.setAccessibilityLabel(AgrypnosCopy.minutesLabel)
         minutesField.frame = NSRect(x: contentW - ci - fieldW, y: 36, width: fieldW, height: 24)
-        g2.addSubview(minutesField)
+        card.addSubview(minutesField)
         let chrome = DurationPickerChrome.make(duration: .indefinite)
         durationControl = NSSegmentedControl(
             labels: chrome.segmentTitles,
@@ -188,7 +188,7 @@ extension PopoverController {
         durationControl.segmentDistribution = .fillEqually
         durationControl.selectedSegment = 0
         durationControl.frame = NSRect(x: ci, y: 36, width: cw - fieldW - fieldGap, height: 24)
-        g2.addSubview(durationControl)
+        card.addSubview(durationControl)
         durationHint = LabelFactory.wrapping(
             "",
             font: .systemFont(ofSize: 12),
@@ -197,23 +197,23 @@ extension PopoverController {
         )
         durationHint.frame = NSRect(x: ci, y: 68, width: cw, height: PopoverMetrics.durationHintHeight)
         durationHint.preferredMaxLayoutWidth = cw
-        g2.addSubview(durationHint)
+        card.addSubview(durationHint)
     }
 
-    func addBatteryCard(_ g4: CardView, contentW: CGFloat, ci: CGFloat, cw: CGFloat) {
+    func addBatteryCard(_ card: CardView, contentW: CGFloat, ci: CGFloat, cw: CGFloat) {
         let batt = LabelFactory.make(AgrypnosCopy.batteryFloor, font: .systemFont(ofSize: 13), color: .labelColor)
         batt.frame = NSRect(x: ci, y: ci, width: cw - PopoverForm.percentValueWidth, height: 18)
-        g4.addSubview(batt)
+        card.addSubview(batt)
         let batteryRange = UserPreferences.batteryFloorRange
         batteryValue = PopoverForm.valueLabel(
-            in: g4,
+            in: card,
             y: ci,
             contentW: contentW,
             ci: ci,
             text: "\(UserPreferences.default.batteryFloorPercent)%"
         )
         batterySlider = PopoverForm.slider(
-            in: g4,
+            in: card,
             sliderY: ci + 26,
             minMaxY: ci + 50,
             ci: ci,

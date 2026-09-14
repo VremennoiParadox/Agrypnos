@@ -21,9 +21,6 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static var firstCardY: Int {
         sectionSwitcherY + sectionSwitcherHeight + cardGap
     }
-    /// Clip a section that grows past a 13" panel. Per-section stacks currently fit.
-    /// AppKit must use a flipped NSClipView and scroll the document to (0, 0) on open,
-    /// or an unflipped clip shows Quit first on General.
     public static let maxVisibleHeight = 720
     public static let quitReserve = 36
     public static let switchRowHeight = 32
@@ -72,7 +69,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public var needsScroll: Bool { contentHeight > popoverHeight }
 
     public var stackedCards: [PopoverSlot] {
-        [watch, duration, hygiene, battery, settle, ramp, login].compactMap { $0 }
+        section.cards.compactMap { slot($0) }
     }
 
     public func slot(_ card: PopoverCard) -> PopoverSlot? {

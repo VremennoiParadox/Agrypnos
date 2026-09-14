@@ -33,7 +33,6 @@ extension PopoverController {
         let popH = CGFloat(layout.popoverHeight)
         popoverRoot.frame.size.height = popH
         popoverScroll.frame = popoverRoot.bounds
-        popoverScroll.hasVerticalScroller = layout.needsScroll
         popover.contentSize = NSSize(width: width, height: popH)
         popoverScroll.documentView?.scroll(.zero)
     }
