@@ -36,6 +36,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var settleSlider: NSSlider!
     var settleValue: NSTextField!
     var rampControl: NSSegmentedControl!
+    var thermalSwitch: NSSwitch!
     var loginSwitch: NSSwitch!
     var hotkeyHint: NSTextField!
     let recorder = HotkeyRecorderControl()
@@ -50,6 +51,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var batteryCard: CardView!
     var settleCard: CardView!
     var rampCard: CardView!
+    var thermalCard: CardView!
     var loginCard: CardView!
     var shortcutLabel: NSTextField!
     var quitButton: NSButton!
@@ -121,6 +123,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         rampControl?.selectedSegment = LidOpenRampChrome.selectedSegment(
             seconds: runtime.preferences.lidOpenRampSeconds
         )
+        thermalSwitch?.state = runtime.preferences.thermalAutoOff ? .on : .off
         let batteryRange = UserPreferences.batteryFloorRange
         batterySlider?.minValue = Double(batteryRange.lowerBound)
         batterySlider?.maxValue = Double(batteryRange.upperBound)
@@ -302,6 +305,12 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
             return
         }
         runtime?.setLidOpenRampSeconds(seconds)
+        refresh()
+    }
+
+    @objc func thermalToggled(_ sender: NSSwitch) {
+        stopRecordingIfNeeded()
+        runtime?.setThermalAutoOff(sender.state == .on)
         refresh()
     }
 

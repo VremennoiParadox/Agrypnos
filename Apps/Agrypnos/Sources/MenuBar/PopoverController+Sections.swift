@@ -25,6 +25,7 @@ extension PopoverController {
         PopoverForm.apply(batteryCard, slot: layout.battery, pad: pad, width: contentW)
         PopoverForm.apply(settleCard, slot: layout.settle, pad: pad, width: contentW)
         PopoverForm.apply(rampCard, slot: layout.ramp, pad: pad, width: contentW)
+        PopoverForm.apply(thermalCard, slot: layout.thermal, pad: pad, width: contentW)
         PopoverForm.apply(loginCard, slot: layout.login, pad: pad, width: contentW)
 
         applyGeneralChrome(layout, pad: pad, contentW: contentW)

@@ -40,6 +40,8 @@ final class PopoverSectionTests: XCTestCase {
     func testCardMapKeepsExistingControlsInTheFourSections() {
         XCTAssertEqual(PopoverSection.watch.cards, [.watch, .duration])
         XCTAssertEqual(PopoverSection.power.cards, [.hygiene, .battery, .ramp, .thermal])
+        XCTAssertTrue(PopoverSection.power.cards.contains(.thermal))
+        XCTAssertEqual(PopoverSection.power.cards.last, .thermal)
         XCTAssertEqual(PopoverSection.agents.cards, [.settle])
         XCTAssertEqual(PopoverSection.general.cards, [.login])
         XCTAssertFalse(PopoverSection.agents.cards.contains(.watch))

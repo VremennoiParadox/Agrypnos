@@ -108,6 +108,9 @@ extension PopoverController {
         rampCard = PopoverForm.card(in: document, slot: power.ramp!, pad: pad, width: contentW)
         addRampCard(rampCard, ci: ci, cw: cw)
 
+        thermalCard = PopoverForm.card(in: document, slot: power.thermal!, pad: pad, width: contentW)
+        addThermalCard(thermalCard, contentW: contentW, ci: ci, cw: cw, swW: swW, swH: swH)
+
         loginCard = PopoverForm.card(in: document, slot: general.login!, pad: pad, width: contentW)
         loginSwitch = PopoverForm.switchRow(
             in: loginCard,
