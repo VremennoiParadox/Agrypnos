@@ -116,7 +116,7 @@ final class AgentHeuristicEngineTests: XCTestCase {
         XCTAssertTrue(busy.report(.codex)?.isBusy ?? false)
     }
 
-    func testCursorThinkPauseFiveMinutesStillBusyWithDefaultFreshness() {
+    func testCursorThinkPauseFiveMinutesIsIdleWithDefaultFreshness() {
         let engine = AgentHeuristicEngine()
         let snap = engine.evaluate(
             processes: [ProcessRecord(pid: 1, cpuPercent: 1, name: "Cursor")],
@@ -129,9 +129,9 @@ final class AgentHeuristicEngineTests: XCTestCase {
             ],
             now: now
         )
-        XCTAssertTrue(snap.anyBusy)
-        XCTAssertEqual(snap.report(.cursor)?.recentSessionWrite, true)
-        XCTAssertEqual(snap.report(.cursor)?.isBusy, true)
+        XCTAssertFalse(snap.anyBusy)
+        XCTAssertEqual(snap.report(.cursor)?.recentSessionWrite, false)
+        XCTAssertEqual(snap.report(.cursor)?.isBusy, false)
     }
 
     func testCursorTranscriptOlderThanDefaultFreshnessIsIdle() {
@@ -141,7 +141,7 @@ final class AgentHeuristicEngineTests: XCTestCase {
             sessionWrites: [
                 SessionFileSignal(
                     url: URL(fileURLWithPath: "/Users/a/.cursor/projects/x/agent-transcripts/old.jsonl"),
-                    modified: now.addingTimeInterval(-901),
+                    modified: now.addingTimeInterval(-46),
                     kind: .cursor
                 )
             ],

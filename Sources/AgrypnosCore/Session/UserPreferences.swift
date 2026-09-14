@@ -10,11 +10,9 @@ public struct UserPreferences: Equatable, Sendable, Codable {
     /// Lid-open brightness ramp, seconds.
     public static let lidOpenRampRange = 1...3
     /// Seconds of session-file mtime that still count as busy.
-    /// Hidden: not a popover control. Must cover think / tool pauses; 45s does not.
-    public static let defaultSessionFreshness: TimeInterval = 900
-    /// Values below this are the old 45s default (or junk) and migrate.
-    public static let sessionFreshnessLegacyCeiling: TimeInterval = 300
-    public static let sessionFreshnessRange: ClosedRange<TimeInterval> = 300...1_800
+    /// Hidden flush window only — not a second settle. Think pauses belong on the visible idle wait.
+    public static let defaultSessionFreshness: TimeInterval = 45
+    public static let sessionFreshnessRange: ClosedRange<TimeInterval> = 15...120
 
     public var batteryFloorPercent: Int
     public var duration: DurationOption
@@ -80,7 +78,8 @@ public struct UserPreferences: Equatable, Sendable, Codable {
 
     public static func clampSessionFreshness(_ seconds: TimeInterval) -> TimeInterval {
         guard seconds.isFinite else { return defaultSessionFreshness }
-        if seconds < sessionFreshnessLegacyCeiling { return defaultSessionFreshness }
+        // ponytail: 300…1800 was a hidden 15m settle and blocked sleep after agents stopped.
+        if seconds > sessionFreshnessRange.upperBound { return defaultSessionFreshness }
         let lo = sessionFreshnessRange.lowerBound
         let hi = sessionFreshnessRange.upperBound
         return min(max(seconds, lo), hi)
