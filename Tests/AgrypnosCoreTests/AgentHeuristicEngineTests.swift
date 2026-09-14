@@ -115,6 +115,85 @@ final class AgentHeuristicEngineTests: XCTestCase {
         )
         XCTAssertTrue(busy.report(.codex)?.isBusy ?? false)
     }
+
+    func testCursorThinkPauseFiveMinutesIsIdleWithDefaultFreshness() {
+        let engine = AgentHeuristicEngine()
+        let snap = engine.evaluate(
+            processes: [ProcessRecord(pid: 1, cpuPercent: 1, name: "Cursor")],
+            sessionWrites: [
+                SessionFileSignal(
+                    url: URL(fileURLWithPath: "/Users/a/.cursor/projects/x/agent-transcripts/t.jsonl"),
+                    modified: now.addingTimeInterval(-300),
+                    kind: .cursor
+                )
+            ],
+            now: now
+        )
+        XCTAssertFalse(snap.anyBusy)
+        XCTAssertEqual(snap.report(.cursor)?.recentSessionWrite, false)
+        XCTAssertEqual(snap.report(.cursor)?.isBusy, false)
+    }
+
+    func testCursorTranscriptOlderThanDefaultFreshnessIsIdle() {
+        let engine = AgentHeuristicEngine()
+        let snap = engine.evaluate(
+            processes: [ProcessRecord(pid: 1, cpuPercent: 80, name: "Cursor Helper (GPU)")],
+            sessionWrites: [
+                SessionFileSignal(
+                    url: URL(fileURLWithPath: "/Users/a/.cursor/projects/x/agent-transcripts/old.jsonl"),
+                    modified: now.addingTimeInterval(-46),
+                    kind: .cursor
+                )
+            ],
+            now: now
+        )
+        XCTAssertFalse(snap.anyBusy)
+        XCTAssertEqual(snap.report(.cursor)?.processRunning, true)
+        XCTAssertEqual(snap.report(.cursor)?.isBusy, false)
+    }
+
+    func testClaudeCodeNodeWrapperWithFreshJSONLIsBusy() {
+        let snap = engine.evaluate(
+            processes: [
+                ProcessRecord(
+                    pid: 9,
+                    cpuPercent: 0.2,
+                    name: "node /usr/local/lib/node_modules/@anthropic-ai/claude-code/cli.js"
+                )
+            ],
+            sessionWrites: [
+                SessionFileSignal(
+                    url: URL(fileURLWithPath: "/Users/a/.claude/projects/p/s.jsonl"),
+                    modified: now.addingTimeInterval(-8),
+                    kind: .claudeCode
+                )
+            ],
+            now: now
+        )
+        XCTAssertTrue(snap.report(.claudeCode)?.isBusy ?? false)
+    }
+
+    func testClaudeDesktopAppIsNotClaudeCodeBusy() {
+        let snap = engine.evaluate(
+            processes: [
+                ProcessRecord(
+                    pid: 2,
+                    cpuPercent: 40,
+                    name: "/Applications/Claude.app/Contents/MacOS/Claude"
+                )
+            ],
+            sessionWrites: [
+                SessionFileSignal(
+                    url: URL(fileURLWithPath: "/Users/a/.claude/projects/p/s.jsonl"),
+                    modified: now.addingTimeInterval(-1),
+                    kind: .claudeCode
+                )
+            ],
+            now: now
+        )
+        XCTAssertEqual(snap.report(.claudeCode)?.processRunning, false)
+        XCTAssertFalse(snap.report(.claudeCode)?.isBusy ?? true)
+    }
 }
 
 private extension AgentSnapshot {

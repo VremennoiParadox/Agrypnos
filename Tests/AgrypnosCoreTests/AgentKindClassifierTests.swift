@@ -11,9 +11,36 @@ final class AgentKindClassifierTests: XCTestCase {
 
     func testClaudeAndCodexNames() {
         XCTAssertEqual(AgentKindClassifier.classify(processName: "claude"), .claudeCode)
-        XCTAssertEqual(AgentKindClassifier.classify(processName: "Claude"), .claudeCode)
         XCTAssertEqual(AgentKindClassifier.classify(processName: "codex"), .codex)
         XCTAssertEqual(AgentKindClassifier.classify(processName: "codex-exec"), .codex)
+    }
+
+    func testClaudeCodeCLIClassifiesAndDesktopAppDoesNot() {
+        XCTAssertEqual(AgentKindClassifier.classify(processName: "claude"), .claudeCode)
+        XCTAssertEqual(AgentKindClassifier.classify(processName: "/opt/homebrew/bin/claude"), .claudeCode)
+        XCTAssertEqual(
+            AgentKindClassifier.classify(
+                processName: "node /usr/local/lib/node_modules/@anthropic-ai/claude-code/cli.js"
+            ),
+            .claudeCode
+        )
+        XCTAssertNil(AgentKindClassifier.classify(processName: "/Applications/Claude.app/Contents/MacOS/Claude"))
+        XCTAssertNil(AgentKindClassifier.classify(processName: "Claude Helper"))
+        XCTAssertNil(AgentKindClassifier.classify(processName: "Claude Helper (Renderer)"))
+    }
+
+    func testCodexCLIAndNodeWrapper() {
+        XCTAssertEqual(AgentKindClassifier.classify(processName: "codex"), .codex)
+        XCTAssertEqual(AgentKindClassifier.classify(processName: "codex-exec"), .codex)
+        XCTAssertEqual(
+            AgentKindClassifier.classify(processName: "node /Users/ada/.npm/_npx/codex/bin/codex"),
+            .codex
+        )
+    }
+
+    func testBareNodeStillIgnored() {
+        XCTAssertNil(AgentKindClassifier.classify(processName: "node"))
+        XCTAssertNil(AgentKindClassifier.classify(processName: "/usr/local/bin/node"))
     }
 
     func testUnrelatedProcessesAreIgnored() {
@@ -29,6 +56,19 @@ final class AgentKindClassifierTests: XCTestCase {
             .cursor
         )
         XCTAssertEqual(AgentKindClassifier.classify(processName: "Cursor Helper (G"), .cursor)
+    }
+
+    func testCursorWinsWhenArgsContainClaudePath() {
+        XCTAssertEqual(
+            AgentKindClassifier.classify(
+                processName: "/Applications/Cursor.app/Contents/MacOS/Cursor /Users/a/claude/notes.md"
+            ),
+            .cursor
+        )
+        XCTAssertEqual(
+            AgentKindClassifier.classify(processName: "cursor-agent --workspace /Users/a/claude"),
+            .cursor
+        )
     }
 
     func testCursorCPUIsNeverABusySignal() {

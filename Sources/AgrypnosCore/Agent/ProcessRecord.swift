@@ -11,7 +11,7 @@ public struct ProcessRecord: Equatable, Sendable {
 }
 
 public enum ProcessTableParser: Sendable {
-    /// Parses `ps -axo pid= -o pcpu= -o comm=` (pid, cpu, rest is command).
+    /// Parses `ps -axo pid= -o pcpu= -o args=` (pid, cpu, rest is command). Never log `name`.
     public static func parse(stdout: String) -> [ProcessRecord] {
         stdout.split(whereSeparator: \.isNewline).compactMap(parseLine)
     }

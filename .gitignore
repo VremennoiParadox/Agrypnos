@@ -14,3 +14,4 @@ xcuserdata/
 .env
 .env.*
 Apps/Agrypnos/build/
+.worktrees/

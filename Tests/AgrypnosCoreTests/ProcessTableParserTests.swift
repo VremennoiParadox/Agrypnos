@@ -28,4 +28,14 @@ final class ProcessTableParserTests: XCTestCase {
         XCTAssertEqual(rows.first?.name, "/opt/homebrew/bin/claude")
         XCTAssertEqual(AgentKindClassifier.classify(processName: rows[0].name), .claudeCode)
     }
+
+    func testParsesArgsLineWithNodeWrapper() {
+        let rows = ProcessTableParser.parse(
+            stdout: "  4421  6.1 node /usr/local/lib/node_modules/@anthropic-ai/claude-code/cli.js --resume\n"
+        )
+        XCTAssertEqual(rows.count, 1)
+        XCTAssertEqual(rows[0].pid, 4421)
+        XCTAssertEqual(rows[0].cpuPercent, 6.1, accuracy: 0.01)
+        XCTAssertEqual(AgentKindClassifier.classify(processName: rows[0].name), .claudeCode)
+    }
 }

@@ -9,6 +9,10 @@ public struct UserPreferences: Equatable, Sendable, Codable {
     public static let agentSettleGraceRange = 15...900
     /// Lid-open brightness ramp, seconds.
     public static let lidOpenRampRange = 1...3
+    /// Seconds of session-file mtime that still count as busy.
+    /// Hidden flush window only — not a second settle. Think pauses belong on the visible idle wait.
+    public static let defaultSessionFreshness: TimeInterval = 45
+    public static let sessionFreshnessRange: ClosedRange<TimeInterval> = 15...120
 
     public var batteryFloorPercent: Int
     public var duration: DurationOption
@@ -32,7 +36,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         applyBrightnessFloor: Bool = true,
         brightnessFloorPercent: Int = UserPreferences.defaultBrightnessFloorPercent,
         agentSettleGrace: TimeInterval = 90,
-        sessionFreshness: TimeInterval = 45,
+        sessionFreshness: TimeInterval = UserPreferences.defaultSessionFreshness,
         hotkey: HotkeyChord = .defaultToggle,
         lidOpenRampSeconds: Int = 2
     ) {
@@ -42,7 +46,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         self.applyBrightnessFloor = applyBrightnessFloor
         self.brightnessFloorPercent = Self.clampBrightnessFloor(brightnessFloorPercent)
         self.agentSettleGrace = Self.clampAgentSettleGrace(agentSettleGrace)
-        self.sessionFreshness = sessionFreshness
+        self.sessionFreshness = Self.clampSessionFreshness(sessionFreshness)
         self.hotkey = hotkey.isBindable ? hotkey : .defaultToggle
         self.lidOpenRampSeconds = Self.clampLidOpenRamp(lidOpenRampSeconds)
     }
@@ -70,6 +74,15 @@ public struct UserPreferences: Equatable, Sendable, Codable {
 
     public static func clampLidOpenRamp(_ seconds: Int) -> Int {
         min(max(seconds, lidOpenRampRange.lowerBound), lidOpenRampRange.upperBound)
+    }
+
+    public static func clampSessionFreshness(_ seconds: TimeInterval) -> TimeInterval {
+        guard seconds.isFinite else { return defaultSessionFreshness }
+        // ponytail: 300…1800 was a hidden 15m settle and blocked sleep after agents stopped.
+        if seconds > sessionFreshnessRange.upperBound { return defaultSessionFreshness }
+        let lo = sessionFreshnessRange.lowerBound
+        let hi = sessionFreshnessRange.upperBound
+        return min(max(seconds, lo), hi)
     }
 
     /// Persist a remap only when the chord is safe to bind. Registration success is a Mac concern.

@@ -51,7 +51,23 @@ public enum SessionFileLayout: Sendable {
                 path.contains("agent-transcripts")
                 || path.contains("/chats/")
                 || path.contains("acp-sessions")
+                || path.contains("/terminals/")
             return inAgentTree && (ext == "jsonl" || ext == "json" || ext == "txt" || ext == "db")
+        }
+    }
+
+    public static let cursorSubtreeNames = ["agent-transcripts", "terminals"]
+
+    public static func shouldSkipDirectory(_ name: String) -> Bool {
+        let n = name.lowercased()
+        if n == "node_modules" || n == ".git" { return true }
+        if n.hasPrefix(".") && n != ".cursor" { return true }
+        return false
+    }
+
+    public static func cursorWalkRoots(projectsRoot: URL, projectNames: [String]) -> [URL] {
+        projectNames.flatMap { name in
+            cursorSubtreeNames.map { projectsRoot.appendingPathComponent(name).appendingPathComponent($0) }
         }
     }
 
