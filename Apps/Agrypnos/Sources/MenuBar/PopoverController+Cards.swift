@@ -249,7 +249,7 @@ extension PopoverController {
         thermalSwitch = PopoverForm.switchRow(
             in: card,
             y: CGFloat(PopoverStackLayout.prefControlY),
-            title: AgrypnosCopy.thermalAutoOff,
+            title: "",
             contentW: contentW,
             ci: ci,
             cw: cw,

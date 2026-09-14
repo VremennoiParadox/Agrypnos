@@ -48,10 +48,12 @@ enum PopoverForm {
         action: Selector,
         trailing: CGFloat = 0
     ) -> NSSwitch {
-        let label = LabelFactory.make(title, font: .systemFont(ofSize: 13), color: .labelColor)
-        let labelH = CGFloat(PopoverStackLayout.switchRowLabelHeight)
-        label.frame = NSRect(x: ci, y: y, width: cw - swW - 8 - trailing, height: labelH)
-        card.addSubview(label)
+        if !title.isEmpty {
+            let label = LabelFactory.make(title, font: .systemFont(ofSize: 13), color: .labelColor)
+            let labelH = CGFloat(PopoverStackLayout.switchRowLabelHeight)
+            label.frame = NSRect(x: ci, y: y, width: cw - swW - 8 - trailing, height: labelH)
+            card.addSubview(label)
+        }
         let toggle = NSSwitch()
         toggle.target = target
         toggle.action = action
