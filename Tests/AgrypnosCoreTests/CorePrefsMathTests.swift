@@ -209,6 +209,20 @@ final class CorePrefsMathTests: XCTestCase {
         XCTAssertFalse(AgrypnosCopy.lidOpenRamp.lowercased().contains("lid-open ramp"))
     }
 
+    func testDefaultSessionFreshnessIsFifteenMinutes() {
+        XCTAssertEqual(UserPreferences.defaultSessionFreshness, 900)
+        XCTAssertEqual(UserPreferences.default.sessionFreshness, 900)
+        XCTAssertEqual(AgentHeuristicConfig().sessionFreshness, 900)
+    }
+
+    func testLegacyFortyFiveSecondFreshnessMigratesToDefault() throws {
+        let loaded = try JSONDecoder().decode(
+            UserPreferences.self,
+            from: Data(fixtureJSON().utf8)
+        )
+        XCTAssertEqual(loaded.sessionFreshness, 900)
+    }
+
     private func roundTrip(_ prefs: UserPreferences) throws -> UserPreferences {
         let data = try JSONEncoder().encode(prefs)
         return try JSONDecoder().decode(UserPreferences.self, from: data)

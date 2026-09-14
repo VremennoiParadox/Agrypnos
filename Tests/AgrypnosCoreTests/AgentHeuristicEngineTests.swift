@@ -115,6 +115,42 @@ final class AgentHeuristicEngineTests: XCTestCase {
         )
         XCTAssertTrue(busy.report(.codex)?.isBusy ?? false)
     }
+
+    func testCursorThinkPauseFiveMinutesStillBusyWithDefaultFreshness() {
+        let engine = AgentHeuristicEngine()
+        let snap = engine.evaluate(
+            processes: [ProcessRecord(pid: 1, cpuPercent: 1, name: "Cursor")],
+            sessionWrites: [
+                SessionFileSignal(
+                    url: URL(fileURLWithPath: "/Users/a/.cursor/projects/x/agent-transcripts/t.jsonl"),
+                    modified: now.addingTimeInterval(-300),
+                    kind: .cursor
+                )
+            ],
+            now: now
+        )
+        XCTAssertTrue(snap.anyBusy)
+        XCTAssertEqual(snap.report(.cursor)?.recentSessionWrite, true)
+        XCTAssertEqual(snap.report(.cursor)?.isBusy, true)
+    }
+
+    func testCursorTranscriptOlderThanDefaultFreshnessIsIdle() {
+        let engine = AgentHeuristicEngine()
+        let snap = engine.evaluate(
+            processes: [ProcessRecord(pid: 1, cpuPercent: 80, name: "Cursor Helper (GPU)")],
+            sessionWrites: [
+                SessionFileSignal(
+                    url: URL(fileURLWithPath: "/Users/a/.cursor/projects/x/agent-transcripts/old.jsonl"),
+                    modified: now.addingTimeInterval(-901),
+                    kind: .cursor
+                )
+            ],
+            now: now
+        )
+        XCTAssertFalse(snap.anyBusy)
+        XCTAssertEqual(snap.report(.cursor)?.processRunning, true)
+        XCTAssertEqual(snap.report(.cursor)?.isBusy, false)
+    }
 }
 
 private extension AgentSnapshot {

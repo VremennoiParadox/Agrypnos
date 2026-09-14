@@ -50,7 +50,7 @@ public struct AgentHeuristicConfig: Equatable, Sendable {
     public var sessionFreshness: TimeInterval
     public var claudeCodexCPUBusyThreshold: Double
 
-    public init(sessionFreshness: TimeInterval = 45, claudeCodexCPUBusyThreshold: Double = 5) {
+    public init(sessionFreshness: TimeInterval = 900, claudeCodexCPUBusyThreshold: Double = 5) {
         self.sessionFreshness = sessionFreshness
         self.claudeCodexCPUBusyThreshold = claudeCodexCPUBusyThreshold
     }
