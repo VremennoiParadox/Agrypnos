@@ -42,9 +42,55 @@ final class AutoOffEvaluatorTests: XCTestCase {
             timerEnd: nil,
             safety: SafetyInputs(batteryPercent: 90, onBatteryDischarging: false, thermalSerious: true, lowPowerMode: false),
             batteryFloorPercent: 15,
-            userForcedThisSession: true
+            userForcedThisSession: true,
+            thermalAutoOff: true
         )
         XCTAssertEqual(reason, .thermal)
+    }
+
+    func testThermalSeriousWithAutoOffOffDoesNotDisengage() {
+        let reason = AutoOffEvaluator.reason(
+            engaged: true,
+            timerEnd: nil,
+            safety: SafetyInputs(batteryPercent: 90, onBatteryDischarging: false, thermalSerious: true, lowPowerMode: false),
+            batteryFloorPercent: 15,
+            userForcedThisSession: true,
+            thermalAutoOff: false
+        )
+        XCTAssertNil(reason)
+    }
+
+    func testBatteryTimerAndLPMStillApplyWhenThermalAutoOffIsOff() {
+        let battery = AutoOffEvaluator.reason(
+            engaged: true,
+            timerEnd: nil,
+            safety: SafetyInputs(batteryPercent: 10, onBatteryDischarging: true, thermalSerious: true, lowPowerMode: false),
+            batteryFloorPercent: 15,
+            userForcedThisSession: true,
+            thermalAutoOff: false
+        )
+        XCTAssertEqual(battery, .batteryFloor)
+
+        let timer = AutoOffEvaluator.reason(
+            engaged: true,
+            timerEnd: now.addingTimeInterval(-1),
+            safety: SafetyInputs(batteryPercent: 90, onBatteryDischarging: false, thermalSerious: true, lowPowerMode: false),
+            batteryFloorPercent: 15,
+            userForcedThisSession: true,
+            thermalAutoOff: false,
+            now: now
+        )
+        XCTAssertEqual(timer, .timerExpired)
+
+        let lpm = AutoOffEvaluator.reason(
+            engaged: true,
+            timerEnd: nil,
+            safety: SafetyInputs(batteryPercent: 50, onBatteryDischarging: true, thermalSerious: true, lowPowerMode: true),
+            batteryFloorPercent: 15,
+            userForcedThisSession: false,
+            thermalAutoOff: false
+        )
+        XCTAssertEqual(lpm, .lowPowerMode)
     }
 
     func testLowPowerModeHonorsUserForceExceptBatteryFloor() {

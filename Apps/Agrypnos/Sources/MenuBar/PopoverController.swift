@@ -197,7 +197,8 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         return AgrypnosCopy.durationHint(
             option: runtime.preferences.duration,
             engaged: runtime.engaged,
-            remainingSeconds: remaining
+            remainingSeconds: remaining,
+            thermalAutoOff: runtime.preferences.thermalAutoOff
         )
     }
 

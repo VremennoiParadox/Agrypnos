@@ -23,6 +23,8 @@ public struct UserPreferences: Equatable, Sendable, Codable {
     public var sessionFreshness: TimeInterval
     public var hotkey: HotkeyChord
     public var lidOpenRampSeconds: Int
+    /// Power toggle. Default on. Off skips only the thermal auto-off path.
+    public var thermalAutoOff: Bool
 
     /// 0...1 unit the Mac brightness adapter writes. Derived from floor %.
     public var brightnessFloor: Double {
@@ -38,7 +40,8 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         agentSettleGrace: TimeInterval = 90,
         sessionFreshness: TimeInterval = UserPreferences.defaultSessionFreshness,
         hotkey: HotkeyChord = .defaultToggle,
-        lidOpenRampSeconds: Int = 2
+        lidOpenRampSeconds: Int = 2,
+        thermalAutoOff: Bool = true
     ) {
         self.batteryFloorPercent = Self.clampBatteryFloor(batteryFloorPercent)
         self.duration = duration
@@ -49,6 +52,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         self.sessionFreshness = Self.clampSessionFreshness(sessionFreshness)
         self.hotkey = hotkey.isBindable ? hotkey : .defaultToggle
         self.lidOpenRampSeconds = Self.clampLidOpenRamp(lidOpenRampSeconds)
+        self.thermalAutoOff = thermalAutoOff
     }
 
     public static let `default` = UserPreferences()
@@ -104,6 +108,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         case sessionFreshness
         case hotkey
         case lidOpenRampSeconds
+        case thermalAutoOff
     }
 
     public init(from decoder: Decoder) throws {
@@ -125,7 +130,8 @@ public struct UserPreferences: Equatable, Sendable, Codable {
             agentSettleGrace: try container.decodeIfPresent(TimeInterval.self, forKey: .agentSettleGrace) ?? 90,
             sessionFreshness: try container.decode(TimeInterval.self, forKey: .sessionFreshness),
             hotkey: try container.decodeIfPresent(HotkeyChord.self, forKey: .hotkey) ?? .defaultToggle,
-            lidOpenRampSeconds: try container.decodeIfPresent(Int.self, forKey: .lidOpenRampSeconds) ?? 2
+            lidOpenRampSeconds: try container.decodeIfPresent(Int.self, forKey: .lidOpenRampSeconds) ?? 2,
+            thermalAutoOff: try container.decodeIfPresent(Bool.self, forKey: .thermalAutoOff) ?? true
         )
     }
 
@@ -141,6 +147,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         try container.encode(sessionFreshness, forKey: .sessionFreshness)
         try container.encode(hotkey, forKey: .hotkey)
         try container.encode(lidOpenRampSeconds, forKey: .lidOpenRampSeconds)
+        try container.encode(thermalAutoOff, forKey: .thermalAutoOff)
     }
 }
 

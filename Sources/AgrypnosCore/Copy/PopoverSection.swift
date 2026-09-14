@@ -5,6 +5,7 @@ public enum PopoverCard: Equatable, Hashable, Sendable {
     case battery
     case settle
     case ramp
+    case thermal
     case login
 }
 
@@ -30,7 +31,7 @@ public enum PopoverSection: Int, CaseIterable, Sendable {
     public var cards: [PopoverCard] {
         switch self {
         case .watch: return [.watch, .duration]
-        case .power: return [.hygiene, .battery, .ramp]
+        case .power: return [.hygiene, .battery, .ramp, .thermal]
         case .agents: return [.settle]
         case .general: return [.login]
         }

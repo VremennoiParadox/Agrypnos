@@ -18,6 +18,8 @@ public enum AgrypnosCopy: Sendable {
     public static let lidOpenRampHelp =
         "How long brightness takes to come back when the lid opens."
     public static let batteryFloor = "Auto-off at low battery"
+    public static let thermalAutoOff = "Thermal auto-off"
+    public static let thermalAutoOffHelp = "Thermal pressure turns the watch off."
     public static let launchAtLogin = "Launch at login"
     public static let quit = "Quit Agrypnos"
     public static let agentsHint = "Stays awake while agents are busy. Allows sleep after they go idle."
@@ -25,6 +27,14 @@ public enum AgrypnosCopy: Sendable {
     // User-armed watches do not auto-off on Low Power Mode, so it is not listed here.
     public static let indefiniteHint =
         "Stays on until you turn it off (battery / thermal still apply)."
+
+    public static func indefiniteHint(thermalAutoOff: Bool) -> String {
+        if thermalAutoOff {
+            return AgrypnosCopy.indefiniteHint
+        }
+        return "Stays on until you turn it off (battery still applies)."
+    }
+
     public static let captionOff = "Keeps the Mac awake with the lid closed."
     public static let grantNeeded = "The lid-close grant isn’t installed yet. macOS will ask once."
     public static let timerEnded = "Timer ended. Watch turned off."
@@ -51,7 +61,12 @@ public enum AgrypnosCopy: Sendable {
         return "\(chord.display) is not registered. Use the menu bar."
     }
 
-    public static func durationHint(option: DurationOption, engaged: Bool, remainingSeconds: Int?) -> String {
+    public static func durationHint(
+        option: DurationOption,
+        engaged: Bool,
+        remainingSeconds: Int?,
+        thermalAutoOff: Bool = true
+    ) -> String {
         switch option {
         case .untilAgentsSettle:
             return agentsHint
@@ -68,7 +83,7 @@ public enum AgrypnosCopy: Sendable {
             }
             return "\(max(minutes, 1)) minutes, then the watch turns off."
         case .indefinite:
-            return indefiniteHint
+            return indefiniteHint(thermalAutoOff: thermalAutoOff)
         }
     }
 

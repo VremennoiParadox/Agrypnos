@@ -92,6 +92,29 @@ final class CorePrefsMathTests: XCTestCase {
         XCTAssertEqual(decoded.lidOpenRampSeconds, 2)
         XCTAssertEqual(decoded.agentSettleGrace, 90)
         XCTAssertEqual(decoded.brightnessFloorPercent, 15)
+        XCTAssertTrue(decoded.thermalAutoOff)
+    }
+
+    func testThermalAutoOffDefaultsOnAndMissingKeyDecodesTrue() throws {
+        XCTAssertTrue(UserPreferences.default.thermalAutoOff)
+        XCTAssertTrue(UserPreferences().thermalAutoOff)
+
+        let encoded = try JSONEncoder().encode(UserPreferences.default)
+        let object = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        XCTAssertEqual(object["thermalAutoOff"] as? Bool, true)
+        let loaded = try JSONDecoder().decode(UserPreferences.self, from: encoded)
+        XCTAssertTrue(loaded.thermalAutoOff)
+
+        let missing = try JSONDecoder().decode(
+            UserPreferences.self,
+            from: Data(legacyFractionJSON(brightnessFloor: 0.15).utf8)
+        )
+        XCTAssertTrue(missing.thermalAutoOff)
+
+        let off = UserPreferences(thermalAutoOff: false)
+        XCTAssertFalse(off.thermalAutoOff)
+        let roundTripped = try roundTrip(off)
+        XCTAssertFalse(roundTripped.thermalAutoOff)
     }
 
     func testMissingBrightnessFloorKeysDecodeToDefaultFifteenPercent() throws {
@@ -103,6 +126,7 @@ final class CorePrefsMathTests: XCTestCase {
         XCTAssertEqual(decoded.brightnessFloor, 0.15, accuracy: 0.0001)
         XCTAssertEqual(decoded.lidOpenRampSeconds, 2)
         XCTAssertEqual(decoded.agentSettleGrace, 90)
+        XCTAssertTrue(decoded.thermalAutoOff)
     }
 
     func testLidOpenRampDefaultIsTwoSecondsAndClampsToOneTwoThree() {
@@ -154,6 +178,7 @@ final class CorePrefsMathTests: XCTestCase {
         XCTAssertEqual(loaded.batteryFloorPercent, 80)
         XCTAssertEqual(loaded.duration, .custom(minutes: 33))
         XCTAssertEqual(loaded.hotkey.display, "⌥⌘W")
+        XCTAssertTrue(loaded.thermalAutoOff)
     }
 
     func testAgentsSettleUsesPreferenceGraceNotHardcodedNinety() {

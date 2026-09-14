@@ -76,6 +76,7 @@ public struct WatchEngine: Equatable, Sendable {
             safety: safety,
             batteryFloorPercent: preferences.batteryFloorPercent,
             userForcedThisSession: userForcedThisSession,
+            thermalAutoOff: preferences.thermalAutoOff,
             now: now
         ) {
             return disengage(reason)

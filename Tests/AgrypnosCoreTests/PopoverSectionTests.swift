@@ -39,7 +39,7 @@ final class PopoverSectionTests: XCTestCase {
 
     func testCardMapKeepsExistingControlsInTheFourSections() {
         XCTAssertEqual(PopoverSection.watch.cards, [.watch, .duration])
-        XCTAssertEqual(PopoverSection.power.cards, [.hygiene, .battery, .ramp])
+        XCTAssertEqual(PopoverSection.power.cards, [.hygiene, .battery, .ramp, .thermal])
         XCTAssertEqual(PopoverSection.agents.cards, [.settle])
         XCTAssertEqual(PopoverSection.general.cards, [.login])
         XCTAssertFalse(PopoverSection.agents.cards.contains(.watch))
@@ -72,6 +72,7 @@ final class PopoverSectionLayoutTests: XCTestCase {
         XCTAssertNil(layout.hygiene)
         XCTAssertNil(layout.battery)
         XCTAssertNil(layout.ramp)
+        XCTAssertNil(layout.thermal)
         XCTAssertNil(layout.settle)
         XCTAssertNil(layout.login)
         XCTAssertNil(layout.shortcutY)
@@ -80,22 +81,23 @@ final class PopoverSectionLayoutTests: XCTestCase {
         XCTAssertEqual(layout.contentHeight, layout.duration!.maxY + PopoverStackLayout.pad)
     }
 
-    func testPowerSectionShowsHygieneBatteryAndRampOnly() {
+    func testPowerSectionShowsHygieneBatteryRampAndThermal() {
         let layout = PopoverStackLayout.make(section: .power)
         XCTAssertEqual(layout.section, .power)
         XCTAssertEqual(
             layout.stackedCards.map(\.y),
-            compactYs(layout.hygiene, layout.battery, layout.ramp)
+            compactYs(layout.hygiene, layout.battery, layout.ramp, layout.thermal)
         )
         XCTAssertEqual(layout.hygiene?.y, PopoverStackLayout.firstCardY)
         XCTAssertEqual(layout.battery?.y, layout.hygiene!.maxY + PopoverStackLayout.cardGap)
         XCTAssertEqual(layout.ramp?.y, layout.battery!.maxY + PopoverStackLayout.cardGap)
+        XCTAssertEqual(layout.thermal?.y, layout.ramp!.maxY + PopoverStackLayout.cardGap)
         XCTAssertNil(layout.watch)
         XCTAssertNil(layout.duration)
         XCTAssertNil(layout.settle)
         XCTAssertNil(layout.login)
         XCTAssertNil(layout.quitY)
-        XCTAssertEqual(layout.contentHeight, layout.ramp!.maxY + PopoverStackLayout.pad)
+        XCTAssertEqual(layout.contentHeight, layout.thermal!.maxY + PopoverStackLayout.pad)
     }
 
     func testAgentsSectionShowsIdleWaitOnly() {
@@ -108,6 +110,7 @@ final class PopoverSectionLayoutTests: XCTestCase {
         XCTAssertNil(layout.hygiene)
         XCTAssertNil(layout.battery)
         XCTAssertNil(layout.ramp)
+        XCTAssertNil(layout.thermal)
         XCTAssertNil(layout.login)
         XCTAssertEqual(layout.contentHeight, layout.settle!.maxY + PopoverStackLayout.pad)
     }
@@ -119,6 +122,7 @@ final class PopoverSectionLayoutTests: XCTestCase {
         XCTAssertEqual(layout.login?.y, PopoverStackLayout.firstCardY)
         XCTAssertNil(layout.watch)
         XCTAssertNil(layout.hygiene)
+        XCTAssertNil(layout.thermal)
         XCTAssertNil(layout.settle)
         XCTAssertEqual(layout.shortcutY, layout.login!.maxY + PopoverStackLayout.cardGap)
         XCTAssertEqual(layout.hotkeyHint?.y, layout.shortcutY! + 26)
