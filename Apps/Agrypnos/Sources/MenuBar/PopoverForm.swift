@@ -21,6 +21,20 @@ enum PopoverForm {
         return view
     }
 
+    static func apply(_ view: NSView, slot: PopoverSlot?, pad: CGFloat, width: CGFloat) {
+        guard let slot else {
+            view.isHidden = true
+            return
+        }
+        view.isHidden = false
+        view.frame = NSRect(
+            x: pad,
+            y: CGFloat(slot.y),
+            width: width,
+            height: CGFloat(slot.height)
+        )
+    }
+
     static func switchRow(
         in card: NSView,
         y: CGFloat,

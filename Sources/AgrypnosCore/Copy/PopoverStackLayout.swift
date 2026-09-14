@@ -16,10 +16,11 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static let pad = 16
     public static let inset = 12
     public static let cardGap = 10
-    public static let firstCardY = 42
-    /// Tall enough for 14" Macs; 13" still gets a scroller instead of clipped quit.
-    /// AppKit must use a flipped NSClipView and scroll the document to (0, 0) on open,
-    /// or an unflipped clip shows Quit first.
+    public static let sectionSwitcherY = 38
+    public static let sectionSwitcherHeight = 24
+    public static var firstCardY: Int {
+        sectionSwitcherY + sectionSwitcherHeight + cardGap
+    }
     public static let maxVisibleHeight = 720
     public static let quitReserve = 36
     public static let switchRowHeight = 32
@@ -50,22 +51,40 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static var prefControlY: Int { prefHelpY + PopoverCopyLayout.helpHeightPoints }
     public static var prefMinMaxY: Int { prefControlY + 24 }
 
-    public let watch: PopoverSlot
-    public let duration: PopoverSlot
-    public let hygiene: PopoverSlot
-    public let battery: PopoverSlot
-    public let settle: PopoverSlot
-    public let ramp: PopoverSlot
-    public let login: PopoverSlot
-    public let shortcutY: Int
-    public let hotkeyHint: PopoverSlot
-    public let quitY: Int
+    public let section: PopoverSection
+    public let sectionSwitcher: PopoverSlot
+    public let watch: PopoverSlot?
+    public let duration: PopoverSlot?
+    public let hygiene: PopoverSlot?
+    public let battery: PopoverSlot?
+    public let settle: PopoverSlot?
+    public let ramp: PopoverSlot?
+    public let login: PopoverSlot?
+    public let shortcutY: Int?
+    public let hotkeyHint: PopoverSlot?
+    public let quitY: Int?
     public let contentHeight: Int
     public let popoverHeight: Int
 
     public var needsScroll: Bool { contentHeight > popoverHeight }
 
-    public static func make() -> PopoverStackLayout {
+    public var stackedCards: [PopoverSlot] {
+        section.cards.compactMap { slot($0) }
+    }
+
+    public func slot(_ card: PopoverCard) -> PopoverSlot? {
+        switch card {
+        case .watch: return watch
+        case .duration: return duration
+        case .hygiene: return hygiene
+        case .battery: return battery
+        case .settle: return settle
+        case .ramp: return ramp
+        case .login: return login
+        }
+    }
+
+    public static func make(section: PopoverSection = .default) -> PopoverStackLayout {
         let watchHeight = inset + 28 + PopoverCopyLayout.captionHeightPoints + inset
         let hygieneHeight =
             hygieneKeyboardY
@@ -86,6 +105,18 @@ public struct PopoverStackLayout: Equatable, Sendable {
             + segmentRowHeight
             + inset
 
+        func height(for card: PopoverCard) -> Int {
+            switch card {
+            case .watch: return watchHeight
+            case .duration: return durationCardHeight
+            case .hygiene: return hygieneHeight
+            case .battery: return batteryCardHeight
+            case .settle: return settleHeight
+            case .ramp: return rampHeight
+            case .login: return loginCardHeight
+            }
+        }
+
         var cursor = firstCardY
         func place(_ height: Int) -> PopoverSlot {
             let slot = PopoverSlot(y: cursor, height: height)
@@ -93,29 +124,41 @@ public struct PopoverStackLayout: Equatable, Sendable {
             return slot
         }
 
-        let watch = place(watchHeight)
-        let duration = place(durationCardHeight)
-        let hygiene = place(hygieneHeight)
-        let battery = place(batteryCardHeight)
-        let settle = place(settleHeight)
-        let ramp = place(rampHeight)
-        let login = place(loginCardHeight)
-        let shortcutY = login.maxY + cardGap
-        let hotkeyHint = PopoverSlot(
-            y: shortcutY + 26,
-            height: PopoverCopyLayout.hotkeyHintHeightPoints
-        )
-        let quitY = hotkeyHint.maxY + 10
-        let contentHeight = quitY + quitReserve
+        var placed: [PopoverCard: PopoverSlot] = [:]
+        for card in section.cards {
+            placed[card] = place(height(for: card))
+        }
+
+        var shortcutY: Int?
+        var hotkeyHint: PopoverSlot?
+        var quitY: Int?
+        let contentHeight: Int
+        if section == .general, let login = placed[.login] {
+            shortcutY = login.maxY + cardGap
+            let hint = PopoverSlot(
+                y: shortcutY! + 26,
+                height: PopoverCopyLayout.hotkeyHintHeightPoints
+            )
+            hotkeyHint = hint
+            quitY = hint.maxY + 10
+            contentHeight = quitY! + quitReserve
+        } else if let last = section.cards.last.flatMap({ placed[$0] }) {
+            contentHeight = last.maxY + pad
+        } else {
+            contentHeight = firstCardY + pad
+        }
+
         let popoverHeight = min(contentHeight, maxVisibleHeight)
         return PopoverStackLayout(
-            watch: watch,
-            duration: duration,
-            hygiene: hygiene,
-            battery: battery,
-            settle: settle,
-            ramp: ramp,
-            login: login,
+            section: section,
+            sectionSwitcher: PopoverSlot(y: sectionSwitcherY, height: sectionSwitcherHeight),
+            watch: placed[.watch],
+            duration: placed[.duration],
+            hygiene: placed[.hygiene],
+            battery: placed[.battery],
+            settle: placed[.settle],
+            ramp: placed[.ramp],
+            login: placed[.login],
             shortcutY: shortcutY,
             hotkeyHint: hotkeyHint,
             quitY: quitY,

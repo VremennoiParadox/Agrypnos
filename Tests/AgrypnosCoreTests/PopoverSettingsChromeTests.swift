@@ -129,41 +129,29 @@ final class PopoverPrefChromeTests: XCTestCase {
 
 final class PopoverStackLayoutTests: XCTestCase {
     func testCardsStackTopToBottomWithoutOverlap() {
-        let layout = PopoverStackLayout.make()
-        let cards = [
-            layout.watch,
-            layout.duration,
-            layout.hygiene,
-            layout.battery,
-            layout.settle,
-            layout.ramp,
-            layout.login,
-        ]
-        XCTAssertEqual(layout.watch.y, PopoverStackLayout.firstCardY)
-        for (index, card) in cards.enumerated() {
-            XCTAssertGreaterThan(card.height, 0, "card \(index)")
-            if index > 0 {
-                XCTAssertEqual(
-                    card.y,
-                    cards[index - 1].maxY + PopoverStackLayout.cardGap,
-                    "card \(index) smashed into the previous card"
-                )
-            }
-        }
-        XCTAssertGreaterThanOrEqual(layout.shortcutY, layout.login.maxY)
-        XCTAssertGreaterThanOrEqual(layout.hotkeyHint.y, layout.shortcutY)
-        XCTAssertGreaterThanOrEqual(layout.quitY, layout.hotkeyHint.maxY)
-        XCTAssertEqual(layout.contentHeight, layout.quitY + PopoverStackLayout.quitReserve)
+        let watch = PopoverStackLayout.make(section: .watch)
+        let power = PopoverStackLayout.make(section: .power)
+        let agents = PopoverStackLayout.make(section: .agents)
+        let general = PopoverStackLayout.make(section: .general)
+        assertStacked(watch.stackedCards, firstY: PopoverStackLayout.firstCardY)
+        assertStacked(power.stackedCards, firstY: PopoverStackLayout.firstCardY)
+        assertStacked(agents.stackedCards, firstY: PopoverStackLayout.firstCardY)
+        assertStacked(general.stackedCards, firstY: PopoverStackLayout.firstCardY)
+        XCTAssertEqual(watch.watch?.y, PopoverStackLayout.firstCardY)
+        XCTAssertGreaterThanOrEqual(general.shortcutY!, general.login!.maxY)
+        XCTAssertGreaterThanOrEqual(general.hotkeyHint!.y, general.shortcutY!)
+        XCTAssertGreaterThanOrEqual(general.quitY!, general.hotkeyHint!.maxY)
+        XCTAssertEqual(general.contentHeight, general.quitY! + PopoverStackLayout.quitReserve)
         XCTAssertEqual(
-            layout.popoverHeight,
-            min(layout.contentHeight, PopoverStackLayout.maxVisibleHeight)
+            watch.popoverHeight,
+            min(watch.contentHeight, PopoverStackLayout.maxVisibleHeight)
         )
-        XCTAssertEqual(layout.needsScroll, layout.contentHeight > layout.popoverHeight)
-        XCTAssertLessThanOrEqual(layout.popoverHeight, PopoverStackLayout.maxVisibleHeight)
+        XCTAssertEqual(watch.needsScroll, watch.contentHeight > watch.popoverHeight)
+        XCTAssertLessThanOrEqual(watch.popoverHeight, PopoverStackLayout.maxVisibleHeight)
     }
 
     func testWatchCaptionSlotHoldsLeftoverBatteryWrap() {
-        let layout = PopoverStackLayout.make()
+        let layout = PopoverStackLayout.make(section: .watch)
         XCTAssertGreaterThanOrEqual(
             PopoverCopyLayout.captionMaxLines,
             CopyWrap.lineCount(
@@ -172,7 +160,7 @@ final class PopoverStackLayoutTests: XCTestCase {
             )
         )
         XCTAssertGreaterThanOrEqual(
-            layout.watch.height,
+            layout.watch!.height,
             PopoverStackLayout.inset + 28 + PopoverCopyLayout.captionHeightPoints + PopoverStackLayout.inset
         )
         XCTAssertEqual(
@@ -182,40 +170,63 @@ final class PopoverStackLayoutTests: XCTestCase {
     }
 
     func testHygieneSettleAndRampSlotsFitNativeControls() {
-        let layout = PopoverStackLayout.make()
+        let watch = PopoverStackLayout.make(section: .watch)
+        let power = PopoverStackLayout.make(section: .power)
+        let agents = PopoverStackLayout.make(section: .agents)
+        let general = PopoverStackLayout.make(section: .general)
         XCTAssertGreaterThanOrEqual(
-            layout.hygiene.height,
+            power.hygiene!.height,
             2 * PopoverStackLayout.switchRowHeight
                 + PopoverCopyLayout.helpHeightPoints
                 + PopoverStackLayout.sliderBlockHeight
         )
         XCTAssertGreaterThanOrEqual(
-            layout.settle.height,
+            agents.settle!.height,
             PopoverStackLayout.titleRowHeight
                 + PopoverCopyLayout.helpHeightPoints
                 + PopoverStackLayout.sliderBlockHeight
         )
         XCTAssertGreaterThanOrEqual(
-            layout.ramp.height,
+            power.ramp!.height,
             PopoverStackLayout.titleRowHeight
                 + PopoverCopyLayout.helpHeightPoints
                 + PopoverStackLayout.segmentRowHeight
         )
-        XCTAssertEqual(layout.duration.height, 136)
-        XCTAssertEqual(layout.battery.height, 88)
-        XCTAssertEqual(layout.login.height, 44)
-        XCTAssertEqual(layout.hotkeyHint.height, PopoverCopyLayout.hotkeyHintHeightPoints)
-        XCTAssertGreaterThan(layout.contentHeight, PopoverStackLayout.maxVisibleHeight)
-        XCTAssertTrue(layout.needsScroll)
-        XCTAssertEqual(layout.popoverHeight, PopoverStackLayout.maxVisibleHeight)
+        XCTAssertEqual(watch.duration!.height, 136)
+        XCTAssertEqual(power.battery!.height, 88)
+        XCTAssertEqual(general.login!.height, 44)
+        XCTAssertEqual(general.hotkeyHint!.height, PopoverCopyLayout.hotkeyHintHeightPoints)
+        XCTAssertFalse(watch.needsScroll)
+        XCTAssertFalse(power.needsScroll)
+        XCTAssertFalse(agents.needsScroll)
+        XCTAssertFalse(general.needsScroll)
+        XCTAssertEqual(watch.popoverHeight, watch.contentHeight)
+        XCTAssertLessThan(watch.contentHeight, PopoverStackLayout.maxVisibleHeight)
     }
 
     func testLoginSwitchRowCentersTheLabelInTheLoginCard() {
-        let layout = PopoverStackLayout.make()
-        XCTAssertEqual(layout.login.height, PopoverStackLayout.loginCardHeight)
+        let layout = PopoverStackLayout.make(section: .general)
+        XCTAssertEqual(layout.login!.height, PopoverStackLayout.loginCardHeight)
         let y = PopoverStackLayout.loginSwitchRowY
         let below = PopoverStackLayout.loginCardHeight - y - PopoverStackLayout.switchRowLabelHeight
         XCTAssertEqual(y, below)
+    }
+
+    private func assertStacked(_ cards: [PopoverSlot], firstY: Int, file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertFalse(cards.isEmpty, file: file, line: line)
+        XCTAssertEqual(cards[0].y, firstY, file: file, line: line)
+        for (index, card) in cards.enumerated() {
+            XCTAssertGreaterThan(card.height, 0, "card \(index)", file: file, line: line)
+            if index > 0 {
+                XCTAssertEqual(
+                    card.y,
+                    cards[index - 1].maxY + PopoverStackLayout.cardGap,
+                    "card \(index) smashed into the previous card",
+                    file: file,
+                    line: line
+                )
+            }
+        }
     }
 
     func testSwitchControlSitsOnTheLabelMidline() {
