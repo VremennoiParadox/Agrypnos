@@ -70,7 +70,9 @@ w("")
 w("/* Begin PBXFileReference section */")
 w(f"		{app_ref} /* Agrypnos.app */ = {{isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Agrypnos.app; sourceTree = BUILT_PRODUCTS_DIR; }};")
 for rel in rel_sources:
-    w(f"		{file_ids[rel]} /* {Path(rel).name} */ = {{isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = {Path(rel).name}; sourceTree = \"<group>\"; }};")
+    name = Path(rel).name
+    quoted = name if name.replace("_", "").replace(".", "").replace("-", "").isalnum() else f'"{name}"'
+    w(f"		{file_ids[rel]} /* {name} */ = {{isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = {quoted}; sourceTree = \"<group>\"; }};")
 w(f"		{info_ref} /* Info.plist */ = {{isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = \"<group>\"; }};")
 w(f"		{ent_ref} /* Agrypnos.entitlements */ = {{isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Agrypnos.entitlements; sourceTree = \"<group>\"; }};")
 w(f"		{assets_ref} /* Assets.xcassets */ = {{isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = \"<group>\"; }};")

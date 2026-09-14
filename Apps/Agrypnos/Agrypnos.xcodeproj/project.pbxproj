@@ -42,7 +42,7 @@
 		1531989688A32A6FF3BE1EF7 /* LaunchAtLoginController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginController.swift; sourceTree = "<group>"; };
 		A71AB415778ADE64BF7D1B20 /* HotkeyRecorderControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyRecorderControl.swift; sourceTree = "<group>"; };
 		F94178055CD17CB0C1E4EBE4 /* PopoverChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverChrome.swift; sourceTree = "<group>"; };
-		50D9BE7A9730D85A15B6E96E /* PopoverController+Canvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverController+Canvas.swift; sourceTree = "<group>"; };
+		50D9BE7A9730D85A15B6E96E /* PopoverController+Canvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Canvas.swift"; sourceTree = "<group>"; };
 		329EC7D50E7C6B456084BE11 /* PopoverController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverController.swift; sourceTree = "<group>"; };
 		6E6799E8B24D782B3151D901 /* PopoverForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverForm.swift; sourceTree = "<group>"; };
 		8607BE8FEC94DD9191D5842B /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
