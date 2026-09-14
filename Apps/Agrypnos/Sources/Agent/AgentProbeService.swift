@@ -17,10 +17,33 @@ enum SessionFileWalker {
         let roots = SessionFileLayout.roots(home: home, env: env)
         for (kind, urls) in roots {
             for root in urls {
-                collected.append(contentsOf: walk(root: root, kind: kind))
+                if kind == .cursor, root.lastPathComponent == "projects" {
+                    let names = projectDirectoryNames(in: root)
+                    for sub in SessionFileLayout.cursorWalkRoots(projectsRoot: root, projectNames: names) {
+                        collected.append(contentsOf: walk(root: sub, kind: kind))
+                    }
+                } else {
+                    collected.append(contentsOf: walk(root: root, kind: kind))
+                }
             }
         }
         return collected
+    }
+
+    static func projectDirectoryNames(in root: URL) -> [String] {
+        let fm = FileManager.default
+        guard let items = try? fm.contentsOfDirectory(
+            at: root,
+            includingPropertiesForKeys: [.isDirectoryKey],
+            options: [.skipsHiddenFiles]
+        ) else { return [] }
+        return items.compactMap { url in
+            var isDir: ObjCBool = false
+            guard fm.fileExists(atPath: url.path, isDirectory: &isDir), isDir.boolValue else { return nil }
+            let name = url.lastPathComponent
+            if SessionFileLayout.shouldSkipDirectory(name) { return nil }
+            return name
+        }.sorted()
     }
 
     static func walk(root: URL, kind: AgentKind) -> [SessionFileSignal] {
@@ -39,6 +62,10 @@ enum SessionFileWalker {
             visited += 1
             if visited > 4000 { break }
             if enumerator.level > 6 { enumerator.skipDescendants(); continue }
+            if SessionFileLayout.shouldSkipDirectory(url.lastPathComponent) {
+                enumerator.skipDescendants()
+                continue
+            }
             guard SessionFileLayout.isRelevantFile(url, kind: kind) else { continue }
             guard let values = try? url.resourceValues(forKeys: [.contentModificationDateKey, .isRegularFileKey]),
                   values.isRegularFile == true,

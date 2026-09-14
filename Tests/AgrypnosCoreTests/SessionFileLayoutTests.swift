@@ -53,4 +53,31 @@ final class SessionFileLayoutTests: XCTestCase {
         XCTAssertFalse(SessionFileLayout.isRelevantFile(noise, kind: .cursor))
         XCTAssertFalse(SessionFileLayout.isRelevantFile(URL(fileURLWithPath: "/tmp/other.jsonl"), kind: .codex))
     }
+
+    func testCursorTerminalsAreRelevantAndNoiseIsNot() {
+        let terminal = URL(fileURLWithPath: "/Users/ada/.cursor/projects/foo/terminals/1.txt")
+        let modules = URL(fileURLWithPath: "/Users/ada/.cursor/projects/foo/node_modules/pkg/readme.md")
+        XCTAssertTrue(SessionFileLayout.isRelevantFile(terminal, kind: .cursor))
+        XCTAssertFalse(SessionFileLayout.isRelevantFile(modules, kind: .cursor))
+        XCTAssertTrue(SessionFileLayout.shouldSkipDirectory("node_modules"))
+        XCTAssertTrue(SessionFileLayout.shouldSkipDirectory(".git"))
+        XCTAssertFalse(SessionFileLayout.shouldSkipDirectory("agent-transcripts"))
+    }
+
+    func testCursorWalkRootsAreTranscriptsAndTerminalsNotWholeProject() {
+        let projects = URL(fileURLWithPath: "/Users/ada/.cursor/projects")
+        let urls = SessionFileLayout.cursorWalkRoots(
+            projectsRoot: projects,
+            projectNames: ["Agrypnos", "Other"]
+        )
+        XCTAssertEqual(
+            urls,
+            [
+                URL(fileURLWithPath: "/Users/ada/.cursor/projects/Agrypnos/agent-transcripts"),
+                URL(fileURLWithPath: "/Users/ada/.cursor/projects/Agrypnos/terminals"),
+                URL(fileURLWithPath: "/Users/ada/.cursor/projects/Other/agent-transcripts"),
+                URL(fileURLWithPath: "/Users/ada/.cursor/projects/Other/terminals"),
+            ]
+        )
+    }
 }
