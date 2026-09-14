@@ -64,7 +64,7 @@ Section switcher is **landed**: **Watch** · **Power** · **Agents** · **Genera
 - Top of the popover: slim section switcher. Prefer native segmented control / quiet text. Toolbar *position* like macOS prefs is fine; **do not** copy icon+blue-tile prefs chrome.
 - Card map:
   - **Watch:** Keep the watch (arm) + duration presets/custom + arming caption
-  - **Power:** brightness floor % + keyboard backlight off, battery auto-off, brightness return ramp, thermal auto-off toggle (default ON)
+  - **Power:** brightness floor % + keyboard backlight off, battery auto-off, brightness return ramp, thermal auto-off toggle (default ON; unlocked)
   - **Agents:** idle wait after agents go quiet (per-tool include still locked until Mac prove)
   - **General:** remappable hotkey, launch at login, quit
 - No **Licence** tab. No **About** as a toolbar tab. No **Notif** segment in V1.
@@ -82,7 +82,7 @@ Section switcher is **landed**: **Watch** · **Power** · **Agents** · **Genera
 - Idle wait after agents go quiet — Core + popover control; 15s–15m, default **90s**; then allow sleep
 - Brightness return when the lid opens — Core + popover control; **1 / 2 / 3 s**, default **2s**
 
-**Unlocked (Agrypnos UI):** thermal auto-off — Power toggle, **default ON**. ON: while armed, `.serious` / `.critical` ends the watch. OFF: skip that path (battery / timer / Agents / LPM unchanged). Stays in Power with floor / battery / ramp. No settings window. Plain caption only (thermal pressure turns the watch off). Ban °C, “safe temp”, health-gauge, warranty claims.
+**Unlocked (Core + Agrypnos UI):** thermal auto-off — Power toggle, **default ON**. ON: while armed, `.serious` / `.critical` ends the watch. OFF: skip that path in Core (battery / timer / Agents / LPM unchanged). Stays in Power with floor / battery / ramp. No settings window. Plain caption only (thermal pressure turns the watch off). Ban °C, “safe temp”, health-gauge, warranty claims. Duration / arming copy must not say thermal still applies when the toggle is off.
 
 Still **locked** until Boss unlocks after Mac prove:
 
