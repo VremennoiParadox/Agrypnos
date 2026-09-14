@@ -61,14 +61,12 @@ Until someone proves a **wedge** (clamshell + power + external display, or a sle
 
 ## V1 settings (popover only)
 
-These exist in the menu-bar popover (no separate settings window):
+These exist in the menu-bar popover. There is no separate settings window. A slim text switcher at the top shows one section at a time. **Watch** · **Power** · **Agents** · **General**. The popover opens on Watch.
 
-- Remappable global hotkey (default `⌥⌘A`)
-- Custom duration in minutes
-- Low-battery auto-off threshold **5–100%** (default 15%)
-- Brightness floor **%** (default **15%**; range 5–40; never 0%; lid-close uses this floor)
-- Idle wait after agents go quiet (15s–15m, default 90s) before allowing sleep
-- Brightness return when the lid opens **1 / 2 / 3 s** (default **2s**)
+- **Watch:** Keep the watch, duration presets plus custom minutes, arming caption
+- **Power:** brightness floor % (default **15%**; range 5–40; never 0%), keyboard backlight off, low-battery auto-off **5–100%** (default 15%), brightness return when the lid opens **1 / 2 / 3 s** (default **2s**)
+- **Agents:** idle wait after agents go quiet (15s–15m, default 90s) before allowing sleep
+- **General:** remappable global hotkey (default `⌥⌘A`), launch at login, quit
 
 Still locked until after Mac prove: status-item remaining time, per-tool Agents include list.
 

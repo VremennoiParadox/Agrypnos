@@ -23,6 +23,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var caption: NSTextField!
     var mainCard: CardView!
     var headerMark: NSImageView!
+    var sectionControl: NSSegmentedControl!
     var durationControl: NSSegmentedControl!
     var minutesField: NSTextField!
     var durationHint: NSTextField!
@@ -41,6 +42,18 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var hotkeyButtonY: CGFloat = 0
     var contentWidth: CGFloat = 0
     var popoverScroll: NSScrollView!
+    var popoverRoot: NSView!
+    var popoverDocument: NSView!
+    var watchCard: CardView!
+    var durationCard: CardView!
+    var hygieneCard: CardView!
+    var batteryCard: CardView!
+    var settleCard: CardView!
+    var rampCard: CardView!
+    var loginCard: CardView!
+    var shortcutLabel: NSTextField!
+    var quitButton: NSButton!
+    var currentSection: PopoverSection = .default
 
     init(runtime: WatchRuntime) {
         self.runtime = runtime
@@ -128,6 +141,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     }
 
     func open(relativeTo button: NSView) {
+        applySection(.watch)
         refresh()
         NSApp.activate(ignoringOtherApps: true)
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
@@ -208,6 +222,19 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
             return
         }
         runtime.setCustomMinutes(minutes)
+    }
+
+    @objc func sectionChanged(_ sender: NSSegmentedControl) {
+        guard let section = PopoverSection(rawValue: sender.selectedSegment) else {
+            sender.selectedSegment = currentSection.rawValue
+            return
+        }
+        if currentSection == .watch, section != .watch {
+            commitMinutesIfChanged()
+        }
+        stopRecordingIfNeeded()
+        applySection(section)
+        refresh()
     }
 
     @objc func watchToggled(_ sender: NSSwitch) {
