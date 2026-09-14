@@ -43,7 +43,7 @@ Ship these, and stop:
 
 | Piece | Behavior |
 |---|---|
-| Menu-bar extra + popover | Cards, toggles, duration (presets + custom minutes), remappable hotkey, low-battery slider (5–100%), brightness floor %, idle wait, brightness return 1/2/3s, launch-at-login, quit. Agrypnos glyph (eye, not a coffee cup). **Plain captions only** — every control says what it does (armed / waiting for lid close → brightness floor + keyboard backlight off). No poetry. **No separate settings window** — controls stay in the popover behind the V1 section switcher (**Watch** · **Power** · **Agents** · **General**). |
+| Menu-bar extra + popover | Cards, toggles, duration (presets + custom minutes), remappable hotkey, low-battery slider (5–100%), brightness floor %, idle wait, brightness return 1/2/3s, thermal auto-off (Power toggle, default ON), launch-at-login, quit. Agrypnos glyph (eye, not a coffee cup). **Plain captions only** — every control says what it does (armed / waiting for lid close → brightness floor + keyboard backlight off). No poetry. **No separate settings window** — controls stay in the popover behind the V1 section switcher (**Watch** · **Power** · **Agents** · **General**). |
 | Global hotkey | Activate/toggle the watch. Default `⌥⌘A`. **Remappable** in the popover (conflict-safe). Required V1. Surface bind failure honestly when the chord cannot register. |
 | Keep the watch (armed) | ON = **armed** while the lid is open. Machine may already be held awake (`pmset disablesleep` / SleepDisabled) as needed for the watch, but **no** display blank, **no** `displaysleepnow`, **no** keyboard backlight off on toggle. |
 | Lid-closed keep-awake | With the watch armed, lid close keeps the Mac awake via `pmset disablesleep` (SleepDisabled). IOKit assertions do **not** survive lid close; use them only as extra idle prevention, never as the lid story. |
@@ -52,20 +52,19 @@ Ship these, and stop:
 | Hold until end | Stay armed until the selected timer ends or Agents mode settles idle (then allow sleep). |
 | Auto-off timer | Segmented presets `∞` / `1h` / `3h` / `Agents`, plus **custom minutes** (e.g. 33) the user can set. |
 | Auto-off low battery | Slider **5–100%**, default 15%, on discharging battery. |
-| Thermal auto-off | `ProcessInfo.thermalState` `.serious` or `.critical`. |
+| Thermal auto-off | Power toggle, **default ON**. ON (unchanged): while armed, auto-off on `ProcessInfo.thermalState` `.serious` or `.critical`. OFF: skip that thermal path (battery / timer / Agents / LPM unchanged). Toggle only — not °C, not SMC sensors. |
 | Low Power Mode | Auto-off when LPM is on and discharging **unless** the user deliberately armed this session (forced watch). **Copy honesty:** do not show “ended / standing down” copy while the Mac is still held awake by that forced watch. |
 | Agent watch | Busy → stay awake. Settled idle after **user settle grace** → allow sleep. Cursor + Claude Code + Codex first. Process list + session-file mtimes. |
 | Safety | Reboot clears SleepDisabled. Launch-at-login never re-arms the watch. One-time scoped sudoers grant for *exactly* two `pmset disablesleep` commands. |
 
-### V1 popover sections (unlocked — implement next)
+### V1 popover sections (landed)
 
-**Agrypnos UI** implements this after the bar lands. Still **no** settings window.
+Section switcher is **landed**: **Watch** · **Power** · **Agents** · **General**. Default open **Watch**. Still **no** settings window.
 
 - Top of the popover: slim section switcher. Prefer native segmented control / quiet text. Toolbar *position* like macOS prefs is fine; **do not** copy icon+blue-tile prefs chrome.
-- Exact names: **Watch** · **Power** · **Agents** · **General**. Default open **Watch**.
 - Card map:
   - **Watch:** Keep the watch (arm) + duration presets/custom + arming caption
-  - **Power:** brightness floor % + keyboard backlight off (existing controls), battery auto-off, brightness return ramp
+  - **Power:** brightness floor % + keyboard backlight off, battery auto-off, brightness return ramp, thermal auto-off toggle (default ON; unlocked)
   - **Agents:** idle wait after agents go quiet (per-tool include still locked until Mac prove)
   - **General:** remappable hotkey, launch at login, quit
 - No **Licence** tab. No **About** as a toolbar tab. No **Notif** segment in V1.
@@ -83,7 +82,7 @@ Ship these, and stop:
 - Idle wait after agents go quiet — Core + popover control; 15s–15m, default **90s**; then allow sleep
 - Brightness return when the lid opens — Core + popover control; **1 / 2 / 3 s**, default **2s**
 
-**V1 UI next (Agrypnos UI):** section switcher + card map above. Landed controls move into those sections; do not add a settings window to do it.
+**Unlocked (Core + Agrypnos UI):** thermal auto-off — Power toggle, **default ON**. ON: while armed, `.serious` / `.critical` ends the watch. OFF: skip that path in Core (battery / timer / Agents / LPM unchanged). Stays in Power with floor / battery / ramp. No settings window. Plain caption only (thermal pressure turns the watch off). Ban °C, “safe temp”, health-gauge, warranty claims. Duration / arming copy must not say thermal still applies when the toggle is off.
 
 Still **locked** until Boss unlocks after Mac prove:
 
@@ -150,7 +149,9 @@ Warm and direct. Not a mascot. Not a coffee-cup clone. Light personality in **to
 Good: “Armed. Waiting for lid close — then brightness floor + keyboard backlight off. Auto-off at 15% battery.”
 Good: “Stays awake while agents are busy. Allows sleep after they go idle.”
 Good: “Keeps the Mac awake with the lid closed.”
+Good: “Thermal pressure turns the watch off.”
 Bad: “Sleeps with you when the lid closes.” / “I’ll floor the panel and kill the keys.” / “When they settle, sleep may return.”
+Bad: °C, “safe temp”, health-gauge, or warranty claims for thermal auto-off.
 Bad: “World-class AI-powered sleep prevention maximizing battery.” / “We force the display asleep on toggle.”
 Bad: ended/standing-down copy while Low Power Mode forced-watch is still holding the Mac awake.
 Bad: “We notify your phone.” / “Agent stopped.” (Notif is V2; event is idle after wait; POST to *your* webhook.)
