@@ -1,11 +1,11 @@
 public enum AgentKindClassifier: Sendable {
     public static func classify(processName: String) -> AgentKind? {
         let lowered = processName.lowercased()
-        if isClaudeDesktop(lowered) { return nil }
-
         let n = basename(processName)
         if n == "cursor-agent" || n.hasPrefix("cursor-agent") { return .cursor }
         if n == "cursor" || n.hasPrefix("cursor") { return .cursor }
+
+        if isClaudeDesktop(lowered) { return nil }
 
         if isClaudeCodeCLI(basename: n, loweredCommand: lowered) { return .claudeCode }
         if n == "codex" || n.hasPrefix("codex") { return .codex }
