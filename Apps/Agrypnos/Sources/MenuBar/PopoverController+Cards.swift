@@ -246,13 +246,11 @@ extension PopoverController {
             x: ci,
             width: cw
         )
-        thermalSwitch = PopoverForm.switchRow(
+        thermalSwitch = PopoverForm.switchControl(
             in: card,
             y: CGFloat(PopoverStackLayout.prefControlY),
-            title: "",
             contentW: contentW,
             ci: ci,
-            cw: cw,
             swW: swW,
             swH: swH,
             target: self,

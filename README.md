@@ -10,7 +10,7 @@ MIT. No telemetry. No stealth network.
 - **Lid close** — with the watch armed, sleep is blocked via `pmset disablesleep`. Brightness drops to the **floor %** you set (default 15%, range 5–40; never 0%). Keyboard backlight off. Not `displaysleepnow`.
 - **Lid open mid-watch** — brightness ramps back over **1 / 2 / 3 seconds** (default 2s). Keyboard backlight on.
 - **Hold until end** — timer (`∞` / `1h` / `3h` / custom minutes) or Agents mode (busy → stay; settled idle after **idle wait** → allow sleep).
-- **Safety** — low battery (slider 5–100%, default 15%), thermal `.serious` / `.critical`, reboot clears SleepDisabled, launch-at-login never re-arms.
+- **Safety** — low battery (slider 5–100%, default 15%), thermal auto-off on `.serious` / `.critical` (Power toggle, default on), reboot clears SleepDisabled, launch-at-login never re-arms.
 
 V1 agents: Cursor, Claude Code, Codex. Local heuristics (process list + session-file mtimes). Correctness over coverage.
 
