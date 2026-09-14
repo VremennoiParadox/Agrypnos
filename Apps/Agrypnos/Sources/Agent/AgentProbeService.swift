@@ -6,7 +6,7 @@ import AgrypnosCore
 
 enum ProcessListReader {
     static func records() -> [ProcessRecord] {
-        let stdout = ProcessRunner.run("/bin/ps", ["-axo", "pid=", "-o", "pcpu=", "-o", "comm="]).out
+        let stdout = ProcessRunner.run("/bin/ps", ["-axo", "pid=", "-o", "pcpu=", "-o", "args="]).out
         return ProcessTableParser.parse(stdout: stdout)
     }
 }
