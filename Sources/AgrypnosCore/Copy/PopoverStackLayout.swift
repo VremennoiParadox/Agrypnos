@@ -59,6 +59,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public let battery: PopoverSlot?
     public let settle: PopoverSlot?
     public let ramp: PopoverSlot?
+    public let thermal: PopoverSlot?
     public let login: PopoverSlot?
     public let shortcutY: Int?
     public let hotkeyHint: PopoverSlot?
@@ -80,6 +81,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
         case .battery: return battery
         case .settle: return settle
         case .ramp: return ramp
+        case .thermal: return thermal
         case .login: return login
         }
     }
@@ -104,6 +106,12 @@ public struct PopoverStackLayout: Equatable, Sendable {
             + PopoverCopyLayout.helpHeightPoints
             + segmentRowHeight
             + inset
+        let thermalHeight =
+            inset
+            + titleRowHeight
+            + PopoverCopyLayout.helpHeightPoints
+            + switchRowHeight
+            + inset
 
         func height(for card: PopoverCard) -> Int {
             switch card {
@@ -113,6 +121,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
             case .battery: return batteryCardHeight
             case .settle: return settleHeight
             case .ramp: return rampHeight
+            case .thermal: return thermalHeight
             case .login: return loginCardHeight
             }
         }
@@ -158,6 +167,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
             battery: placed[.battery],
             settle: placed[.settle],
             ramp: placed[.ramp],
+            thermal: placed[.thermal],
             login: placed[.login],
             shortcutY: shortcutY,
             hotkeyHint: hotkeyHint,

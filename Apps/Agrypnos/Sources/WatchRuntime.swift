@@ -78,6 +78,12 @@ final class WatchRuntime {
         delegate?.watchRuntimeDidChange(self)
     }
 
+    func setThermalAutoOff(_ on: Bool) {
+        engine.preferences.thermalAutoOff = on
+        store.save(engine.preferences)
+        delegate?.watchRuntimeDidChange(self)
+    }
+
     func setHotkey(_ chord: HotkeyChord) {
         lastFailedHotkey = nil
         hotkeySuspendedForRecord = false

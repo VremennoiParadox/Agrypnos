@@ -35,10 +35,11 @@ public enum AutoOffEvaluator: Sendable {
         safety: SafetyInputs,
         batteryFloorPercent: Int,
         userForcedThisSession: Bool,
+        thermalAutoOff: Bool = true,
         now: Date = Date()
     ) -> DisengageReason? {
         guard engaged else { return nil }
-        if safety.thermalSerious { return .thermal }
+        if safety.thermalSerious, thermalAutoOff { return .thermal }
         if safety.onBatteryDischarging,
            let percent = safety.batteryPercent,
            percent <= batteryFloorPercent

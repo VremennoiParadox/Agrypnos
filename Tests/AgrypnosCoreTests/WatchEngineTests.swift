@@ -191,6 +191,29 @@ final class WatchEngineTests: XCTestCase {
         )
     }
 
+    func testThermalTickStaysArmedWhenThermalAutoOffIsOff() {
+        var prefs = UserPreferences.default
+        prefs.thermalAutoOff = false
+        var engine = WatchEngine(preferences: prefs)
+        _ = engine.userSetEngaged(true, now: t0)
+        XCTAssertTrue(
+            engine.tick(
+                now: t0.addingTimeInterval(1),
+                safety: SafetyInputs(batteryPercent: 90, onBatteryDischarging: false, thermalSerious: true, lowPowerMode: false),
+                agents: .idle
+            ).isEmpty
+        )
+        XCTAssertTrue(engine.engaged)
+        XCTAssertEqual(
+            engine.tick(
+                now: t0.addingTimeInterval(2),
+                safety: SafetyInputs(batteryPercent: 12, onBatteryDischarging: true, thermalSerious: true, lowPowerMode: false),
+                agents: .idle
+            ),
+            [.disengage(.batteryFloor)]
+        )
+    }
+
     func testUserForcedWatchDoesNotAutoOffOnLowPowerMode() {
         var engine = WatchEngine(preferences: .default)
         _ = engine.userSetEngaged(true, now: t0)

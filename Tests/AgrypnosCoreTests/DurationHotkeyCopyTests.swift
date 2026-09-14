@@ -167,6 +167,21 @@ final class AgrypnosCopyTests: XCTestCase {
             AgrypnosCopy.durationHint(option: .indefinite, engaged: false, remainingSeconds: nil),
             "Stays on until you turn it off (battery / thermal still apply)."
         )
+        XCTAssertEqual(
+            AgrypnosCopy.durationHint(option: .indefinite, engaged: false, remainingSeconds: nil, thermalAutoOff: true),
+            AgrypnosCopy.indefiniteHint
+        )
+        XCTAssertEqual(
+            AgrypnosCopy.durationHint(option: .indefinite, engaged: false, remainingSeconds: nil, thermalAutoOff: false),
+            AgrypnosCopy.indefiniteHint(thermalAutoOff: false)
+        )
+        XCTAssertEqual(
+            AgrypnosCopy.indefiniteHint(thermalAutoOff: false),
+            "Stays on until you turn it off (battery still applies)."
+        )
+        XCTAssertFalse(
+            AgrypnosCopy.indefiniteHint(thermalAutoOff: false).lowercased().contains("thermal")
+        )
         XCTAssertFalse(AgrypnosCopy.indefiniteHint.lowercased().contains("low power"))
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .oneHour, engaged: false, remainingSeconds: nil),
@@ -186,6 +201,24 @@ final class AgrypnosCopyTests: XCTestCase {
         assertFitsDurationHint(
             AgrypnosCopy.durationHint(option: .customMinutes(33), engaged: false, remainingSeconds: nil)
         )
+    }
+
+    func testThermalAutoOffCopyIsPlainAndOmitsCelsius() {
+        XCTAssertEqual(AgrypnosCopy.thermalAutoOff, "Thermal auto-off")
+        XCTAssertEqual(AgrypnosCopy.thermalAutoOffHelp, "Thermal pressure turns the watch off.")
+        let blob = allUserFacingCopy().joined(separator: "\n").lowercased()
+        for banned in ["°c", "celsius", "safe temp", "health-gauge", "health gauge", "warranty"] {
+            XCTAssertFalse(blob.contains(banned), "thermal fiction still in copy: \(banned)")
+        }
+        XCTAssertFalse(AgrypnosCopy.thermalAutoOffHelp.lowercased().contains("°c"))
+        XCTAssertFalse(AgrypnosCopy.thermalAutoOff.lowercased().contains("smc"))
+        assertFitsHelp(AgrypnosCopy.thermalAutoOffHelp)
+        XCTAssertLessThanOrEqual(
+            CopyWrap.lineCount(AgrypnosCopy.thermalAutoOff, columns: PopoverCopyLayout.innerColumns),
+            2
+        )
+        assertFitsDurationHint(AgrypnosCopy.indefiniteHint(thermalAutoOff: false))
+        assertFitsDurationHint(AgrypnosCopy.indefiniteHint(thermalAutoOff: true))
     }
 
     func testEndedNotificationsArePlainWatchTurnedOff() {
@@ -331,6 +364,7 @@ final class AgrypnosCopyTests: XCTestCase {
         assertFitsHelp(AgrypnosCopy.settleGraceHelp)
         assertFitsHelp(AgrypnosCopy.lidOpenRampHelp)
         assertFitsHelp(AgrypnosCopy.brightnessFloorHelp)
+        assertFitsHelp(AgrypnosCopy.thermalAutoOffHelp)
         XCTAssertLessThanOrEqual(
             CopyWrap.lineCount(AgrypnosCopy.settleGrace, columns: PopoverCopyLayout.innerColumns),
             2
@@ -378,6 +412,8 @@ final class AgrypnosCopyTests: XCTestCase {
             AgrypnosCopy.lidOpenRamp,
             AgrypnosCopy.lidOpenRampHelp,
             AgrypnosCopy.batteryFloor,
+            AgrypnosCopy.thermalAutoOff,
+            AgrypnosCopy.thermalAutoOffHelp,
             AgrypnosCopy.launchAtLogin,
             AgrypnosCopy.quit,
             AgrypnosCopy.agentsHint,
@@ -410,6 +446,7 @@ final class AgrypnosCopyTests: XCTestCase {
             AgrypnosCopy.hotkeyHint(HotkeyChord(keyCode: 0, option: false, command: false), registered: false),
             AgrypnosCopy.durationHint(option: .untilAgentsSettle, engaged: false, remainingSeconds: nil),
             AgrypnosCopy.durationHint(option: .indefinite, engaged: false, remainingSeconds: nil),
+            AgrypnosCopy.durationHint(option: .indefinite, engaged: false, remainingSeconds: nil, thermalAutoOff: false),
             AgrypnosCopy.durationHint(option: .oneHour, engaged: false, remainingSeconds: nil),
             AgrypnosCopy.durationHint(option: .threeHours, engaged: false, remainingSeconds: nil),
             AgrypnosCopy.durationHint(option: .customMinutes(33), engaged: false, remainingSeconds: nil),
