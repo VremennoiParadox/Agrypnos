@@ -30,7 +30,7 @@ No giant god-objects. No “just one more helper” that becomes AppDelegate 2.
 ## Hard limits
 
 - **No file over 600 lines.** Split *before* you hit the wall. Prefer ~250.
-- **Menu-bar only.** No Dock-first UI. **No separate settings window** (no traffic-lights titled prefs). V1 sections and parked V2 **Notif** stay in the popover. `LSUIElement`.
+- **Menu-bar only.** No Dock-first UI. **No separate settings window** (no traffic-lights titled prefs). V1 sections stay in the popover. When V2 **Notif** ships, it stays in the popover too — **do not** add a Notif segment in V1. `LSUIElement`.
 - **Open source** (MIT). No telemetry. No stealth network.
 - **Do not claim watt numbers you did not measure.** Do not cite other products’ watt studies or invent comparisons. Agrypnos stands alone — do not name competitors in product docs or commits.
 - **Do not promise every agent provider.** V1 is Cursor, Claude Code, and Codex, local heuristics, correctness over coverage.
@@ -65,10 +65,10 @@ Ship these, and stop:
 - Exact names: **Watch** · **Power** · **Agents** · **General**. Default open **Watch**.
 - Card map:
   - **Watch:** Keep the watch (arm) + duration presets/custom + arming caption
-  - **Power:** keyboard/brightness floor %, battery auto-off, brightness return ramp
+  - **Power:** brightness floor % + keyboard backlight off (existing controls), battery auto-off, brightness return ramp
   - **Agents:** idle wait after agents go quiet (per-tool include still locked until Mac prove)
   - **General:** remappable hotkey, launch at login, quit
-- No **Licence** tab. No **About** as a toolbar tab.
+- No **Licence** tab. No **About** as a toolbar tab. No **Notif** segment in V1.
 - Goal: shorter height per section; reduce long scroll when possible.
 - Plain captions only (personality rules below).
 
@@ -100,7 +100,9 @@ Plain copy: POST to *your* webhook. Not “we notify your phone”. Not “agent
 
 Two-way remote commands and rich status (task text / finish ETA) stay idea-only. Do not invent them as V2 scope beyond one-way outbound notify.
 
-Out of V1: App Store sandbox, notarization pipeline, every provider, fake benchmarks, Wi-Fi/BT kill, Dock UI, separate settings window, **Licence** tab, **About** as a toolbar tab, **Notif**, donate without a live URL, `displaysleepnow` on engage, claiming display sleep when we only floored brightness.
+### Out of V1
+
+App Store sandbox, notarization pipeline, every provider, fake benchmarks, Wi-Fi/BT kill, Dock UI, separate settings window, **Licence** tab, **About** as a toolbar tab, **Notif**, donate without a live URL, `displaysleepnow` on engage, claiming display sleep when we only floored brightness.
 
 ## Layout
 
