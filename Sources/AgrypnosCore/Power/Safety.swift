@@ -19,7 +19,7 @@ public struct SafetyInputs: Equatable, Sendable {
     }
 }
 
-public enum DisengageReason: String, Equatable, Sendable {
+public enum DisengageReason: String, Equatable, Sendable, CaseIterable {
     case user
     case timerExpired
     case batteryFloor

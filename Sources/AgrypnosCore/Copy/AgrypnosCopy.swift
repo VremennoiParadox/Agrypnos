@@ -101,6 +101,18 @@ public enum AgrypnosCopy: Sendable {
 
     public static let leftoverNotify =
         "SleepDisabled was already on. Agrypnos adopted it. Lid close still uses brightness floor + keyboard backlight off."
+    public static let notifEnabled = "Idle-after-wait POST"
+    public static let notifEnabledHelp =
+        "POST to your Discord webhook and/or message your Telegram bot after Agents stay idle through the wait. Off by default."
+    public static let notifDiscord = "Discord webhook URL"
+    public static let notifDiscordHelp = "POST to your webhook. Leave empty to skip Discord."
+    public static let notifTelegramToken = "Telegram bot token"
+    public static let notifTelegramChatId = "Telegram chat id"
+    public static let notifTelegramHelp =
+        "Message your Telegram bot. Needs token and chat id. Agrypnos does not run a shared bot."
+    public static let notifClear = "Clear secrets"
+    public static let notifIdleBody =
+        "Agrypnos: local busy signals went idle after the wait."
     public static let menuTooltipOff = "Agrypnos: watch is off."
     public static let menuTooltipOn =
         "Agrypnos: armed. Waiting for lid close — then brightness floor + keyboard backlight off."

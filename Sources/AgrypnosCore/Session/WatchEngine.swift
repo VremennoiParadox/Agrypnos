@@ -10,6 +10,8 @@ public struct WatchEngine: Equatable, Sendable {
     public private(set) var leftoverAdopted: Bool
     public private(set) var lidClosed: Bool
     public private(set) var lidHygieneApplied: Bool
+    /// One idle-after-wait POST per genuine user arm. Survives disarm-failure rollback.
+    public private(set) var postedThisUserArm: Bool
 
     public init(preferences: UserPreferences = .default) {
         self.preferences = preferences
@@ -21,15 +23,23 @@ public struct WatchEngine: Equatable, Sendable {
         self.leftoverAdopted = false
         self.lidClosed = false
         self.lidHygieneApplied = false
+        self.postedThisUserArm = false
     }
 
     public mutating func userSetEngaged(_ on: Bool, now: Date, lidClosed: Bool = false) -> [WatchCommand] {
         leftoverAdopted = false
         self.lidClosed = lidClosed
         if on {
-            return engage(now: now, forcedByUser: true)
+            return engage(now: now, forcedByUser: true, resetPostedThisUserArm: true)
         }
         return disengage(.user)
+    }
+
+    /// Kernel disarm failed after logical disengage. Same user arm — keep the POST latch.
+    public mutating func rollbackDisarmFailure(now: Date, lidClosed: Bool = false) -> [WatchCommand] {
+        leftoverAdopted = false
+        self.lidClosed = lidClosed
+        return engage(now: now, forcedByUser: true, resetPostedThisUserArm: false)
     }
 
     /// Kernel `SleepDisabled` was already on and could not be cleared. Adopt visibly.
@@ -44,7 +54,7 @@ public struct WatchEngine: Equatable, Sendable {
             }
             return []
         }
-        return engage(now: now, forcedByUser: false)
+        return engage(now: now, forcedByUser: false, resetPostedThisUserArm: true)
     }
 
     public mutating func userSetDuration(_ option: DurationOption, now: Date) -> [WatchCommand] {
@@ -111,9 +121,16 @@ public struct WatchEngine: Equatable, Sendable {
         return lidOpenRestoreCommands()
     }
 
-    mutating func engage(now: Date, forcedByUser: Bool) -> [WatchCommand] {
+    mutating func engage(
+        now: Date,
+        forcedByUser: Bool,
+        resetPostedThisUserArm: Bool
+    ) -> [WatchCommand] {
         engaged = true
         userForcedThisSession = forcedByUser
+        if resetPostedThisUserArm {
+            postedThisUserArm = false
+        }
         settle = AgentSettleTracker(grace: preferences.agentSettleGrace)
         applyDuration(now: now)
         var commands: [WatchCommand] = [.engage]
@@ -143,6 +160,12 @@ public struct WatchEngine: Equatable, Sendable {
     }
 
     mutating func disengage(_ reason: DisengageReason) -> [WatchCommand] {
+        // Capture before reset: settled already requires sawBusy; keep that honesty.
+        let postIdleAfterWait = !postedThisUserArm && NotifIdlePostPolicy.shouldPost(
+            enabled: preferences.notifEnabled,
+            reason: reason,
+            sawBusy: settle.sawBusy
+        )
         engaged = false
         mode = .idle
         timerEnd = nil
@@ -151,6 +174,10 @@ public struct WatchEngine: Equatable, Sendable {
         lidHygieneApplied = false
         settle.reset()
         var commands: [WatchCommand] = [.disengage(reason)]
+        if postIdleAfterWait {
+            postedThisUserArm = true
+            commands.append(.postIdleAfterWaitNotif)
+        }
         // Clearing SleepDisabled does not retrigger clamshell sleep.
         if lidClosed, reason != .user {
             commands.append(.requestSleep)

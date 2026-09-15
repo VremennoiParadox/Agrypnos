@@ -2,13 +2,17 @@ import XCTest
 @testable import AgrypnosCore
 
 final class PopoverSectionTests: XCTestCase {
-    func testSegmentTitlesAreWatchPowerAgentsGeneral() {
-        XCTAssertEqual(PopoverSection.titles, ["Watch", "Power", "Agents", "General"])
-        XCTAssertEqual(PopoverSection.allCases.map(\.title), ["Watch", "Power", "Agents", "General"])
-        XCTAssertEqual(PopoverSection.allCases.count, 4)
+    func testSegmentTitlesAreWatchPowerAgentsNotifGeneral() {
+        XCTAssertEqual(PopoverSection.titles, ["Watch", "Power", "Agents", "Notif", "General"])
+        XCTAssertEqual(
+            PopoverSection.allCases.map(\.title),
+            ["Watch", "Power", "Agents", "Notif", "General"]
+        )
+        XCTAssertEqual(PopoverSection.allCases.count, 5)
         XCTAssertEqual(PopoverSection.watch.title, "Watch")
         XCTAssertEqual(PopoverSection.power.title, "Power")
         XCTAssertEqual(PopoverSection.agents.title, "Agents")
+        XCTAssertEqual(PopoverSection.notif.title, "Notif")
         XCTAssertEqual(PopoverSection.general.title, "General")
     }
 
@@ -19,30 +23,33 @@ final class PopoverSectionTests: XCTestCase {
         XCTAssertEqual(PopoverSection(rawValue: 0), .watch)
         XCTAssertEqual(PopoverSection(rawValue: 1), .power)
         XCTAssertEqual(PopoverSection(rawValue: 2), .agents)
-        XCTAssertEqual(PopoverSection(rawValue: 3), .general)
-        XCTAssertNil(PopoverSection(rawValue: 4))
+        XCTAssertEqual(PopoverSection(rawValue: 3), .notif)
+        XCTAssertEqual(PopoverSection(rawValue: 4), .general)
+        XCTAssertNil(PopoverSection(rawValue: 5))
         XCTAssertNil(PopoverSection(rawValue: -1))
     }
 
-    func testSwitcherOmitsNotifLicenceAndAbout() {
+    func testSwitcherIncludesNotifAndOmitsLicenceAndAbout() {
         let titles = PopoverSection.titles
-        XCTAssertEqual(titles, ["Watch", "Power", "Agents", "General"])
-        for banned in ["Notif", "Licence", "License", "About"] {
+        XCTAssertEqual(titles, ["Watch", "Power", "Agents", "Notif", "General"])
+        XCTAssertEqual(titles.firstIndex(of: "Notif"), titles.firstIndex(of: "Agents").map { $0 + 1 })
+        XCTAssertEqual(titles.firstIndex(of: "General"), titles.firstIndex(of: "Notif").map { $0 + 1 })
+        for banned in ["Licence", "License", "About"] {
             XCTAssertFalse(titles.contains(banned), banned)
         }
         let joined = titles.joined(separator: " ").lowercased()
-        XCTAssertFalse(joined.contains("notif"))
         XCTAssertFalse(joined.contains("licence"))
         XCTAssertFalse(joined.contains("license"))
         XCTAssertFalse(joined.contains("about"))
     }
 
-    func testCardMapKeepsExistingControlsInTheFourSections() {
+    func testCardMapKeepsExistingControlsAndLeavesNotifForUI() {
         XCTAssertEqual(PopoverSection.watch.cards, [.watch, .duration])
         XCTAssertEqual(PopoverSection.power.cards, [.hygiene, .battery, .ramp, .thermal])
         XCTAssertTrue(PopoverSection.power.cards.contains(.thermal))
         XCTAssertEqual(PopoverSection.power.cards.last, .thermal)
         XCTAssertEqual(PopoverSection.agents.cards, [.settle])
+        XCTAssertEqual(PopoverSection.notif.cards, [])
         XCTAssertEqual(PopoverSection.general.cards, [.login])
         XCTAssertFalse(PopoverSection.agents.cards.contains(.watch))
         XCTAssertFalse(PopoverSection.power.cards.contains(.settle))
@@ -115,6 +122,24 @@ final class PopoverSectionLayoutTests: XCTestCase {
         XCTAssertNil(layout.thermal)
         XCTAssertNil(layout.login)
         XCTAssertEqual(layout.contentHeight, layout.settle!.maxY + PopoverStackLayout.pad)
+    }
+
+    func testNotifSectionExistsWithNoCardsYet() {
+        let layout = PopoverStackLayout.make(section: .notif)
+        XCTAssertEqual(layout.section, .notif)
+        XCTAssertTrue(layout.stackedCards.isEmpty)
+        XCTAssertNil(layout.watch)
+        XCTAssertNil(layout.duration)
+        XCTAssertNil(layout.hygiene)
+        XCTAssertNil(layout.battery)
+        XCTAssertNil(layout.ramp)
+        XCTAssertNil(layout.thermal)
+        XCTAssertNil(layout.settle)
+        XCTAssertNil(layout.login)
+        XCTAssertNil(layout.shortcutY)
+        XCTAssertNil(layout.quitY)
+        XCTAssertEqual(layout.contentHeight, PopoverStackLayout.firstCardY + PopoverStackLayout.pad)
+        XCTAssertFalse(layout.needsScroll)
     }
 
     func testGeneralSectionShowsLoginHotkeyAndQuit() {
