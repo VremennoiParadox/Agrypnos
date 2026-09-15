@@ -35,7 +35,7 @@ No giant god-objects. No “just one more helper” that becomes AppDelegate 2.
 - **Do not claim watt numbers you did not measure.** Do not cite other products’ watt studies or invent comparisons. Agrypnos stands alone — do not name competitors in product docs or commits.
 - **Do not promise every agent provider.** V1 is Cursor, Claude Code, and Codex, local heuristics, correctness over coverage.
 - **Do not kill Wi-Fi or Bluetooth.** Out of scope forever unless a later spec says otherwise.
-- **Armed ≠ black screen.** Toggling Keep the watch must **not** call `displaysleepnow`, blank the panel, or kill the keyboard backlight while the lid is open. Do not claim “we force display asleep”, “screen off”, or “dim ≠ asleep / real display sleep” for this path — V1 honesty is **brightness floor + keyboard off on lid close** (brightness write only).
+- **Armed ≠ black screen.** Toggling Keep the watch must **not** call `displaysleepnow`, blank the panel, or kill the keyboard backlight while the lid is open. Do not claim “we force display asleep”, “screen off”, or “dim ≠ asleep / real display sleep” for the toggle — V1 lid-close honesty is **brightness floor + keyboard off**.
 
 ## V1 scope
 
@@ -152,7 +152,7 @@ Good: “Keeps the Mac awake with the lid closed.”
 Good: “Thermal pressure turns the watch off.”
 Bad: “Sleeps with you when the lid closes.” / “I’ll floor the panel and kill the keys.” / “When they settle, sleep may return.”
 Bad: °C, “safe temp”, health-gauge, or warranty claims for thermal auto-off.
-Bad: “World-class AI-powered sleep prevention maximizing battery.” / “We force the display asleep on toggle.” / “screen off.”
+Bad: “World-class AI-powered sleep prevention maximizing battery.” / “We force the display asleep on toggle.” / “Lid close turns the screen off.”
 Bad: ended/standing-down copy while Low Power Mode forced-watch is still holding the Mac awake.
 Bad: “We notify your phone.” / “Agent stopped.” (Notif is V2; event is idle after wait; POST to *your* webhook.)
 
