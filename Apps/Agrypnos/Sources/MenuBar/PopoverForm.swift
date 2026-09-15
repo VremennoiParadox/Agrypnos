@@ -203,4 +203,41 @@ enum PopoverForm {
         card.addSubview(field)
         return field
     }
+
+    static func labeledSecretField(
+        in card: NSView,
+        y: CGFloat,
+        x: CGFloat,
+        width: CGFloat,
+        caption: String,
+        secure: Bool,
+        label: String,
+        help: String,
+        target: AnyObject,
+        action: Selector,
+        delegate: NSTextFieldDelegate
+    ) -> NSTextField {
+        let labelW = CGFloat(PopoverCopyLayout.secretFieldLabelWidthPoints)
+        let captionField = LabelFactory.make(caption, font: .systemFont(ofSize: 13), color: .labelColor)
+        captionField.frame = NSRect(
+            x: x,
+            y: y,
+            width: labelW,
+            height: CGFloat(PopoverStackLayout.switchRowLabelHeight)
+        )
+        card.addSubview(captionField)
+        return secretField(
+            in: card,
+            y: y,
+            x: x + labelW + 8,
+            width: max(width - labelW - 8, 80),
+            placeholder: "",
+            secure: secure,
+            label: label,
+            help: help,
+            target: target,
+            action: action,
+            delegate: delegate
+        )
+    }
 }

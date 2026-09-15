@@ -53,6 +53,15 @@ final class NotifPopoverChromeTests: XCTestCase {
         XCTAssertEqual(NotifOptionalSecretChrome.commit("99"), "99")
     }
 
+    func testTelegramFieldsHaveVisibleTokenAndChatIdCaptions() {
+        XCTAssertEqual(AgrypnosCopy.notifTelegramTokenShort, "Token")
+        XCTAssertEqual(AgrypnosCopy.notifTelegramChatShort, "Chat id")
+        let needed = AgrypnosCopy.notifTelegramChatShort.count * 9 + 8
+        XCTAssertGreaterThanOrEqual(PopoverCopyLayout.secretFieldLabelWidthPoints, needed)
+        XCTAssertEqual(AgrypnosCopy.notifSaveFailed, "Couldn't save that secret.")
+        XCTAssertFalse(AgrypnosCopy.notifSaveFailed.lowercased().contains("saved."))
+    }
+
     func testClearSecretsCopyDeletesKeychainEntriesNotASharedBot() {
         XCTAssertEqual(AgrypnosCopy.notifClear, "Clear secrets")
         XCTAssertTrue(AgrypnosCopy.notifSetupHelp.lowercased().contains("keychain"))
@@ -149,12 +158,15 @@ final class NotifPopoverChromeTests: XCTestCase {
             AgrypnosCopy.notifDiscordHelp,
             AgrypnosCopy.notifDiscordInvalid,
             AgrypnosCopy.notifTelegram,
+            AgrypnosCopy.notifTelegramTokenShort,
+            AgrypnosCopy.notifTelegramChatShort,
             AgrypnosCopy.notifTelegramToken,
             AgrypnosCopy.notifTelegramChatId,
             AgrypnosCopy.notifTelegramHelp,
             AgrypnosCopy.notifSetup,
             AgrypnosCopy.notifSetupHelp,
             AgrypnosCopy.notifClear,
+            AgrypnosCopy.notifSaveFailed,
             AgrypnosCopy.notifIdleBody,
         ].joined(separator: "\n").lowercased()
         XCTAssertTrue(blob.contains("your webhook"))

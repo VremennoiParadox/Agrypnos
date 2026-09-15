@@ -109,9 +109,12 @@ public enum AgrypnosCopy: Sendable {
     public static let notifTelegramToken = "Telegram bot token"
     public static let notifTelegramChatId = "Telegram chat id"
     public static let notifTelegram = "Telegram"
+    public static let notifTelegramTokenShort = "Token"
+    public static let notifTelegramChatShort = "Chat id"
     public static let notifTelegramHelp =
         "Message your Telegram bot. Needs token and chat id. Agrypnos does not run a shared bot."
     public static let notifClear = "Clear secrets"
+    public static let notifSaveFailed = "Couldn't save that secret."
     public static let notifDiscordInvalid =
         "That is not a Discord webhook URL. Nothing was saved."
     public static let notifSetup = "Setup"

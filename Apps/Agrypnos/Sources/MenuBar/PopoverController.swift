@@ -171,7 +171,9 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
 
     func close() {
         commitMinutesIfChanged()
-        commitNotifFields()
+        if currentSection == .notif {
+            commitNotifFields()
+        }
         recorder.stop()
         runtime?.restoreSuspendedHotkey()
         popover.performClose(nil)

@@ -64,7 +64,6 @@ public struct PopoverStackLayout: Equatable, Sendable {
     }
     public static var notifTelegramChatY: Int { notifTelegramTokenY + secretFieldRowHeight }
     public static var notifSetupHelpY: Int { prefTitleY + titleRowHeight }
-    public static var notifClearButtonY: Int { loginSwitchRowY }
 
     public let section: PopoverSection
     public let sectionSwitcher: PopoverSlot

@@ -109,11 +109,13 @@ final class WatchRuntime {
         }
     }
 
-    func setNotifTelegramBotToken(_ value: String?) {
+    @discardableResult
+    func setNotifTelegramBotToken(_ value: String?) -> Bool {
         NotifSecretsStore.setTelegramBotToken(NotifOptionalSecretChrome.commit(value ?? ""))
     }
 
-    func setNotifTelegramChatId(_ value: String?) {
+    @discardableResult
+    func setNotifTelegramChatId(_ value: String?) -> Bool {
         NotifSecretsStore.setTelegramChatId(NotifOptionalSecretChrome.commit(value ?? ""))
     }
 
