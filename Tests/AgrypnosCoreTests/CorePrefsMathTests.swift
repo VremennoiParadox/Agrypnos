@@ -5,25 +5,27 @@ final class CorePrefsMathTests: XCTestCase {
     let t0 = Date(timeIntervalSince1970: 10_000)
 
     func testBrightnessFloorDefaultIsFifteenPercentNeverZero() {
-        XCTAssertEqual(UserPreferences.brightnessFloorPercentRange, 5...40)
+        XCTAssertEqual(UserPreferences.brightnessFloorPercentRange, 1...40)
         XCTAssertEqual(UserPreferences.default.brightnessFloorPercent, 15)
         XCTAssertEqual(UserPreferences.defaultBrightnessFloorPercent, 15)
         XCTAssertEqual(UserPreferences.default.brightnessFloor, 0.15, accuracy: 0.0001)
         XCTAssertNotEqual(UserPreferences.default.brightnessFloorPercent, 0)
         XCTAssertGreaterThan(UserPreferences.default.brightnessFloor, 0)
-        XCTAssertEqual(UserPreferences.clampBrightnessFloor(0), 5)
-        XCTAssertEqual(UserPreferences(brightnessFloorPercent: 0).brightnessFloorPercent, 5)
+        XCTAssertEqual(UserPreferences.clampBrightnessFloor(0), 1)
+        XCTAssertEqual(UserPreferences(brightnessFloorPercent: 0).brightnessFloorPercent, 1)
         XCTAssertNotEqual(UserPreferences(brightnessFloorPercent: 0).brightnessFloor, 0)
     }
 
     func testBrightnessFloorPercentClampsAndMapsToUnit() {
-        XCTAssertEqual(UserPreferences.clampBrightnessFloor(0), 5)
-        XCTAssertEqual(UserPreferences.clampBrightnessFloor(4), 5)
+        XCTAssertEqual(UserPreferences.clampBrightnessFloor(0), 1)
+        XCTAssertEqual(UserPreferences.clampBrightnessFloor(-3), 1)
+        XCTAssertEqual(UserPreferences.clampBrightnessFloor(1), 1)
+        XCTAssertEqual(UserPreferences.clampBrightnessFloor(4), 4)
         XCTAssertEqual(UserPreferences.clampBrightnessFloor(5), 5)
         XCTAssertEqual(UserPreferences.clampBrightnessFloor(20), 20)
         XCTAssertEqual(UserPreferences.clampBrightnessFloor(40), 40)
         XCTAssertEqual(UserPreferences.clampBrightnessFloor(41), 40)
-        XCTAssertEqual(UserPreferences(brightnessFloorPercent: 4).brightnessFloorPercent, 5)
+        XCTAssertEqual(UserPreferences(brightnessFloorPercent: 4).brightnessFloorPercent, 4)
         XCTAssertEqual(UserPreferences(brightnessFloorPercent: 20).brightnessFloorPercent, 20)
         XCTAssertEqual(UserPreferences(brightnessFloorPercent: 99).brightnessFloorPercent, 40)
         XCTAssertEqual(UserPreferences(brightnessFloorPercent: 20).brightnessFloor, 0.20, accuracy: 0.0001)
@@ -217,9 +219,9 @@ final class CorePrefsMathTests: XCTestCase {
     }
 
     func testCorePrefsChromeMatchesClamps() {
-        XCTAssertEqual(BrightnessFloorPercentChrome.minPercent, 5)
+        XCTAssertEqual(BrightnessFloorPercentChrome.minPercent, 1)
         XCTAssertEqual(BrightnessFloorPercentChrome.maxPercent, 40)
-        XCTAssertEqual(BrightnessFloorPercentChrome.minLabel, "5%")
+        XCTAssertEqual(BrightnessFloorPercentChrome.minLabel, "1%")
         XCTAssertEqual(BrightnessFloorPercentChrome.maxLabel, "40%")
         XCTAssertEqual(AgentSettleGraceChrome.minSeconds, 15)
         XCTAssertEqual(AgentSettleGraceChrome.maxSeconds, 900)
