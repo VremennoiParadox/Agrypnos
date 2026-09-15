@@ -49,7 +49,7 @@ Ship these, and stop:
 | Lid-closed keep-awake | With the watch armed, lid close keeps the Mac awake via `pmset disablesleep` (SleepDisabled). IOKit assertions do **not** survive lid close; use them only as extra idle prevention, never as the lid story. |
 | Lid-close hygiene | On lid **close** (not on toggle): set brightness to the **user floor %** (default **15%**, range 1–40; never 0%) and turn **keyboard backlight off**. Brightness write only — not display sleep, not “screen off”. Do **not** use `displaysleepnow` for this path. |
 | Lid-open restore | If the lid opens again while the watch is still armed (timer/agents not finished): gradual brightness ramp (**1 / 2 / 3 s**, default **2s**) + keyboard backlight on. |
-| Hold until end | Stay armed until the selected timer ends or Agents mode’s settle buffer after local busy signals elapses (then allow sleep). |
+| Hold until end | Stay armed until the selected timer ends or Agents mode waits the settle buffer after local busy signals stop (then allow sleep). |
 | Auto-off timer | Segmented presets `∞` / `1h` / `3h` / `Agents`, plus **custom minutes** (e.g. 33) the user can set. |
 | Auto-off low battery | Slider **5–100%**, default 15%, on discharging battery. |
 | Thermal auto-off | Power toggle, **default ON**. ON (unchanged): while armed, auto-off on `ProcessInfo.thermalState` `.serious` or `.critical`. OFF: skip that thermal path (battery / timer / Agents / LPM unchanged). Toggle only — not °C, not SMC sensors. |
@@ -92,7 +92,6 @@ Still **locked** until Boss unlocks after Mac prove:
 
 - Status-item remaining time
 - Per-tool Agents include list
-- Think-detection / “still thinking” (local busy signals only)
 
 **Gated:** donate — no donate control until there is a live URL.
 
@@ -106,7 +105,7 @@ Two-way remote commands and rich status (task text / finish ETA) stay idea-only.
 
 ### Out of V1
 
-App Store sandbox, notarization pipeline, every provider, fake benchmarks, Wi-Fi/BT kill, Dock UI, separate settings window, **Licence** tab, **About** as a toolbar tab, **Notif**, donate without a live URL, `displaysleepnow` on engage, claiming display sleep or “screen off” when we only floored brightness, opt-in panel sleep (parked / idea-only — do not unlock).
+App Store sandbox, notarization pipeline, every provider, fake benchmarks, Wi-Fi/BT kill, Dock UI, separate settings window, **Licence** tab, **About** as a toolbar tab, **Notif**, donate without a live URL, `displaysleepnow` on engage, claiming display sleep or “screen off” when we only floored brightness, think-detection / “still thinking” claims, opt-in panel sleep (parked / idea-only — do not unlock).
 
 ## Layout
 
