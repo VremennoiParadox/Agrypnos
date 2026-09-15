@@ -16,7 +16,7 @@ public struct NotifOutboundRequest: Equatable, Sendable {
 
 public enum NotifOutboundRequestFactory: Sendable {
     public static func discord(webhookURL: String, content: String) -> NotifOutboundRequest? {
-        guard let url = httpsURL(webhookURL) else { return nil }
+        guard let url = DiscordWebhookURL.parse(webhookURL) else { return nil }
         guard let body = json(["content": content]) else { return nil }
         return NotifOutboundRequest(
             url: url,
@@ -54,13 +54,6 @@ public enum NotifOutboundRequestFactory: Sendable {
     }
 
     static let jsonHeaders = ["Content-Type": "application/json"]
-
-    static func httpsURL(_ raw: String) -> URL? {
-        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, let url = URL(string: trimmed) else { return nil }
-        guard url.scheme == "https", let host = url.host, !host.isEmpty else { return nil }
-        return url
-    }
 
     static func json(_ object: [String: String]) -> Data? {
         try? JSONSerialization.data(withJSONObject: object)

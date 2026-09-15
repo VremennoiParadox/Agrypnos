@@ -28,22 +28,6 @@ public enum NotifIdlePostPolicy: Sendable {
         return destinations
     }
 
-    public static func channels(
-        enabled: Bool,
-        reason: DisengageReason,
-        sawBusy: Bool,
-        discordWebhookURL: String?,
-        telegramBotToken: String?,
-        telegramChatId: String?
-    ) -> [NotifChannel] {
-        guard shouldPost(enabled: enabled, reason: reason, sawBusy: sawBusy) else { return [] }
-        return destinations(
-            discordWebhookURL: discordWebhookURL,
-            telegramBotToken: telegramBotToken,
-            telegramChatId: telegramChatId
-        )
-    }
-
     static func present(_ value: String?) -> Bool {
         guard let value else { return false }
         return !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty

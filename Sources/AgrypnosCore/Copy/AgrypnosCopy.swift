@@ -112,7 +112,7 @@ public enum AgrypnosCopy: Sendable {
         "Message your Telegram bot. Needs token and chat id. Agrypnos does not run a shared bot."
     public static let notifClear = "Clear secrets"
     public static let notifIdleBody =
-        "Agrypnos: local busy signals went idle after the wait. Watch turned off."
+        "Agrypnos: local busy signals went idle after the wait."
     public static let menuTooltipOff = "Agrypnos: watch is off."
     public static let menuTooltipOn =
         "Agrypnos: armed. Waiting for lid close — then brightness floor + keyboard backlight off."

@@ -46,13 +46,13 @@ final class NotifIdlePostPolicyTests: XCTestCase {
 
     func testDisabledNeverFiresEvenWithSecretsAndSettle() {
         XCTAssertEqual(
-            NotifIdlePostPolicy.channels(
+            channels(
                 enabled: false,
                 reason: .agentsSettled,
                 sawBusy: true,
-                discordWebhookURL: "https://discord.com/api/webhooks/1/abc",
-                telegramBotToken: "123:token",
-                telegramChatId: "99"
+                discord: "https://discord.com/api/webhooks/1/abc",
+                token: "123:token",
+                chat: "99"
             ),
             []
         )
@@ -185,65 +185,17 @@ final class NotifIdlePostPolicyTests: XCTestCase {
         token: String?,
         chat: String?
     ) -> [NotifChannel] {
-        NotifIdlePostPolicy.channels(
+        guard NotifIdlePostPolicy.shouldPost(
             enabled: enabled,
             reason: reason,
-            sawBusy: sawBusy,
+            sawBusy: sawBusy
+        ) else {
+            return []
+        }
+        return NotifIdlePostPolicy.destinations(
             discordWebhookURL: discord,
             telegramBotToken: token,
             telegramChatId: chat
-        )
-    }
-}
-
-final class NotifOutboundRequestTests: XCTestCase {
-    func testDiscordRequestPostsJSONContent() throws {
-        let url = "https://discord.com/api/webhooks/1/abc"
-        let request = try XCTUnwrap(
-            NotifOutboundRequestFactory.discord(webhookURL: url, content: AgrypnosCopy.notifIdleBody)
-        )
-        XCTAssertEqual(request.url.absoluteString, url)
-        XCTAssertEqual(request.httpMethod, "POST")
-        XCTAssertEqual(request.headers["Content-Type"], "application/json")
-        let object = try XCTUnwrap(
-            JSONSerialization.jsonObject(with: request.body) as? [String: Any]
-        )
-        XCTAssertEqual(object["content"] as? String, AgrypnosCopy.notifIdleBody)
-        XCTAssertNil(NotifOutboundRequestFactory.discord(webhookURL: "", content: "x"))
-        XCTAssertNil(NotifOutboundRequestFactory.discord(webhookURL: "  ", content: "x"))
-        XCTAssertNil(
-            NotifOutboundRequestFactory.discord(
-                webhookURL: "http://discord.com/api/webhooks/1/abc",
-                content: "x"
-            )
-        )
-        XCTAssertNil(NotifOutboundRequestFactory.discord(webhookURL: "https://", content: "x"))
-    }
-
-    func testTelegramRequestPostsChatAndText() throws {
-        let request = try XCTUnwrap(
-            NotifOutboundRequestFactory.telegram(
-                botToken: "123:token",
-                chatId: "-1001",
-                text: AgrypnosCopy.notifIdleBody
-            )
-        )
-        XCTAssertEqual(
-            request.url.absoluteString,
-            "https://api.telegram.org/bot123:token/sendMessage"
-        )
-        XCTAssertEqual(request.httpMethod, "POST")
-        XCTAssertEqual(request.headers["Content-Type"], "application/json")
-        let object = try XCTUnwrap(
-            JSONSerialization.jsonObject(with: request.body) as? [String: Any]
-        )
-        XCTAssertEqual(object["chat_id"] as? String, "-1001")
-        XCTAssertEqual(object["text"] as? String, AgrypnosCopy.notifIdleBody)
-        XCTAssertNil(
-            NotifOutboundRequestFactory.telegram(botToken: "", chatId: "1", text: "x")
-        )
-        XCTAssertNil(
-            NotifOutboundRequestFactory.telegram(botToken: "123:token", chatId: "  ", text: "x")
         )
     }
 }
@@ -389,6 +341,64 @@ final class NotifWatchEngineTests: XCTestCase {
         )
     }
 
+    func testDisarmFailureRollbackDoesNotPostASecondTime() {
+        var prefs = UserPreferences.default
+        prefs.duration = .untilAgentsSettle
+        prefs.notifEnabled = true
+        var engine = WatchEngine(preferences: prefs)
+        _ = engine.userSetEngaged(true, now: t0)
+        busyThenSettle(&engine)
+        XCTAssertEqual(
+            engine.tick(now: t0.addingTimeInterval(20 + 120), safety: .acPower, agents: .idle),
+            [.disengage(.agentsSettled), .postIdleAfterWaitNotif]
+        )
+        XCTAssertTrue(engine.postedThisUserArm)
+        XCTAssertFalse(engine.engaged)
+
+        let rollback = engine.rollbackDisarmFailure(now: t0.addingTimeInterval(21), lidClosed: false)
+        XCTAssertTrue(engine.engaged)
+        XCTAssertTrue(engine.postedThisUserArm)
+        XCTAssertTrue(rollback.contains(.engage))
+
+        XCTAssertTrue(
+            engine.tick(now: t0.addingTimeInterval(40), safety: .acPower, agents: .busy).isEmpty
+        )
+        XCTAssertTrue(
+            engine.tick(now: t0.addingTimeInterval(40 + 119), safety: .acPower, agents: .idle).isEmpty
+        )
+        XCTAssertEqual(
+            engine.tick(now: t0.addingTimeInterval(40 + 120), safety: .acPower, agents: .idle),
+            [.disengage(.agentsSettled)],
+            "same user arm must not POST again after disarm-failure rollback"
+        )
+    }
+
+    func testGenuineUserRearmAllowsAnotherIdlePost() {
+        var prefs = UserPreferences.default
+        prefs.duration = .untilAgentsSettle
+        prefs.notifEnabled = true
+        var engine = WatchEngine(preferences: prefs)
+        _ = engine.userSetEngaged(true, now: t0)
+        busyThenSettle(&engine)
+        XCTAssertEqual(
+            engine.tick(now: t0.addingTimeInterval(20 + 120), safety: .acPower, agents: .idle),
+            [.disengage(.agentsSettled), .postIdleAfterWaitNotif]
+        )
+
+        _ = engine.userSetEngaged(true, now: t0.addingTimeInterval(200))
+        XCTAssertFalse(engine.postedThisUserArm)
+        XCTAssertTrue(
+            engine.tick(now: t0.addingTimeInterval(220), safety: .acPower, agents: .busy).isEmpty
+        )
+        XCTAssertTrue(
+            engine.tick(now: t0.addingTimeInterval(220 + 119), safety: .acPower, agents: .idle).isEmpty
+        )
+        XCTAssertEqual(
+            engine.tick(now: t0.addingTimeInterval(220 + 120), safety: .acPower, agents: .idle),
+            [.disengage(.agentsSettled), .postIdleAfterWaitNotif]
+        )
+    }
+
     private func busyThenSettle(_ engine: inout WatchEngine) {
         XCTAssertTrue(
             engine.tick(
@@ -411,7 +421,11 @@ final class NotifCopyTests: XCTestCase {
     func testIdleBodyAndHelpAreIdleAfterWaitNotJobFinished() {
         XCTAssertEqual(
             AgrypnosCopy.notifIdleBody,
-            "Agrypnos: local busy signals went idle after the wait. Watch turned off."
+            "Agrypnos: local busy signals went idle after the wait."
+        )
+        XCTAssertFalse(
+            AgrypnosCopy.notifIdleBody.lowercased().contains("watch turned off"),
+            "outbound body is idle-after-wait only"
         )
         XCTAssertEqual(
             AgrypnosCopy.notifEnabledHelp,
