@@ -2,8 +2,8 @@ import Foundation
 
 public struct UserPreferences: Equatable, Sendable, Codable {
     public static let batteryFloorRange = 5...100
-    /// Lid-close brightness floor as percent. Default 15%; clamp 5–40. Never 0% — that is not a sleep trick.
-    public static let brightnessFloorPercentRange = 5...40
+    /// Lid-close brightness floor as percent. Default 15%; clamp 1–40. Never 0% — that is not a sleep trick.
+    public static let brightnessFloorPercentRange = 1...40
     public static let defaultBrightnessFloorPercent = 15
     /// Quiet seconds after last busy before Agents mode allows sleep.
     public static let agentSettleGraceRange = 15...900

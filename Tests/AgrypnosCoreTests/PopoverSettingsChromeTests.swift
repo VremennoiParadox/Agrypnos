@@ -79,11 +79,12 @@ final class PopoverPrefChromeTests: XCTestCase {
             BrightnessFloorPercentChrome.maxPercent,
             UserPreferences.brightnessFloorPercentRange.upperBound
         )
-        XCTAssertEqual(UserPreferences.brightnessFloorPercentRange, 5...40)
+        XCTAssertEqual(UserPreferences.brightnessFloorPercentRange, 1...40)
         XCTAssertEqual(UserPreferences.defaultBrightnessFloorPercent, 15)
-        XCTAssertEqual(BrightnessFloorPercentChrome.minLabel, "5%")
+        XCTAssertEqual(BrightnessFloorPercentChrome.minLabel, "1%")
         XCTAssertEqual(BrightnessFloorPercentChrome.maxLabel, "40%")
         XCTAssertNotEqual(BrightnessFloorPercentChrome.minPercent, 0)
+        XCTAssertNotEqual(BrightnessFloorPercentChrome.minLabel, "0%")
     }
 
     func testSettleGraceChromeMatchesPreferencesRange() {
