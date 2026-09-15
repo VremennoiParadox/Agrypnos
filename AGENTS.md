@@ -30,7 +30,7 @@ No giant god-objects. No “just one more helper” that becomes AppDelegate 2.
 ## Hard limits
 
 - **No file over 600 lines.** Split *before* you hit the wall. Prefer ~250.
-- **Menu-bar only.** No Dock-first UI. **No separate settings window** (no traffic-lights titled prefs). Sections stay in the popover. Unlocked V2 **Notif** is a popover segment in this order: **Watch · Power · Agents · Notif · General**. Still no Licence/About tabs. `LSUIElement`.
+- **Menu-bar only.** No Dock-first UI. **No separate settings window** (no traffic-lights titled prefs). Sections stay in the popover. When V2 **Notif** is implemented, the order is **Watch · Power · Agents · Notif · General**. Do not add that segment in unrelated PRs. Still no Licence/About tabs. `LSUIElement`.
 - **Open source** (MIT). No telemetry. No stealth network.
 - **Do not claim watt numbers you did not measure.** Do not cite other products’ watt studies or invent comparisons. Agrypnos stands alone — do not name competitors in product docs or commits.
 - **Do not promise every agent provider.** V1 is Cursor, Claude Code, and Codex, local heuristics, correctness over coverage.
@@ -43,7 +43,7 @@ Ship these, and stop:
 
 | Piece | Behavior |
 |---|---|
-| Menu-bar extra + popover | Cards, toggles, duration (presets + custom minutes), remappable hotkey, low-battery slider (5–100%), brightness floor %, idle wait, brightness return 1/2/3s, thermal auto-off (Power toggle, default ON), launch-at-login, quit. Agrypnos glyph (eye, not a coffee cup). **Plain captions only** — every control says what it does (armed / waiting for lid close → brightness floor + keyboard backlight off). No poetry. **No separate settings window** — V1 controls stay in the popover behind **Watch** · **Power** · **Agents** · **General**. Unlocked V2 **Notif** inserts after Agents (see below). |
+| Menu-bar extra + popover | Cards, toggles, duration (presets + custom minutes), remappable hotkey, low-battery slider (5–100%), brightness floor %, idle wait, brightness return 1/2/3s, thermal auto-off (Power toggle, default ON), launch-at-login, quit. Agrypnos glyph (eye, not a coffee cup). **Plain captions only** — every control says what it does (armed / waiting for lid close → brightness floor + keyboard backlight off). No poetry. **No separate settings window** — V1 controls stay in the popover behind **Watch** · **Power** · **Agents** · **General**. |
 | Global hotkey | Activate/toggle the watch. Default `⌥⌘A`. **Remappable** in the popover (conflict-safe). Required V1. Surface bind failure honestly when the chord cannot register. |
 | Keep the watch (armed) | ON = **armed** while the lid is open. Machine may already be held awake (`pmset disablesleep` / SleepDisabled) as needed for the watch, but **no** display blank, **no** `displaysleepnow`, **no** keyboard backlight off on toggle. |
 | Lid-closed keep-awake | With the watch armed, lid close keeps the Mac awake via `pmset disablesleep` (SleepDisabled). IOKit assertions do **not** survive lid close; use them only as extra idle prevention, never as the lid story. |
@@ -61,16 +61,13 @@ Ship these, and stop:
 
 V1 switcher is **landed**: **Watch** · **Power** · **Agents** · **General**. Default open **Watch**. Still **no** settings window.
 
-Unlocked V2 **Notif** adds a fifth segment after Agents: **Watch** · **Power** · **Agents** · **Notif** · **General**. Default stays **Watch**. Implement that order; do not invent Licence/About/settings-window chrome.
-
 - Top of the popover: slim section switcher. Prefer native segmented control / quiet text. Toolbar *position* like macOS prefs is fine; **do not** copy icon+blue-tile prefs chrome.
 - Card map:
   - **Watch:** Keep the watch (arm) + duration presets/custom + arming caption
   - **Power:** brightness floor % + keyboard backlight off, battery auto-off, brightness return ramp, thermal auto-off toggle (default ON; unlocked)
   - **Agents:** idle wait after local busy signals stop (per-tool include still locked until Mac prove)
-  - **Notif:** (unlocked V2 — implement next) opt-in Discord webhook + user’s Telegram bot; default OFF; short help in the popover, full DIY steps in README
   - **General:** remappable hotkey, launch at login, quit
-- No **Licence** tab. No **About** as a toolbar tab.
+- No **Licence** tab. No **About** as a toolbar tab. **Notif** is not in this landed V1 switcher; it is the next allowed slice (order below).
 - Goal: shorter height per section; reduce long scroll when possible.
 - Plain captions only (personality rules below).
 
@@ -100,17 +97,18 @@ Still **locked** until Boss unlocks after Mac prove:
 
 ### Unlocked (implement next)
 
-**Notif** — V2 slice, popover-only. Implement this. Do not grow it. Do not treat it as parked.
+**Notif** — V2 slice, popover-only. Implement this. Do not grow it. Do not treat it as parked. V1 stays landed; this is the next allowed slice, not a V1 add-on.
 
-- **One-way outbound only.** One-shot POST when Agents mode is armed and local busy signals stay quiet through the idle wait (`agentSettleGrace`). Event is **idle after wait**, not “agent stopped / job done / still thinking.”
-- **Default OFF.** Opt-in.
+- **One-way outbound only.** One-shot POST when Agents mode is armed, local busy signals were **seen this arm**, then stayed quiet through the idle wait (`agentSettleGrace`). Event is **idle after wait**, not “agent stopped / job done / still thinking.” Never-busy this arm is not that event — do not POST. Do not POST for timer, battery, thermal, LPM, or manual off. Outbound body uses the same idle-after-wait honesty (ban “agent stopped” / “job finished” there too).
+- **Default OFF.** One opt-in. Discord fires only if a webhook URL is set; Telegram fires only if token **and** chat id are set. Empty fields: no POST, no shared bot.
 - **Channels:** (1) Discord **incoming webhook URL** the user creates in their own server; (2) Telegram **user’s own bot** — token + chat id from BotFather / `getUpdates`. **No shared Agrypnos bot. No companion app. No telemetry / stealth network.**
 - **Secrets in Keychain** (webhook URL / bot token / chat id). Never plaintext prefs, logs, or README examples with real secrets.
-- **UI:** add **Notif** as a V1-style popover section: **Watch · Power · Agents · Notif · General**. Still **no** separate settings window. Still no Licence/About tabs.
+- **UI (when implementing):** add **Notif** after Agents: **Watch · Power · Agents · Notif · General**. Default still **Watch**. Controls: opt-in (default OFF); Discord URL field; Telegram token + chat id fields; clear/remove that deletes the Keychain entries. Still **no** separate settings window. Still no Licence/About tabs. Do not add the segment in unrelated PRs.
 - **Plain copy:** “POST to *your* webhook” / “message *your* Telegram bot”. Ban “we notify your phone”, “agent stopped”, “job finished”.
 - **Honesty:** the user owns the webhook/bot. Agrypnos only POSTs when Notif is enabled and the matching secrets are set.
+- **Docs when shipping:** amend `SECURITY.md` so “no network calls” is not an absolute — opt-in POST to the user’s webhook/bot is allowed; still no telemetry / stealth network.
 - **Self-serve docs (required):**
-  - README: step-by-step Discord (Server Settings → Integrations → Webhooks → New Webhook → copy URL) and Telegram (BotFather `/newbot` → token; message the bot; get chat id via `getUpdates` or a clear equivalent). What to paste where in Agrypnos. How to test (arm Agents, wait idle, expect one POST). How to turn off / clear secrets.
+  - README: step-by-step Discord (Server Settings → Integrations → Webhooks → New Webhook → copy URL) and Telegram (BotFather `/newbot` → token; message the bot; get chat id via `getUpdates` or a clear equivalent). What to paste where in Agrypnos. How to test (arm Agents, produce a local busy signal, wait idle, expect one POST). How to turn off / clear secrets.
   - In-app Notif help must point at the same steps (short in the popover; full detail in README, linked or paraphrased).
 - **Out of this unlock (idea-only):** two-way remote (arm/disarm/status via bot) and rich status (task text / ETA). Not Notification Center as the V2 path. Do not invent them.
 
