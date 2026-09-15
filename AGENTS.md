@@ -30,7 +30,7 @@ No giant god-objects. No “just one more helper” that becomes AppDelegate 2.
 ## Hard limits
 
 - **No file over 600 lines.** Split *before* you hit the wall. Prefer ~250.
-- **Menu-bar only.** No Dock-first UI. **No separate settings window** (no traffic-lights titled prefs). V1 sections stay in the popover. When V2 **Notif** ships, it stays in the popover too — **do not** add a Notif segment in V1. `LSUIElement`.
+- **Menu-bar only.** No Dock-first UI. **No separate settings window** (no traffic-lights titled prefs). Sections stay in the popover. When V2 **Notif** is implemented, the order is **Watch · Power · Agents · Notif · General**. Do not add that segment in unrelated PRs. Still no Licence/About tabs. `LSUIElement`.
 - **Open source** (MIT). No telemetry. No stealth network.
 - **Do not claim watt numbers you did not measure.** Do not cite other products’ watt studies or invent comparisons. Agrypnos stands alone — do not name competitors in product docs or commits.
 - **Do not promise every agent provider.** V1 is Cursor, Claude Code, and Codex, local heuristics, correctness over coverage.
@@ -43,7 +43,7 @@ Ship these, and stop:
 
 | Piece | Behavior |
 |---|---|
-| Menu-bar extra + popover | Cards, toggles, duration (presets + custom minutes), remappable hotkey, low-battery slider (5–100%), brightness floor %, idle wait, brightness return 1/2/3s, thermal auto-off (Power toggle, default ON), launch-at-login, quit. Agrypnos glyph (eye, not a coffee cup). **Plain captions only** — every control says what it does (armed / waiting for lid close → brightness floor + keyboard backlight off). No poetry. **No separate settings window** — controls stay in the popover behind the V1 section switcher (**Watch** · **Power** · **Agents** · **General**). |
+| Menu-bar extra + popover | Cards, toggles, duration (presets + custom minutes), remappable hotkey, low-battery slider (5–100%), brightness floor %, idle wait, brightness return 1/2/3s, thermal auto-off (Power toggle, default ON), launch-at-login, quit. Agrypnos glyph (eye, not a coffee cup). **Plain captions only** — every control says what it does (armed / waiting for lid close → brightness floor + keyboard backlight off). No poetry. **No separate settings window** — V1 controls stay in the popover behind **Watch** · **Power** · **Agents** · **General**. |
 | Global hotkey | Activate/toggle the watch. Default `⌥⌘A`. **Remappable** in the popover (conflict-safe). Required V1. Surface bind failure honestly when the chord cannot register. |
 | Keep the watch (armed) | ON = **armed** while the lid is open. Machine may already be held awake (`pmset disablesleep` / SleepDisabled) as needed for the watch, but **no** display blank, **no** `displaysleepnow`, **no** keyboard backlight off on toggle. |
 | Lid-closed keep-awake | With the watch armed, lid close keeps the Mac awake via `pmset disablesleep` (SleepDisabled). IOKit assertions do **not** survive lid close; use them only as extra idle prevention, never as the lid story. |
@@ -59,7 +59,7 @@ Ship these, and stop:
 
 ### V1 popover sections (landed)
 
-Section switcher is **landed**: **Watch** · **Power** · **Agents** · **General**. Default open **Watch**. Still **no** settings window.
+V1 switcher is **landed**: **Watch** · **Power** · **Agents** · **General**. Default open **Watch**. Still **no** settings window.
 
 - Top of the popover: slim section switcher. Prefer native segmented control / quiet text. Toolbar *position* like macOS prefs is fine; **do not** copy icon+blue-tile prefs chrome.
 - Card map:
@@ -67,7 +67,7 @@ Section switcher is **landed**: **Watch** · **Power** · **Agents** · **Genera
   - **Power:** brightness floor % + keyboard backlight off, battery auto-off, brightness return ramp, thermal auto-off toggle (default ON; unlocked)
   - **Agents:** idle wait after local busy signals stop (per-tool include still locked until Mac prove)
   - **General:** remappable hotkey, launch at login, quit
-- No **Licence** tab. No **About** as a toolbar tab. No **Notif** segment in V1.
+- No **Licence** tab. No **About** as a toolbar tab. **Notif** is not in this landed V1 switcher; it is the next allowed slice (order below).
 - Goal: shorter height per section; reduce long scroll when possible.
 - Plain captions only (personality rules below).
 
@@ -95,17 +95,32 @@ Still **locked** until Boss unlocks after Mac prove:
 
 **Gated:** donate — no donate control until there is a live URL.
 
+### Unlocked (implement next)
+
+**Notif** — V2 slice, popover-only. Implement this. Do not grow it. Do not treat it as parked. V1 stays landed; this is the next allowed slice, not a V1 add-on.
+
+- **One-way outbound only.** One-shot POST when Agents mode is armed, local busy signals were **seen this arm**, then stayed quiet through the idle wait (`agentSettleGrace`). Event is **idle after wait**, not “agent stopped / job done / still thinking.” Never-busy this arm is not that event — do not POST. Do not POST for timer, battery, thermal, LPM, or manual off. Outbound body uses the same idle-after-wait honesty (ban “agent stopped” / “job finished” there too).
+- **Default OFF.** One opt-in. Discord fires only if a webhook URL is set; Telegram fires only if token **and** chat id are set. Empty fields: no POST, no shared bot.
+- **Channels:** (1) Discord **incoming webhook URL** the user creates in their own server; (2) Telegram **user’s own bot** — token + chat id from BotFather / `getUpdates`. **No shared Agrypnos bot. No companion app. No telemetry / stealth network.**
+- **Secrets in Keychain** (webhook URL / bot token / chat id). Never plaintext prefs, logs, or README examples with real secrets.
+- **UI (when implementing):** add **Notif** after Agents: **Watch · Power · Agents · Notif · General**. Default still **Watch**. Controls: opt-in (default OFF); Discord URL field; Telegram token + chat id fields; clear/remove that deletes the Keychain entries. Still **no** separate settings window. Still no Licence/About tabs. Do not add the segment in unrelated PRs.
+- **Plain copy:** “POST to *your* webhook” / “message *your* Telegram bot”. Ban “we notify your phone”, “agent stopped”, “job finished”.
+- **Honesty:** the user owns the webhook/bot. Agrypnos only POSTs when Notif is enabled and the matching secrets are set.
+- **Docs when shipping:** amend `SECURITY.md` so “no network calls” is not an absolute — opt-in POST to the user’s webhook/bot is allowed; still no telemetry / stealth network.
+- **Self-serve docs (required):**
+  - README: step-by-step Discord (Server Settings → Integrations → Webhooks → New Webhook → copy URL) and Telegram (BotFather `/newbot` → token; message the bot; get chat id via `getUpdates` or a clear equivalent). What to paste where in Agrypnos. How to test (arm Agents, produce a local busy signal, wait idle, expect one POST). How to turn off / clear secrets.
+  - In-app Notif help must point at the same steps (short in the popover; full detail in README, linked or paraphrased).
+- **Out of this unlock (idea-only):** two-way remote (arm/disarm/status via bot) and rich status (task text / ETA). Not Notification Center as the V2 path. Do not invent them.
+
 ### V2 park (do not implement)
 
-**Notif** section/tab for opt-in Discord webhook / user Telegram bot (token + chat id). One-shot POST on agents idle-while-armed (after the idle wait). Default off. Secrets in Keychain. No shared Agrypnos bot. No companion app. No stealth network / telemetry.
+Two-way remote commands and rich status (task text / finish ETA) stay idea-only.
 
-Plain copy: POST to *your* webhook. Not “we notify your phone”. Not “agent stopped” — only idle after wait.
-
-Two-way remote commands and rich status (task text / finish ETA) stay idea-only. Do not invent them as V2 scope beyond one-way outbound notify.
+Opt-in panel sleep stays parked / idea-only — do not unlock.
 
 ### Out of V1
 
-App Store sandbox, notarization pipeline, every provider, fake benchmarks, Wi-Fi/BT kill, Dock UI, separate settings window, **Licence** tab, **About** as a toolbar tab, **Notif**, donate without a live URL, `displaysleepnow` on engage, claiming display sleep or “screen off” when we only floored brightness, think-detection / “still thinking” claims, opt-in panel sleep (parked / idea-only — do not unlock).
+App Store sandbox, notarization pipeline, every provider, fake benchmarks, Wi-Fi/BT kill, Dock UI, separate settings window, **Licence** tab, **About** as a toolbar tab, donate without a live URL, `displaysleepnow` on engage, claiming display sleep or “screen off” when we only floored brightness, think-detection / “still thinking” claims, opt-in panel sleep (parked / idea-only — do not unlock), two-way remote, rich status, a shared Agrypnos bot, Notification Center as the Notif path.
 
 ## Layout
 
@@ -139,8 +154,8 @@ Commit and push when the work is a coherent slice. Do not ask the user for permi
 | **Rules** | `AGENTS.md`, this bar, scope fights | Feature code |
 | **Swift core** | `AgrypnosCore`, heuristics, watch engine, lid/hygiene, safety | AppKit chrome |
 | **UI** | Menu bar, popover (section switcher + cards), personality copy, glyph | Kernel sleep flag |
-| **Review** | Gates. File size, TDD, no watt fiction, no god files, no false display-sleep claims, plain popover copy, no false ended-copy under LPM forced-watch, no settings window, no Licence/About tabs, Notif is V2, donate gated on live URL | Shipping unreviewed slop |
-| **Boss** | Sequence, merge order, “stop, this is V2” | Writing all the code |
+| **Review** | Gates. File size, TDD, no watt fiction, no god files, no false display-sleep claims, plain popover copy, no false ended-copy under LPM forced-watch, no settings window, no Licence/About tabs, Notif is unlocked V2 (popover-only, one-way idle-after-wait, Keychain, self-serve Discord/Telegram, no shared bot; two-way/rich status stay idea-only), donate gated on live URL | Shipping unreviewed slop |
+| **Boss** | Sequence, merge order, “stop” on parked V2 (two-way/rich status, panel-sleep) | Writing all the code |
 
 Parallel foundations are forbidden. One track. If you find a second scaffold, delete yours or stop.
 
@@ -155,12 +170,14 @@ Good: “Stays awake while agents are busy. Allows sleep after they go idle.” 
 Good: “How long to wait after local busy signals stop, before allowing sleep. Agents mode needs this buffer so a quiet gap mid-run (no file write / low CPU) doesn’t look finished and sleep the Mac. Not still thinking — we only see local process and session activity.”
 Good: “Keeps the Mac awake with the lid closed.”
 Good: “Thermal pressure turns the watch off.”
+Good: “POST to *your* webhook when Agents stay idle after the wait.”
+Good: “Message *your* Telegram bot. Agrypnos does not run a shared bot.”
 Bad: “Sleeps with you when the lid closes.” / “I’ll floor the panel and kill the keys.” / “When they settle, sleep may return.”
 Bad: “after the agent finishes thinking” / “we know it’s still thinking” / “when the job is done.”
 Bad: °C, “safe temp”, health-gauge, or warranty claims for thermal auto-off.
 Bad: “World-class AI-powered sleep prevention maximizing battery.” / “We force the display asleep on toggle.” / “Lid close turns the screen off.”
 Bad: ended/standing-down copy while Low Power Mode forced-watch is still holding the Mac awake.
-Bad: “We notify your phone.” / “Agent stopped.” (Notif is V2; event is idle after wait; POST to *your* webhook.)
+Bad: “We notify your phone.” / “Agent stopped.” / “Job finished.” (Notif event is idle after wait; POST to *your* webhook / message *your* Telegram bot.)
 
 ## OSS
 
