@@ -92,19 +92,20 @@ enum PopoverForm {
         in card: NSView,
         y: CGFloat,
         x: CGFloat,
-        width: CGFloat
+        width: CGFloat,
+        lines: Int = PopoverCopyLayout.helpMaxLines
     ) -> NSTextField {
         let field = LabelFactory.wrapping(
             text,
             font: .systemFont(ofSize: 12),
             color: .secondaryLabelColor,
-            lines: PopoverCopyLayout.helpMaxLines
+            lines: lines
         )
         field.frame = NSRect(
             x: x,
             y: y,
             width: width,
-            height: CGFloat(PopoverCopyLayout.helpHeightPoints)
+            height: CGFloat(lines * PopoverCopyLayout.lineHeightPoints)
         )
         field.preferredMaxLayoutWidth = width
         card.addSubview(field)

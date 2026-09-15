@@ -50,6 +50,8 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static var prefHelpY: Int { prefTitleY + titleRowHeight }
     public static var prefControlY: Int { prefHelpY + PopoverCopyLayout.helpHeightPoints }
     public static var prefMinMaxY: Int { prefControlY + 24 }
+    public static var settleControlY: Int { prefHelpY + PopoverCopyLayout.settleHelpHeightPoints }
+    public static var settleMinMaxY: Int { settleControlY + 24 }
 
     public let section: PopoverSection
     public let sectionSwitcher: PopoverSlot
@@ -97,7 +99,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
         let settleHeight =
             inset
             + titleRowHeight
-            + PopoverCopyLayout.helpHeightPoints
+            + PopoverCopyLayout.settleHelpHeightPoints
             + sliderBlockHeight
             + inset
         let rampHeight =
