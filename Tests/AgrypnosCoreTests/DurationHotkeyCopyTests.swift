@@ -62,6 +62,9 @@ final class AgrypnosCopyTests: XCTestCase {
             "safety nets",
             "sleep may return",
             "busy stays awake",
+            "we notify your phone",
+            "agent stopped",
+            "job finished",
         ]
         for phrase in banned {
             XCTAssertFalse(blob.contains(phrase), "banned phrase still in copy: \(phrase)")
@@ -434,6 +437,15 @@ final class AgrypnosCopyTests: XCTestCase {
             AgrypnosCopy.agentsEnded,
             AgrypnosCopy.lpmEnded,
             AgrypnosCopy.leftoverNotify,
+            AgrypnosCopy.notifEnabled,
+            AgrypnosCopy.notifEnabledHelp,
+            AgrypnosCopy.notifDiscord,
+            AgrypnosCopy.notifDiscordHelp,
+            AgrypnosCopy.notifTelegramToken,
+            AgrypnosCopy.notifTelegramChatId,
+            AgrypnosCopy.notifTelegramHelp,
+            AgrypnosCopy.notifClear,
+            AgrypnosCopy.notifIdleBody,
             AgrypnosCopy.menuTooltipOff,
             AgrypnosCopy.menuTooltipOn,
             AgrypnosCopy.menuTooltipArmed,

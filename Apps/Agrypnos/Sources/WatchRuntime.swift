@@ -84,6 +84,32 @@ final class WatchRuntime {
         delegate?.watchRuntimeDidChange(self)
     }
 
+    func setNotifEnabled(_ on: Bool) {
+        engine.preferences.notifEnabled = on
+        store.save(engine.preferences)
+        delegate?.watchRuntimeDidChange(self)
+    }
+
+    func notifSecrets() -> NotifSecrets {
+        NotifSecretsStore.load()
+    }
+
+    func setNotifDiscordWebhookURL(_ value: String?) {
+        NotifSecretsStore.setDiscordWebhookURL(value)
+    }
+
+    func setNotifTelegramBotToken(_ value: String?) {
+        NotifSecretsStore.setTelegramBotToken(value)
+    }
+
+    func setNotifTelegramChatId(_ value: String?) {
+        NotifSecretsStore.setTelegramChatId(value)
+    }
+
+    func clearNotifSecrets() {
+        NotifSecretsStore.clear()
+    }
+
     func setHotkey(_ chord: HotkeyChord) {
         lastFailedHotkey = nil
         hotkeySuspendedForRecord = false
@@ -200,6 +226,9 @@ final class WatchRuntime {
         for command in commands {
             if case .assertSleepDisabled = command {
                 _ = armKernel()
+            }
+            if case .postIdleAfterWaitNotif = command {
+                NotifIdlePoster.postIfNeeded()
             }
         }
         PowerHygieneCoordinator.apply(

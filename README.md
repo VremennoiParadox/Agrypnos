@@ -63,33 +63,30 @@ Until someone proves a **wedge** (clamshell + power + external display, or a sle
 
 ## V1 settings (popover only)
 
-V1 controls exist in the menu-bar popover. There is no separate settings window. A slim text switcher at the top shows one section at a time. **Watch** · **Power** · **Agents** · **General**. The popover opens on Watch.
+V1 controls exist in the menu-bar popover. There is no separate settings window. A slim text switcher at the top shows one section at a time. **Watch** · **Power** · **Agents** · **Notif** · **General**. The popover opens on Watch.
 
 - **Watch:** Keep the watch, duration presets plus custom minutes, arming caption
 - **Power:** brightness floor % (default **15%**; range 1–40; never 0%), keyboard backlight off, low-battery auto-off **5–100%** (default 15%), brightness return when the lid opens **1 / 2 / 3 s** (default **2s**), thermal auto-off (default on)
 - **Agents:** idle wait after local busy signals stop (**2 minutes – 15 minutes**, default **2 minutes** / 120s; stored prefs below 2m clamp up to 2m) before allowing sleep. Settle buffer on local process and session activity — not “still thinking,” not “agent finished.” Per-tool include still locked.
+- **Notif:** opt-in idle-after-wait POST (default **off**). Field chrome (Discord URL, Telegram token + chat id, clear Keychain) is the next UI slice. Self-serve setup: [Notif](#notif).
 - **General:** remappable global hotkey (default `⌥⌘A`), launch at login, quit
 
 Still locked until after Mac prove: status-item remaining time, per-tool Agents include list. Donate stays gated until there is a live URL.
 
-**Notif** is not in the app yet. When that slice lands, the switcher becomes **Watch** · **Power** · **Agents** · **Notif** · **General**. Self-serve setup: [Notif](#notif).
-
 ## Notif
-
-**Not in the app yet.** This is the self-serve contract for the next slice. Until the **Notif** popover section ships, there is nowhere in Agrypnos to paste a webhook or bot token.
 
 Opt-in. Default **off**. One-way outbound only: a **one-shot POST** when Agents mode is armed, Agrypnos has seen a **local busy signal this arm**, and those signals then stay quiet through the idle wait. The event is **idle after wait** — not “agent stopped,” not “job finished,” not “still thinking.” Timer, battery, thermal, Low Power Mode, and manual off do not send this POST. If nothing was busy this arm, nothing is sent.
 
-You own the destination. Agrypnos does not run a shared bot, a companion app, or telemetry. It only POSTs when Notif is on and the matching secrets are set. Secrets live in Keychain — never in plaintext prefs, logs, or example URLs in this file.
+Core decides; the Mac adapter POSTs to **your** Discord incoming webhook and/or **your** Telegram bot when Notif is on and the matching Keychain secrets are set. Popover fields to paste those secrets are the next UI slice — until they land, there is nowhere in the popover to type a webhook or bot token. Discord POSTs only if a URL is set. Telegram POSTs only if both token and chat id are set. In-app help stays short and points at these same steps.
 
-When the section ships: one opt-in (default off), a Discord URL field, Telegram token + chat id fields, and a clear/remove control that deletes Keychain entries. Discord POSTs only if a URL is set. Telegram POSTs only if both token and chat id are set. In-app help stays short and points at these same steps.
+You own the destination. Agrypnos does not run a shared bot, a companion app, or telemetry. Secrets live in Keychain — never in plaintext prefs, logs, or example URLs in this file.
 
 ### Discord — your incoming webhook
 
 1. Open Discord on desktop or the website and go to **your** server (you need permission to manage webhooks).
 2. **Server Settings → Integrations → Webhooks → New Webhook**.
 3. Name it, pick the channel, **Copy Webhook URL**.
-4. When Agrypnos has a **Notif** section: popover → **Notif** → paste that URL into the Discord field and turn Notif on.
+4. When the Notif fields ship: popover → **Notif** → paste that URL into the Discord field and turn Notif on.
 5. Do not paste the URL into chat, screenshots, or issue reports. It is a secret.
 
 The URL looks like `https://discord.com/api/webhooks/…` — this README will not include a real one.
@@ -109,11 +106,11 @@ The URL looks like `https://discord.com/api/webhooks/…` — this README will n
 
    For a private chat the id is a positive integer; for a group it is often negative. A clear equivalent is any client that calls the same `getUpdates` method with your token and reads `result[].message.chat.id`.
 5. If `"result":[]` is empty: you opened the URL before messaging the bot, or another client already consumed the update. Message the bot (or the group) again, then reload.
-6. When Agrypnos has a **Notif** section: popover → **Notif** → paste the **token** and **chat id** and turn Notif on.
+6. When the Notif fields ship: popover → **Notif** → paste the **token** and **chat id** and turn Notif on.
 
 Agrypnos does not ship a bot for you to add. If BotFather did not give you the token, you do not have a bot yet.
 
-### What to paste where (when Notif ships)
+### What to paste where (when Notif fields ship)
 
 | You created | Paste in Agrypnos **Notif** |
 |---|---|
@@ -123,7 +120,7 @@ Agrypnos does not ship a bot for you to add. If BotFather did not give you the t
 
 Use one channel, or both. Leave a field empty if you do not use that channel. Nothing is sent while Notif is off, or while the matching secret is missing.
 
-### How to test (when Notif ships)
+### How to test (when Notif fields ship)
 
 1. Turn **Notif** on and save at least one channel’s secrets.
 2. In **Watch**, arm Keep the watch with duration **Agents** (`∞` / `1h` / `3h` / custom do not send this POST).
@@ -132,7 +129,7 @@ Use one channel, or both. Leave a field empty if you do not use that channel. No
 5. Expect **one** Discord webhook POST and/or **one** message from *your* Telegram bot. Copy should say idle after wait — not that the agent stopped or the job finished.
 6. If nothing arrives: Notif off, missing/wrong secret, duration was not Agents, this arm never saw busy, or busy signals are still counting as activity. Agrypnos will not POST to a destination you did not configure.
 
-### Turn off / clear secrets (when Notif ships)
+### Turn off / clear secrets (when Notif fields ship)
 
 - Switch **Notif** off in the popover. POSTs stop. Default is off.
 - Use the Notif section’s clear/remove control to delete Keychain entries (webhook URL, bot token, chat id).

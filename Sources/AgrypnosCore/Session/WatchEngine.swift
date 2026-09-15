@@ -143,6 +143,11 @@ public struct WatchEngine: Equatable, Sendable {
     }
 
     mutating func disengage(_ reason: DisengageReason) -> [WatchCommand] {
+        // Capture before reset: settled already requires sawBusy; keep that honesty.
+        let postIdleAfterWait =
+            preferences.notifEnabled
+            && reason == .agentsSettled
+            && settle.sawBusy
         engaged = false
         mode = .idle
         timerEnd = nil
@@ -151,6 +156,9 @@ public struct WatchEngine: Equatable, Sendable {
         lidHygieneApplied = false
         settle.reset()
         var commands: [WatchCommand] = [.disengage(reason)]
+        if postIdleAfterWait {
+            commands.append(.postIdleAfterWaitNotif)
+        }
         // Clearing SleepDisabled does not retrigger clamshell sleep.
         if lidClosed, reason != .user {
             commands.append(.requestSleep)

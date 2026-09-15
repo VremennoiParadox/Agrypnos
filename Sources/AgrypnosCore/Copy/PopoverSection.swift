@@ -13,6 +13,7 @@ public enum PopoverSection: Int, CaseIterable, Sendable {
     case watch
     case power
     case agents
+    case notif
     case general
 
     public static let `default` = PopoverSection.watch
@@ -22,6 +23,7 @@ public enum PopoverSection: Int, CaseIterable, Sendable {
         case .watch: return "Watch"
         case .power: return "Power"
         case .agents: return "Agents"
+        case .notif: return "Notif"
         case .general: return "General"
         }
     }
@@ -33,6 +35,7 @@ public enum PopoverSection: Int, CaseIterable, Sendable {
         case .watch: return [.watch, .duration]
         case .power: return [.hygiene, .battery, .ramp, .thermal]
         case .agents: return [.settle]
+        case .notif: return []
         case .general: return [.login]
         }
     }

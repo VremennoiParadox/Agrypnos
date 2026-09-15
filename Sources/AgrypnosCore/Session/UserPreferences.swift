@@ -26,6 +26,8 @@ public struct UserPreferences: Equatable, Sendable, Codable {
     public var lidOpenRampSeconds: Int
     /// Power toggle. Default on. Off skips only the thermal auto-off path.
     public var thermalAutoOff: Bool
+    /// Opt-in idle-after-wait POST. Default off. Secrets stay in Keychain, not here.
+    public var notifEnabled: Bool
 
     /// 0...1 unit the Mac brightness adapter writes. Derived from floor %.
     public var brightnessFloor: Double {
@@ -42,7 +44,8 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         sessionFreshness: TimeInterval = UserPreferences.defaultSessionFreshness,
         hotkey: HotkeyChord = .defaultToggle,
         lidOpenRampSeconds: Int = 2,
-        thermalAutoOff: Bool = true
+        thermalAutoOff: Bool = true,
+        notifEnabled: Bool = false
     ) {
         self.batteryFloorPercent = Self.clampBatteryFloor(batteryFloorPercent)
         self.duration = duration
@@ -54,6 +57,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         self.hotkey = hotkey.isBindable ? hotkey : .defaultToggle
         self.lidOpenRampSeconds = Self.clampLidOpenRamp(lidOpenRampSeconds)
         self.thermalAutoOff = thermalAutoOff
+        self.notifEnabled = notifEnabled
     }
 
     public static let `default` = UserPreferences()
@@ -110,6 +114,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         case hotkey
         case lidOpenRampSeconds
         case thermalAutoOff
+        case notifEnabled
     }
 
     public init(from decoder: Decoder) throws {
@@ -132,7 +137,8 @@ public struct UserPreferences: Equatable, Sendable, Codable {
             sessionFreshness: try container.decode(TimeInterval.self, forKey: .sessionFreshness),
             hotkey: try container.decodeIfPresent(HotkeyChord.self, forKey: .hotkey) ?? .defaultToggle,
             lidOpenRampSeconds: try container.decodeIfPresent(Int.self, forKey: .lidOpenRampSeconds) ?? 2,
-            thermalAutoOff: try container.decodeIfPresent(Bool.self, forKey: .thermalAutoOff) ?? true
+            thermalAutoOff: try container.decodeIfPresent(Bool.self, forKey: .thermalAutoOff) ?? true,
+            notifEnabled: try container.decodeIfPresent(Bool.self, forKey: .notifEnabled) ?? false
         )
     }
 
@@ -149,6 +155,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         try container.encode(hotkey, forKey: .hotkey)
         try container.encode(lidOpenRampSeconds, forKey: .lidOpenRampSeconds)
         try container.encode(thermalAutoOff, forKey: .thermalAutoOff)
+        try container.encode(notifEnabled, forKey: .notifEnabled)
     }
 }
 
