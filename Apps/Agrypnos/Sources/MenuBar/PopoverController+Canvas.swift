@@ -111,6 +111,22 @@ extension PopoverController {
         thermalCard = PopoverForm.card(in: document, slot: power.thermal!, pad: pad, width: contentW)
         addThermalCard(thermalCard, contentW: contentW, ci: ci, cw: cw, swW: swW, swH: swH)
 
+        let notif = PopoverStackLayout.make(section: .notif)
+        notifEnableCard = PopoverForm.card(in: document, slot: notif.notifEnable!, pad: pad, width: contentW)
+        addNotifEnableCard(notifEnableCard, contentW: contentW, ci: ci, cw: cw, swW: swW, swH: swH)
+
+        notifDiscordCard = PopoverForm.card(in: document, slot: notif.notifDiscord!, pad: pad, width: contentW)
+        addNotifDiscordCard(notifDiscordCard, ci: ci, cw: cw)
+
+        notifTelegramCard = PopoverForm.card(in: document, slot: notif.notifTelegram!, pad: pad, width: contentW)
+        addNotifTelegramCard(notifTelegramCard, ci: ci, cw: cw)
+
+        notifSetupCard = PopoverForm.card(in: document, slot: notif.notifSetup!, pad: pad, width: contentW)
+        addNotifSetupCard(notifSetupCard, ci: ci, cw: cw)
+
+        notifClearCard = PopoverForm.card(in: document, slot: notif.notifClear!, pad: pad, width: contentW)
+        addNotifClearCard(notifClearCard, ci: ci, cw: cw)
+
         loginCard = PopoverForm.card(in: document, slot: general.login!, pad: pad, width: contentW)
         loginSwitch = PopoverForm.switchRow(
             in: loginCard,

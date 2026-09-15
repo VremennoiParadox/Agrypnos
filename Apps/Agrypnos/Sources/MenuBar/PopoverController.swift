@@ -15,7 +15,7 @@ enum PopoverMetrics {
 @MainActor
 final class PopoverController: NSObject, NSTextFieldDelegate {
     let popover = NSPopover()
-    private weak var runtime: WatchRuntime?
+    weak var runtime: WatchRuntime?
     private var clickMonitor: Any?
     private var countdown: Timer?
 
@@ -37,6 +37,12 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var settleValue: NSTextField!
     var rampControl: NSSegmentedControl!
     var thermalSwitch: NSSwitch!
+    var notifSwitch: NSSwitch!
+    var discordField: NSTextField!
+    var discordStatus: NSTextField!
+    var telegramTokenField: NSTextField!
+    var telegramChatField: NSTextField!
+    var discordInvalid = false
     var loginSwitch: NSSwitch!
     var hotkeyHint: NSTextField!
     let recorder = HotkeyRecorderControl()
@@ -52,6 +58,12 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var settleCard: CardView!
     var rampCard: CardView!
     var thermalCard: CardView!
+    var notifEnableCard: CardView!
+    var notifDiscordCard: CardView!
+    var notifTelegramCard: CardView!
+    var notifSetupCard: CardView!
+    var notifClearCard: CardView!
+    var notifClearButton: NSButton!
     var loginCard: CardView!
     var shortcutLabel: NSTextField!
     var quitButton: NSButton!
@@ -124,6 +136,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
             seconds: runtime.preferences.lidOpenRampSeconds
         )
         thermalSwitch?.state = runtime.preferences.thermalAutoOff ? .on : .off
+        refreshNotifChrome(runtime: runtime)
         let batteryRange = UserPreferences.batteryFloorRange
         batterySlider?.minValue = Double(batteryRange.lowerBound)
         batterySlider?.maxValue = Double(batteryRange.upperBound)
@@ -158,6 +171,9 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
 
     func close() {
         commitMinutesIfChanged()
+        if currentSection == .notif {
+            commitNotifFields()
+        }
         recorder.stop()
         runtime?.restoreSuspendedHotkey()
         popover.performClose(nil)
@@ -212,7 +228,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         }
     }
 
-    private func stopRecordingIfNeeded() {
+    func stopRecordingIfNeeded() {
         if recorder.isRecording {
             recorder.stop()
             runtime?.restoreSuspendedHotkey()
@@ -235,6 +251,9 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         }
         if currentSection == .watch, section != .watch {
             commitMinutesIfChanged()
+        }
+        if currentSection == .notif, section != .notif {
+            commitNotifFields()
         }
         stopRecordingIfNeeded()
         applySection(section)
@@ -266,6 +285,10 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
 
     func controlTextDidBeginEditing(_ obj: Notification) {
         stopRecordingIfNeeded()
+        if obj.object as? NSTextField === discordField {
+            discordInvalid = false
+            discordStatus?.stringValue = ""
+        }
     }
 
     @objc func keyboardToggled(_ sender: NSSwitch) {

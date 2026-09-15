@@ -30,6 +30,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static let durationCardHeight = 136
     public static let batteryCardHeight = 88
     public static let loginCardHeight = 44
+    public static let secretFieldRowHeight = 28
     public static let switchRowLabelHeight = 22
 
     public static var loginSwitchRowY: Int {
@@ -52,6 +53,17 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static var prefMinMaxY: Int { prefControlY + 24 }
     public static var settleControlY: Int { prefHelpY + PopoverCopyLayout.settleHelpHeightPoints }
     public static var settleMinMaxY: Int { settleControlY + 24 }
+    public static var notifEnableHelpY: Int { prefTitleY + titleRowHeight }
+    public static var notifEnableSwitchY: Int {
+        notifEnableHelpY + PopoverCopyLayout.notifEnableHelpHeightPoints
+    }
+    public static var notifDiscordFieldY: Int { prefHelpY + PopoverCopyLayout.helpHeightPoints }
+    public static var notifDiscordStatusY: Int { notifDiscordFieldY + secretFieldRowHeight }
+    public static var notifTelegramTokenY: Int {
+        prefTitleY + titleRowHeight + PopoverCopyLayout.notifTelegramHelpHeightPoints
+    }
+    public static var notifTelegramChatY: Int { notifTelegramTokenY + secretFieldRowHeight }
+    public static var notifSetupHelpY: Int { prefTitleY + titleRowHeight }
 
     public let section: PopoverSection
     public let sectionSwitcher: PopoverSlot
@@ -63,6 +75,11 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public let ramp: PopoverSlot?
     public let thermal: PopoverSlot?
     public let login: PopoverSlot?
+    public let notifEnable: PopoverSlot?
+    public let notifDiscord: PopoverSlot?
+    public let notifTelegram: PopoverSlot?
+    public let notifSetup: PopoverSlot?
+    public let notifClear: PopoverSlot?
     public let shortcutY: Int?
     public let hotkeyHint: PopoverSlot?
     public let quitY: Int?
@@ -85,6 +102,11 @@ public struct PopoverStackLayout: Equatable, Sendable {
         case .ramp: return ramp
         case .thermal: return thermal
         case .login: return login
+        case .notifEnable: return notifEnable
+        case .notifDiscord: return notifDiscord
+        case .notifTelegram: return notifTelegram
+        case .notifSetup: return notifSetup
+        case .notifClear: return notifClear
         }
     }
 
@@ -114,6 +136,30 @@ public struct PopoverStackLayout: Equatable, Sendable {
             + PopoverCopyLayout.helpHeightPoints
             + switchRowHeight
             + inset
+        let notifEnableHeight =
+            inset
+            + titleRowHeight
+            + PopoverCopyLayout.notifEnableHelpHeightPoints
+            + switchRowHeight
+            + inset
+        let notifDiscordHeight =
+            inset
+            + titleRowHeight
+            + PopoverCopyLayout.helpHeightPoints
+            + secretFieldRowHeight
+            + PopoverCopyLayout.notifDiscordStatusHeightPoints
+            + inset
+        let notifTelegramHeight =
+            inset
+            + titleRowHeight
+            + PopoverCopyLayout.notifTelegramHelpHeightPoints
+            + 2 * secretFieldRowHeight
+            + inset
+        let notifSetupHeight =
+            inset
+            + titleRowHeight
+            + PopoverCopyLayout.notifSetupHelpHeightPoints
+            + inset
 
         func height(for card: PopoverCard) -> Int {
             switch card {
@@ -125,6 +171,11 @@ public struct PopoverStackLayout: Equatable, Sendable {
             case .ramp: return rampHeight
             case .thermal: return thermalHeight
             case .login: return loginCardHeight
+            case .notifEnable: return notifEnableHeight
+            case .notifDiscord: return notifDiscordHeight
+            case .notifTelegram: return notifTelegramHeight
+            case .notifSetup: return notifSetupHeight
+            case .notifClear: return loginCardHeight
             }
         }
 
@@ -171,6 +222,11 @@ public struct PopoverStackLayout: Equatable, Sendable {
             ramp: placed[.ramp],
             thermal: placed[.thermal],
             login: placed[.login],
+            notifEnable: placed[.notifEnable],
+            notifDiscord: placed[.notifDiscord],
+            notifTelegram: placed[.notifTelegram],
+            notifSetup: placed[.notifSetup],
+            notifClear: placed[.notifClear],
             shortcutY: shortcutY,
             hotkeyHint: hotkeyHint,
             quitY: quitY,

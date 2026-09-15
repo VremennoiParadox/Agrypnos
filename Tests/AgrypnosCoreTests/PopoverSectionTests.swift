@@ -43,16 +43,20 @@ final class PopoverSectionTests: XCTestCase {
         XCTAssertFalse(joined.contains("about"))
     }
 
-    func testCardMapKeepsExistingControlsAndLeavesNotifForUI() {
+    func testCardMapKeepsExistingControlsAndFillsNotif() {
         XCTAssertEqual(PopoverSection.watch.cards, [.watch, .duration])
         XCTAssertEqual(PopoverSection.power.cards, [.hygiene, .battery, .ramp, .thermal])
         XCTAssertTrue(PopoverSection.power.cards.contains(.thermal))
         XCTAssertEqual(PopoverSection.power.cards.last, .thermal)
         XCTAssertEqual(PopoverSection.agents.cards, [.settle])
-        XCTAssertEqual(PopoverSection.notif.cards, [])
+        XCTAssertEqual(
+            PopoverSection.notif.cards,
+            [.notifEnable, .notifDiscord, .notifTelegram, .notifSetup, .notifClear]
+        )
         XCTAssertEqual(PopoverSection.general.cards, [.login])
         XCTAssertFalse(PopoverSection.agents.cards.contains(.watch))
         XCTAssertFalse(PopoverSection.power.cards.contains(.settle))
+        XCTAssertFalse(PopoverSection.notif.cards.isEmpty)
     }
 }
 
@@ -124,10 +128,11 @@ final class PopoverSectionLayoutTests: XCTestCase {
         XCTAssertEqual(layout.contentHeight, layout.settle!.maxY + PopoverStackLayout.pad)
     }
 
-    func testNotifSectionExistsWithNoCardsYet() {
+    func testNotifSectionShowsEnableDiscordTelegramSetupAndClear() {
         let layout = PopoverStackLayout.make(section: .notif)
         XCTAssertEqual(layout.section, .notif)
-        XCTAssertTrue(layout.stackedCards.isEmpty)
+        XCTAssertEqual(layout.stackedCards.count, 5)
+        XCTAssertEqual(layout.notifEnable?.y, PopoverStackLayout.firstCardY)
         XCTAssertNil(layout.watch)
         XCTAssertNil(layout.duration)
         XCTAssertNil(layout.hygiene)
@@ -138,8 +143,12 @@ final class PopoverSectionLayoutTests: XCTestCase {
         XCTAssertNil(layout.login)
         XCTAssertNil(layout.shortcutY)
         XCTAssertNil(layout.quitY)
-        XCTAssertEqual(layout.contentHeight, PopoverStackLayout.firstCardY + PopoverStackLayout.pad)
-        XCTAssertFalse(layout.needsScroll)
+        XCTAssertEqual(layout.contentHeight, layout.notifClear!.maxY + PopoverStackLayout.pad)
+        XCTAssertEqual(
+            layout.popoverHeight,
+            min(layout.contentHeight, PopoverStackLayout.maxVisibleHeight)
+        )
+        XCTAssertEqual(layout.needsScroll, layout.contentHeight > layout.popoverHeight)
     }
 
     func testGeneralSectionShowsLoginHotkeyAndQuit() {
@@ -162,13 +171,27 @@ final class PopoverSectionLayoutTests: XCTestCase {
             let layout = PopoverStackLayout.make(section: section)
             XCTAssertEqual(layout.section, section)
             XCTAssertLessThanOrEqual(
+                layout.popoverHeight,
+                PopoverStackLayout.maxVisibleHeight,
+                "\(section.title) popover taller than the 720pt clip"
+            )
+            XCTAssertGreaterThan(layout.contentHeight, layout.sectionSwitcher.maxY, section.title)
+            XCTAssertEqual(
+                layout.popoverHeight,
+                min(layout.contentHeight, PopoverStackLayout.maxVisibleHeight),
+                section.title
+            )
+            if section == .notif {
+                XCTAssertEqual(layout.needsScroll, layout.contentHeight > layout.popoverHeight)
+                continue
+            }
+            XCTAssertLessThanOrEqual(
                 layout.contentHeight,
                 PopoverStackLayout.maxVisibleHeight,
                 "\(section.title) still needs the 720pt clip"
             )
             XCTAssertFalse(layout.needsScroll, section.title)
             XCTAssertEqual(layout.popoverHeight, layout.contentHeight, section.title)
-            XCTAssertGreaterThan(layout.contentHeight, layout.sectionSwitcher.maxY, section.title)
         }
         let watch = PopoverStackLayout.make(section: .watch).contentHeight
         let power = PopoverStackLayout.make(section: .power).contentHeight

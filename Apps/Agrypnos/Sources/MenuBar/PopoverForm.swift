@@ -172,4 +172,72 @@ enum PopoverForm {
         card.addSubview(maxHint)
         return slider
     }
+
+    static func secretField(
+        in card: NSView,
+        y: CGFloat,
+        x: CGFloat,
+        width: CGFloat,
+        placeholder: String,
+        secure: Bool,
+        label: String,
+        help: String,
+        target: AnyObject,
+        action: Selector,
+        delegate: NSTextFieldDelegate
+    ) -> NSTextField {
+        let field: NSTextField = secure ? NSSecureTextField(string: "") : NSTextField(string: "")
+        field.placeholderString = placeholder
+        field.font = .systemFont(ofSize: 13)
+        field.isBezeled = true
+        field.bezelStyle = .roundedBezel
+        field.isEditable = true
+        field.isSelectable = true
+        field.delegate = delegate
+        field.target = target
+        field.action = action
+        field.cell?.sendsActionOnEndEditing = true
+        field.setAccessibilityLabel(label)
+        field.setAccessibilityHelp(help)
+        field.frame = NSRect(x: x, y: y, width: width, height: 24)
+        card.addSubview(field)
+        return field
+    }
+
+    static func labeledSecretField(
+        in card: NSView,
+        y: CGFloat,
+        x: CGFloat,
+        width: CGFloat,
+        caption: String,
+        secure: Bool,
+        label: String,
+        help: String,
+        target: AnyObject,
+        action: Selector,
+        delegate: NSTextFieldDelegate
+    ) -> NSTextField {
+        let labelW = CGFloat(PopoverCopyLayout.secretFieldLabelWidthPoints)
+        let captionField = LabelFactory.make(caption, font: .systemFont(ofSize: 13), color: .labelColor)
+        captionField.frame = NSRect(
+            x: x,
+            y: y,
+            width: labelW,
+            height: CGFloat(PopoverStackLayout.switchRowLabelHeight)
+        )
+        card.addSubview(captionField)
+        return secretField(
+            in: card,
+            y: y,
+            x: x + labelW + 8,
+            width: max(width - labelW - 8, 80),
+            placeholder: "",
+            secure: secure,
+            label: label,
+            help: help,
+            target: target,
+            action: action,
+            delegate: delegate
+        )
+    }
 }

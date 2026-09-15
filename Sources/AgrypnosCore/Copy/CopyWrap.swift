@@ -5,7 +5,7 @@ public enum PopoverCopyLayout: Sendable {
     /// Leftover + “battery” wraps to 4 lines at the conservative column budget.
     public static let captionMaxLines = 4
     public static let helpMaxLines = 2
-    /// `AgrypnosCopy.settleGraceHelp` wraps to 8 lines at `innerColumns`. Other help stays at 2.
+    /// `AgrypnosCopy.settleGraceHelp` wraps to 8 lines at `innerColumns`. Power/Watch help stays at 2.
     public static let settleHelpMaxLines = 8
     public static let hotkeyHintMaxLines = 2
     public static let lineHeightPoints = 16
@@ -13,12 +13,23 @@ public enum PopoverCopyLayout: Sendable {
     public static let captionHeightPoints = captionMaxLines * lineHeightPoints
     public static let helpHeightPoints = helpMaxLines * lineHeightPoints
     public static let settleHelpHeightPoints = settleHelpMaxLines * lineHeightPoints
+    /// `AgrypnosCopy.notifSetupHelp` wraps to 17 lines at `innerColumns`. Enable 4, Telegram 3.
+    public static let notifEnableHelpMaxLines = 4
+    public static let notifTelegramHelpMaxLines = 3
+    public static let notifSetupHelpMaxLines = 17
+    public static let notifDiscordStatusMaxLines = 2
+    public static let notifEnableHelpHeightPoints = notifEnableHelpMaxLines * lineHeightPoints
+    public static let notifTelegramHelpHeightPoints = notifTelegramHelpMaxLines * lineHeightPoints
+    public static let notifSetupHelpHeightPoints = notifSetupHelpMaxLines * lineHeightPoints
+    public static let notifDiscordStatusHeightPoints = notifDiscordStatusMaxLines * lineHeightPoints
     public static let hotkeyHintHeightPoints = hotkeyHintMaxLines * lineHeightPoints
     /// Custom-minutes field. The "Minutes" label is wider so it does not share this slot.
     public static let minutesFieldWidthPoints = 56
     /// Right-aligned on the How long row, extending left into the gap past the 56pt field.
     public static let minutesLabelWidthPoints = 80
     public static let percentValueWidthPoints = 54
+    /// "Chat id" at 13pt — token/chat labels beside the Notif secret fields.
+    public static let secretFieldLabelWidthPoints = 80
     /// "1m 30s" at 13pt — wider than a percent so the idle-wait value does not clip.
     public static let timeValueWidthPoints = 72
 }
