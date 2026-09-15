@@ -31,7 +31,8 @@ final class WatchRuntime {
     private(set) var lastFailedHotkey: HotkeyChord?
     private var hotkeySuspendedForRecord = false
     /// Hold SleepDisabled until the idle-after-wait POST attempt finishes, then disarm.
-    private var completingIdleNotif = false
+    private var idleOutbound = NotifIdleOutboundCoordinator()
+    private var idlePostTask: Task<Void, Never>?
 
     init() {
         engine = WatchEngine(preferences: store.load())
@@ -168,6 +169,9 @@ final class WatchRuntime {
         lastLidClosed = lidClosed
         if on {
             guard armKernel() else { return }
+            idlePostTask?.cancel()
+            idlePostTask = nil
+            idleOutbound.noteUserArm()
             apply(engine.userSetEngaged(true, now: Date(), lidClosed: lidClosed))
             if !lidClosed {
                 recaptureOpenLidHygiene()
@@ -187,7 +191,7 @@ final class WatchRuntime {
     }
 
     func poll() {
-        if completingIdleNotif { return }
+        if idleOutbound.shouldSkipPoll(engineEngaged: engine.engaged) { return }
         reconcileKernel(preferClearLeftover: false)
         pollLid()
 
@@ -207,12 +211,14 @@ final class WatchRuntime {
             kernelSleepDisabled: kernel
         )
         if commands.contains(where: Self.isPostIdleAfterWait) {
-            completingIdleNotif = true
+            let token = idleOutbound.beginPost()
             let enabled = engine.preferences.notifEnabled
-            Task { @MainActor in
+            idlePostTask?.cancel()
+            idlePostTask = Task { @MainActor in
                 await NotifIdlePoster.postIfNeeded(enabled: enabled)
+                guard self.idleOutbound.completePost(token: token) else { return }
+                self.idlePostTask = nil
                 self.finishTickCommands(commands)
-                self.completingIdleNotif = false
                 self.delegate?.watchRuntimeDidChange(self)
             }
             delegate?.watchRuntimeDidChange(self)
@@ -227,7 +233,10 @@ final class WatchRuntime {
         for command in commands {
             if case .disengage(let reason) = command {
                 if !disarmKernel() {
-                    _ = engine.userSetEngaged(true, now: Date(), lidClosed: LidStateReader.isClosed())
+                    _ = engine.rollbackDisarmFailure(
+                        now: Date(),
+                        lidClosed: LidStateReader.isClosed()
+                    )
                     UserNotify.post("Couldn't drop SleepDisabled. The watch stays up.")
                     applyCommands = []
                     break
@@ -340,6 +349,26 @@ final class WatchRuntime {
     func disarmKernel() -> Bool {
         _ = SleepDisabledController.set(false)
         return !SleepDisabledController.read()
+    }
+
+    /// Quit must clear actual kernel-held SleepDisabled even if the engine already disengaged for POST.
+    func prepareForTermination() {
+        let kernelHeld = SleepDisabledController.read()
+        let plan = idleOutbound.terminatePlan(
+            engineEngaged: engine.engaged,
+            kernelSleepDisabled: kernelHeld
+        )
+        idlePostTask?.cancel()
+        idlePostTask = nil
+        idleOutbound.cancelInFlight()
+        guard plan.cleanupRequired else { return }
+        if plan.clearKernel {
+            _ = disarmKernel()
+        }
+        if engine.engaged {
+            apply(engine.userSetEngaged(false, now: Date(), lidClosed: LidStateReader.isClosed()))
+        }
+        restoreHygiene()
     }
 
     func reconcileKernel(preferClearLeftover: Bool) {

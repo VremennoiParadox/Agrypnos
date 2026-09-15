@@ -34,9 +34,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WatchRuntimeDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        if runtime.engaged {
-            runtime.setEngaged(false)
-        }
+        runtime.prepareForTermination()
         hotkey.unregister()
     }
 
