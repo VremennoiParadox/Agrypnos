@@ -61,7 +61,7 @@ final class WatchEngineTests: XCTestCase {
 
         XCTAssertTrue(
             engine.tick(
-                now: t0.addingTimeInterval(20 + 89),
+                now: t0.addingTimeInterval(20 + 119),
                 safety: .acPower,
                 agents: .idle
             ).isEmpty
@@ -69,7 +69,7 @@ final class WatchEngineTests: XCTestCase {
 
         XCTAssertEqual(
             engine.tick(
-                now: t0.addingTimeInterval(20 + 90),
+                now: t0.addingTimeInterval(20 + 120),
                 safety: .acPower,
                 agents: .idle
             ),
@@ -113,7 +113,7 @@ final class WatchEngineTests: XCTestCase {
         )
         XCTAssertEqual(
             engine.tick(
-                now: t0.addingTimeInterval(90),
+                now: t0.addingTimeInterval(120),
                 safety: .acPower,
                 agents: .idle,
                 kernelSleepDisabled: true

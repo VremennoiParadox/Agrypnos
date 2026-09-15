@@ -137,7 +137,7 @@ final class WatchLidHygieneTests: XCTestCase {
             ).isEmpty
         )
         XCTAssertEqual(
-            engine.tick(now: t0.addingTimeInterval(90), safety: .acPower, agents: .idle),
+            engine.tick(now: t0.addingTimeInterval(120), safety: .acPower, agents: .idle),
             [.disengage(.agentsSettled), .requestSleep]
         )
     }

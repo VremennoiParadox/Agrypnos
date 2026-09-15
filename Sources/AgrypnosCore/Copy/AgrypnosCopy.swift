@@ -13,7 +13,7 @@ public enum AgrypnosCopy: Sendable {
         "When the lid closes, brightness drops to this percent."
     public static let settleGrace = "Wait after agents go idle"
     public static let settleGraceHelp =
-        "How long to wait after they go quiet before allowing sleep."
+        "How long to wait after local busy signals stop, before allowing sleep. Agents mode needs this buffer so a quiet gap mid-run (no file write / low CPU) doesn’t look finished and sleep the Mac. Not still thinking — we only see local process and session activity."
     public static let lidOpenRamp = "Brightness return when lid opens"
     public static let lidOpenRampHelp =
         "How long brightness takes to come back when the lid opens."
@@ -22,7 +22,8 @@ public enum AgrypnosCopy: Sendable {
     public static let thermalAutoOffHelp = "Thermal pressure turns the watch off."
     public static let launchAtLogin = "Launch at login"
     public static let quit = "Quit Agrypnos"
-    public static let agentsHint = "Stays awake while agents are busy. Allows sleep after they go idle."
+    public static let agentsHint =
+        "Stays awake while local busy signals run. Allows sleep after the settle buffer."
     public static let timedHint = "Runs for the selected time, then turns the watch off."
     // User-armed watches do not auto-off on Low Power Mode, so it is not listed here.
     public static let indefiniteHint =

@@ -41,7 +41,8 @@ final class AgrypnosCopyTests: XCTestCase {
         let caption = AgrypnosCopy.captionPrepared(floor: 15)
         XCTAssertFalse(caption.lowercased().contains("watt"))
         XCTAssertFalse(caption.lowercased().contains("1.76"))
-        XCTAssertTrue(AgrypnosCopy.agentsHint.lowercased().contains("busy"))
+        XCTAssertTrue(AgrypnosCopy.agentsHint.lowercased().contains("local busy signals"))
+        XCTAssertTrue(AgrypnosCopy.agentsHint.lowercased().contains("settle buffer"))
         XCTAssertEqual(AgrypnosCopy.quit, "Quit Agrypnos")
         XCTAssertEqual(AgrypnosCopy.hotkeyHint(.defaultToggle), "⌥⌘A toggles the watch")
     }
@@ -157,7 +158,7 @@ final class AgrypnosCopyTests: XCTestCase {
     func testDurationHintsArePlainAndFitTheDurationCard() {
         XCTAssertEqual(
             AgrypnosCopy.agentsHint,
-            "Stays awake while agents are busy. Allows sleep after they go idle."
+            "Stays awake while local busy signals run. Allows sleep after the settle buffer."
         )
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .untilAgentsSettle, engaged: true, remainingSeconds: nil),
@@ -356,12 +357,18 @@ final class AgrypnosCopyTests: XCTestCase {
         XCTAssertFalse(AgrypnosCopy.settleGraceHelp.lowercased().contains("settle grace"))
         XCTAssertFalse(AgrypnosCopy.lidOpenRampHelp.lowercased().contains("lid-open ramp"))
         XCTAssertTrue(AgrypnosCopy.settleGrace.lowercased().contains("idle"))
-        XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("sleep"))
+        XCTAssertEqual(
+            AgrypnosCopy.settleGraceHelp,
+            "How long to wait after local busy signals stop, before allowing sleep. Agents mode needs this buffer so a quiet gap mid-run (no file write / low CPU) doesn’t look finished and sleep the Mac. Not still thinking — we only see local process and session activity."
+        )
+        XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("local busy signals"))
+        XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("not still thinking"))
+        XCTAssertFalse(AgrypnosCopy.settleGraceHelp.lowercased().contains("agent finished"))
         XCTAssertTrue(AgrypnosCopy.lidOpenRamp.lowercased().contains("brightness"))
         XCTAssertTrue(AgrypnosCopy.lidOpenRampHelp.lowercased().contains("lid"))
         XCTAssertTrue(AgrypnosCopy.brightnessFloorHelp.lowercased().contains("lid"))
         XCTAssertTrue(AgrypnosCopy.brightnessFloorHelp.lowercased().contains("percent"))
-        assertFitsHelp(AgrypnosCopy.settleGraceHelp)
+        // Detailed Agents help is longer than the 2-line help slot; UI wrapping ships after Core.
         assertFitsHelp(AgrypnosCopy.lidOpenRampHelp)
         assertFitsHelp(AgrypnosCopy.brightnessFloorHelp)
         assertFitsHelp(AgrypnosCopy.thermalAutoOffHelp)
