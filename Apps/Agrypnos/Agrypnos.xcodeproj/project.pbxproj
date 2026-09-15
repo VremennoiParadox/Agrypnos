@@ -17,6 +17,7 @@
 		87299C24812BC138E73D77BC /* PopoverController+Canvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50D9BE7A9730D85A15B6E96E /* PopoverController+Canvas.swift */; };
 		C4E81B9A6D2F40B7A1C35E08 /* PopoverController+Cards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F2A1C6D4B90E37C5D1A2F44 /* PopoverController+Cards.swift */; };
 		A9D47E12B6C58F30E4A21B77 /* PopoverController+Sections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B7C9E41F05A62D8C4E18A90 /* PopoverController+Sections.swift */; };
+		D4C81E0A7B2F9461C5E8A013 /* PopoverController+Notif.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A6F2B19E4C07D53A1B90E27 /* PopoverController+Notif.swift */; };
 		40DF44DBC43DE8B05319E1F5 /* PopoverController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 329EC7D50E7C6B456084BE11 /* PopoverController.swift */; };
 		6ED04DCF9683E5F466136641 /* PopoverForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E6799E8B24D782B3151D901 /* PopoverForm.swift */; };
 		EC7A8AAC019F71CCB4D3623D /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8607BE8FEC94DD9191D5842B /* StatusItemController.swift */; };
@@ -49,6 +50,7 @@
 		50D9BE7A9730D85A15B6E96E /* PopoverController+Canvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Canvas.swift"; sourceTree = "<group>"; };
 		8F2A1C6D4B90E37C5D1A2F44 /* PopoverController+Cards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Cards.swift"; sourceTree = "<group>"; };
 		3B7C9E41F05A62D8C4E18A90 /* PopoverController+Sections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Sections.swift"; sourceTree = "<group>"; };
+		8A6F2B19E4C07D53A1B90E27 /* PopoverController+Notif.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Notif.swift"; sourceTree = "<group>"; };
 		329EC7D50E7C6B456084BE11 /* PopoverController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverController.swift; sourceTree = "<group>"; };
 		6E6799E8B24D782B3151D901 /* PopoverForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverForm.swift; sourceTree = "<group>"; };
 		8607BE8FEC94DD9191D5842B /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
@@ -140,6 +142,7 @@
 				F94178055CD17CB0C1E4EBE4 /* PopoverChrome.swift */,
 				50D9BE7A9730D85A15B6E96E /* PopoverController+Canvas.swift */,
 				8F2A1C6D4B90E37C5D1A2F44 /* PopoverController+Cards.swift */,
+				8A6F2B19E4C07D53A1B90E27 /* PopoverController+Notif.swift */,
 				3B7C9E41F05A62D8C4E18A90 /* PopoverController+Sections.swift */,
 				329EC7D50E7C6B456084BE11 /* PopoverController.swift */,
 				6E6799E8B24D782B3151D901 /* PopoverForm.swift */,
@@ -286,6 +289,7 @@
 				EE4DE2012E8891D5E35D9C27 /* PopoverChrome.swift in Sources */,
 				87299C24812BC138E73D77BC /* PopoverController+Canvas.swift in Sources */,
 				C4E81B9A6D2F40B7A1C35E08 /* PopoverController+Cards.swift in Sources */,
+				D4C81E0A7B2F9461C5E8A013 /* PopoverController+Notif.swift in Sources */,
 				A9D47E12B6C58F30E4A21B77 /* PopoverController+Sections.swift in Sources */,
 				40DF44DBC43DE8B05319E1F5 /* PopoverController.swift in Sources */,
 				6ED04DCF9683E5F466136641 /* PopoverForm.swift in Sources */,

@@ -17,6 +17,8 @@ enum NotifSecretsStore {
         case telegramChatId
     }
 
+    // Raw values match NotifClearChrome.deletedAccounts.
+
     static func load() -> NotifSecrets {
         NotifSecrets(
             discordWebhookURL: get(.discordWebhookURL),

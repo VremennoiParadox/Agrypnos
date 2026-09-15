@@ -26,6 +26,11 @@ extension PopoverController {
         PopoverForm.apply(settleCard, slot: layout.settle, pad: pad, width: contentW)
         PopoverForm.apply(rampCard, slot: layout.ramp, pad: pad, width: contentW)
         PopoverForm.apply(thermalCard, slot: layout.thermal, pad: pad, width: contentW)
+        PopoverForm.apply(notifEnableCard, slot: layout.notifEnable, pad: pad, width: contentW)
+        PopoverForm.apply(notifDiscordCard, slot: layout.notifDiscord, pad: pad, width: contentW)
+        PopoverForm.apply(notifTelegramCard, slot: layout.notifTelegram, pad: pad, width: contentW)
+        PopoverForm.apply(notifSetupCard, slot: layout.notifSetup, pad: pad, width: contentW)
+        PopoverForm.apply(notifClearCard, slot: layout.notifClear, pad: pad, width: contentW)
         PopoverForm.apply(loginCard, slot: layout.login, pad: pad, width: contentW)
 
         applyGeneralChrome(layout, pad: pad, contentW: contentW)
