@@ -9,10 +9,10 @@ MIT. No telemetry. No stealth network.
 - **Keep the watch** — ON = armed while the lid is open. The machine may already be held awake (`pmset disablesleep`). The display stays usable; Agrypnos does **not** blank the panel, call `displaysleepnow`, or turn the keyboard backlight off on that toggle.
 - **Lid close** — with the watch armed, sleep is blocked via `pmset disablesleep`. Brightness drops to the **floor %** you set (default 15%, range 1–40; never 0%). Keyboard backlight off. Brightness write only — not `displaysleepnow`, not display sleep, not “screen off”.
 - **Lid open mid-watch** — brightness ramps back over **1 / 2 / 3 seconds** (default 2s). Keyboard backlight on.
-- **Hold until end** — timer (`∞` / `1h` / `3h` / custom minutes) or Agents mode (busy → stay; settled idle after **idle wait** → allow sleep).
+- **Hold until end** — timer (`∞` / `1h` / `3h` / custom minutes) or Agents mode (busy → stay; after local busy signals stop, **idle wait**, then allow sleep).
 - **Safety** — low battery (slider 5–100%, default 15%), thermal auto-off on `.serious` / `.critical` (Power toggle, default on), reboot clears SleepDisabled, launch-at-login never re-arms.
 
-V1 agents: Cursor, Claude Code, Codex. Local heuristics (process list + session-file mtimes). Correctness over coverage.
+V1 agents: Cursor, Claude Code, Codex. Local heuristics (process list + session-file mtimes; Claude/Codex may also use CPU). Correctness over coverage.
 
 ## Not this product
 
@@ -65,7 +65,7 @@ These exist in the menu-bar popover. There is no separate settings window. A sli
 
 - **Watch:** Keep the watch, duration presets plus custom minutes, arming caption
 - **Power:** brightness floor % (default **15%**; range 1–40; never 0%), keyboard backlight off, low-battery auto-off **5–100%** (default 15%), brightness return when the lid opens **1 / 2 / 3 s** (default **2s**), thermal auto-off (default on)
-- **Agents:** idle wait after agents go quiet (15s–15m, default 90s) before allowing sleep
+- **Agents:** idle wait after local busy signals stop (**2 minutes – 15 minutes**, default **2 minutes** / 120s; stored prefs below 2m clamp up to 2m) before allowing sleep. Settle buffer on local process and session activity — not “still thinking,” not “agent finished.” Per-tool include still locked.
 - **General:** remappable global hotkey (default `⌥⌘A`), launch at login, quit
 
 Still locked until after Mac prove: status-item remaining time, per-tool Agents include list.
