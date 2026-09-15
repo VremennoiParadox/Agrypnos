@@ -68,7 +68,7 @@ V1 controls exist in the menu-bar popover. There is no separate settings window.
 - **Watch:** Keep the watch, duration presets plus custom minutes, arming caption
 - **Power:** brightness floor % (default **15%**; range 1–40; never 0%), keyboard backlight off, low-battery auto-off **5–100%** (default 15%), brightness return when the lid opens **1 / 2 / 3 s** (default **2s**), thermal auto-off (default on)
 - **Agents:** idle wait after local busy signals stop (**2 minutes – 15 minutes**, default **2 minutes** / 120s; stored prefs below 2m clamp up to 2m) before allowing sleep. Settle buffer on local process and session activity — not “still thinking,” not “agent finished.” Per-tool include still locked.
-- **Notif:** opt-in idle-after-wait POST (default **off**). Field chrome (Discord URL, Telegram token + chat id, clear Keychain) is the next UI slice. Self-serve setup: [Notif](#notif).
+- **Notif:** opt-in idle-after-wait POST (default **off**). Opt-in switch, Discord URL, Telegram token + chat id, and clear Keychain are the next UI slice. Self-serve setup: [Notif](#notif).
 - **General:** remappable global hotkey (default `⌥⌘A`), launch at login, quit
 
 Still locked until after Mac prove: status-item remaining time, per-tool Agents include list. Donate stays gated until there is a live URL.
@@ -77,7 +77,7 @@ Still locked until after Mac prove: status-item remaining time, per-tool Agents 
 
 Opt-in. Default **off**. One-way outbound only: a **one-shot POST** when Agents mode is armed, Agrypnos has seen a **local busy signal this arm**, and those signals then stay quiet through the idle wait. The event is **idle after wait** — not “agent stopped,” not “job finished,” not “still thinking.” Timer, battery, thermal, Low Power Mode, and manual off do not send this POST. If nothing was busy this arm, nothing is sent.
 
-Core decides; the Mac adapter POSTs to **your** Discord incoming webhook and/or **your** Telegram bot when Notif is on and the matching Keychain secrets are set. Popover fields to paste those secrets are the next UI slice — until they land, there is nowhere in the popover to type a webhook or bot token. Discord POSTs only if a URL is set. Telegram POSTs only if both token and chat id are set. In-app help stays short and points at these same steps.
+Core decides; the Mac adapter POSTs to **your** Discord incoming webhook and/or **your** Telegram bot when Notif is on and the matching Keychain secrets are set. Popover fields to paste those secrets (and the opt-in switch) are the next UI slice — until they land, there is nowhere in the popover to turn Notif on or type a webhook or bot token. Discord POSTs only if a URL is set. Telegram POSTs only if both token and chat id are set. When those fields ship, in-app help stays short and points at these same steps.
 
 You own the destination. Agrypnos does not run a shared bot, a companion app, or telemetry. Secrets live in Keychain — never in plaintext prefs, logs, or example URLs in this file.
 

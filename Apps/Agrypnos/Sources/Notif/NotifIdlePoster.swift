@@ -4,24 +4,33 @@ import Foundation
 import AgrypnosCore
 #endif
 
-/// Best-effort one-shot POST. Does not block disarm. At most one Discord + one Telegram.
+/// Best-effort one-shot POST. Bounded wait so lid-closed sleepnow does not kill the attempt.
 enum NotifIdlePoster {
-    static func postIfNeeded() {
+    static let waitBound: TimeInterval = 3
+
+    static let session: URLSession = {
+        let config = URLSessionConfiguration.ephemeral
+        config.timeoutIntervalForRequest = waitBound
+        config.timeoutIntervalForResource = waitBound
+        config.waitsForConnectivity = false
+        return URLSession(configuration: config)
+    }()
+
+    static func postIfNeeded(enabled: Bool) async {
+        guard enabled else { return }
         let secrets = NotifSecretsStore.load()
-        let channels = NotifIdlePostPolicy.channels(
-            enabled: true,
-            reason: .agentsSettled,
-            sawBusy: true,
+        let channels = NotifIdlePostPolicy.destinations(
             discordWebhookURL: secrets.discordWebhookURL,
             telegramBotToken: secrets.telegramBotToken,
             telegramChatId: secrets.telegramChatId
         )
         let body = AgrypnosCopy.notifIdleBody
+        var requests: [NotifOutboundRequest] = []
         if channels.contains(.discord),
            let url = secrets.discordWebhookURL,
            let request = NotifOutboundRequestFactory.discord(webhookURL: url, content: body)
         {
-            fire(request)
+            requests.append(request)
         }
         if channels.contains(.telegram),
            let token = secrets.telegramBotToken,
@@ -32,18 +41,23 @@ enum NotifIdlePoster {
             text: body
            )
         {
-            fire(request)
+            requests.append(request)
+        }
+        await withTaskGroup(of: Void.self) { group in
+            for request in requests {
+                group.addTask { await fire(request) }
+            }
         }
     }
 
-    static func fire(_ request: NotifOutboundRequest) {
+    static func fire(_ request: NotifOutboundRequest) async {
         var urlRequest = URLRequest(url: request.url)
         urlRequest.httpMethod = request.httpMethod
         urlRequest.httpBody = request.body
-        urlRequest.timeoutInterval = 15
+        urlRequest.timeoutInterval = waitBound
         for (header, value) in request.headers {
             urlRequest.setValue(value, forHTTPHeaderField: header)
         }
-        URLSession.shared.dataTask(with: urlRequest) { _, _, _ in }.resume()
+        _ = try? await session.data(for: urlRequest)
     }
 }

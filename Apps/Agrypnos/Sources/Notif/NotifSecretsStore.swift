@@ -1,10 +1,6 @@
 import Foundation
 import Security
 
-#if canImport(AgrypnosCore)
-import AgrypnosCore
-#endif
-
 struct NotifSecrets: Equatable {
     var discordWebhookURL: String?
     var telegramBotToken: String?
@@ -29,15 +25,18 @@ enum NotifSecretsStore {
         )
     }
 
-    static func setDiscordWebhookURL(_ value: String?) {
+    @discardableResult
+    static func setDiscordWebhookURL(_ value: String?) -> Bool {
         set(.discordWebhookURL, value)
     }
 
-    static func setTelegramBotToken(_ value: String?) {
+    @discardableResult
+    static func setTelegramBotToken(_ value: String?) -> Bool {
         set(.telegramBotToken, value)
     }
 
-    static func setTelegramChatId(_ value: String?) {
+    @discardableResult
+    static func setTelegramChatId(_ value: String?) -> Bool {
         set(.telegramChatId, value)
     }
 
@@ -63,21 +62,27 @@ enum NotifSecretsStore {
         return trimmed.isEmpty ? nil : trimmed
     }
 
-    static func set(_ account: Account, _ value: String?) {
+    @discardableResult
+    static func set(_ account: Account, _ value: String?) -> Bool {
         let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         if trimmed.isEmpty {
             delete(account)
-            return
+            return true
         }
-        delete(account)
-        let add: [String: Any] = [
+        let data = Data(trimmed.utf8)
+        let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account.rawValue,
-            kSecValueData as String: Data(trimmed.utf8),
-            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
         ]
-        SecItemAdd(add as CFDictionary, nil)
+        let update: [String: Any] = [kSecValueData as String: data]
+        let updated = SecItemUpdate(query as CFDictionary, update as CFDictionary)
+        if updated == errSecSuccess { return true }
+        guard updated == errSecItemNotFound else { return false }
+        var add = query
+        add[kSecValueData as String] = data
+        add[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        return SecItemAdd(add as CFDictionary, nil) == errSecSuccess
     }
 
     static func delete(_ account: Account) {

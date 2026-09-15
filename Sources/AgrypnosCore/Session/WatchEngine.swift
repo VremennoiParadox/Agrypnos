@@ -144,10 +144,11 @@ public struct WatchEngine: Equatable, Sendable {
 
     mutating func disengage(_ reason: DisengageReason) -> [WatchCommand] {
         // Capture before reset: settled already requires sawBusy; keep that honesty.
-        let postIdleAfterWait =
-            preferences.notifEnabled
-            && reason == .agentsSettled
-            && settle.sawBusy
+        let postIdleAfterWait = NotifIdlePostPolicy.shouldPost(
+            enabled: preferences.notifEnabled,
+            reason: reason,
+            sawBusy: settle.sawBusy
+        )
         engaged = false
         mode = .idle
         timerEnd = nil

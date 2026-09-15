@@ -29,6 +29,21 @@ final class NotifPreferenceTests: XCTestCase {
 }
 
 final class NotifIdlePostPolicyTests: XCTestCase {
+    func testShouldPostIsOnlyEnabledAgentsSettledAndSawBusy() {
+        XCTAssertTrue(
+            NotifIdlePostPolicy.shouldPost(enabled: true, reason: .agentsSettled, sawBusy: true)
+        )
+        XCTAssertFalse(
+            NotifIdlePostPolicy.shouldPost(enabled: false, reason: .agentsSettled, sawBusy: true)
+        )
+        XCTAssertFalse(
+            NotifIdlePostPolicy.shouldPost(enabled: true, reason: .agentsSettled, sawBusy: false)
+        )
+        XCTAssertFalse(
+            NotifIdlePostPolicy.shouldPost(enabled: true, reason: .timerExpired, sawBusy: true)
+        )
+    }
+
     func testDisabledNeverFiresEvenWithSecretsAndSettle() {
         XCTAssertEqual(
             NotifIdlePostPolicy.channels(
@@ -202,6 +217,7 @@ final class NotifOutboundRequestTests: XCTestCase {
                 content: "x"
             )
         )
+        XCTAssertNil(NotifOutboundRequestFactory.discord(webhookURL: "https://", content: "x"))
     }
 
     func testTelegramRequestPostsChatAndText() throws {
@@ -345,6 +361,21 @@ final class NotifWatchEngineTests: XCTestCase {
         )
     }
 
+    func testBusyThenManualOffDoesNotEmitIdleNotif() {
+        var prefs = UserPreferences.default
+        prefs.duration = .untilAgentsSettle
+        prefs.notifEnabled = true
+        var engine = WatchEngine(preferences: prefs)
+        _ = engine.userSetEngaged(true, now: t0)
+        XCTAssertTrue(
+            engine.tick(now: t0.addingTimeInterval(20), safety: .acPower, agents: .busy).isEmpty
+        )
+        XCTAssertEqual(
+            engine.userSetEngaged(false, now: t0.addingTimeInterval(21)),
+            [.disengage(.user)]
+        )
+    }
+
     func testLidClosedAgentsSettlePostsThenRequestsSleep() {
         var prefs = UserPreferences.default
         prefs.duration = .untilAgentsSettle
@@ -411,12 +442,6 @@ final class NotifCopyTests: XCTestCase {
             XCTAssertFalse(blob.contains(banned), "banned phrase in Notif copy: \(banned)")
         }
         XCTAssertTrue(blob.contains("idle after the wait") || blob.contains("idle through the wait"))
-    }
-}
-
-private extension DisengageReason {
-    static var allCases: [DisengageReason] {
-        [.user, .timerExpired, .batteryFloor, .thermal, .agentsSettled, .lowPowerMode]
     }
 }
 

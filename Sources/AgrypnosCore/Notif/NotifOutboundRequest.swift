@@ -34,10 +34,16 @@ public enum NotifOutboundRequestFactory: Sendable {
         let token = botToken.trimmingCharacters(in: .whitespacesAndNewlines)
         let chat = chatId.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !token.isEmpty, !chat.isEmpty else { return nil }
-        guard let url = URL(string: "https://api.telegram.org/bot\(token)/sendMessage") else {
+        var pathAllowed = CharacterSet.urlPathAllowed
+        pathAllowed.insert(charactersIn: ":")
+        let encodedToken = token.addingPercentEncoding(withAllowedCharacters: pathAllowed) ?? token
+        guard
+            let url = URL(string: "https://api.telegram.org/bot\(encodedToken)/sendMessage"),
+            url.scheme == "https",
+            url.host == "api.telegram.org"
+        else {
             return nil
         }
-        guard url.scheme == "https" else { return nil }
         guard let body = json(["chat_id": chat, "text": text]) else { return nil }
         return NotifOutboundRequest(
             url: url,
@@ -51,9 +57,8 @@ public enum NotifOutboundRequestFactory: Sendable {
 
     static func httpsURL(_ raw: String) -> URL? {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, let url = URL(string: trimmed), url.scheme == "https" else {
-            return nil
-        }
+        guard !trimmed.isEmpty, let url = URL(string: trimmed) else { return nil }
+        guard url.scheme == "https", let host = url.host, !host.isEmpty else { return nil }
         return url
     }
 

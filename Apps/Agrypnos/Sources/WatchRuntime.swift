@@ -30,6 +30,8 @@ final class WatchRuntime {
     var unbindHotkey: (() -> Void)?
     private(set) var lastFailedHotkey: HotkeyChord?
     private var hotkeySuspendedForRecord = false
+    /// Hold SleepDisabled until the idle-after-wait POST attempt finishes, then disarm.
+    private var completingIdleNotif = false
 
     init() {
         engine = WatchEngine(preferences: store.load())
@@ -185,6 +187,7 @@ final class WatchRuntime {
     }
 
     func poll() {
+        if completingIdleNotif { return }
         reconcileKernel(preferClearLeftover: false)
         pollLid()
 
@@ -203,7 +206,24 @@ final class WatchRuntime {
             agents: agents,
             kernelSleepDisabled: kernel
         )
-        var applyCommands = commands
+        if commands.contains(where: Self.isPostIdleAfterWait) {
+            completingIdleNotif = true
+            let enabled = engine.preferences.notifEnabled
+            Task { @MainActor in
+                await NotifIdlePoster.postIfNeeded(enabled: enabled)
+                self.finishTickCommands(commands)
+                self.completingIdleNotif = false
+                self.delegate?.watchRuntimeDidChange(self)
+            }
+            delegate?.watchRuntimeDidChange(self)
+            return
+        }
+        finishTickCommands(commands)
+        delegate?.watchRuntimeDidChange(self)
+    }
+
+    func finishTickCommands(_ commands: [WatchCommand]) {
+        var applyCommands = commands.filter { !Self.isPostIdleAfterWait($0) }
         for command in commands {
             if case .disengage(let reason) = command {
                 if !disarmKernel() {
@@ -219,16 +239,17 @@ final class WatchRuntime {
             }
         }
         apply(applyCommands)
-        delegate?.watchRuntimeDidChange(self)
+    }
+
+    static func isPostIdleAfterWait(_ command: WatchCommand) -> Bool {
+        if case .postIdleAfterWaitNotif = command { return true }
+        return false
     }
 
     func apply(_ commands: [WatchCommand]) {
         for command in commands {
             if case .assertSleepDisabled = command {
                 _ = armKernel()
-            }
-            if case .postIdleAfterWaitNotif = command {
-                NotifIdlePoster.postIfNeeded()
             }
         }
         PowerHygieneCoordinator.apply(
