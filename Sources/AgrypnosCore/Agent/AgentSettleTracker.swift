@@ -12,7 +12,7 @@ public struct AgentSettleTracker: Equatable, Sendable {
     public private(set) var lastBusyAt: Date?
     public private(set) var sawBusy: Bool
 
-    public init(grace: TimeInterval = 90) {
+    public init(grace: TimeInterval = UserPreferences.defaultAgentSettleGrace) {
         self.grace = grace
         self.lastBusyAt = nil
         self.sawBusy = false

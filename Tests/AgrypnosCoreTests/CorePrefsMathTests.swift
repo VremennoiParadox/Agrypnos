@@ -55,23 +55,27 @@ final class CorePrefsMathTests: XCTestCase {
         XCTAssertEqual(legacy.brightnessFloor, 0.20, accuracy: 0.0001)
     }
 
-    func testAgentSettleGraceDefaultIsNinetySecondsAndClamps() {
-        XCTAssertEqual(UserPreferences.agentSettleGraceRange, 15...900)
-        XCTAssertEqual(UserPreferences.default.agentSettleGrace, 90)
-        XCTAssertEqual(UserPreferences.clampAgentSettleGrace(5), 15)
-        XCTAssertEqual(UserPreferences.clampAgentSettleGrace(15), 15)
-        XCTAssertEqual(UserPreferences.clampAgentSettleGrace(90), 90)
+    func testAgentSettleGraceDefaultIsTwoMinutesAndClampsUpFromOldFloor() {
+        XCTAssertEqual(UserPreferences.agentSettleGraceRange, 120...900)
+        XCTAssertEqual(UserPreferences.defaultAgentSettleGrace, 120)
+        XCTAssertEqual(UserPreferences.default.agentSettleGrace, 120)
+        XCTAssertEqual(UserPreferences.clampAgentSettleGrace(5), 120)
+        XCTAssertEqual(UserPreferences.clampAgentSettleGrace(15), 120)
+        XCTAssertEqual(UserPreferences.clampAgentSettleGrace(90), 120)
+        XCTAssertEqual(UserPreferences.clampAgentSettleGrace(120), 120)
         XCTAssertEqual(UserPreferences.clampAgentSettleGrace(900), 900)
         XCTAssertEqual(UserPreferences.clampAgentSettleGrace(12_000), 900)
-        XCTAssertEqual(UserPreferences.clampAgentSettleGrace(minutes: 0), 15)
+        XCTAssertEqual(UserPreferences.clampAgentSettleGrace(minutes: 0), 120)
         XCTAssertEqual(UserPreferences.clampAgentSettleGrace(minutes: 2), 120)
         XCTAssertEqual(UserPreferences.clampAgentSettleGrace(minutes: 20), 900)
-        XCTAssertEqual(UserPreferences(agentSettleGrace: 5).agentSettleGrace, 15)
+        XCTAssertEqual(UserPreferences(agentSettleGrace: 5).agentSettleGrace, 120)
+        XCTAssertEqual(UserPreferences(agentSettleGrace: 15).agentSettleGrace, 120)
+        XCTAssertEqual(UserPreferences(agentSettleGrace: 90).agentSettleGrace, 120)
         XCTAssertEqual(UserPreferences(agentSettleGrace: 120).agentSettleGrace, 120)
         XCTAssertEqual(UserPreferences(agentSettleGrace: 9_999).agentSettleGrace, 900)
         XCTAssertEqual(UserPreferences.clampAgentSettleGrace(1e20), 900)
-        XCTAssertEqual(UserPreferences.clampAgentSettleGrace(.infinity), 90)
-        XCTAssertEqual(UserPreferences(agentSettleGrace: .nan).agentSettleGrace, 90)
+        XCTAssertEqual(UserPreferences.clampAgentSettleGrace(.infinity), 120)
+        XCTAssertEqual(UserPreferences(agentSettleGrace: .nan).agentSettleGrace, 120)
     }
 
     func testAgentSettleGracePersistsAndDecodedOvershootClamps() throws {
@@ -92,9 +96,18 @@ final class CorePrefsMathTests: XCTestCase {
             from: Data(legacyFractionJSON(brightnessFloor: 0.15).utf8)
         )
         XCTAssertEqual(decoded.lidOpenRampSeconds, 2)
-        XCTAssertEqual(decoded.agentSettleGrace, 90)
+        XCTAssertEqual(decoded.agentSettleGrace, 120)
         XCTAssertEqual(decoded.brightnessFloorPercent, 15)
         XCTAssertTrue(decoded.thermalAutoOff)
+    }
+
+    func testMissingSettleGraceKeyDecodesToTwoMinutes() throws {
+        let json = """
+        {"batteryFloorPercent":15,"duration":"indefinite","keyboardBacklightOff":true,"applyBrightnessFloor":true,"brightnessFloorPercent":15,"sessionFreshness":45,"lidOpenRampSeconds":2,"hotkey":{"keyCode":0,"option":true,"command":true,"shift":false,"control":false}}
+        """
+        let decoded = try JSONDecoder().decode(UserPreferences.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.agentSettleGrace, 120)
+        XCTAssertEqual(decoded.agentSettleGrace, UserPreferences.defaultAgentSettleGrace)
     }
 
     func testThermalAutoOffDefaultsOnAndMissingKeyDecodesTrue() throws {
@@ -127,7 +140,7 @@ final class CorePrefsMathTests: XCTestCase {
         XCTAssertEqual(decoded.brightnessFloorPercent, 15)
         XCTAssertEqual(decoded.brightnessFloor, 0.15, accuracy: 0.0001)
         XCTAssertEqual(decoded.lidOpenRampSeconds, 2)
-        XCTAssertEqual(decoded.agentSettleGrace, 90)
+        XCTAssertEqual(decoded.agentSettleGrace, 120)
         XCTAssertTrue(decoded.thermalAutoOff)
     }
 
@@ -183,25 +196,41 @@ final class CorePrefsMathTests: XCTestCase {
         XCTAssertTrue(loaded.thermalAutoOff)
     }
 
-    func testAgentsSettleUsesPreferenceGraceNotHardcodedNinety() {
-        var prefs = UserPreferences.default
+    func testAgentsSettleUsesPreferenceGraceNotHardcodedDefault() {
+        var prefs = UserPreferences(agentSettleGrace: 180)
         prefs.duration = .untilAgentsSettle
-        prefs.agentSettleGrace = 30
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
         XCTAssertTrue(
             engine.tick(now: t0, safety: .acPower, agents: .busy).isEmpty
         )
         XCTAssertTrue(
-            engine.tick(now: t0.addingTimeInterval(29), safety: .acPower, agents: .idle).isEmpty
+            engine.tick(now: t0.addingTimeInterval(179), safety: .acPower, agents: .idle).isEmpty
         )
         XCTAssertEqual(
-            engine.tick(now: t0.addingTimeInterval(30), safety: .acPower, agents: .idle),
+            engine.tick(now: t0.addingTimeInterval(180), safety: .acPower, agents: .idle),
             [.disengage(.agentsSettled)]
         )
     }
 
     func testShorteningSettleGraceWhileArmedUsesTheNewWindow() {
+        var prefs = UserPreferences(agentSettleGrace: 300)
+        prefs.duration = .untilAgentsSettle
+        var engine = WatchEngine(preferences: prefs)
+        _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
+        XCTAssertTrue(engine.tick(now: t0, safety: .acPower, agents: .busy).isEmpty)
+        XCTAssertTrue(
+            engine.tick(now: t0.addingTimeInterval(150), safety: .acPower, agents: .idle).isEmpty
+        )
+        engine.userSetAgentSettleGrace(120)
+        XCTAssertEqual(engine.preferences.agentSettleGrace, 120)
+        XCTAssertEqual(
+            engine.tick(now: t0.addingTimeInterval(150), safety: .acPower, agents: .idle),
+            [.disengage(.agentsSettled)]
+        )
+    }
+
+    func testShorteningSettleGraceBelowTwoMinutesClampsUp() {
         var prefs = UserPreferences.default
         prefs.duration = .untilAgentsSettle
         var engine = WatchEngine(preferences: prefs)
@@ -211,10 +240,9 @@ final class CorePrefsMathTests: XCTestCase {
             engine.tick(now: t0.addingTimeInterval(40), safety: .acPower, agents: .idle).isEmpty
         )
         engine.userSetAgentSettleGrace(30)
-        XCTAssertEqual(engine.preferences.agentSettleGrace, 30)
-        XCTAssertEqual(
-            engine.tick(now: t0.addingTimeInterval(40), safety: .acPower, agents: .idle),
-            [.disengage(.agentsSettled)]
+        XCTAssertEqual(engine.preferences.agentSettleGrace, 120)
+        XCTAssertTrue(
+            engine.tick(now: t0.addingTimeInterval(40), safety: .acPower, agents: .idle).isEmpty
         )
     }
 
@@ -223,9 +251,10 @@ final class CorePrefsMathTests: XCTestCase {
         XCTAssertEqual(BrightnessFloorPercentChrome.maxPercent, 40)
         XCTAssertEqual(BrightnessFloorPercentChrome.minLabel, "1%")
         XCTAssertEqual(BrightnessFloorPercentChrome.maxLabel, "40%")
-        XCTAssertEqual(AgentSettleGraceChrome.minSeconds, 15)
+        XCTAssertEqual(AgentSettleGraceChrome.minSeconds, 120)
         XCTAssertEqual(AgentSettleGraceChrome.maxSeconds, 900)
-        XCTAssertEqual(AgentSettleGraceChrome.minLabel, "15s")
+        XCTAssertEqual(AgentSettleGraceChrome.minLabel, "2m")
+        XCTAssertNotEqual(AgentSettleGraceChrome.minLabel, "120s")
         XCTAssertEqual(AgentSettleGraceChrome.maxLabel, "15m")
         XCTAssertEqual(LidOpenRampChrome.titles, ["1s", "2s", "3s"])
         XCTAssertEqual(LidOpenRampChrome.selectedSegment(seconds: 2), 1)
@@ -262,7 +291,7 @@ final class CorePrefsMathTests: XCTestCase {
 
     private func fixtureJSON(
         brightnessFloorPercent: Int = 15,
-        agentSettleGrace: TimeInterval = 90,
+        agentSettleGrace: TimeInterval = 120,
         lidOpenRampSeconds: Int = 2
     ) -> String {
         """

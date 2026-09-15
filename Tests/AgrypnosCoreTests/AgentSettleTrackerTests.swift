@@ -4,6 +4,11 @@ import XCTest
 final class AgentSettleTrackerTests: XCTestCase {
     let t0 = Date(timeIntervalSince1970: 1_000)
 
+    func testDefaultGraceIsTwoMinutes() {
+        XCTAssertEqual(AgentSettleTracker().grace, 120)
+        XCTAssertEqual(AgentSettleTracker().grace, UserPreferences.defaultAgentSettleGrace)
+    }
+
     func testQuietUntilFirstBusy() {
         var tracker = AgentSettleTracker(grace: 90)
         XCTAssertEqual(tracker.observe(busy: false, now: t0), .quiet)
