@@ -35,6 +35,29 @@ enum PopoverForm {
         )
     }
 
+    static func switchControl(
+        in card: NSView,
+        y: CGFloat,
+        contentW: CGFloat,
+        ci: CGFloat,
+        swW: CGFloat,
+        swH: CGFloat,
+        target: AnyObject,
+        action: Selector
+    ) -> NSSwitch {
+        let toggle = NSSwitch()
+        toggle.target = target
+        toggle.action = action
+        toggle.frame = NSRect(
+            x: contentW - ci - swW,
+            y: CGFloat(PopoverStackLayout.switchControlY(labelY: Double(y), switchHeight: Double(swH))),
+            width: swW,
+            height: swH
+        )
+        card.addSubview(toggle)
+        return toggle
+    }
+
     static func switchRow(
         in card: NSView,
         y: CGFloat,
@@ -52,17 +75,16 @@ enum PopoverForm {
         let labelH = CGFloat(PopoverStackLayout.switchRowLabelHeight)
         label.frame = NSRect(x: ci, y: y, width: cw - swW - 8 - trailing, height: labelH)
         card.addSubview(label)
-        let toggle = NSSwitch()
-        toggle.target = target
-        toggle.action = action
-        toggle.frame = NSRect(
-            x: contentW - ci - swW,
-            y: CGFloat(PopoverStackLayout.switchControlY(labelY: Double(y), switchHeight: Double(swH))),
-            width: swW,
-            height: swH
+        return switchControl(
+            in: card,
+            y: y,
+            contentW: contentW,
+            ci: ci,
+            swW: swW,
+            swH: swH,
+            target: target,
+            action: action
         )
-        card.addSubview(toggle)
-        return toggle
     }
 
     static func help(

@@ -10,7 +10,7 @@ MIT. No telemetry. No stealth network.
 - **Lid close** — with the watch armed, sleep is blocked via `pmset disablesleep`. Brightness drops to the **floor %** you set (default 15%, range 5–40; never 0%). Keyboard backlight off. Not `displaysleepnow`.
 - **Lid open mid-watch** — brightness ramps back over **1 / 2 / 3 seconds** (default 2s). Keyboard backlight on.
 - **Hold until end** — timer (`∞` / `1h` / `3h` / custom minutes) or Agents mode (busy → stay; settled idle after **idle wait** → allow sleep).
-- **Safety** — low battery (slider 5–100%, default 15%), thermal `.serious` / `.critical`, reboot clears SleepDisabled, launch-at-login never re-arms.
+- **Safety** — low battery (slider 5–100%, default 15%), thermal auto-off on `.serious` / `.critical` (Power toggle, default on), reboot clears SleepDisabled, launch-at-login never re-arms.
 
 V1 agents: Cursor, Claude Code, Codex. Local heuristics (process list + session-file mtimes). Correctness over coverage.
 
@@ -64,7 +64,7 @@ Until someone proves a **wedge** (clamshell + power + external display, or a sle
 These exist in the menu-bar popover. There is no separate settings window. A slim text switcher at the top shows one section at a time. **Watch** · **Power** · **Agents** · **General**. The popover opens on Watch.
 
 - **Watch:** Keep the watch, duration presets plus custom minutes, arming caption
-- **Power:** brightness floor % (default **15%**; range 5–40; never 0%), keyboard backlight off, low-battery auto-off **5–100%** (default 15%), brightness return when the lid opens **1 / 2 / 3 s** (default **2s**)
+- **Power:** brightness floor % (default **15%**; range 5–40; never 0%), keyboard backlight off, low-battery auto-off **5–100%** (default 15%), brightness return when the lid opens **1 / 2 / 3 s** (default **2s**), thermal auto-off (default on)
 - **Agents:** idle wait after agents go quiet (15s–15m, default 90s) before allowing sleep
 - **General:** remappable global hotkey (default `⌥⌘A`), launch at login, quit
 

@@ -125,6 +125,21 @@ final class PopoverPrefChromeTests: XCTestCase {
         XCTAssertFalse(AgrypnosCopy.settleGraceHelp.lowercased().contains("settle grace"))
         XCTAssertFalse(AgrypnosCopy.lidOpenRampHelp.lowercased().contains("lid-open ramp"))
     }
+
+    func testThermalAutoOffRowCopyIsPlain() {
+        XCTAssertEqual(AgrypnosCopy.thermalAutoOff, "Thermal auto-off")
+        XCTAssertEqual(AgrypnosCopy.thermalAutoOffHelp, "Thermal pressure turns the watch off.")
+        for text in [AgrypnosCopy.thermalAutoOff, AgrypnosCopy.thermalAutoOffHelp] {
+            let lower = text.lowercased()
+            XCTAssertFalse(lower.contains("°c"), text)
+            XCTAssertFalse(lower.contains("celsius"), text)
+            XCTAssertFalse(lower.contains("safe temp"), text)
+            XCTAssertFalse(lower.contains("health-gauge"), text)
+            XCTAssertFalse(lower.contains("health gauge"), text)
+            XCTAssertFalse(lower.contains("warranty"), text)
+            XCTAssertFalse(lower.contains("smc"), text)
+        }
+    }
 }
 
 final class PopoverStackLayoutTests: XCTestCase {
@@ -191,6 +206,20 @@ final class PopoverStackLayoutTests: XCTestCase {
             PopoverStackLayout.titleRowHeight
                 + PopoverCopyLayout.helpHeightPoints
                 + PopoverStackLayout.segmentRowHeight
+        )
+        XCTAssertEqual(
+            power.thermal!.height,
+            PopoverStackLayout.inset
+                + PopoverStackLayout.titleRowHeight
+                + PopoverCopyLayout.helpHeightPoints
+                + PopoverStackLayout.switchRowHeight
+                + PopoverStackLayout.inset
+        )
+        XCTAssertEqual(
+            power.thermal!.height,
+            PopoverStackLayout.prefControlY
+                + PopoverStackLayout.switchRowHeight
+                + PopoverStackLayout.inset
         )
         XCTAssertEqual(watch.duration!.height, 136)
         XCTAssertEqual(power.battery!.height, 88)

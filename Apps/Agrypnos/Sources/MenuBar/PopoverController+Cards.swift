@@ -229,4 +229,34 @@ extension PopoverController {
         )
         batterySlider.setAccessibilityLabel(AgrypnosCopy.batteryFloor)
     }
+
+    func addThermalCard(
+        _ card: CardView,
+        contentW: CGFloat,
+        ci: CGFloat,
+        cw: CGFloat,
+        swW: CGFloat,
+        swH: CGFloat
+    ) {
+        addPrefTitle(AgrypnosCopy.thermalAutoOff, in: card, ci: ci, width: cw)
+        _ = PopoverForm.help(
+            AgrypnosCopy.thermalAutoOffHelp,
+            in: card,
+            y: CGFloat(PopoverStackLayout.prefHelpY),
+            x: ci,
+            width: cw
+        )
+        thermalSwitch = PopoverForm.switchControl(
+            in: card,
+            y: CGFloat(PopoverStackLayout.prefControlY),
+            contentW: contentW,
+            ci: ci,
+            swW: swW,
+            swH: swH,
+            target: self,
+            action: #selector(thermalToggled(_:))
+        )
+        thermalSwitch.setAccessibilityLabel(AgrypnosCopy.thermalAutoOff)
+        thermalSwitch.setAccessibilityHelp(AgrypnosCopy.thermalAutoOffHelp)
+    }
 }
