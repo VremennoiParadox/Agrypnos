@@ -100,13 +100,14 @@ extension PopoverController {
             in: card,
             y: CGFloat(PopoverStackLayout.prefHelpY),
             x: ci,
-            width: cw
+            width: cw,
+            lines: PopoverCopyLayout.settleHelpMaxLines
         )
         let settleRange = UserPreferences.agentSettleGraceRange
         settleSlider = PopoverForm.slider(
             in: card,
-            sliderY: CGFloat(PopoverStackLayout.prefControlY),
-            minMaxY: CGFloat(PopoverStackLayout.prefMinMaxY),
+            sliderY: CGFloat(PopoverStackLayout.settleControlY),
+            minMaxY: CGFloat(PopoverStackLayout.settleMinMaxY),
             ci: ci,
             cw: cw,
             contentW: contentW,

@@ -203,7 +203,7 @@ final class PopoverStackLayoutTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(
             agents.settle!.height,
             PopoverStackLayout.titleRowHeight
-                + PopoverCopyLayout.helpHeightPoints
+                + PopoverCopyLayout.settleHelpHeightPoints
                 + PopoverStackLayout.sliderBlockHeight
         )
         XCTAssertGreaterThanOrEqual(
@@ -267,6 +267,101 @@ final class PopoverStackLayoutTests: XCTestCase {
         XCTAssertEqual(PopoverStackLayout.switchControlY(labelY: 11, switchHeight: 21), 11.5)
         XCTAssertEqual(PopoverStackLayout.switchControlY(labelY: 10, switchHeight: 22), 10)
         XCTAssertEqual(PopoverStackLayout.switchControlY(labelY: 11, switchHeight: 25), 9.5)
+    }
+
+    func testSettleHelpNeedsItsOwnSlotAndKeepsOtherHelpAtTwoLines() {
+        let settleLines = CopyWrap.lineCount(
+            AgrypnosCopy.settleGraceHelp,
+            columns: PopoverCopyLayout.innerColumns
+        )
+        XCTAssertEqual(PopoverCopyLayout.helpMaxLines, 2)
+        XCTAssertEqual(PopoverCopyLayout.helpHeightPoints, 2 * PopoverCopyLayout.lineHeightPoints)
+        XCTAssertGreaterThan(settleLines, PopoverCopyLayout.helpMaxLines)
+        XCTAssertEqual(settleLines, 8)
+        XCTAssertEqual(PopoverCopyLayout.settleHelpMaxLines, 8)
+        XCTAssertEqual(
+            PopoverCopyLayout.settleHelpHeightPoints,
+            8 * PopoverCopyLayout.lineHeightPoints
+        )
+        XCTAssertGreaterThanOrEqual(
+            PopoverCopyLayout.settleHelpHeightPoints,
+            settleLines * PopoverCopyLayout.lineHeightPoints
+        )
+        XCTAssertLessThanOrEqual(
+            CopyWrap.lineCount(
+                AgrypnosCopy.brightnessFloorHelp,
+                columns: PopoverCopyLayout.innerColumns
+            ),
+            PopoverCopyLayout.helpMaxLines
+        )
+        XCTAssertLessThanOrEqual(
+            CopyWrap.lineCount(
+                AgrypnosCopy.lidOpenRampHelp,
+                columns: PopoverCopyLayout.innerColumns
+            ),
+            PopoverCopyLayout.helpMaxLines
+        )
+        XCTAssertLessThanOrEqual(
+            CopyWrap.lineCount(
+                AgrypnosCopy.thermalAutoOffHelp,
+                columns: PopoverCopyLayout.innerColumns
+            ),
+            PopoverCopyLayout.helpMaxLines
+        )
+        XCTAssertEqual(AgentSettleGraceChrome.minLabel, "2m")
+        XCTAssertNotEqual(AgentSettleGraceChrome.minLabel, "15s")
+        XCTAssertEqual(AgentSettleGraceChrome.maxLabel, "15m")
+    }
+
+    func testSettleCardGrowsWithSettleHelpAndLeavesRampThermalOnTheTwoLineSlot() {
+        let agents = PopoverStackLayout.make(section: .agents)
+        let power = PopoverStackLayout.make(section: .power)
+        XCTAssertEqual(
+            agents.settle!.height,
+            PopoverStackLayout.inset
+                + PopoverStackLayout.titleRowHeight
+                + PopoverCopyLayout.settleHelpHeightPoints
+                + PopoverStackLayout.sliderBlockHeight
+                + PopoverStackLayout.inset
+        )
+        XCTAssertGreaterThan(
+            PopoverCopyLayout.settleHelpHeightPoints,
+            PopoverCopyLayout.helpHeightPoints
+        )
+        XCTAssertEqual(
+            PopoverStackLayout.settleControlY,
+            PopoverStackLayout.prefHelpY + PopoverCopyLayout.settleHelpHeightPoints
+        )
+        XCTAssertEqual(
+            PopoverStackLayout.settleMinMaxY,
+            PopoverStackLayout.settleControlY + 24
+        )
+        XCTAssertGreaterThan(
+            PopoverStackLayout.settleControlY,
+            PopoverStackLayout.prefControlY
+        )
+        XCTAssertEqual(
+            PopoverStackLayout.prefControlY,
+            PopoverStackLayout.prefHelpY + PopoverCopyLayout.helpHeightPoints
+        )
+        XCTAssertEqual(
+            power.ramp!.height,
+            PopoverStackLayout.inset
+                + PopoverStackLayout.titleRowHeight
+                + PopoverCopyLayout.helpHeightPoints
+                + PopoverStackLayout.segmentRowHeight
+                + PopoverStackLayout.inset
+        )
+        XCTAssertEqual(
+            power.thermal!.height,
+            PopoverStackLayout.inset
+                + PopoverStackLayout.titleRowHeight
+                + PopoverCopyLayout.helpHeightPoints
+                + PopoverStackLayout.switchRowHeight
+                + PopoverStackLayout.inset
+        )
+        XCTAssertFalse(agents.needsScroll)
+        XCTAssertLessThan(agents.contentHeight, PopoverStackLayout.maxVisibleHeight)
     }
 
     func testTimeValueSlotFitsOneMinuteThirty() {

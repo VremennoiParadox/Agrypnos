@@ -5,11 +5,14 @@ public enum PopoverCopyLayout: Sendable {
     /// Leftover + “battery” wraps to 4 lines at the conservative column budget.
     public static let captionMaxLines = 4
     public static let helpMaxLines = 2
+    /// `AgrypnosCopy.settleGraceHelp` wraps to 8 lines at `innerColumns`. Other help stays at 2.
+    public static let settleHelpMaxLines = 8
     public static let hotkeyHintMaxLines = 2
     public static let lineHeightPoints = 16
     public static let durationHintHeightPoints = 48
     public static let captionHeightPoints = captionMaxLines * lineHeightPoints
     public static let helpHeightPoints = helpMaxLines * lineHeightPoints
+    public static let settleHelpHeightPoints = settleHelpMaxLines * lineHeightPoints
     public static let hotkeyHintHeightPoints = hotkeyHintMaxLines * lineHeightPoints
     /// Custom-minutes field. The "Minutes" label is wider so it does not share this slot.
     public static let minutesFieldWidthPoints = 56

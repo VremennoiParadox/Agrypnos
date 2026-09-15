@@ -368,7 +368,7 @@ final class AgrypnosCopyTests: XCTestCase {
         XCTAssertTrue(AgrypnosCopy.lidOpenRampHelp.lowercased().contains("lid"))
         XCTAssertTrue(AgrypnosCopy.brightnessFloorHelp.lowercased().contains("lid"))
         XCTAssertTrue(AgrypnosCopy.brightnessFloorHelp.lowercased().contains("percent"))
-        // Detailed Agents help is longer than the 2-line help slot; UI wrapping ships after Core.
+        assertFitsSettleHelp(AgrypnosCopy.settleGraceHelp)
         assertFitsHelp(AgrypnosCopy.lidOpenRampHelp)
         assertFitsHelp(AgrypnosCopy.brightnessFloorHelp)
         assertFitsHelp(AgrypnosCopy.thermalAutoOffHelp)
@@ -494,6 +494,18 @@ final class AgrypnosCopyTests: XCTestCase {
         XCTAssertLessThanOrEqual(lines, PopoverCopyLayout.helpMaxLines, file: file, line: line)
         XCTAssertGreaterThanOrEqual(
             PopoverCopyLayout.helpHeightPoints,
+            lines * PopoverCopyLayout.lineHeightPoints,
+            file: file,
+            line: line
+        )
+    }
+
+    private func assertFitsSettleHelp(_ text: String, file: StaticString = #filePath, line: UInt = #line) {
+        let lines = CopyWrap.lineCount(text, columns: PopoverCopyLayout.innerColumns)
+        XCTAssertGreaterThan(lines, PopoverCopyLayout.helpMaxLines, file: file, line: line)
+        XCTAssertLessThanOrEqual(lines, PopoverCopyLayout.settleHelpMaxLines, file: file, line: line)
+        XCTAssertGreaterThanOrEqual(
+            PopoverCopyLayout.settleHelpHeightPoints,
             lines * PopoverCopyLayout.lineHeightPoints,
             file: file,
             line: line
