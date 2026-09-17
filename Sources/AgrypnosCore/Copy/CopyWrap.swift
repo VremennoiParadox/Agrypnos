@@ -8,6 +8,8 @@ public enum PopoverCopyLayout: Sendable {
     /// `AgrypnosCopy.settleGraceHelp` wraps to 8 lines at `innerColumns`. Power/Watch help stays at 2.
     public static let settleHelpMaxLines = 8
     public static let hotkeyHintMaxLines = 2
+    public static let lastWatchEndMaxLines = 3
+    public static var lastWatchEndHeightPoints: Int { lastWatchEndMaxLines * lineHeightPoints }
     public static let lineHeightPoints = 16
     public static let durationHintHeightPoints = 48
     public static let captionHeightPoints = captionMaxLines * lineHeightPoints

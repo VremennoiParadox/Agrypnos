@@ -19,13 +19,22 @@ public struct SafetyInputs: Equatable, Sendable {
     }
 }
 
-public enum DisengageReason: String, Equatable, Sendable, CaseIterable {
+public enum DisengageReason: String, Equatable, Sendable, CaseIterable, Codable {
     case user
     case timerExpired
     case batteryFloor
     case thermal
     case agentsSettled
     case lowPowerMode
+}
+
+public struct LastWatchEnd: Equatable, Sendable, Codable {
+    public var endedAt: Date
+    public var reason: DisengageReason
+    public init(endedAt: Date, reason: DisengageReason) {
+        self.endedAt = endedAt
+        self.reason = reason
+    }
 }
 
 public enum AutoOffEvaluator: Sendable {

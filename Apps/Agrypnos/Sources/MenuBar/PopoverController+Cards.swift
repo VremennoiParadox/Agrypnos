@@ -201,6 +201,20 @@ extension PopoverController {
         card.addSubview(durationHint)
     }
 
+    func addLastWatchEndCard(_ card: CardView, ci: CGFloat, cw: CGFloat) {
+        lastWatchEndLabel = LabelFactory.wrapping(
+            "", font: .systemFont(ofSize: 12), color: .secondaryLabelColor,
+            lines: PopoverCopyLayout.lastWatchEndMaxLines
+        )
+        lastWatchEndLabel.frame = NSRect(
+            x: ci, y: CGFloat(PopoverStackLayout.inset), width: cw,
+            height: CGFloat(PopoverCopyLayout.lastWatchEndHeightPoints)
+        )
+        lastWatchEndLabel.preferredMaxLayoutWidth = cw
+        lastWatchEndLabel.setAccessibilityLabel("Last watch")
+        card.addSubview(lastWatchEndLabel)
+    }
+
     func addBatteryCard(_ card: CardView, contentW: CGFloat, ci: CGFloat, cw: CGFloat) {
         let batt = LabelFactory.make(AgrypnosCopy.batteryFloor, font: .systemFont(ofSize: 13), color: .labelColor)
         batt.frame = NSRect(x: ci, y: ci, width: cw - PopoverForm.percentValueWidth, height: 18)

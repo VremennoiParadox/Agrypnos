@@ -21,6 +21,7 @@ extension PopoverController {
 
         PopoverForm.apply(watchCard, slot: layout.watch, pad: pad, width: contentW)
         PopoverForm.apply(durationCard, slot: layout.duration, pad: pad, width: contentW)
+        PopoverForm.apply(lastWatchEndCard, slot: layout.lastWatchEnd, pad: pad, width: contentW)
         PopoverForm.apply(hygieneCard, slot: layout.hygiene, pad: pad, width: contentW)
         PopoverForm.apply(batteryCard, slot: layout.battery, pad: pad, width: contentW)
         PopoverForm.apply(settleCard, slot: layout.settle, pad: pad, width: contentW)
