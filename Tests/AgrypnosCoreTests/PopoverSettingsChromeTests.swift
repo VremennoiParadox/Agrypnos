@@ -25,7 +25,6 @@ final class DurationPickerChromeTests: XCTestCase {
             DurationPickerChrome.segmentSelection(selectedSegment: chrome.selectedSegment, count: 4),
             [false, false, false, false]
         )
-        XCTAssertTrue(DurationPickerChrome.segmentAllowsNoSelection)
         XCTAssertEqual(
             DurationPickerChrome.exclusiveSelectedIndex(nowOn: [3], previous: 3),
             3

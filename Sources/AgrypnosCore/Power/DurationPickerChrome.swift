@@ -13,9 +13,6 @@ public struct DurationPickerChrome: Equatable, Sendable {
         self.minutesText = minutesText
     }
 
-    /// `selectOne` keeps a preset lit when Minutes is active. Allow none selected.
-    public static let segmentAllowsNoSelection = true
-
     public static func segmentSelection(selectedSegment: Int, count: Int) -> [Bool] {
         (0..<count).map { $0 == selectedSegment }
     }

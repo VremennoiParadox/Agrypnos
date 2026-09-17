@@ -326,7 +326,6 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     func controlTextDidChange(_ obj: Notification) {
         guard let field = obj.object as? NSTextField else { return }
         if field === minutesField {
-            commitMinutesIfChanged()
             refresh()
             return
         }
