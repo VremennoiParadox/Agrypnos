@@ -186,13 +186,17 @@ enum PopoverForm {
         action: Selector,
         delegate: NSTextFieldDelegate
     ) -> NSTextField {
-        let field: NSTextField = secure ? NSSecureTextField(string: "") : NSTextField(string: "")
+        let field: NSTextField = secure
+            ? PopoverSecureTextField(string: "")
+            : PopoverTextField(string: "")
         field.placeholderString = placeholder
         field.font = .systemFont(ofSize: 13)
         field.isBezeled = true
         field.bezelStyle = .roundedBezel
         field.isEditable = true
         field.isSelectable = true
+        field.usesSingleLineMode = true
+        field.cell?.isScrollable = true
         field.delegate = delegate
         field.target = target
         field.action = action
@@ -210,6 +214,7 @@ enum PopoverForm {
         x: CGFloat,
         width: CGFloat,
         caption: String,
+        placeholder: String,
         secure: Bool,
         label: String,
         help: String,
@@ -231,7 +236,7 @@ enum PopoverForm {
             y: y,
             x: x + labelW + 8,
             width: max(width - labelW - 8, 80),
-            placeholder: "",
+            placeholder: placeholder,
             secure: secure,
             label: label,
             help: help,
@@ -240,4 +245,37 @@ enum PopoverForm {
             delegate: delegate
         )
     }
+}
+
+/// Accessory apps often fail to make the popover key. Clicking a field
+/// activates Agrypnos so Cmd+V can reach the field editor. Smart quotes
+/// stay off so pasted tokens and webhook URLs are not rewritten.
+final class PopoverTextField: NSTextField {
+    override func becomeFirstResponder() -> Bool {
+        NSApp.activate(ignoringOtherApps: true)
+        window?.makeKey()
+        let ok = super.becomeFirstResponder()
+        disarmSmartQuotes(in: currentEditor() as? NSTextView)
+        return ok
+    }
+}
+
+final class PopoverSecureTextField: NSSecureTextField {
+    override func becomeFirstResponder() -> Bool {
+        NSApp.activate(ignoringOtherApps: true)
+        window?.makeKey()
+        let ok = super.becomeFirstResponder()
+        disarmSmartQuotes(in: currentEditor() as? NSTextView)
+        return ok
+    }
+}
+
+private func disarmSmartQuotes(in editor: NSTextView?) {
+    guard let editor else { return }
+    editor.isAutomaticQuoteSubstitutionEnabled = false
+    editor.isAutomaticDashSubstitutionEnabled = false
+    editor.isAutomaticTextReplacementEnabled = false
+    editor.isAutomaticSpellingCorrectionEnabled = false
+    editor.isContinuousSpellCheckingEnabled = false
+    editor.allowsUndo = true
 }

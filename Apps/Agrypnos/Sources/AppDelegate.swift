@@ -13,6 +13,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WatchRuntimeDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        AppEditMenu.install()
         hotkey.onTrigger = { [weak self] in
             self?.runtime.toggle()
         }
@@ -40,5 +41,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WatchRuntimeDelegate {
 
     func watchRuntimeDidChange(_ runtime: WatchRuntime) {
         statusItem.refresh()
+    }
+}
+
+/// LSUIElement extras do not show a menu bar. Cmd+V still needs an Edit menu.
+@MainActor
+enum AppEditMenu {
+    static func install() {
+        let main = NSMenu()
+        let appItem = NSMenuItem()
+        appItem.submenu = NSMenu(title: "Agrypnos")
+        main.addItem(appItem)
+        let editItem = NSMenuItem()
+        let edit = NSMenu(title: "Edit")
+        edit.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        edit.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        edit.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        edit.addItem(NSMenuItem.separator())
+        edit.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        editItem.submenu = edit
+        main.addItem(editItem)
+        NSApp.mainMenu = main
     }
 }

@@ -51,7 +51,7 @@ extension PopoverController {
             y: CGFloat(PopoverStackLayout.notifDiscordFieldY),
             x: ci,
             width: cw,
-            placeholder: "",
+            placeholder: AgrypnosCopy.notifDiscordPlaceholder,
             secure: true,
             label: AgrypnosCopy.notifDiscord,
             help: AgrypnosCopy.notifDiscordHelp,
@@ -91,6 +91,7 @@ extension PopoverController {
             x: ci,
             width: cw,
             caption: AgrypnosCopy.notifTelegramTokenShort,
+            placeholder: AgrypnosCopy.notifTelegramTokenPlaceholder,
             secure: true,
             label: AgrypnosCopy.notifTelegramToken,
             help: AgrypnosCopy.notifTelegramHelp,
@@ -104,6 +105,7 @@ extension PopoverController {
             x: ci,
             width: cw,
             caption: AgrypnosCopy.notifTelegramChatShort,
+            placeholder: AgrypnosCopy.notifTelegramChatPlaceholder,
             secure: false,
             label: AgrypnosCopy.notifTelegramChatId,
             help: AgrypnosCopy.notifTelegramHelp,
@@ -146,23 +148,30 @@ extension PopoverController {
     func refreshNotifChrome(runtime: WatchRuntime) {
         notifSwitch?.state = runtime.preferences.notifEnabled ? .on : .off
         discordStatus?.stringValue = discordInvalid ? AgrypnosCopy.notifDiscordInvalid : ""
-        guard currentSection == .notif else { return }
+    }
+
+    func loadNotifSecretFields() {
+        guard let runtime else { return }
         let secrets = runtime.notifSecrets()
-        if discordField?.currentEditor() == nil {
-            discordField?.stringValue = secrets.discordWebhookURL ?? ""
-        }
-        if telegramTokenField?.currentEditor() == nil {
-            telegramTokenField?.stringValue = secrets.telegramBotToken ?? ""
-        }
-        if telegramChatField?.currentEditor() == nil {
-            telegramChatField?.stringValue = secrets.telegramChatId ?? ""
-        }
+        discordField?.stringValue = secrets.discordWebhookURL ?? ""
+        telegramTokenField?.stringValue = secrets.telegramBotToken ?? ""
+        telegramChatField?.stringValue = secrets.telegramChatId ?? ""
+        discordInvalid = false
+        discordStatus?.stringValue = ""
     }
 
     func commitNotifFields() {
+        flushSecretFieldEditor(discordField)
+        flushSecretFieldEditor(telegramTokenField)
+        flushSecretFieldEditor(telegramChatField)
         if let discordField { discordCommitted(discordField) }
         if let telegramTokenField { telegramTokenCommitted(telegramTokenField) }
         if let telegramChatField { telegramChatCommitted(telegramChatField) }
+    }
+
+    func flushSecretFieldEditor(_ field: NSTextField?) {
+        guard let field, let editor = field.currentEditor() as? NSText else { return }
+        field.stringValue = editor.string
     }
 
     @objc func notifToggled(_ sender: NSSwitch) {
@@ -173,40 +182,55 @@ extension PopoverController {
 
     @objc func discordCommitted(_ sender: NSTextField) {
         stopRecordingIfNeeded()
+        flushSecretFieldEditor(sender)
         switch NotifDiscordFieldChrome.commit(sender.stringValue) {
-        case .persist, .clear:
+        case .persist(let url):
             discordInvalid = false
-            let saved = runtime?.setNotifDiscordWebhookURL(sender.stringValue) ?? true
-            restoreDiscordFieldFromStore()
+            let saved = runtime?.setNotifDiscordWebhookURL(url) ?? true
+            sender.stringValue = url
             if !saved {
                 UserNotify.post(AgrypnosCopy.notifSaveFailed)
             }
+        case .clear:
+            break // empty: do not delete Keychain
         case .reject:
             discordInvalid = true
-            restoreDiscordFieldFromStore()
+            UserNotify.post(AgrypnosCopy.notifDiscordInvalid)
         }
         discordStatus?.stringValue = discordInvalid ? AgrypnosCopy.notifDiscordInvalid : ""
     }
 
     @objc func telegramTokenCommitted(_ sender: NSTextField) {
         stopRecordingIfNeeded()
-        let saved = runtime?.setNotifTelegramBotToken(sender.stringValue) ?? true
-        if sender.currentEditor() == nil {
-            sender.stringValue = runtime?.notifSecrets().telegramBotToken ?? ""
-        }
-        if !saved {
-            UserNotify.post(AgrypnosCopy.notifSaveFailed)
+        flushSecretFieldEditor(sender)
+        switch TelegramBotTokenChrome.commit(sender.stringValue) {
+        case .persist(let token):
+            let saved = runtime?.setNotifTelegramBotToken(token) ?? true
+            sender.stringValue = token
+            if !saved {
+                UserNotify.post(AgrypnosCopy.notifSaveFailed)
+            }
+        case .clear:
+            break // empty: do not delete Keychain
+        case .reject:
+            UserNotify.post(AgrypnosCopy.notifTelegramTokenInvalid)
         }
     }
 
     @objc func telegramChatCommitted(_ sender: NSTextField) {
         stopRecordingIfNeeded()
-        let saved = runtime?.setNotifTelegramChatId(sender.stringValue) ?? true
-        if sender.currentEditor() == nil {
-            sender.stringValue = runtime?.notifSecrets().telegramChatId ?? ""
-        }
-        if !saved {
-            UserNotify.post(AgrypnosCopy.notifSaveFailed)
+        flushSecretFieldEditor(sender)
+        switch TelegramChatIdChrome.commit(sender.stringValue) {
+        case .persist(let id):
+            let saved = runtime?.setNotifTelegramChatId(id) ?? true
+            sender.stringValue = id
+            if !saved {
+                UserNotify.post(AgrypnosCopy.notifSaveFailed)
+            }
+        case .clear:
+            break // empty: do not delete Keychain
+        case .reject:
+            UserNotify.post(AgrypnosCopy.notifTelegramChatInvalid)
         }
     }
 
@@ -218,9 +242,5 @@ extension PopoverController {
         telegramTokenField?.stringValue = ""
         telegramChatField?.stringValue = ""
         discordStatus?.stringValue = ""
-    }
-
-    private func restoreDiscordFieldFromStore() {
-        discordField?.stringValue = runtime?.notifSecrets().discordWebhookURL ?? ""
     }
 }

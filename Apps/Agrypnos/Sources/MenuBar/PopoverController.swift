@@ -116,7 +116,14 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
             floor: runtime.preferences.batteryFloorPercent,
             lidClosed: runtime.engine.lidClosed
         )
-        applyDuration(DurationPickerChrome.make(duration: runtime.preferences.duration))
+        applyDuration(
+            DurationPickerChrome.make(
+                duration: runtime.preferences.duration,
+                minutesDraft: minutesField?.currentEditor() != nil
+                    ? (minutesField?.stringValue ?? "")
+                    : nil
+            )
+        )
         durationHint?.stringValue = hintCopy(for: runtime)
         keyboardSwitch?.state = runtime.preferences.keyboardBacklightOff ? .on : .off
         floorSwitch?.state = runtime.preferences.applyBrightnessFloor ? .on : .off
@@ -170,7 +177,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     }
 
     func close() {
-        commitMinutesIfChanged()
+        commitMinutesIfChanged(onLeaveWatch: true)
         if currentSection == .notif {
             commitNotifFields()
         }
@@ -190,8 +197,14 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         for (index, title) in chrome.segmentTitles.enumerated() where index < durationControl.segmentCount {
             durationControl.setLabel(title, forSegment: index)
         }
-        durationControl.selectedSegment = chrome.selectedSegment
-        if minutesField?.currentEditor() == nil {
+        let selected = DurationPickerChrome.segmentSelection(
+            selectedSegment: chrome.selectedSegment,
+            count: durationControl.segmentCount
+        )
+        for (index, on) in selected.enumerated() {
+            durationControl.setSelected(on, forSegment: index)
+        }
+        if chrome.selectedSegment >= 0 || minutesField?.currentEditor() == nil {
             minutesField?.stringValue = chrome.minutesText
         }
     }
@@ -235,12 +248,16 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         }
     }
 
-    private func commitMinutesIfChanged() {
+    private func commitMinutesIfChanged(onLeaveWatch: Bool = false) {
         guard let runtime else { return }
         guard let minutes = DurationPickerChrome.parseMinutes(minutesField?.stringValue ?? "") else { return }
-        guard DurationPickerChrome.shouldCommit(minutes: minutes, current: runtime.preferences.duration) else {
-            return
-        }
+        let should = onLeaveWatch
+            ? DurationPickerChrome.shouldCommitOnLeaveWatch(
+                minutes: minutes,
+                current: runtime.preferences.duration
+            )
+            : DurationPickerChrome.shouldCommit(minutes: minutes, current: runtime.preferences.duration)
+        guard should else { return }
         runtime.setCustomMinutes(minutes)
     }
 
@@ -250,13 +267,16 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
             return
         }
         if currentSection == .watch, section != .watch {
-            commitMinutesIfChanged()
+            commitMinutesIfChanged(onLeaveWatch: true)
         }
         if currentSection == .notif, section != .notif {
             commitNotifFields()
         }
         stopRecordingIfNeeded()
         applySection(section)
+        if section == .notif {
+            loadNotifSecretFields()
+        }
         refresh()
     }
 
@@ -268,11 +288,18 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
 
     @objc func durationChanged(_ sender: NSSegmentedControl) {
         stopRecordingIfNeeded()
-        guard let option = DurationPickerChrome.duration(selectingSegment: sender.selectedSegment) else {
-            minutesField?.window?.makeFirstResponder(minutesField)
+        let on = (0..<sender.segmentCount).filter { sender.isSelected(forSegment: $0) }
+        let previous = DurationPickerChrome.make(
+            duration: runtime?.preferences.duration ?? .indefinite
+        ).selectedSegment
+        guard let index = DurationPickerChrome.exclusiveSelectedIndex(nowOn: on, previous: previous),
+              let option = DurationPickerChrome.duration(selectingSegment: index)
+        else {
             refresh()
             return
         }
+        minutesField?.window?.makeFirstResponder(nil)
+        minutesField?.stringValue = ""
         runtime?.setDuration(option)
         refresh()
     }
@@ -285,10 +312,34 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
 
     func controlTextDidBeginEditing(_ obj: Notification) {
         stopRecordingIfNeeded()
+        NSApp.activate(ignoringOtherApps: true)
+        (obj.object as? NSView)?.window?.makeKey()
         if obj.object as? NSTextField === discordField {
             discordInvalid = false
             discordStatus?.stringValue = ""
         }
+        if obj.object as? NSTextField === minutesField {
+            refresh()
+        }
+    }
+
+    func controlTextDidChange(_ obj: Notification) {
+        guard let field = obj.object as? NSTextField else { return }
+        if field === minutesField {
+            refresh()
+            return
+        }
+        if field === discordField {
+            discordInvalid = false
+            discordStatus?.stringValue = ""
+        }
+    }
+
+    func control(_ control: NSControl, textShouldEndEditing fieldEditor: NSText) -> Bool {
+        if let field = control as? NSTextField {
+            field.stringValue = fieldEditor.string
+        }
+        return true
     }
 
     @objc func keyboardToggled(_ sender: NSSwitch) {

@@ -13,7 +13,11 @@ public enum DiscordWebhookURL: Sendable {
         .union(CharacterSet(charactersIn: "_-."))
 
     public static func parse(_ raw: String) -> URL? {
-        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        var trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.hasPrefix("<"), trimmed.hasSuffix(">"), trimmed.count >= 2 {
+            trimmed = String(trimmed.dropFirst().dropLast())
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+        }
         guard !trimmed.isEmpty, let url = URL(string: trimmed) else { return nil }
         guard url.scheme?.lowercased() == "https" else { return nil }
         guard let host = url.host?.lowercased(), hosts.contains(host) else { return nil }

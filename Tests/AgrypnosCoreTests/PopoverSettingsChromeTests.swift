@@ -21,6 +21,47 @@ final class DurationPickerChromeTests: XCTestCase {
         XCTAssertEqual(chrome.selectedSegment, -1)
         XCTAssertEqual(chrome.minutesText, "33")
         XCTAssertFalse(DurationOption.presets.indices.contains(chrome.selectedSegment))
+        XCTAssertEqual(
+            DurationPickerChrome.segmentSelection(selectedSegment: chrome.selectedSegment, count: 4),
+            [false, false, false, false]
+        )
+        XCTAssertEqual(
+            DurationPickerChrome.exclusiveSelectedIndex(nowOn: [3], previous: 3),
+            3
+        )
+        XCTAssertEqual(
+            DurationPickerChrome.exclusiveSelectedIndex(nowOn: [1, 3], previous: 3),
+            1
+        )
+        XCTAssertNil(DurationPickerChrome.exclusiveSelectedIndex(nowOn: [], previous: 3))
+    }
+
+    func testPresetAndMinutesCannotBothLookSelected() {
+        let agents = DurationPickerChrome.make(duration: .untilAgentsSettle)
+        XCTAssertEqual(agents.selectedSegment, 3)
+        XCTAssertEqual(agents.minutesText, "")
+        XCTAssertEqual(
+            DurationPickerChrome.segmentSelection(selectedSegment: agents.selectedSegment, count: 4),
+            [false, false, false, true]
+        )
+
+        let draft = DurationPickerChrome.make(
+            duration: .untilAgentsSettle,
+            minutesDraft: "33"
+        )
+        XCTAssertEqual(draft.selectedSegment, -1)
+        XCTAssertEqual(draft.minutesText, "33")
+        XCTAssertEqual(
+            DurationPickerChrome.segmentSelection(selectedSegment: draft.selectedSegment, count: 4),
+            [false, false, false, false]
+        )
+
+        let focusing = DurationPickerChrome.make(
+            duration: .untilAgentsSettle,
+            minutesDraft: ""
+        )
+        XCTAssertEqual(focusing.selectedSegment, -1)
+        XCTAssertEqual(focusing.minutesText, "")
     }
 
     func testPresetSelectionStaysOnTheFourPresets() {
@@ -58,6 +99,25 @@ final class DurationPickerChromeTests: XCTestCase {
         XCTAssertTrue(DurationPickerChrome.shouldCommit(minutes: 40, current: .customMinutes(33)))
         XCTAssertTrue(DurationPickerChrome.shouldCommit(minutes: 33, current: .indefinite))
         XCTAssertTrue(DurationPickerChrome.shouldCommit(minutes: 60, current: .oneHour))
+        XCTAssertTrue(DurationPickerChrome.shouldCommit(minutes: 33, current: .untilAgentsSettle))
+    }
+
+    func testLeaveWatchDoesNotReplacePresetsWithLeftoverMinutes() {
+        XCTAssertFalse(
+            DurationPickerChrome.shouldCommitOnLeaveWatch(minutes: 33, current: .untilAgentsSettle)
+        )
+        XCTAssertFalse(
+            DurationPickerChrome.shouldCommitOnLeaveWatch(minutes: 1, current: .indefinite)
+        )
+        XCTAssertFalse(
+            DurationPickerChrome.shouldCommitOnLeaveWatch(minutes: 60, current: .oneHour)
+        )
+        XCTAssertFalse(
+            DurationPickerChrome.shouldCommitOnLeaveWatch(minutes: 33, current: .customMinutes(33))
+        )
+        XCTAssertTrue(
+            DurationPickerChrome.shouldCommitOnLeaveWatch(minutes: 40, current: .customMinutes(33))
+        )
     }
 
     func testBatterySliderChromeReadsThePreferencesRange() {

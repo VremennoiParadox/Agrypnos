@@ -175,14 +175,14 @@ extension PopoverController {
         minutesField.delegate = self
         minutesField.target = self
         minutesField.action = #selector(minutesCommitted(_:))
-        minutesField.cell?.sendsActionOnEndEditing = true
+        minutesField.cell?.sendsActionOnEndEditing = false
         minutesField.setAccessibilityLabel(AgrypnosCopy.minutesLabel)
         minutesField.frame = NSRect(x: contentW - ci - fieldW, y: 36, width: fieldW, height: 24)
         card.addSubview(minutesField)
         let chrome = DurationPickerChrome.make(duration: .indefinite)
         durationControl = NSSegmentedControl(
             labels: chrome.segmentTitles,
-            trackingMode: .selectOne,
+            trackingMode: .selectAny,
             target: self,
             action: #selector(durationChanged(_:))
         )
