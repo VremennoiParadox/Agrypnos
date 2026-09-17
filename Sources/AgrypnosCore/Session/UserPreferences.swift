@@ -26,7 +26,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
     public var lidOpenRampSeconds: Int
     /// Power toggle. Default on. Off skips only the thermal auto-off path.
     public var thermalAutoOff: Bool
-    /// Opt-in idle-after-wait POST. Default off. Secrets stay in Keychain, not here.
+    /// Opt-in idle-after-wait POST. Default off. Secrets stay out of this blob.
     public var notifEnabled: Bool
     /// Last time the watch ended, with why. Nil until a watch has ended on this Mac.
     public var lastWatchEnd: LastWatchEnd?

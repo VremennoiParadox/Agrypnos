@@ -71,11 +71,23 @@ public enum NotifEnableChrome: Sendable {
     public static var defaultEnabled: Bool { UserPreferences.default.notifEnabled }
 }
 
-public enum NotifClearChrome: Sendable {
-    public static let deletedAccounts = [
-        "secrets",
-        "discordWebhookURL",
-        "telegramBotToken",
-        "telegramChatId",
-    ]
+public enum SecretRevealChrome: Sendable {
+    public static let buttonWidthPoints = 22
+    public static let gapPoints = 4
+    public static let fieldMinWidthPoints = 80
+
+    public static func fieldWidth(total: Int) -> Int {
+        max(total - buttonWidthPoints - gapPoints, fieldMinWidthPoints)
+    }
+
+    public static func nextRevealed(_ revealed: Bool) -> Bool { !revealed }
+
+    public static func symbolName(revealed: Bool) -> String {
+        revealed ? "eye.slash" : "eye"
+    }
+}
+
+public enum NotifSecretsFileChrome: Sendable {
+    public static let folderName = "Agrypnos"
+    public static let fileName = "notif-secrets.json"
 }

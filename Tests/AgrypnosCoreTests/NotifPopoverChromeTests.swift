@@ -109,6 +109,22 @@ final class NotifPopoverChromeTests: XCTestCase {
         XCTAssertFalse(AgrypnosCopy.notifSaveFailed.lowercased().contains("saved."))
     }
 
+    func testSecretRevealButtonSitsBesideTheFieldAndStartsHidden() {
+        let total = 200
+        let field = SecretRevealChrome.fieldWidth(total: total)
+        XCTAssertEqual(
+            field + SecretRevealChrome.gapPoints + SecretRevealChrome.buttonWidthPoints,
+            total
+        )
+        XCTAssertGreaterThanOrEqual(field, SecretRevealChrome.fieldMinWidthPoints)
+        XCTAssertEqual(SecretRevealChrome.symbolName(revealed: false), "eye")
+        XCTAssertEqual(SecretRevealChrome.symbolName(revealed: true), "eye.slash")
+        XCTAssertTrue(SecretRevealChrome.nextRevealed(false))
+        XCTAssertFalse(SecretRevealChrome.nextRevealed(true))
+        XCTAssertEqual(AgrypnosCopy.notifRevealShow, "Show secret")
+        XCTAssertEqual(AgrypnosCopy.notifRevealHide, "Hide secret")
+    }
+
     func testTelegramHelpAndPlaceholdersSayWhereChatIdComesFrom() {
         let help = AgrypnosCopy.notifTelegramHelp.lowercased()
         XCTAssertTrue(help.contains("your telegram bot"))
@@ -129,14 +145,13 @@ final class NotifPopoverChromeTests: XCTestCase {
         XCTAssertFalse(AgrypnosCopy.notifDiscordPlaceholder.contains("discord.com/api/webhooks/"))
     }
 
-    func testClearSecretsCopyDeletesKeychainEntriesNotASharedBot() {
+    func testClearSecretsCopyDeletesSavedFileNotKeychain() {
         XCTAssertEqual(AgrypnosCopy.notifClear, "Clear secrets")
-        XCTAssertTrue(AgrypnosCopy.notifSetupHelp.lowercased().contains("keychain"))
         XCTAssertTrue(AgrypnosCopy.notifSetupHelp.lowercased().contains("clear secrets"))
-        XCTAssertEqual(
-            NotifClearChrome.deletedAccounts,
-            ["secrets", "discordWebhookURL", "telegramBotToken", "telegramChatId"]
-        )
+        XCTAssertFalse(AgrypnosCopy.notifSetupHelp.lowercased().contains("keychain"))
+        XCTAssertEqual(NotifSecretsFileChrome.folderName, "Agrypnos")
+        XCTAssertEqual(NotifSecretsFileChrome.fileName, "notif-secrets.json")
+        XCTAssertFalse(NotifSecretsFileChrome.fileName.contains("preferences"))
         XCTAssertNil(NotifOptionalSecretChrome.commit(""))
         XCTAssertEqual(NotifDiscordFieldChrome.commit(""), .clear)
     }
@@ -259,6 +274,8 @@ final class NotifPopoverChromeTests: XCTestCase {
             AgrypnosCopy.notifSetup,
             AgrypnosCopy.notifSetupHelp,
             AgrypnosCopy.notifClear,
+            AgrypnosCopy.notifRevealShow,
+            AgrypnosCopy.notifRevealHide,
             AgrypnosCopy.notifSaveFailed,
             AgrypnosCopy.notifDiscordPostFailed,
             AgrypnosCopy.notifTelegramPostFailed,
@@ -270,6 +287,9 @@ final class NotifPopoverChromeTests: XCTestCase {
         XCTAssertTrue(blob.contains("your telegram bot"))
         XCTAssertTrue(blob.contains("does not run a shared bot"))
         XCTAssertTrue(blob.contains("idle after the wait") || blob.contains("idle after wait"))
+        XCTAssertTrue(blob.contains("show secret"))
+        XCTAssertTrue(blob.contains("hide secret"))
+        XCTAssertFalse(blob.contains("keychain"))
         for banned in [
             "we notify your phone",
             "notify your phone",
@@ -277,6 +297,7 @@ final class NotifPopoverChromeTests: XCTestCase {
             "job finished",
             "still thinking",
             "agent finished",
+            "login keychain",
         ] {
             XCTAssertFalse(blob.contains(banned), "banned phrase in Notif chrome copy: \(banned)")
         }

@@ -77,9 +77,9 @@ Still locked until after Mac prove: status-item remaining time, per-tool Agents 
 
 Opt-in. Default **off**. One-way outbound only: a **one-shot POST** when Agents mode is armed, Agrypnos has seen a **local busy signal this arm**, and those signals then stay quiet through the idle wait. The event is **idle after wait** — not “agent stopped,” not “job finished,” not “still thinking.” Timer, battery, thermal, Low Power Mode, and manual off do not send this POST. If nothing was busy this arm, nothing is sent.
 
-Core decides; the Mac adapter POSTs to **your** Discord incoming webhook and/or **your** Telegram bot when Notif is on and the matching Keychain secrets are set. Paste those secrets in the popover **Notif** section and turn the opt-in on. Discord POSTs only if a URL is set. Telegram POSTs only if both token and chat id are set. In-app help in that section has the same steps as below.
+Core decides; the Mac adapter POSTs to **your** Discord incoming webhook and/or **your** Telegram bot when Notif is on and the matching secrets are set. Paste those secrets in the popover **Notif** section and turn the opt-in on. Discord POSTs only if a URL is set. Telegram POSTs only if both token and chat id are set. Fields show dots; the eye button reveals a paste so you can check it. In-app help in that section has the same steps as below.
 
-You own the destination. Agrypnos does not run a shared bot, a companion app, or telemetry. Secrets live in Keychain — never in plaintext prefs, logs, or example URLs in this file.
+You own the destination. Agrypnos does not run a shared bot, a companion app, or telemetry. Secrets live in Application Support — never Keychain (that login-password prompt), never plaintext prefs, logs, or example URLs in this file.
 
 ### Discord — your incoming webhook
 
@@ -132,7 +132,7 @@ Use one channel, or both. Leave a field empty if you do not use that channel. No
 ### Turn off / clear secrets
 
 - Switch **Notif** off in the popover. POSTs stop. Default is off.
-- Use **Clear secrets** in the Notif section to delete Keychain entries (webhook URL, bot token, chat id).
+- Use **Clear secrets** in the Notif section to delete the saved webhook URL, bot token, and chat id.
 - On Discord you can also delete the webhook: **Server Settings → Integrations → Webhooks**.
 - On Telegram you can revoke or delete the bot in BotFather (`/revoke` or `/deletebot`).
 

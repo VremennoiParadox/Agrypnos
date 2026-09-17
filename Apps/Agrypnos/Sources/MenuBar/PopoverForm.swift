@@ -179,33 +179,23 @@ enum PopoverForm {
         x: CGFloat,
         width: CGFloat,
         placeholder: String,
-        secure: Bool,
         label: String,
         help: String,
         target: AnyObject,
         action: Selector,
         delegate: NSTextFieldDelegate
-    ) -> NSTextField {
-        let field: NSTextField = secure
-            ? PopoverSecureTextField(string: "")
-            : PopoverTextField(string: "")
-        field.placeholderString = placeholder
-        field.font = .systemFont(ofSize: 13)
-        field.isBezeled = true
-        field.bezelStyle = .roundedBezel
-        field.isEditable = true
-        field.isSelectable = true
-        field.usesSingleLineMode = true
-        field.cell?.isScrollable = true
-        field.delegate = delegate
-        field.target = target
-        field.action = action
-        field.cell?.sendsActionOnEndEditing = true
-        field.setAccessibilityLabel(label)
-        field.setAccessibilityHelp(help)
-        field.frame = NSRect(x: x, y: y, width: width, height: 24)
-        card.addSubview(field)
-        return field
+    ) -> SecretRevealRow {
+        let row = SecretRevealRow(
+            frame: NSRect(x: x, y: y, width: width, height: 24),
+            placeholder: placeholder,
+            label: label,
+            help: help,
+            target: target,
+            action: action,
+            delegate: delegate
+        )
+        card.addSubview(row)
+        return row
     }
 
     static func labeledSecretField(
@@ -215,13 +205,12 @@ enum PopoverForm {
         width: CGFloat,
         caption: String,
         placeholder: String,
-        secure: Bool,
         label: String,
         help: String,
         target: AnyObject,
         action: Selector,
         delegate: NSTextFieldDelegate
-    ) -> NSTextField {
+    ) -> SecretRevealRow {
         let labelW = CGFloat(PopoverCopyLayout.secretFieldLabelWidthPoints)
         let captionField = LabelFactory.make(caption, font: .systemFont(ofSize: 13), color: .labelColor)
         captionField.frame = NSRect(
@@ -237,13 +226,143 @@ enum PopoverForm {
             x: x + labelW + 8,
             width: max(width - labelW - 8, 80),
             placeholder: placeholder,
-            secure: secure,
             label: label,
             help: help,
             target: target,
             action: action,
             delegate: delegate
         )
+    }
+}
+
+/// Dots by default. Eye button swaps in a plain field so the user can check a paste.
+@MainActor
+final class SecretRevealRow: NSView {
+    private let secureField = PopoverSecureTextField(string: "")
+    private let plainField = PopoverTextField(string: "")
+    private let revealButton = NSButton(title: "", target: nil, action: nil)
+    private var isRevealed = false
+
+    override var isFlipped: Bool { true }
+
+    var field: NSTextField { isRevealed ? plainField : secureField }
+
+    var stringValue: String {
+        get { field.stringValue }
+        set {
+            secureField.stringValue = newValue
+            plainField.stringValue = newValue
+        }
+    }
+
+    func contains(_ field: NSTextField) -> Bool {
+        field === secureField || field === plainField
+    }
+
+    init(
+        frame: NSRect,
+        placeholder: String,
+        label: String,
+        help: String,
+        target: AnyObject,
+        action: Selector,
+        delegate: NSTextFieldDelegate
+    ) {
+        super.init(frame: frame)
+        configure(
+            secureField,
+            placeholder: placeholder,
+            label: label,
+            help: help,
+            target: target,
+            action: action,
+            delegate: delegate
+        )
+        configure(
+            plainField,
+            placeholder: placeholder,
+            label: label,
+            help: help,
+            target: target,
+            action: action,
+            delegate: delegate
+        )
+        let fieldW = CGFloat(SecretRevealChrome.fieldWidth(total: Int(frame.width.rounded(.down))))
+        let fieldFrame = NSRect(x: 0, y: 0, width: fieldW, height: frame.height)
+        secureField.frame = fieldFrame
+        plainField.frame = fieldFrame
+        plainField.isHidden = true
+        addSubview(secureField)
+        addSubview(plainField)
+
+        revealButton.target = self
+        revealButton.action = #selector(toggleReveal)
+        revealButton.bezelStyle = .inline
+        revealButton.isBordered = false
+        revealButton.imagePosition = .imageOnly
+        revealButton.frame = NSRect(
+            x: fieldW + CGFloat(SecretRevealChrome.gapPoints),
+            y: 0,
+            width: CGFloat(SecretRevealChrome.buttonWidthPoints),
+            height: frame.height
+        )
+        applyRevealChrome()
+        addSubview(revealButton)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { nil }
+
+    @objc private func toggleReveal() {
+        let editing = field.currentEditor() != nil
+        if let editor = field.currentEditor() as? NSText {
+            field.stringValue = editor.string
+        }
+        let value = field.stringValue
+        field.isHidden = true
+        isRevealed = SecretRevealChrome.nextRevealed(isRevealed)
+        stringValue = value
+        field.isHidden = false
+        applyRevealChrome()
+        if editing {
+            window?.makeFirstResponder(field)
+        }
+    }
+
+    private func applyRevealChrome() {
+        let access = isRevealed ? AgrypnosCopy.notifRevealHide : AgrypnosCopy.notifRevealShow
+        let name = SecretRevealChrome.symbolName(revealed: isRevealed)
+        let image = NSImage(systemSymbolName: name, accessibilityDescription: access)
+        image?.isTemplate = true
+        revealButton.image = image
+        revealButton.contentTintColor = .secondaryLabelColor
+        revealButton.setAccessibilityLabel(access)
+        revealButton.toolTip = access
+    }
+
+    private func configure(
+        _ field: NSTextField,
+        placeholder: String,
+        label: String,
+        help: String,
+        target: AnyObject,
+        action: Selector,
+        delegate: NSTextFieldDelegate
+    ) {
+        field.placeholderString = placeholder
+        field.font = .systemFont(ofSize: 13)
+        field.isBezeled = true
+        field.bezelStyle = .roundedBezel
+        field.isEditable = true
+        field.isSelectable = true
+        field.usesSingleLineMode = true
+        field.cell?.isScrollable = true
+        field.delegate = delegate
+        field.target = target
+        field.action = action
+        field.cell?.sendsActionOnEndEditing = true
+        field.setAccessibilityLabel(label)
+        field.setAccessibilityHelp(help)
     }
 }
 

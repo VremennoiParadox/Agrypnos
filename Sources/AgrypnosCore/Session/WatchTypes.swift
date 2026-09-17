@@ -8,7 +8,7 @@ public enum WatchCommand: Equatable, Sendable {
     case rampBrightnessRestore
     /// Lid already shut: dropping SleepDisabled does not start sleep; ask the Mac to.
     case requestSleep
-    /// One-shot outbound after Agents idle-after-wait. Mac reads Keychain and POSTs.
+    /// One-shot outbound after Agents idle-after-wait. Mac reads secrets and POSTs.
     case postIdleAfterWaitNotif
 }
 

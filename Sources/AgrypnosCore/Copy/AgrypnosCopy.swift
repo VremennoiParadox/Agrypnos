@@ -156,6 +156,8 @@ public enum AgrypnosCopy: Sendable {
     public static let notifTelegramHelp =
         "Message your Telegram bot. Needs token; chat id from getUpdates. Agrypnos does not run a shared bot."
     public static let notifClear = "Clear secrets"
+    public static let notifRevealShow = "Show secret"
+    public static let notifRevealHide = "Hide secret"
     public static let notifSaveFailed = "Couldn't save that secret."
     public static let notifDiscordPostFailed = "Couldn't POST to your webhook."
     public static let notifTelegramPostFailed = "Couldn't message your Telegram bot."
@@ -167,7 +169,7 @@ public enum AgrypnosCopy: Sendable {
         "That is not a Discord webhook URL. Nothing was saved."
     public static let notifSetup = "Setup"
     public static let notifSetupHelp =
-        "Discord: Server Settings → Integrations → Webhooks → New Webhook → copy URL → paste above. Empty skips Discord. Telegram: @BotFather /newbot → token. Message the bot. Chat id from https://api.telegram.org/botYOUR_TOKEN/getUpdates — find \"chat\":{\"id\":. Empty result: message the bot, then reload. Paste token + chat id. Test: turn Notif on, save secrets, arm Agents, produce a local busy signal, wait the idle wait, expect one POST to your webhook and/or your Telegram bot. The event is idle after wait. Off: switch Notif off. Clear secrets deletes the Keychain entries."
+        "Discord: Server Settings → Integrations → Webhooks → New Webhook → copy URL → paste above. Empty skips Discord. Telegram: @BotFather /newbot → token. Message the bot. Chat id from https://api.telegram.org/botYOUR_TOKEN/getUpdates — find \"chat\":{\"id\":. Empty result: message the bot, then reload. Paste token + chat id. Test: turn Notif on, save secrets, arm Agents, produce a local busy signal, wait the idle wait, expect one POST to your webhook and/or your Telegram bot. The event is idle after wait. Off: switch Notif off. Clear secrets deletes those saved values."
     public static let notifIdleBody =
         "Agrypnos: local busy signals went idle after the wait."
     public static let menuTooltipOff = "Agrypnos: watch is off."

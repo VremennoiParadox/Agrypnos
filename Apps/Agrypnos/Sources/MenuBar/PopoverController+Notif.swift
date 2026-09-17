@@ -46,13 +46,12 @@ extension PopoverController {
             x: ci,
             width: cw
         )
-        discordField = PopoverForm.secretField(
+        discordSecrets = PopoverForm.secretField(
             in: card,
             y: CGFloat(PopoverStackLayout.notifDiscordFieldY),
             x: ci,
             width: cw,
             placeholder: AgrypnosCopy.notifDiscordPlaceholder,
-            secure: true,
             label: AgrypnosCopy.notifDiscord,
             help: AgrypnosCopy.notifDiscordHelp,
             target: self,
@@ -85,28 +84,26 @@ extension PopoverController {
             width: cw,
             lines: PopoverCopyLayout.notifTelegramHelpMaxLines
         )
-        telegramTokenField = PopoverForm.labeledSecretField(
+        telegramTokenSecrets = PopoverForm.labeledSecretField(
             in: card,
             y: CGFloat(PopoverStackLayout.notifTelegramTokenY),
             x: ci,
             width: cw,
             caption: AgrypnosCopy.notifTelegramTokenShort,
             placeholder: AgrypnosCopy.notifTelegramTokenPlaceholder,
-            secure: true,
             label: AgrypnosCopy.notifTelegramToken,
             help: AgrypnosCopy.notifTelegramHelp,
             target: self,
             action: #selector(telegramTokenCommitted(_:)),
             delegate: self
         )
-        telegramChatField = PopoverForm.labeledSecretField(
+        telegramChatSecrets = PopoverForm.labeledSecretField(
             in: card,
             y: CGFloat(PopoverStackLayout.notifTelegramChatY),
             x: ci,
             width: cw,
             caption: AgrypnosCopy.notifTelegramChatShort,
             placeholder: AgrypnosCopy.notifTelegramChatPlaceholder,
-            secure: false,
             label: AgrypnosCopy.notifTelegramChatId,
             help: AgrypnosCopy.notifTelegramHelp,
             target: self,
@@ -153,20 +150,20 @@ extension PopoverController {
     func loadNotifSecretFields() {
         guard let runtime else { return }
         let secrets = runtime.notifSecrets()
-        discordField?.stringValue = secrets.discordWebhookURL ?? ""
-        telegramTokenField?.stringValue = secrets.telegramBotToken ?? ""
-        telegramChatField?.stringValue = secrets.telegramChatId ?? ""
+        discordSecrets?.stringValue = secrets.discordWebhookURL ?? ""
+        telegramTokenSecrets?.stringValue = secrets.telegramBotToken ?? ""
+        telegramChatSecrets?.stringValue = secrets.telegramChatId ?? ""
         discordInvalid = false
         discordStatus?.stringValue = ""
     }
 
     func commitNotifFields() {
-        flushSecretFieldEditor(discordField)
-        flushSecretFieldEditor(telegramTokenField)
-        flushSecretFieldEditor(telegramChatField)
-        if let discordField { discordCommitted(discordField) }
-        if let telegramTokenField { telegramTokenCommitted(telegramTokenField) }
-        if let telegramChatField { telegramChatCommitted(telegramChatField) }
+        flushSecretFieldEditor(discordSecrets?.field)
+        flushSecretFieldEditor(telegramTokenSecrets?.field)
+        flushSecretFieldEditor(telegramChatSecrets?.field)
+        if let discordSecrets { discordCommitted(discordSecrets.field) }
+        if let telegramTokenSecrets { telegramTokenCommitted(telegramTokenSecrets.field) }
+        if let telegramChatSecrets { telegramChatCommitted(telegramChatSecrets.field) }
     }
 
     func flushSecretFieldEditor(_ field: NSTextField?) {
@@ -187,12 +184,12 @@ extension PopoverController {
         case .persist(let url):
             discordInvalid = false
             let saved = runtime?.setNotifDiscordWebhookURL(url) ?? true
-            sender.stringValue = url
+            discordSecrets.stringValue = url
             if !saved {
                 UserNotify.post(AgrypnosCopy.notifSaveFailed)
             }
         case .clear:
-            break // empty: do not delete Keychain
+            break // empty: keep the stored secret
         case .reject:
             discordInvalid = true
             UserNotify.post(AgrypnosCopy.notifDiscordInvalid)
@@ -206,12 +203,12 @@ extension PopoverController {
         switch TelegramBotTokenChrome.commit(sender.stringValue) {
         case .persist(let token):
             let saved = runtime?.setNotifTelegramBotToken(token) ?? true
-            sender.stringValue = token
+            telegramTokenSecrets.stringValue = token
             if !saved {
                 UserNotify.post(AgrypnosCopy.notifSaveFailed)
             }
         case .clear:
-            break // empty: do not delete Keychain
+            break // empty: keep the stored secret
         case .reject:
             UserNotify.post(AgrypnosCopy.notifTelegramTokenInvalid)
         }
@@ -223,12 +220,12 @@ extension PopoverController {
         switch TelegramChatIdChrome.commit(sender.stringValue) {
         case .persist(let id):
             let saved = runtime?.setNotifTelegramChatId(id) ?? true
-            sender.stringValue = id
+            telegramChatSecrets.stringValue = id
             if !saved {
                 UserNotify.post(AgrypnosCopy.notifSaveFailed)
             }
         case .clear:
-            break // empty: do not delete Keychain
+            break // empty: keep the stored secret
         case .reject:
             UserNotify.post(AgrypnosCopy.notifTelegramChatInvalid)
         }
@@ -238,9 +235,9 @@ extension PopoverController {
         stopRecordingIfNeeded()
         runtime?.clearNotifSecrets()
         discordInvalid = false
-        discordField?.stringValue = ""
-        telegramTokenField?.stringValue = ""
-        telegramChatField?.stringValue = ""
+        discordSecrets?.stringValue = ""
+        telegramTokenSecrets?.stringValue = ""
+        telegramChatSecrets?.stringValue = ""
         discordStatus?.stringValue = ""
     }
 }
