@@ -139,52 +139,17 @@ final class NotifPopoverChromeTests: XCTestCase {
         )
     }
 
-    func testPastedSecretOnceCollapsesAnExactDoublePaste() {
-        XCTAssertEqual(PastedSecretChrome.once("57281263295728126329"), "5728126329")
-        let token = "111:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-        XCTAssertEqual(PastedSecretChrome.once(token + token), token)
-        XCTAssertEqual(PastedSecretChrome.once(token), token)
-        let url = "https://discord.com/api/webhooks/1/abc"
-        XCTAssertEqual(PastedSecretChrome.once(url + url), url)
-        XCTAssertEqual(PastedSecretChrome.once("abc"), "abc")
-        XCTAssertEqual(PastedSecretChrome.once(""), "")
-        XCTAssertEqual(PastedSecretChrome.once("12121212"), "1212")
-        XCTAssertGreaterThanOrEqual(PastedSecretChrome.minimumOnceCount, 8)
-    }
-
-    func testPopoverEditKeyDoesNotSendPasteFromALocalMonitor() {
-        XCTAssertFalse(PopoverEditKeyChrome.sendsEditActionsFromLocalMonitor)
-        XCTAssertEqual(PopoverEditKeyChrome.menuPaste, "v")
-        XCTAssertEqual(PopoverEditKeyChrome.menuCopy, "c")
-        XCTAssertEqual(PopoverEditKeyChrome.menuCut, "x")
-        XCTAssertEqual(PopoverEditKeyChrome.menuSelectAll, "a")
-    }
-
-    func testTelegramChatIdKeepsOneCopyWhenPasteDoubles() {
+    func testTelegramChatIdPersistsNumericIdsAndRejectsJunk() {
         XCTAssertEqual(TelegramChatIdChrome.commit("5728126329"), .persist("5728126329"))
         XCTAssertEqual(TelegramChatIdChrome.commit("  -1001234567890  "), .persist("-1001234567890"))
         XCTAssertEqual(TelegramChatIdChrome.commit(""), .clear)
         XCTAssertEqual(TelegramChatIdChrome.commit("   "), .clear)
-        XCTAssertEqual(
-            TelegramChatIdChrome.commit("57281263295728126329"),
-            .persist("5728126329")
-        )
         XCTAssertEqual(TelegramChatIdChrome.commit("not-a-id"), .reject)
         XCTAssertEqual(TelegramChatIdChrome.commit("@channel"), .reject)
     }
 
-    func testTelegramBotTokenCommitTakesOneCopyWhenPasteDoubles() {
-        let token = "111:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-        XCTAssertEqual(TelegramBotTokenChrome.commit(token + token), .persist(token))
-        XCTAssertEqual(
-            TelegramBotTokenChrome.commit(token + "\n" + token),
-            .persist(token)
-        )
-    }
-
-    func testDiscordCommitTakesOneCopyWhenPasteDoubles() {
-        let url = "https://discord.com/api/webhooks/1/abc"
-        XCTAssertEqual(NotifDiscordFieldChrome.commit(url + url), .persist(url))
+    func testTelegramChatIdKeepsAPalindromicEvenLengthId() {
+        XCTAssertEqual(TelegramChatIdChrome.commit("12121212"), .persist("12121212"))
     }
 
     func testTelegramFieldsHaveVisibleTokenAndChatIdCaptions() {

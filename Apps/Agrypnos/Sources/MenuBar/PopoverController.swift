@@ -17,7 +17,6 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     let popover = NSPopover()
     weak var runtime: WatchRuntime?
     private var clickMonitor: Any?
-    private var keyMonitor: Any?
     private var countdown: Timer?
 
     var watchSwitch: NSSwitch!
@@ -175,11 +174,6 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             self?.close()
         }
-        if PopoverEditKeyChrome.sendsEditActionsFromLocalMonitor {
-            keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-                self?.handleEditKey(event) ?? event
-            }
-        }
     }
 
     func close() {
@@ -195,10 +189,6 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         if let clickMonitor {
             NSEvent.removeMonitor(clickMonitor)
             self.clickMonitor = nil
-        }
-        if let keyMonitor {
-            NSEvent.removeMonitor(keyMonitor)
-            self.keyMonitor = nil
         }
     }
 
@@ -256,27 +246,6 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
             recorder.stop()
             runtime?.restoreSuspendedHotkey()
         }
-    }
-
-    /// Hidden Edit menu already pastes. Sending paste here too inserts twice.
-    private func handleEditKey(_ event: NSEvent) -> NSEvent? {
-        guard PopoverEditKeyChrome.sendsEditActionsFromLocalMonitor else { return event }
-        guard popover.isShown, !recorder.isRecording else { return event }
-        let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-        guard flags.contains(.command),
-              !flags.contains(.option),
-              !flags.contains(.control),
-              !flags.contains(.shift)
-        else { return event }
-        let action: Selector
-        switch event.charactersIgnoringModifiers?.lowercased() {
-        case "v": action = #selector(NSText.paste(_:))
-        case "c": action = #selector(NSText.copy(_:))
-        case "x": action = #selector(NSText.cut(_:))
-        case "a": action = #selector(NSText.selectAll(_:))
-        default: return event
-        }
-        return NSApp.sendAction(action, to: nil, from: nil) ? nil : event
     }
 
     private func commitMinutesIfChanged(onLeaveWatch: Bool = false) {

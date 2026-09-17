@@ -1,20 +1,5 @@
 import Foundation
 
-/// Cmd+V in the popover used to insert the clipboard twice.
-public enum PastedSecretChrome: Sendable {
-    public static let minimumOnceCount = 8
-
-    public static func once(_ raw: String) -> String {
-        guard raw.count >= minimumOnceCount, raw.count.isMultiple(of: 2) else {
-            return raw
-        }
-        let mid = raw.index(raw.startIndex, offsetBy: raw.count / 2)
-        let left = String(raw[..<mid])
-        let right = String(raw[mid...])
-        return left == right ? left : raw
-    }
-}
-
 public enum NotifDiscordFieldCommit: Equatable, Sendable {
     case persist(String)
     case clear
@@ -23,9 +8,7 @@ public enum NotifDiscordFieldCommit: Equatable, Sendable {
 
 public enum NotifDiscordFieldChrome: Sendable {
     public static func commit(_ raw: String) -> NotifDiscordFieldCommit {
-        let trimmed = PastedSecretChrome.once(
-            raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        )
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty { return .clear }
         guard let url = DiscordWebhookURL.parse(trimmed) else { return .reject }
         return .persist(url.absoluteString)
@@ -47,10 +30,8 @@ public enum TelegramBotTokenChrome: Sendable {
     )
 
     public static func commit(_ raw: String) -> NotifDiscordFieldCommit {
-        let trimmed = PastedSecretChrome.once(
-            raw.replacingOccurrences(of: "\u{ff1a}", with: ":")
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-        )
+        let trimmed = raw.replacingOccurrences(of: "\u{ff1a}", with: ":")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty { return .clear }
         let ns = trimmed as NSString
         let matches = tokenPattern.matches(
@@ -66,9 +47,7 @@ public enum TelegramBotTokenChrome: Sendable {
 
 public enum TelegramChatIdChrome: Sendable {
     public static func commit(_ raw: String) -> NotifDiscordFieldCommit {
-        let trimmed = PastedSecretChrome.once(
-            raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        )
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty { return .clear }
         guard isChatId(trimmed) else { return .reject }
         return .persist(trimmed)
