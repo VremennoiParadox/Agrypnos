@@ -1,3 +1,5 @@
+import Foundation
+
 public enum AgrypnosCopy: Sendable {
     public static let appName = "Agrypnos"
     public static let keepWatch = "Keep the watch"
@@ -97,6 +99,43 @@ public enum AgrypnosCopy: Sendable {
         case .agentsSettled: return agentsEnded
         case .lowPowerMode: return lpmEnded
         }
+    }
+
+    public static let lastWatchEndNone = "No watch has ended yet."
+
+    public static func lastWatchEndReason(_ reason: DisengageReason) -> String {
+        switch reason {
+        case .user: return "you turned it off"
+        case .timerExpired: return "the timer ended"
+        case .batteryFloor: return "the battery floor was reached"
+        case .thermal: return "thermal pressure turned the watch off"
+        case .agentsSettled: return "local busy signals stayed idle after the wait"
+        case .lowPowerMode: return "Low Power Mode was on"
+        }
+    }
+
+    public static func lastWatchEndCaption(when: String, reason: DisengageReason) -> String {
+        "Last watch ended at \(when), because \(lastWatchEndReason(reason))."
+    }
+
+    public static func lastWatchEndClock(
+        endedAt: Date, now: Date, calendar: Calendar = .current, locale: Locale = .current
+    ) -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = calendar
+        formatter.locale = locale
+        formatter.timeZone = calendar.timeZone
+        formatter.timeStyle = .short
+        formatter.dateStyle = calendar.isDate(endedAt, inSameDayAs: now) ? .none : .medium
+        return formatter.string(from: endedAt)
+    }
+
+    public static func lastWatchEndCaption(
+        event: LastWatchEnd?, now: Date, calendar: Calendar = .current, locale: Locale = .current
+    ) -> String {
+        guard let event else { return lastWatchEndNone }
+        let when = lastWatchEndClock(endedAt: event.endedAt, now: now, calendar: calendar, locale: locale)
+        return lastWatchEndCaption(when: when, reason: event.reason)
     }
 
     public static let leftoverNotify =

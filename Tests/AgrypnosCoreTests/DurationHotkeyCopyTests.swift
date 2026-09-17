@@ -490,6 +490,13 @@ final class AgrypnosCopyTests: XCTestCase {
             AgrypnosCopy.notification(for: .thermal),
             AgrypnosCopy.notification(for: .agentsSettled),
             AgrypnosCopy.notification(for: .lowPowerMode),
+            AgrypnosCopy.lastWatchEndNone,
+            AgrypnosCopy.lastWatchEndCaption(when: "23:04", reason: .user),
+            AgrypnosCopy.lastWatchEndCaption(when: "23:04", reason: .timerExpired),
+            AgrypnosCopy.lastWatchEndCaption(when: "23:04", reason: .batteryFloor),
+            AgrypnosCopy.lastWatchEndCaption(when: "23:04", reason: .thermal),
+            AgrypnosCopy.lastWatchEndCaption(when: "23:04", reason: .agentsSettled),
+            AgrypnosCopy.lastWatchEndCaption(when: "23:04", reason: .lowPowerMode),
         ]
     }
 
