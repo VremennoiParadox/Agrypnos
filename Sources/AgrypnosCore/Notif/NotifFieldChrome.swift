@@ -1,13 +1,13 @@
 import Foundation
 
-public enum NotifDiscordFieldCommit: Equatable, Sendable {
+public enum NotifFieldCommit: Equatable, Sendable {
     case persist(String)
     case clear
     case reject
 }
 
 public enum NotifDiscordFieldChrome: Sendable {
-    public static func commit(_ raw: String) -> NotifDiscordFieldCommit {
+    public static func commit(_ raw: String) -> NotifFieldCommit {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty { return .clear }
         guard let url = DiscordWebhookURL.parse(trimmed) else { return .reject }
@@ -29,7 +29,7 @@ public enum TelegramBotTokenChrome: Sendable {
         pattern: "[0-9]+:[A-Za-z0-9_-]{\(secretMinimumCount),}"
     )
 
-    public static func commit(_ raw: String) -> NotifDiscordFieldCommit {
+    public static func commit(_ raw: String) -> NotifFieldCommit {
         let trimmed = raw.replacingOccurrences(of: "\u{ff1a}", with: ":")
             .trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty { return .clear }
@@ -46,7 +46,7 @@ public enum TelegramBotTokenChrome: Sendable {
 }
 
 public enum TelegramChatIdChrome: Sendable {
-    public static func commit(_ raw: String) -> NotifDiscordFieldCommit {
+    public static func commit(_ raw: String) -> NotifFieldCommit {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty { return .clear }
         guard isChatId(trimmed) else { return .reject }
@@ -78,31 +78,4 @@ public enum NotifClearChrome: Sendable {
         "telegramBotToken",
         "telegramChatId",
     ]
-}
-
-public enum NotifSecretStoreAction: Equatable, Sendable {
-    case persist(String)
-    case skip
-    case reject
-}
-
-/// Empty Notif fields on tab leave / end-editing must not delete Keychain secrets.
-/// Clear secrets is the delete path. Unsaved draft stays in the field when store is empty.
-public enum NotifSecretLeaveChrome: Sendable {
-    public static func storeAction(_ commit: NotifDiscordFieldCommit) -> NotifSecretStoreAction {
-        switch commit {
-        case .persist(let value): return .persist(value)
-        case .clear: return .skip
-        case .reject: return .reject
-        }
-    }
-
-    public static func storeAction(_ trimmed: String?) -> NotifSecretStoreAction {
-        guard let trimmed else { return .skip }
-        return .persist(trimmed)
-    }
-
-    public static func displayed(stored: String?, field: String) -> String {
-        stored ?? field
-    }
 }

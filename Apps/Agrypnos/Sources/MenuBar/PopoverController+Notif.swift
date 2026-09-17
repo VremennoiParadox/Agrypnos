@@ -52,6 +52,7 @@ extension PopoverController {
             x: ci,
             width: cw,
             placeholder: AgrypnosCopy.notifDiscordPlaceholder,
+            secure: true,
             label: AgrypnosCopy.notifDiscord,
             help: AgrypnosCopy.notifDiscordHelp,
             target: self,
@@ -91,6 +92,7 @@ extension PopoverController {
             width: cw,
             caption: AgrypnosCopy.notifTelegramTokenShort,
             placeholder: AgrypnosCopy.notifTelegramTokenPlaceholder,
+            secure: true,
             label: AgrypnosCopy.notifTelegramToken,
             help: AgrypnosCopy.notifTelegramHelp,
             target: self,
@@ -104,6 +106,7 @@ extension PopoverController {
             width: cw,
             caption: AgrypnosCopy.notifTelegramChatShort,
             placeholder: AgrypnosCopy.notifTelegramChatPlaceholder,
+            secure: false,
             label: AgrypnosCopy.notifTelegramChatId,
             help: AgrypnosCopy.notifTelegramHelp,
             target: self,
@@ -180,7 +183,7 @@ extension PopoverController {
     @objc func discordCommitted(_ sender: NSTextField) {
         stopRecordingIfNeeded()
         flushSecretFieldEditor(sender)
-        switch NotifSecretLeaveChrome.storeAction(NotifDiscordFieldChrome.commit(sender.stringValue)) {
+        switch NotifDiscordFieldChrome.commit(sender.stringValue) {
         case .persist(let url):
             discordInvalid = false
             let saved = runtime?.setNotifDiscordWebhookURL(url) ?? true
@@ -188,8 +191,8 @@ extension PopoverController {
             if !saved {
                 UserNotify.post(AgrypnosCopy.notifSaveFailed)
             }
-        case .skip:
-            break
+        case .clear:
+            break // empty: do not delete Keychain
         case .reject:
             discordInvalid = true
             UserNotify.post(AgrypnosCopy.notifDiscordInvalid)
@@ -200,15 +203,15 @@ extension PopoverController {
     @objc func telegramTokenCommitted(_ sender: NSTextField) {
         stopRecordingIfNeeded()
         flushSecretFieldEditor(sender)
-        switch NotifSecretLeaveChrome.storeAction(TelegramBotTokenChrome.commit(sender.stringValue)) {
+        switch TelegramBotTokenChrome.commit(sender.stringValue) {
         case .persist(let token):
             let saved = runtime?.setNotifTelegramBotToken(token) ?? true
             sender.stringValue = token
             if !saved {
                 UserNotify.post(AgrypnosCopy.notifSaveFailed)
             }
-        case .skip:
-            break
+        case .clear:
+            break // empty: do not delete Keychain
         case .reject:
             UserNotify.post(AgrypnosCopy.notifTelegramTokenInvalid)
         }
@@ -217,15 +220,15 @@ extension PopoverController {
     @objc func telegramChatCommitted(_ sender: NSTextField) {
         stopRecordingIfNeeded()
         flushSecretFieldEditor(sender)
-        switch NotifSecretLeaveChrome.storeAction(TelegramChatIdChrome.commit(sender.stringValue)) {
+        switch TelegramChatIdChrome.commit(sender.stringValue) {
         case .persist(let id):
             let saved = runtime?.setNotifTelegramChatId(id) ?? true
             sender.stringValue = id
             if !saved {
                 UserNotify.post(AgrypnosCopy.notifSaveFailed)
             }
-        case .skip:
-            break
+        case .clear:
+            break // empty: do not delete Keychain
         case .reject:
             UserNotify.post(AgrypnosCopy.notifTelegramChatInvalid)
         }

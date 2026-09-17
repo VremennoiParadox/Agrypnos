@@ -179,13 +179,16 @@ enum PopoverForm {
         x: CGFloat,
         width: CGFloat,
         placeholder: String,
+        secure: Bool,
         label: String,
         help: String,
         target: AnyObject,
         action: Selector,
         delegate: NSTextFieldDelegate
     ) -> NSTextField {
-        let field = PopoverTextField(string: "")
+        let field: NSTextField = secure
+            ? PopoverSecureTextField(string: "")
+            : PopoverTextField(string: "")
         field.placeholderString = placeholder
         field.font = .systemFont(ofSize: 13)
         field.isBezeled = true
@@ -212,6 +215,7 @@ enum PopoverForm {
         width: CGFloat,
         caption: String,
         placeholder: String,
+        secure: Bool,
         label: String,
         help: String,
         target: AnyObject,
@@ -233,6 +237,7 @@ enum PopoverForm {
             x: x + labelW + 8,
             width: max(width - labelW - 8, 80),
             placeholder: placeholder,
+            secure: secure,
             label: label,
             help: help,
             target: target,
@@ -250,14 +255,27 @@ final class PopoverTextField: NSTextField {
         NSApp.activate(ignoringOtherApps: true)
         window?.makeKey()
         let ok = super.becomeFirstResponder()
-        if let editor = currentEditor() as? NSTextView {
-            editor.isAutomaticQuoteSubstitutionEnabled = false
-            editor.isAutomaticDashSubstitutionEnabled = false
-            editor.isAutomaticTextReplacementEnabled = false
-            editor.isAutomaticSpellingCorrectionEnabled = false
-            editor.isContinuousSpellCheckingEnabled = false
-            editor.allowsUndo = true
-        }
+        disarmSmartQuotes(in: currentEditor() as? NSTextView)
         return ok
     }
+}
+
+final class PopoverSecureTextField: NSSecureTextField {
+    override func becomeFirstResponder() -> Bool {
+        NSApp.activate(ignoringOtherApps: true)
+        window?.makeKey()
+        let ok = super.becomeFirstResponder()
+        disarmSmartQuotes(in: currentEditor() as? NSTextView)
+        return ok
+    }
+}
+
+private func disarmSmartQuotes(in editor: NSTextView?) {
+    guard let editor else { return }
+    editor.isAutomaticQuoteSubstitutionEnabled = false
+    editor.isAutomaticDashSubstitutionEnabled = false
+    editor.isAutomaticTextReplacementEnabled = false
+    editor.isAutomaticSpellingCorrectionEnabled = false
+    editor.isContinuousSpellCheckingEnabled = false
+    editor.allowsUndo = true
 }

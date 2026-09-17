@@ -23,58 +23,6 @@ final class NotifPopoverChromeTests: XCTestCase {
         XCTAssertEqual(NotifEnableChrome.defaultEnabled, UserPreferences.default.notifEnabled)
     }
 
-    func testLeavingNotifDoesNotWipeASecretOnEmptyAndKeepsAnUnsavedDraft() {
-        XCTAssertEqual(
-            NotifSecretLeaveChrome.storeAction(NotifDiscordFieldChrome.commit("")),
-            .skip
-        )
-        XCTAssertEqual(
-            NotifSecretLeaveChrome.storeAction(NotifDiscordFieldChrome.commit("   ")),
-            .skip
-        )
-        XCTAssertEqual(
-            NotifSecretLeaveChrome.storeAction(
-                NotifDiscordFieldChrome.commit("https://discord.com/api/webhooks/1/abc")
-            ),
-            .persist("https://discord.com/api/webhooks/1/abc")
-        )
-        XCTAssertEqual(
-            NotifSecretLeaveChrome.storeAction(NotifDiscordFieldChrome.commit("not a url")),
-            .reject
-        )
-        XCTAssertEqual(
-            NotifSecretLeaveChrome.storeAction(NotifOptionalSecretChrome.commit("")),
-            .skip
-        )
-        XCTAssertEqual(
-            NotifSecretLeaveChrome.storeAction(NotifOptionalSecretChrome.commit("123:token")),
-            .persist("123:token")
-        )
-        XCTAssertEqual(
-            NotifSecretLeaveChrome.storeAction(TelegramChatIdChrome.commit("")),
-            .skip
-        )
-        XCTAssertEqual(
-            NotifSecretLeaveChrome.storeAction(TelegramChatIdChrome.commit("5728126329")),
-            .persist("5728126329")
-        )
-        XCTAssertEqual(
-            NotifSecretLeaveChrome.displayed(
-                stored: nil,
-                field: "https://discord.com/api/webhooks/1/abc"
-            ),
-            "https://discord.com/api/webhooks/1/abc"
-        )
-        XCTAssertEqual(
-            NotifSecretLeaveChrome.displayed(
-                stored: "https://discord.com/api/webhooks/9/saved",
-                field: "https://discord.com/api/webhooks/1/abc"
-            ),
-            "https://discord.com/api/webhooks/9/saved"
-        )
-        XCTAssertEqual(NotifSecretLeaveChrome.displayed(stored: nil, field: ""), "")
-    }
-
     func testDiscordCommitPersistsValidURLClearsEmptyAndRejectsJunk() {
         XCTAssertEqual(
             NotifDiscordFieldChrome.commit("https://discord.com/api/webhooks/1/abc"),

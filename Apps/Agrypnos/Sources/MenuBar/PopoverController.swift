@@ -330,25 +330,8 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
             return
         }
         if field === discordField {
-            if case .persist(let url) = NotifDiscordFieldChrome.commit(field.stringValue) {
-                discordInvalid = false
-                discordStatus?.stringValue = ""
-                _ = runtime?.setNotifDiscordWebhookURL(url)
-            }
-            return
-        }
-        if field === telegramTokenField {
-            if case .persist(let token) = TelegramBotTokenChrome.commit(field.stringValue) {
-                if runtime?.setNotifTelegramBotToken(token) == false {
-                    UserNotify.post(AgrypnosCopy.notifSaveFailed)
-                }
-            }
-            return
-        }
-        if field === telegramChatField,
-           case .persist(let id) = TelegramChatIdChrome.commit(field.stringValue)
-        {
-            _ = runtime?.setNotifTelegramChatId(id)
+            discordInvalid = false
+            discordStatus?.stringValue = ""
         }
     }
 

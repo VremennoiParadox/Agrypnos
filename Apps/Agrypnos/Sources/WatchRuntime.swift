@@ -99,38 +99,17 @@ final class WatchRuntime {
 
     @discardableResult
     func setNotifDiscordWebhookURL(_ value: String?) -> Bool {
-        switch NotifDiscordFieldChrome.commit(value ?? "") {
-        case .persist(let url):
-            return NotifSecretsStore.setDiscordWebhookURL(url)
-        case .clear:
-            return NotifSecretsStore.setDiscordWebhookURL(nil)
-        case .reject:
-            return false
-        }
+        NotifSecretsStore.setDiscordWebhookURL(value)
     }
 
     @discardableResult
     func setNotifTelegramBotToken(_ value: String?) -> Bool {
-        switch TelegramBotTokenChrome.commit(value ?? "") {
-        case .persist(let token):
-            return NotifSecretsStore.setTelegramBotToken(token)
-        case .clear:
-            return NotifSecretsStore.setTelegramBotToken(nil)
-        case .reject:
-            return false
-        }
+        NotifSecretsStore.setTelegramBotToken(value)
     }
 
     @discardableResult
     func setNotifTelegramChatId(_ value: String?) -> Bool {
-        switch TelegramChatIdChrome.commit(value ?? "") {
-        case .persist(let id):
-            return NotifSecretsStore.setTelegramChatId(id)
-        case .clear:
-            return NotifSecretsStore.setTelegramChatId(nil)
-        case .reject:
-            return false
-        }
+        NotifSecretsStore.setTelegramChatId(value)
     }
 
     func clearNotifSecrets() {

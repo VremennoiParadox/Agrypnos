@@ -4,15 +4,15 @@ import Foundation
 import AgrypnosCore
 #endif
 
-/// Best-effort one-shot POST. Bounded wait so lid-closed sleepnow does not kill the attempt.
+/// Best-effort one-shot POST. Bounded wait so lid-closed sleepnow is not blocked.
 enum NotifIdlePoster {
-    static let waitBound: TimeInterval = 10
+    static let waitBound: TimeInterval = 3
 
     static let session: URLSession = {
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = waitBound
         config.timeoutIntervalForResource = waitBound
-        config.waitsForConnectivity = true
+        config.waitsForConnectivity = false
         return URLSession(configuration: config)
     }()
 
