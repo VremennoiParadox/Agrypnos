@@ -28,6 +28,8 @@ public struct UserPreferences: Equatable, Sendable, Codable {
     public var thermalAutoOff: Bool
     /// Opt-in idle-after-wait POST. Default off. Secrets stay in Keychain, not here.
     public var notifEnabled: Bool
+    /// Last time the watch ended, with why. Nil until a watch has ended on this Mac.
+    public var lastWatchEnd: LastWatchEnd?
 
     /// 0...1 unit the Mac brightness adapter writes. Derived from floor %.
     public var brightnessFloor: Double {
@@ -45,7 +47,8 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         hotkey: HotkeyChord = .defaultToggle,
         lidOpenRampSeconds: Int = 2,
         thermalAutoOff: Bool = true,
-        notifEnabled: Bool = false
+        notifEnabled: Bool = false,
+        lastWatchEnd: LastWatchEnd? = nil
     ) {
         self.batteryFloorPercent = Self.clampBatteryFloor(batteryFloorPercent)
         self.duration = duration
@@ -58,6 +61,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         self.lidOpenRampSeconds = Self.clampLidOpenRamp(lidOpenRampSeconds)
         self.thermalAutoOff = thermalAutoOff
         self.notifEnabled = notifEnabled
+        self.lastWatchEnd = lastWatchEnd
     }
 
     public static let `default` = UserPreferences()
@@ -115,6 +119,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         case lidOpenRampSeconds
         case thermalAutoOff
         case notifEnabled
+        case lastWatchEnd
     }
 
     public init(from decoder: Decoder) throws {
@@ -138,7 +143,8 @@ public struct UserPreferences: Equatable, Sendable, Codable {
             hotkey: try container.decodeIfPresent(HotkeyChord.self, forKey: .hotkey) ?? .defaultToggle,
             lidOpenRampSeconds: try container.decodeIfPresent(Int.self, forKey: .lidOpenRampSeconds) ?? 2,
             thermalAutoOff: try container.decodeIfPresent(Bool.self, forKey: .thermalAutoOff) ?? true,
-            notifEnabled: try container.decodeIfPresent(Bool.self, forKey: .notifEnabled) ?? false
+            notifEnabled: try container.decodeIfPresent(Bool.self, forKey: .notifEnabled) ?? false,
+            lastWatchEnd: try container.decodeIfPresent(LastWatchEnd.self, forKey: .lastWatchEnd)
         )
     }
 
@@ -156,6 +162,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         try container.encode(lidOpenRampSeconds, forKey: .lidOpenRampSeconds)
         try container.encode(thermalAutoOff, forKey: .thermalAutoOff)
         try container.encode(notifEnabled, forKey: .notifEnabled)
+        try container.encodeIfPresent(lastWatchEnd, forKey: .lastWatchEnd)
     }
 }
 
