@@ -12,6 +12,7 @@ public struct WatchEngine: Equatable, Sendable {
     public private(set) var lidHygieneApplied: Bool
     /// One idle-after-wait POST per genuine user arm. Survives disarm-failure rollback.
     public private(set) var postedThisUserArm: Bool
+    var lastWatchEndRollback: LastWatchEnd?
 
     public init(preferences: UserPreferences = .default) {
         self.preferences = preferences
@@ -24,6 +25,7 @@ public struct WatchEngine: Equatable, Sendable {
         self.lidClosed = false
         self.lidHygieneApplied = false
         self.postedThisUserArm = false
+        self.lastWatchEndRollback = nil
     }
 
     public mutating func userSetEngaged(_ on: Bool, now: Date, lidClosed: Bool = false) -> [WatchCommand] {
@@ -32,14 +34,18 @@ public struct WatchEngine: Equatable, Sendable {
         if on {
             return engage(now: now, forcedByUser: true, resetPostedThisUserArm: true)
         }
-        return disengage(.user)
+        return disengage(.user, at: now)
     }
 
     /// Kernel disarm failed after logical disengage. Same user arm — keep the POST latch.
     public mutating func rollbackDisarmFailure(now: Date, lidClosed: Bool = false) -> [WatchCommand] {
+        let restored = lastWatchEndRollback
+        lastWatchEndRollback = nil
         leftoverAdopted = false
         self.lidClosed = lidClosed
-        return engage(now: now, forcedByUser: true, resetPostedThisUserArm: false)
+        let commands = engage(now: now, forcedByUser: true, resetPostedThisUserArm: false)
+        preferences.lastWatchEnd = restored
+        return commands
     }
 
     /// Kernel `SleepDisabled` was already on and could not be cleared. Adopt visibly.
@@ -89,12 +95,12 @@ public struct WatchEngine: Equatable, Sendable {
             thermalAutoOff: preferences.thermalAutoOff,
             now: now
         ) {
-            return disengage(reason)
+            return disengage(reason, at: now)
         }
         if mode == .untilAgentsSettle {
             let activity = settle.observe(busy: agents.anyBusy, now: now)
             if activity == .settled {
-                return disengage(.agentsSettled)
+                return disengage(.agentsSettled, at: now)
             }
         }
         if !kernelSleepDisabled {
@@ -159,13 +165,18 @@ public struct WatchEngine: Equatable, Sendable {
         }
     }
 
-    mutating func disengage(_ reason: DisengageReason) -> [WatchCommand] {
+    mutating func disengage(_ reason: DisengageReason, at now: Date) -> [WatchCommand] {
+        let wasEngaged = engaged
         // Capture before reset: settled already requires sawBusy; keep that honesty.
         let postIdleAfterWait = !postedThisUserArm && NotifIdlePostPolicy.shouldPost(
             enabled: preferences.notifEnabled,
             reason: reason,
             sawBusy: settle.sawBusy
         )
+        if wasEngaged {
+            lastWatchEndRollback = preferences.lastWatchEnd
+            preferences.lastWatchEnd = LastWatchEnd(endedAt: now, reason: reason)
+        }
         engaged = false
         mode = .idle
         timerEnd = nil

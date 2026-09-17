@@ -86,4 +86,92 @@ final class LastWatchEndTests: XCTestCase {
             AgrypnosCopy.lastWatchEndNone
         )
     }
+
+    func testEveryRealDisengageRecordsLastWatchEnd() {
+        func record(_ duration: DurationOption, safety: SafetyInputs, wait: TimeInterval, busyFirst: Bool = false) -> WatchEngine {
+            var prefs = UserPreferences.default
+            prefs.duration = duration
+            var engine = WatchEngine(preferences: prefs)
+            _ = engine.userSetEngaged(true, now: t0)
+            if busyFirst { _ = engine.tick(now: t0, safety: .acPower, agents: .busy) }
+            _ = engine.tick(now: t0.addingTimeInterval(wait), safety: safety, agents: .idle)
+            return engine
+        }
+        var manual = WatchEngine(preferences: .default)
+        _ = manual.userSetEngaged(true, now: t0)
+        _ = manual.userSetEngaged(false, now: t0.addingTimeInterval(1))
+        XCTAssertEqual(manual.preferences.lastWatchEnd, LastWatchEnd(endedAt: t0.addingTimeInterval(1), reason: .user))
+
+        let timer = record(.oneHour, safety: .acPower, wait: 3600)
+        XCTAssertEqual(timer.preferences.lastWatchEnd, LastWatchEnd(endedAt: t0.addingTimeInterval(3600), reason: .timerExpired))
+
+        let battery = record(.indefinite, safety: SafetyInputs(batteryPercent: 12, onBatteryDischarging: true, thermalSerious: false, lowPowerMode: false), wait: 1)
+        XCTAssertEqual(battery.preferences.lastWatchEnd?.reason, .batteryFloor)
+
+        let thermal = record(.indefinite, safety: SafetyInputs(batteryPercent: 90, onBatteryDischarging: false, thermalSerious: true, lowPowerMode: false), wait: 1)
+        XCTAssertEqual(thermal.preferences.lastWatchEnd?.reason, .thermal)
+
+        let agents = record(.untilAgentsSettle, safety: .acPower, wait: 120, busyFirst: true)
+        XCTAssertEqual(agents.preferences.lastWatchEnd, LastWatchEnd(endedAt: t0.addingTimeInterval(120), reason: .agentsSettled))
+
+        var leftover = WatchEngine(preferences: .default)
+        _ = leftover.adoptLeftoverKernel(now: t0)
+        _ = leftover.tick(now: t0.addingTimeInterval(1), safety: .lowPowerDischarging, agents: .idle)
+        XCTAssertEqual(leftover.preferences.lastWatchEnd, LastWatchEnd(endedAt: t0.addingTimeInterval(1), reason: .lowPowerMode))
+    }
+
+    func testReArmKeepsLastWatchEndUntilTheNextRealEnd() {
+        var engine = WatchEngine(preferences: .default)
+        _ = engine.userSetEngaged(true, now: t0)
+        _ = engine.userSetEngaged(false, now: t0.addingTimeInterval(5))
+        let first = engine.preferences.lastWatchEnd
+        _ = engine.userSetEngaged(true, now: t0.addingTimeInterval(10))
+        XCTAssertEqual(engine.preferences.lastWatchEnd, first)
+        XCTAssertTrue(engine.engaged)
+        _ = engine.userSetEngaged(false, now: t0.addingTimeInterval(20))
+        XCTAssertEqual(engine.preferences.lastWatchEnd?.endedAt, t0.addingTimeInterval(20))
+        _ = engine.userSetEngaged(false, now: t0.addingTimeInterval(30))
+        XCTAssertEqual(engine.preferences.lastWatchEnd?.endedAt, t0.addingTimeInterval(20))
+    }
+
+    func testForcedLowPowerModeDoesNotRecordAnEnd() {
+        var engine = WatchEngine(preferences: .default)
+        _ = engine.userSetEngaged(true, now: t0)
+        XCTAssertTrue(engine.tick(now: t0.addingTimeInterval(1), safety: .lowPowerDischarging, agents: .idle).isEmpty)
+        XCTAssertTrue(engine.engaged)
+        XCTAssertNil(engine.preferences.lastWatchEnd)
+    }
+
+    func testRollbackDisarmFailureRestoresPreviousLastWatchEnd() {
+        var engine = WatchEngine(preferences: .default)
+        _ = engine.userSetEngaged(true, now: t0)
+        _ = engine.userSetEngaged(false, now: t0.addingTimeInterval(5))
+        let previous = engine.preferences.lastWatchEnd
+        _ = engine.userSetEngaged(true, now: t0.addingTimeInterval(10))
+        _ = engine.userSetDuration(.oneHour, now: t0.addingTimeInterval(10))
+        XCTAssertEqual(
+            engine.tick(now: t0.addingTimeInterval(10 + 3600), safety: .acPower, agents: .idle),
+            [.disengage(.timerExpired)]
+        )
+        XCTAssertEqual(engine.preferences.lastWatchEnd?.reason, .timerExpired)
+        _ = engine.rollbackDisarmFailure(now: t0.addingTimeInterval(3611), lidClosed: false)
+        XCTAssertTrue(engine.engaged)
+        XCTAssertEqual(engine.preferences.lastWatchEnd, previous)
+    }
+}
+
+private extension SafetyInputs {
+    static let acPower = SafetyInputs(
+        batteryPercent: 90, onBatteryDischarging: false, thermalSerious: false, lowPowerMode: false
+    )
+    static let lowPowerDischarging = SafetyInputs(
+        batteryPercent: 50, onBatteryDischarging: true, thermalSerious: false, lowPowerMode: true
+    )
+}
+
+private extension AgentSnapshot {
+    static let idle = AgentSnapshot(reports: [])
+    static let busy = AgentSnapshot(reports: [
+        AgentReport(kind: .claudeCode, processRunning: true, cpuBusy: true, recentSessionWrite: true, isBusy: true)
+    ])
 }
