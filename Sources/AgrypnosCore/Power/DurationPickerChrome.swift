@@ -13,8 +13,38 @@ public struct DurationPickerChrome: Equatable, Sendable {
         self.minutesText = minutesText
     }
 
-    public static func make(duration: DurationOption) -> DurationPickerChrome {
+    /// `selectOne` keeps a preset lit when Minutes is active. Allow none selected.
+    public static let segmentAllowsNoSelection = true
+
+    public static func segmentSelection(selectedSegment: Int, count: Int) -> [Bool] {
+        (0..<count).map { $0 == selectedSegment }
+    }
+
+    public static func exclusiveSelectedIndex(nowOn: [Int], previous: Int) -> Int? {
+        if nowOn.count == 1 { return nowOn[0] }
+        if nowOn.count > 1 { return nowOn.first { $0 != previous } ?? nowOn[0] }
+        return nil
+    }
+
+    public static func make(
+        duration: DurationOption,
+        minutesDraft: String? = nil
+    ) -> DurationPickerChrome {
         let titles = DurationOption.presets.map(\.segmentTitle)
+        if let draft = minutesDraft {
+            if let minutes = parseMinutes(draft) {
+                return DurationPickerChrome(
+                    segmentTitles: titles,
+                    selectedSegment: -1,
+                    minutesText: "\(minutes)"
+                )
+            }
+            return DurationPickerChrome(
+                segmentTitles: titles,
+                selectedSegment: -1,
+                minutesText: draft
+            )
+        }
         switch duration {
         case .custom(let minutes):
             let value = max(minutes, 1)
@@ -46,5 +76,14 @@ public struct DurationPickerChrome: Equatable, Sendable {
 
     public static func shouldCommit(minutes: Int, current: DurationOption) -> Bool {
         current != .customMinutes(minutes)
+    }
+
+    /// Leaving Watch must not turn leftover Minutes digits into a custom duration
+    /// over a preset (including Agents). Enter in the minutes field still commits.
+    public static func shouldCommitOnLeaveWatch(minutes: Int, current: DurationOption) -> Bool {
+        if case .custom = current {
+            return shouldCommit(minutes: minutes, current: current)
+        }
+        return false
     }
 }

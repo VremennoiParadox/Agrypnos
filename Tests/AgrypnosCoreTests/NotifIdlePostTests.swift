@@ -445,11 +445,18 @@ final class NotifCopyTests: XCTestCase {
             AgrypnosCopy.notifTelegramChatShort,
             AgrypnosCopy.notifTelegramToken,
             AgrypnosCopy.notifTelegramChatId,
+            AgrypnosCopy.notifDiscordPlaceholder,
+            AgrypnosCopy.notifTelegramTokenPlaceholder,
+            AgrypnosCopy.notifTelegramChatPlaceholder,
             AgrypnosCopy.notifTelegramHelp,
             AgrypnosCopy.notifSetup,
             AgrypnosCopy.notifSetupHelp,
             AgrypnosCopy.notifClear,
             AgrypnosCopy.notifSaveFailed,
+            AgrypnosCopy.notifDiscordPostFailed,
+            AgrypnosCopy.notifTelegramPostFailed,
+            AgrypnosCopy.notifTelegramChatInvalid,
+            AgrypnosCopy.notifTelegramTokenInvalid,
             AgrypnosCopy.notifIdleBody,
         ].joined(separator: "\n").lowercased()
         for banned in [

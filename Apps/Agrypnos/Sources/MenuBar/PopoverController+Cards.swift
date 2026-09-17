@@ -182,7 +182,7 @@ extension PopoverController {
         let chrome = DurationPickerChrome.make(duration: .indefinite)
         durationControl = NSSegmentedControl(
             labels: chrome.segmentTitles,
-            trackingMode: .selectOne,
+            trackingMode: DurationPickerChrome.segmentAllowsNoSelection ? .selectAny : .selectOne,
             target: self,
             action: #selector(durationChanged(_:))
         )

@@ -179,20 +179,21 @@ enum PopoverForm {
         x: CGFloat,
         width: CGFloat,
         placeholder: String,
-        secure: Bool,
         label: String,
         help: String,
         target: AnyObject,
         action: Selector,
         delegate: NSTextFieldDelegate
     ) -> NSTextField {
-        let field: NSTextField = secure ? NSSecureTextField(string: "") : NSTextField(string: "")
+        let field = PopoverTextField(string: "")
         field.placeholderString = placeholder
         field.font = .systemFont(ofSize: 13)
         field.isBezeled = true
         field.bezelStyle = .roundedBezel
         field.isEditable = true
         field.isSelectable = true
+        field.usesSingleLineMode = true
+        field.cell?.isScrollable = true
         field.delegate = delegate
         field.target = target
         field.action = action
@@ -210,7 +211,7 @@ enum PopoverForm {
         x: CGFloat,
         width: CGFloat,
         caption: String,
-        secure: Bool,
+        placeholder: String,
         label: String,
         help: String,
         target: AnyObject,
@@ -231,13 +232,32 @@ enum PopoverForm {
             y: y,
             x: x + labelW + 8,
             width: max(width - labelW - 8, 80),
-            placeholder: "",
-            secure: secure,
+            placeholder: placeholder,
             label: label,
             help: help,
             target: target,
             action: action,
             delegate: delegate
         )
+    }
+}
+
+/// Accessory apps often fail to make the popover key. Clicking a field
+/// activates Agrypnos so Cmd+V can reach the field editor. Smart quotes
+/// stay off so pasted tokens and webhook URLs are not rewritten.
+final class PopoverTextField: NSTextField {
+    override func becomeFirstResponder() -> Bool {
+        NSApp.activate(ignoringOtherApps: true)
+        window?.makeKey()
+        let ok = super.becomeFirstResponder()
+        if let editor = currentEditor() as? NSTextView {
+            editor.isAutomaticQuoteSubstitutionEnabled = false
+            editor.isAutomaticDashSubstitutionEnabled = false
+            editor.isAutomaticTextReplacementEnabled = false
+            editor.isAutomaticSpellingCorrectionEnabled = false
+            editor.isContinuousSpellCheckingEnabled = false
+            editor.allowsUndo = true
+        }
+        return ok
     }
 }

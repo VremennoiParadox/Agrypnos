@@ -6,13 +6,13 @@ import AgrypnosCore
 
 /// Best-effort one-shot POST. Bounded wait so lid-closed sleepnow does not kill the attempt.
 enum NotifIdlePoster {
-    static let waitBound: TimeInterval = 3
+    static let waitBound: TimeInterval = 10
 
     static let session: URLSession = {
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = waitBound
         config.timeoutIntervalForResource = waitBound
-        config.waitsForConnectivity = false
+        config.waitsForConnectivity = true
         return URLSession(configuration: config)
     }()
 
@@ -32,16 +32,19 @@ enum NotifIdlePoster {
         {
             requests.append(request)
         }
-        if channels.contains(.telegram),
-           let token = secrets.telegramBotToken,
-           let chat = secrets.telegramChatId,
-           let request = NotifOutboundRequestFactory.telegram(
-            botToken: token,
-            chatId: chat,
-            text: body
-           )
-        {
-            requests.append(request)
+        if channels.contains(.telegram) {
+            if let token = secrets.telegramBotToken,
+               let chat = secrets.telegramChatId,
+               let request = NotifOutboundRequestFactory.telegram(
+                botToken: token,
+                chatId: chat,
+                text: body
+               )
+            {
+                requests.append(request)
+            } else {
+                UserNotify.post(AgrypnosCopy.notifTelegramPostFailed)
+            }
         }
         await withTaskGroup(of: Void.self) { group in
             for request in requests {
@@ -58,6 +61,28 @@ enum NotifIdlePoster {
         for (header, value) in request.headers {
             urlRequest.setValue(value, forHTTPHeaderField: header)
         }
-        _ = try? await session.data(for: urlRequest)
+        do {
+            let (data, response) = try await session.data(for: urlRequest)
+            let status = (response as? HTTPURLResponse)?.statusCode
+            let channel = NotifOutboundPostChrome.channel(for: request.url)
+            let detail = channel == .telegram ? NotifOutboundPostChrome.telegramDetail(body: data) : nil
+            let outcome = NotifOutboundPostChrome.outcome(
+                channel: channel,
+                statusCode: status,
+                body: data
+            )
+            if let copy = NotifOutboundPostChrome.notifyCopy(
+                channel: channel,
+                outcome: outcome,
+                detail: detail
+            ) {
+                UserNotify.post(copy)
+            }
+        } catch {
+            let channel = NotifOutboundPostChrome.channel(for: request.url)
+            if let copy = NotifOutboundPostChrome.notifyCopy(channel: channel, outcome: .unreachable) {
+                UserNotify.post(copy)
+            }
+        }
     }
 }

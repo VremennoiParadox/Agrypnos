@@ -23,6 +23,58 @@ final class NotifPopoverChromeTests: XCTestCase {
         XCTAssertEqual(NotifEnableChrome.defaultEnabled, UserPreferences.default.notifEnabled)
     }
 
+    func testLeavingNotifDoesNotWipeASecretOnEmptyAndKeepsAnUnsavedDraft() {
+        XCTAssertEqual(
+            NotifSecretLeaveChrome.storeAction(NotifDiscordFieldChrome.commit("")),
+            .skip
+        )
+        XCTAssertEqual(
+            NotifSecretLeaveChrome.storeAction(NotifDiscordFieldChrome.commit("   ")),
+            .skip
+        )
+        XCTAssertEqual(
+            NotifSecretLeaveChrome.storeAction(
+                NotifDiscordFieldChrome.commit("https://discord.com/api/webhooks/1/abc")
+            ),
+            .persist("https://discord.com/api/webhooks/1/abc")
+        )
+        XCTAssertEqual(
+            NotifSecretLeaveChrome.storeAction(NotifDiscordFieldChrome.commit("not a url")),
+            .reject
+        )
+        XCTAssertEqual(
+            NotifSecretLeaveChrome.storeAction(NotifOptionalSecretChrome.commit("")),
+            .skip
+        )
+        XCTAssertEqual(
+            NotifSecretLeaveChrome.storeAction(NotifOptionalSecretChrome.commit("123:token")),
+            .persist("123:token")
+        )
+        XCTAssertEqual(
+            NotifSecretLeaveChrome.storeAction(TelegramChatIdChrome.commit("")),
+            .skip
+        )
+        XCTAssertEqual(
+            NotifSecretLeaveChrome.storeAction(TelegramChatIdChrome.commit("5728126329")),
+            .persist("5728126329")
+        )
+        XCTAssertEqual(
+            NotifSecretLeaveChrome.displayed(
+                stored: nil,
+                field: "https://discord.com/api/webhooks/1/abc"
+            ),
+            "https://discord.com/api/webhooks/1/abc"
+        )
+        XCTAssertEqual(
+            NotifSecretLeaveChrome.displayed(
+                stored: "https://discord.com/api/webhooks/9/saved",
+                field: "https://discord.com/api/webhooks/1/abc"
+            ),
+            "https://discord.com/api/webhooks/9/saved"
+        )
+        XCTAssertEqual(NotifSecretLeaveChrome.displayed(stored: nil, field: ""), "")
+    }
+
     func testDiscordCommitPersistsValidURLClearsEmptyAndRejectsJunk() {
         XCTAssertEqual(
             NotifDiscordFieldChrome.commit("https://discord.com/api/webhooks/1/abc"),
@@ -31,6 +83,10 @@ final class NotifPopoverChromeTests: XCTestCase {
         XCTAssertEqual(
             NotifDiscordFieldChrome.commit("  https://discord.com/api/webhooks/99/Tok.en-1_2  "),
             .persist("https://discord.com/api/webhooks/99/Tok.en-1_2")
+        )
+        XCTAssertEqual(
+            NotifDiscordFieldChrome.commit("<https://discord.com/api/webhooks/1/abc>"),
+            .persist("https://discord.com/api/webhooks/1/abc")
         )
         XCTAssertEqual(NotifDiscordFieldChrome.commit(""), .clear)
         XCTAssertEqual(NotifDiscordFieldChrome.commit("   "), .clear)
@@ -53,6 +109,84 @@ final class NotifPopoverChromeTests: XCTestCase {
         XCTAssertEqual(NotifOptionalSecretChrome.commit("99"), "99")
     }
 
+    func testTelegramBotTokenCommitNeedsARealBotTokenNotAPrefix() {
+        XCTAssertEqual(
+            TelegramBotTokenChrome.commit("111:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
+            .persist("111:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+        )
+        XCTAssertEqual(TelegramBotTokenChrome.commit(""), .clear)
+        XCTAssertEqual(TelegramBotTokenChrome.commit("111"), .reject)
+        XCTAssertEqual(TelegramBotTokenChrome.commit("111:"), .reject)
+        XCTAssertEqual(TelegramBotTokenChrome.commit("111:short"), .reject)
+        XCTAssertEqual(TelegramBotTokenChrome.commit("not-a-token"), .reject)
+        XCTAssertEqual(
+            TelegramBotTokenChrome.commit(
+                """
+                Use this token to access the HTTP API:
+                111:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+                Keep your token secure
+                """
+            ),
+            .persist("111:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+        )
+        XCTAssertEqual(
+            TelegramBotTokenChrome.commit("HTTP API: 111:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
+            .persist("111:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+        )
+        XCTAssertEqual(
+            AgrypnosCopy.notifTelegramTokenInvalid,
+            "That is not a Telegram bot token. Nothing was saved."
+        )
+    }
+
+    func testPastedSecretOnceCollapsesAnExactDoublePaste() {
+        XCTAssertEqual(PastedSecretChrome.once("57281263295728126329"), "5728126329")
+        let token = "111:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        XCTAssertEqual(PastedSecretChrome.once(token + token), token)
+        XCTAssertEqual(PastedSecretChrome.once(token), token)
+        let url = "https://discord.com/api/webhooks/1/abc"
+        XCTAssertEqual(PastedSecretChrome.once(url + url), url)
+        XCTAssertEqual(PastedSecretChrome.once("abc"), "abc")
+        XCTAssertEqual(PastedSecretChrome.once(""), "")
+        XCTAssertEqual(PastedSecretChrome.once("12121212"), "1212")
+        XCTAssertGreaterThanOrEqual(PastedSecretChrome.minimumOnceCount, 8)
+    }
+
+    func testPopoverEditKeyDoesNotSendPasteFromALocalMonitor() {
+        XCTAssertFalse(PopoverEditKeyChrome.sendsEditActionsFromLocalMonitor)
+        XCTAssertEqual(PopoverEditKeyChrome.menuPaste, "v")
+        XCTAssertEqual(PopoverEditKeyChrome.menuCopy, "c")
+        XCTAssertEqual(PopoverEditKeyChrome.menuCut, "x")
+        XCTAssertEqual(PopoverEditKeyChrome.menuSelectAll, "a")
+    }
+
+    func testTelegramChatIdKeepsOneCopyWhenPasteDoubles() {
+        XCTAssertEqual(TelegramChatIdChrome.commit("5728126329"), .persist("5728126329"))
+        XCTAssertEqual(TelegramChatIdChrome.commit("  -1001234567890  "), .persist("-1001234567890"))
+        XCTAssertEqual(TelegramChatIdChrome.commit(""), .clear)
+        XCTAssertEqual(TelegramChatIdChrome.commit("   "), .clear)
+        XCTAssertEqual(
+            TelegramChatIdChrome.commit("57281263295728126329"),
+            .persist("5728126329")
+        )
+        XCTAssertEqual(TelegramChatIdChrome.commit("not-a-id"), .reject)
+        XCTAssertEqual(TelegramChatIdChrome.commit("@channel"), .reject)
+    }
+
+    func testTelegramBotTokenCommitTakesOneCopyWhenPasteDoubles() {
+        let token = "111:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        XCTAssertEqual(TelegramBotTokenChrome.commit(token + token), .persist(token))
+        XCTAssertEqual(
+            TelegramBotTokenChrome.commit(token + "\n" + token),
+            .persist(token)
+        )
+    }
+
+    func testDiscordCommitTakesOneCopyWhenPasteDoubles() {
+        let url = "https://discord.com/api/webhooks/1/abc"
+        XCTAssertEqual(NotifDiscordFieldChrome.commit(url + url), .persist(url))
+    }
+
     func testTelegramFieldsHaveVisibleTokenAndChatIdCaptions() {
         XCTAssertEqual(AgrypnosCopy.notifTelegramTokenShort, "Token")
         XCTAssertEqual(AgrypnosCopy.notifTelegramChatShort, "Chat id")
@@ -62,16 +196,59 @@ final class NotifPopoverChromeTests: XCTestCase {
         XCTAssertFalse(AgrypnosCopy.notifSaveFailed.lowercased().contains("saved."))
     }
 
+    func testTelegramHelpAndPlaceholdersSayWhereChatIdComesFrom() {
+        let help = AgrypnosCopy.notifTelegramHelp.lowercased()
+        XCTAssertTrue(help.contains("your telegram bot"))
+        XCTAssertTrue(help.contains("does not run a shared bot"))
+        XCTAssertTrue(help.contains("chat id"))
+        XCTAssertTrue(help.contains("getupdates"))
+        XCTAssertEqual(
+            CopyWrap.lineCount(
+                AgrypnosCopy.notifTelegramHelp,
+                columns: PopoverCopyLayout.innerColumns
+            ),
+            PopoverCopyLayout.notifTelegramHelpMaxLines
+        )
+        XCTAssertEqual(AgrypnosCopy.notifTelegramChatPlaceholder, "from getUpdates")
+        XCTAssertEqual(AgrypnosCopy.notifTelegramTokenPlaceholder, "paste bot token")
+        XCTAssertEqual(AgrypnosCopy.notifDiscordPlaceholder, "paste webhook URL")
+        XCTAssertFalse(AgrypnosCopy.notifTelegramChatPlaceholder.contains("123456"))
+        XCTAssertFalse(AgrypnosCopy.notifDiscordPlaceholder.contains("discord.com/api/webhooks/"))
+    }
+
     func testClearSecretsCopyDeletesKeychainEntriesNotASharedBot() {
         XCTAssertEqual(AgrypnosCopy.notifClear, "Clear secrets")
         XCTAssertTrue(AgrypnosCopy.notifSetupHelp.lowercased().contains("keychain"))
         XCTAssertTrue(AgrypnosCopy.notifSetupHelp.lowercased().contains("clear secrets"))
         XCTAssertEqual(
             NotifClearChrome.deletedAccounts,
-            ["discordWebhookURL", "telegramBotToken", "telegramChatId"]
+            ["secrets", "discordWebhookURL", "telegramBotToken", "telegramChatId"]
         )
         XCTAssertNil(NotifOptionalSecretChrome.commit(""))
         XCTAssertEqual(NotifDiscordFieldChrome.commit(""), .clear)
+    }
+
+    func testSecretsPayloadRoundTripsAndOmitsEmptyFields() throws {
+        let data = try XCTUnwrap(
+            NotifSecretsPayload.encode(
+                discordWebhookURL: "https://discord.com/api/webhooks/1/abc",
+                telegramBotToken: "111:token",
+                telegramChatId: "5728126329"
+            )
+        )
+        let decoded = try XCTUnwrap(NotifSecretsPayload.decode(data))
+        XCTAssertEqual(decoded.discordWebhookURL, "https://discord.com/api/webhooks/1/abc")
+        XCTAssertEqual(decoded.telegramBotToken, "111:token")
+        XCTAssertEqual(decoded.telegramChatId, "5728126329")
+        let empty = try XCTUnwrap(NotifSecretsPayload.encode(
+            discordWebhookURL: "  ",
+            telegramBotToken: nil,
+            telegramChatId: ""
+        ))
+        let emptyDecoded = try XCTUnwrap(NotifSecretsPayload.decode(empty))
+        XCTAssertNil(emptyDecoded.discordWebhookURL)
+        XCTAssertNil(emptyDecoded.telegramBotToken)
+        XCTAssertNil(emptyDecoded.telegramChatId)
     }
 
     func testSetupHelpFitsItsSlotAndIsSelfServe() {
@@ -162,11 +339,18 @@ final class NotifPopoverChromeTests: XCTestCase {
             AgrypnosCopy.notifTelegramChatShort,
             AgrypnosCopy.notifTelegramToken,
             AgrypnosCopy.notifTelegramChatId,
+            AgrypnosCopy.notifDiscordPlaceholder,
+            AgrypnosCopy.notifTelegramTokenPlaceholder,
+            AgrypnosCopy.notifTelegramChatPlaceholder,
             AgrypnosCopy.notifTelegramHelp,
             AgrypnosCopy.notifSetup,
             AgrypnosCopy.notifSetupHelp,
             AgrypnosCopy.notifClear,
             AgrypnosCopy.notifSaveFailed,
+            AgrypnosCopy.notifDiscordPostFailed,
+            AgrypnosCopy.notifTelegramPostFailed,
+            AgrypnosCopy.notifTelegramChatInvalid,
+            AgrypnosCopy.notifTelegramTokenInvalid,
             AgrypnosCopy.notifIdleBody,
         ].joined(separator: "\n").lowercased()
         XCTAssertTrue(blob.contains("your webhook"))
