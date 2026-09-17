@@ -8,10 +8,6 @@ struct NotifSecrets: Equatable {
     var discordWebhookURL: String?
     var telegramBotToken: String?
     var telegramChatId: String?
-
-    var isEmpty: Bool {
-        discordWebhookURL == nil && telegramBotToken == nil && telegramChatId == nil
-    }
 }
 
 /// Application Support file, mode 0600. Not Keychain (unsigned builds prompt for
@@ -62,12 +58,29 @@ enum NotifSecretsStore {
         )
         guard let data = NotifSecretsPayload.encode(payload) else { return false }
         do {
+            let dir = directoryURL()
             try FileManager.default.createDirectory(
-                at: directoryURL(),
+                at: dir,
                 withIntermediateDirectories: true
             )
             let url = fileURL()
-            try data.write(to: url, options: .atomic)
+            let temp = dir.appendingPathComponent(".\(NotifSecretsFileChrome.fileName).tmp")
+            if FileManager.default.fileExists(atPath: temp.path) {
+                try FileManager.default.removeItem(at: temp)
+            }
+            guard FileManager.default.createFile(
+                atPath: temp.path,
+                contents: data,
+                attributes: [.posixPermissions: 0o600]
+            ) else {
+                return false
+            }
+            do {
+                _ = try FileManager.default.replaceItemAt(url, withItemAt: temp)
+            } catch {
+                try? FileManager.default.removeItem(at: temp)
+                throw error
+            }
             try FileManager.default.setAttributes(
                 [.posixPermissions: 0o600],
                 ofItemAtPath: url.path

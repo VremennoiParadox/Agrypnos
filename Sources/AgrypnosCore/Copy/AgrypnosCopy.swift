@@ -156,8 +156,9 @@ public enum AgrypnosCopy: Sendable {
     public static let notifTelegramHelp =
         "Message your Telegram bot. Needs token; chat id from getUpdates. Agrypnos does not run a shared bot."
     public static let notifClear = "Clear secrets"
-    public static let notifRevealShow = "Show secret"
-    public static let notifRevealHide = "Hide secret"
+    public static func revealAccess(label: String, revealed: Bool) -> String {
+        "\(revealed ? "Hide" : "Show") \(label)"
+    }
     public static let notifSaveFailed = "Couldn't save that secret."
     public static let notifDiscordPostFailed = "Couldn't POST to your webhook."
     public static let notifTelegramPostFailed = "Couldn't message your Telegram bot."

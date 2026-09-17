@@ -121,8 +121,18 @@ final class NotifPopoverChromeTests: XCTestCase {
         XCTAssertEqual(SecretRevealChrome.symbolName(revealed: true), "eye.slash")
         XCTAssertTrue(SecretRevealChrome.nextRevealed(false))
         XCTAssertFalse(SecretRevealChrome.nextRevealed(true))
-        XCTAssertEqual(AgrypnosCopy.notifRevealShow, "Show secret")
-        XCTAssertEqual(AgrypnosCopy.notifRevealHide, "Hide secret")
+        XCTAssertEqual(
+            AgrypnosCopy.revealAccess(label: AgrypnosCopy.notifDiscord, revealed: false),
+            "Show Discord webhook URL"
+        )
+        XCTAssertEqual(
+            AgrypnosCopy.revealAccess(label: AgrypnosCopy.notifDiscord, revealed: true),
+            "Hide Discord webhook URL"
+        )
+        XCTAssertNotEqual(
+            AgrypnosCopy.revealAccess(label: AgrypnosCopy.notifTelegramToken, revealed: false),
+            AgrypnosCopy.revealAccess(label: AgrypnosCopy.notifTelegramChatId, revealed: false)
+        )
     }
 
     func testTelegramHelpAndPlaceholdersSayWhereChatIdComesFrom() {
@@ -274,8 +284,8 @@ final class NotifPopoverChromeTests: XCTestCase {
             AgrypnosCopy.notifSetup,
             AgrypnosCopy.notifSetupHelp,
             AgrypnosCopy.notifClear,
-            AgrypnosCopy.notifRevealShow,
-            AgrypnosCopy.notifRevealHide,
+            AgrypnosCopy.revealAccess(label: AgrypnosCopy.notifDiscord, revealed: false),
+            AgrypnosCopy.revealAccess(label: AgrypnosCopy.notifTelegramToken, revealed: true),
             AgrypnosCopy.notifSaveFailed,
             AgrypnosCopy.notifDiscordPostFailed,
             AgrypnosCopy.notifTelegramPostFailed,
@@ -287,8 +297,8 @@ final class NotifPopoverChromeTests: XCTestCase {
         XCTAssertTrue(blob.contains("your telegram bot"))
         XCTAssertTrue(blob.contains("does not run a shared bot"))
         XCTAssertTrue(blob.contains("idle after the wait") || blob.contains("idle after wait"))
-        XCTAssertTrue(blob.contains("show secret"))
-        XCTAssertTrue(blob.contains("hide secret"))
+        XCTAssertTrue(blob.contains("show discord webhook url"))
+        XCTAssertTrue(blob.contains("hide telegram bot token"))
         XCTAssertFalse(blob.contains("keychain"))
         for banned in [
             "we notify your phone",

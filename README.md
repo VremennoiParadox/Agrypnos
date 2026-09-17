@@ -79,7 +79,7 @@ Opt-in. Default **off**. One-way outbound only: a **one-shot POST** when Agents 
 
 Core decides; the Mac adapter POSTs to **your** Discord incoming webhook and/or **your** Telegram bot when Notif is on and the matching secrets are set. Paste those secrets in the popover **Notif** section and turn the opt-in on. Discord POSTs only if a URL is set. Telegram POSTs only if both token and chat id are set. Fields show dots; the eye button reveals a paste so you can check it. In-app help in that section has the same steps as below.
 
-You own the destination. Agrypnos does not run a shared bot, a companion app, or telemetry. Secrets live in Application Support — never Keychain (that login-password prompt), never plaintext prefs, logs, or example URLs in this file.
+You own the destination. Agrypnos does not run a shared bot, a companion app, or telemetry. Secrets live in `~/Library/Application Support/Agrypnos/notif-secrets.json` (mode 0600) — never Keychain (that login-password prompt), never plaintext prefs, logs, or example URLs in this file. Values saved in an older Keychain build are not imported; paste them again.
 
 ### Discord — your incoming webhook
 

@@ -241,6 +241,7 @@ final class SecretRevealRow: NSView {
     private let secureField = PopoverSecureTextField(string: "")
     private let plainField = PopoverTextField(string: "")
     private let revealButton = NSButton(title: "", target: nil, action: nil)
+    private let fieldLabel: String
     private var isRevealed = false
 
     override var isFlipped: Bool { true }
@@ -268,6 +269,7 @@ final class SecretRevealRow: NSView {
         action: Selector,
         delegate: NSTextFieldDelegate
     ) {
+        fieldLabel = label
         super.init(frame: frame)
         configure(
             secureField,
@@ -330,7 +332,7 @@ final class SecretRevealRow: NSView {
     }
 
     private func applyRevealChrome() {
-        let access = isRevealed ? AgrypnosCopy.notifRevealHide : AgrypnosCopy.notifRevealShow
+        let access = AgrypnosCopy.revealAccess(label: fieldLabel, revealed: isRevealed)
         let name = SecretRevealChrome.symbolName(revealed: isRevealed)
         let image = NSImage(systemSymbolName: name, accessibilityDescription: access)
         image?.isTemplate = true

@@ -23,7 +23,7 @@ Agent heuristics look at process names and mtimes of known session paths under y
 
 ## Opt-in outbound (Notif)
 
-When Notif is enabled, Agrypnos may POST **once** to **your** Discord incoming webhook and/or **your** Telegram bot after Agents mode has seen local busy this arm and then stayed quiet through the idle wait. Default **off**. Empty fields skip that channel. Secrets (webhook URL, bot token, chat id) live in Application Support (`~/Library/Application Support/Agrypnos/notif-secrets.json`, mode 0600), not Keychain and not plaintext prefs. This is not telemetry. Agrypnos does not run a shared bot.
+When Notif is enabled, Agrypnos may POST **once** to **your** Discord incoming webhook and/or **your** Telegram bot after Agents mode has seen local busy this arm and then stayed quiet through the idle wait. Default **off**. Empty fields skip that channel. Secrets (webhook URL, bot token, chat id) live in `~/Library/Application Support/Agrypnos/notif-secrets.json` (mode 0600), not Keychain and not plaintext prefs. Values saved in an older Keychain build are not imported; paste them again. This is not telemetry. Agrypnos does not run a shared bot.
 
 ## What we will not do
 
