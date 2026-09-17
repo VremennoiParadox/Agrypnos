@@ -189,6 +189,7 @@ final class WatchRuntime {
             stopLidPulse()
             apply(engine.userSetEngaged(false, now: Date(), lidClosed: lidClosed))
             restoreHygiene()
+            store.save(engine.preferences)
         }
         delegate?.watchRuntimeDidChange(self)
     }
@@ -251,6 +252,9 @@ final class WatchRuntime {
             }
         }
         apply(applyCommands)
+        if commands.contains(where: { if case .disengage = $0 { return true }; return false }) {
+            store.save(engine.preferences)
+        }
     }
 
     static func isPostIdleAfterWait(_ command: WatchCommand) -> Bool {
@@ -370,6 +374,7 @@ final class WatchRuntime {
         }
         if engine.engaged {
             apply(engine.userSetEngaged(false, now: Date(), lidClosed: LidStateReader.isClosed()))
+            store.save(engine.preferences)
         }
         restoreHygiene()
     }

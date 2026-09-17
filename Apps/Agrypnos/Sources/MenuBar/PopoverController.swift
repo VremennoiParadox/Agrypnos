@@ -53,6 +53,8 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var popoverDocument: NSView!
     var watchCard: CardView!
     var durationCard: CardView!
+    var lastWatchEndCard: CardView!
+    var lastWatchEndLabel: NSTextField!
     var hygieneCard: CardView!
     var batteryCard: CardView!
     var settleCard: CardView!
@@ -115,6 +117,9 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
             leftover: runtime.adoptedLeftover,
             floor: runtime.preferences.batteryFloorPercent,
             lidClosed: runtime.engine.lidClosed
+        )
+        lastWatchEndLabel?.stringValue = AgrypnosCopy.lastWatchEndCaption(
+            event: runtime.preferences.lastWatchEnd, now: Date()
         )
         applyDuration(
             DurationPickerChrome.make(
