@@ -1,6 +1,7 @@
 public enum PopoverCard: Equatable, Hashable, Sendable {
     case watch
     case duration
+    case lastWatchEnd
     case hygiene
     case battery
     case settle
@@ -37,7 +38,7 @@ public enum PopoverSection: Int, CaseIterable, Sendable {
 
     public var cards: [PopoverCard] {
         switch self {
-        case .watch: return [.watch, .duration]
+        case .watch: return [.watch, .duration, .lastWatchEnd]
         case .power: return [.hygiene, .battery, .ramp, .thermal]
         case .agents: return [.settle]
         case .notif: return [.notifEnable, .notifDiscord, .notifTelegram, .notifSetup, .notifClear]

@@ -44,7 +44,7 @@ final class PopoverSectionTests: XCTestCase {
     }
 
     func testCardMapKeepsExistingControlsAndFillsNotif() {
-        XCTAssertEqual(PopoverSection.watch.cards, [.watch, .duration])
+        XCTAssertEqual(PopoverSection.watch.cards, [.watch, .duration, .lastWatchEnd])
         XCTAssertEqual(PopoverSection.power.cards, [.hygiene, .battery, .ramp, .thermal])
         XCTAssertTrue(PopoverSection.power.cards.contains(.thermal))
         XCTAssertEqual(PopoverSection.power.cards.last, .thermal)
@@ -77,21 +77,17 @@ final class PopoverSectionLayoutTests: XCTestCase {
         )
     }
 
-    func testWatchSectionShowsArmAndDurationOnly() {
+    func testWatchSectionShowsArmDurationAndLastEnd() {
         let layout = PopoverStackLayout.make(section: .watch)
-        XCTAssertEqual(layout.section, .watch)
-        XCTAssertEqual(layout.stackedCards.map(\.y), compactYs(layout.watch, layout.duration))
-        XCTAssertEqual(layout.duration?.y, layout.watch!.maxY + PopoverStackLayout.cardGap)
+        XCTAssertEqual(layout.stackedCards.map(\.y), compactYs(layout.watch, layout.duration, layout.lastWatchEnd))
+        XCTAssertEqual(layout.lastWatchEnd?.y, layout.duration!.maxY + PopoverStackLayout.cardGap)
+        XCTAssertEqual(
+            layout.lastWatchEnd?.height,
+            PopoverStackLayout.inset + PopoverCopyLayout.lastWatchEndHeightPoints + PopoverStackLayout.inset
+        )
         XCTAssertNil(layout.hygiene)
-        XCTAssertNil(layout.battery)
-        XCTAssertNil(layout.ramp)
-        XCTAssertNil(layout.thermal)
-        XCTAssertNil(layout.settle)
-        XCTAssertNil(layout.login)
-        XCTAssertNil(layout.shortcutY)
-        XCTAssertNil(layout.hotkeyHint)
-        XCTAssertNil(layout.quitY)
-        XCTAssertEqual(layout.contentHeight, layout.duration!.maxY + PopoverStackLayout.pad)
+        XCTAssertEqual(layout.contentHeight, layout.lastWatchEnd!.maxY + PopoverStackLayout.pad)
+        XCTAssertFalse(layout.needsScroll)
     }
 
     func testPowerSectionShowsHygieneBatteryRampAndThermal() {

@@ -69,6 +69,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public let sectionSwitcher: PopoverSlot
     public let watch: PopoverSlot?
     public let duration: PopoverSlot?
+    public let lastWatchEnd: PopoverSlot?
     public let hygiene: PopoverSlot?
     public let battery: PopoverSlot?
     public let settle: PopoverSlot?
@@ -96,6 +97,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
         switch card {
         case .watch: return watch
         case .duration: return duration
+        case .lastWatchEnd: return lastWatchEnd
         case .hygiene: return hygiene
         case .battery: return battery
         case .settle: return settle
@@ -165,6 +167,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
             switch card {
             case .watch: return watchHeight
             case .duration: return durationCardHeight
+            case .lastWatchEnd: return inset + PopoverCopyLayout.lastWatchEndHeightPoints + inset
             case .hygiene: return hygieneHeight
             case .battery: return batteryCardHeight
             case .settle: return settleHeight
@@ -216,6 +219,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
             sectionSwitcher: PopoverSlot(y: sectionSwitcherY, height: sectionSwitcherHeight),
             watch: placed[.watch],
             duration: placed[.duration],
+            lastWatchEnd: placed[.lastWatchEnd],
             hygiene: placed[.hygiene],
             battery: placed[.battery],
             settle: placed[.settle],
