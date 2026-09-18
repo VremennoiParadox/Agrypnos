@@ -110,6 +110,56 @@ final class StickyWatchTests: XCTestCase {
         )
     }
 
+    func testAgentsIdleWithDroppedKernelReassertsSleepDisabled() {
+        var prefs = UserPreferences.default
+        prefs.duration = .untilAgentsSettle
+        prefs.notifEnabled = true
+        var engine = WatchEngine(preferences: prefs)
+        _ = engine.userSetEngaged(true, now: t0)
+        XCTAssertTrue(engine.tick(now: t0.addingTimeInterval(20), safety: .acPower, agents: .busy).isEmpty)
+        XCTAssertEqual(
+            engine.tick(
+                now: t0.addingTimeInterval(20 + 120),
+                safety: .acPower,
+                agents: .idle,
+                kernelSleepDisabled: false
+            ),
+            [.postIdleAfterWaitNotif, .assertSleepDisabled]
+        )
+        XCTAssertTrue(engine.engaged)
+        XCTAssertEqual(
+            engine.tick(
+                now: t0.addingTimeInterval(20 + 180),
+                safety: .acPower,
+                agents: .idle,
+                kernelSleepDisabled: false
+            ),
+            [.assertSleepDisabled]
+        )
+    }
+
+    func testLeftoverTimedWatchStillAutoOffsOnLowPowerModeAfterTheClock() {
+        var prefs = UserPreferences.default
+        prefs.duration = .oneHour
+        var engine = WatchEngine(preferences: prefs)
+        _ = engine.adoptLeftoverKernel(now: t0)
+        XCTAssertFalse(engine.userForcedThisSession)
+        XCTAssertEqual(
+            engine.tick(
+                now: t0.addingTimeInterval(3600),
+                safety: SafetyInputs(
+                    batteryPercent: 50,
+                    onBatteryDischarging: true,
+                    thermalSerious: false,
+                    lowPowerMode: true
+                ),
+                agents: .idle
+            ),
+            [.disengage(.lowPowerMode)]
+        )
+        XCTAssertEqual(engine.preferences.duration, .oneHour)
+    }
+
     func testTimerAndAgentsIdleDoNotCountAsTurningTheWatchOff() {
         XCTAssertFalse(DisengageReason.timerExpired.turnsWatchOff)
         XCTAssertFalse(DisengageReason.agentsSettled.turnsWatchOff)

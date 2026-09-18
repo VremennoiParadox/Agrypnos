@@ -1,6 +1,6 @@
 # Agrypnos
 
-Native Swift menu-bar extra for macOS. Keep the Mac awake with the lid closed while coding agents work, then let it sleep when the watch ends. Greek *agrypnos*: sleepless.
+Native Swift menu-bar extra for macOS. Keep the Mac awake with the lid closed while coding agents work, then let it sleep when you turn the watch off (or safety auto-off). Greek *agrypnos*: sleepless.
 
 MIT. No telemetry. No stealth network.
 
@@ -9,7 +9,7 @@ MIT. No telemetry. No stealth network.
 - **Keep the watch** — ON = armed while the lid is open. The machine may already be held awake (`pmset disablesleep`). The display stays usable; Agrypnos does **not** blank the panel, call `displaysleepnow`, or turn the keyboard backlight off on that toggle.
 - **Lid close** — with the watch armed, sleep is blocked via `pmset disablesleep`. Brightness drops to the **floor %** you set (default 15%, range 1–40; never 0%). Keyboard backlight off. Brightness write only — not `displaysleepnow`, not display sleep, not “screen off”.
 - **Lid open mid-watch** — brightness ramps back over **1 / 2 / 3 seconds** (default 2s). Keyboard backlight on.
-- **Hold until end** — timer (`∞` / `1h` / `3h` / custom minutes) or Agents mode (busy → stay; after local busy signals stop, **idle wait**, then allow sleep).
+- **Hold until you turn it off** — Keep the watch and How long stay as you set them. Timer and Agents idle do not flip the toggle. Battery / thermal (and leftover Low Power Mode) still can.
 - **Safety** — low battery (slider 5–100%, default 15%), thermal auto-off on `.serious` / `.critical` (Power toggle, default on), reboot clears SleepDisabled, launch-at-login never re-arms.
 
 V1 agents: Cursor, Claude Code, Codex. Local heuristics (process list + session-file mtimes; Claude/Codex may also use CPU). Correctness over coverage.
@@ -55,9 +55,9 @@ swift test
 ./Scripts/build.sh
 ```
 
-Needs a Mac to run the menu-bar extra. Until someone arms Keep the watch with the lid **open** (screen stays usable), closes the lid (brightness floor + keyboard dark), reopens mid-watch (ramp from prefs + keyboard on), and confirms timer/Agents end allows sleep, do not claim that path is proven.
+Needs a Mac to run the menu-bar extra. Until someone arms Keep the watch with the lid **open** (screen stays usable), closes the lid (brightness floor + keyboard dark), reopens mid-watch (ramp from prefs + keyboard on, Keep the watch still on), do not claim that path is proven.
 
-Until someone proves **Low Power Mode** while the watch is armed (lid open and lid closed) and confirms the Mac stays awake, do not claim LPM cannot force a watch. Until someone proves **lid-closed auto-off** (timer, Agents settle, battery, thermal) **requests sleep** with the lid still closed, do not claim that path.
+Until someone proves **Low Power Mode** while the watch is armed (lid open and lid closed) and confirms the Mac stays awake, do not claim LPM cannot force a leftover watch. Until someone proves **lid-closed safety auto-off** (battery, thermal) **requests sleep** with the lid still closed, do not claim that path.
 
 Until someone proves a **wedge** (clamshell + power + external display, or a sleep assertion Agrypnos did not take) and confirms `pmset disablesleep` is not enough under a closed lid, do not claim Agents detection plus drop-keep-awake is the whole closed-lid story.
 

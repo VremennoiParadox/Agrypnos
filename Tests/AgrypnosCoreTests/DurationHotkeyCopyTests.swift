@@ -41,8 +41,9 @@ final class AgrypnosCopyTests: XCTestCase {
         let caption = AgrypnosCopy.captionPrepared(floor: 15)
         XCTAssertFalse(caption.lowercased().contains("watt"))
         XCTAssertFalse(caption.lowercased().contains("1.76"))
-        XCTAssertTrue(AgrypnosCopy.agentsHint.lowercased().contains("local busy signals"))
-        XCTAssertTrue(AgrypnosCopy.agentsHint.lowercased().contains("settle buffer"))
+        XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("local busy signals"))
+        XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("settle buffer")
+            || AgrypnosCopy.settleGraceHelp.lowercased().contains("idle-after-wait"))
         XCTAssertEqual(AgrypnosCopy.quit, "Quit Agrypnos")
         XCTAssertEqual(AgrypnosCopy.hotkeyHint(.defaultToggle), "⌥⌘A toggles the watch")
     }
@@ -161,7 +162,7 @@ final class AgrypnosCopyTests: XCTestCase {
     func testDurationHintsArePlainAndFitTheDurationCard() {
         XCTAssertEqual(
             AgrypnosCopy.agentsHint,
-            "Stays awake until you turn it off. Local busy signals and the settle buffer only gate Notif."
+            AgrypnosCopy.indefiniteHint
         )
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .untilAgentsSettle, engaged: true, remainingSeconds: nil),

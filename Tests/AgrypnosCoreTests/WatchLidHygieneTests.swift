@@ -173,6 +173,25 @@ final class WatchLidHygieneTests: XCTestCase {
         XCTAssertEqual(engine.preferences.duration, .oneHour)
     }
 
+    func testBatteryFloorWithLidClosedRequestsSleep() {
+        var engine = WatchEngine(preferences: .default)
+        _ = engine.userSetEngaged(true, now: t0, lidClosed: true)
+        XCTAssertEqual(
+            engine.tick(
+                now: t0.addingTimeInterval(1),
+                safety: SafetyInputs(
+                    batteryPercent: 12,
+                    onBatteryDischarging: true,
+                    thermalSerious: false,
+                    lowPowerMode: false
+                ),
+                agents: .idle
+            ),
+            [.disengage(.batteryFloor), .requestSleep]
+        )
+        XCTAssertEqual(engine.preferences.duration, .indefinite)
+    }
+
     func testPreferencesDecodeIgnoresUnknownForceDisplaySleepKey() throws {
         let json = """
         {"batteryFloorPercent":20,"duration":"oneHour","forceDisplaySleep":true,"keyboardBacklightOff":false,"applyBrightnessFloor":true,"brightnessFloor":0.2,"agentSettleGrace":90,"sessionFreshness":45,"hotkey":{"keyCode":0,"option":true,"command":true,"shift":false,"control":false}}

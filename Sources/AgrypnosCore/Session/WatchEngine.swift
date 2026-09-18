@@ -100,7 +100,11 @@ public struct WatchEngine: Equatable, Sendable {
         if mode == .untilAgentsSettle {
             let activity = settle.observe(busy: agents.anyBusy, now: now)
             if activity == .settled {
-                return idleAfterWaitCommands()
+                var commands = idleAfterWaitCommands()
+                if !kernelSleepDisabled {
+                    commands.append(.assertSleepDisabled)
+                }
+                return commands
             }
         }
         if !kernelSleepDisabled {

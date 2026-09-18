@@ -57,6 +57,8 @@ public enum AutoOffEvaluator: Sendable {
         thermalAutoOff: Bool = true,
         now: Date = Date()
     ) -> DisengageReason? {
+        _ = timerEnd
+        _ = now
         guard engaged else { return nil }
         if safety.thermalSerious, thermalAutoOff { return .thermal }
         if safety.onBatteryDischarging,
@@ -65,7 +67,6 @@ public enum AutoOffEvaluator: Sendable {
         {
             return .batteryFloor
         }
-        if let timerEnd, now >= timerEnd { return .timerExpired }
         if safety.lowPowerMode, safety.onBatteryDischarging, !userForcedThisSession {
             return .lowPowerMode
         }

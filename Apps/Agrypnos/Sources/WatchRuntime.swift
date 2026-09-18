@@ -215,6 +215,7 @@ final class WatchRuntime {
             kernelSleepDisabled: kernel
         )
         if commands.contains(where: Self.isPostIdleAfterWait) {
+            apply(commands.filter { if case .assertSleepDisabled = $0 { return true }; return false })
             let token = idleOutbound.beginPost()
             let enabled = engine.preferences.notifEnabled
             idlePostTask?.cancel()

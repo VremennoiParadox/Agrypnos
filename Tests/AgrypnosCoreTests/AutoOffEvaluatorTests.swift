@@ -4,7 +4,7 @@ import XCTest
 final class AutoOffEvaluatorTests: XCTestCase {
     let now = Date(timeIntervalSince1970: 5_000)
 
-    func testTimerExpiry() {
+    func testTimerExpiryDoesNotEndTheWatch() {
         let reason = AutoOffEvaluator.reason(
             engaged: true,
             timerEnd: now.addingTimeInterval(-1),
@@ -13,7 +13,7 @@ final class AutoOffEvaluatorTests: XCTestCase {
             userForcedThisSession: true,
             now: now
         )
-        XCTAssertEqual(reason, .timerExpired)
+        XCTAssertNil(reason)
     }
 
     func testBatteryFloorOnlyWhileDischarging() {
@@ -80,7 +80,7 @@ final class AutoOffEvaluatorTests: XCTestCase {
             thermalAutoOff: false,
             now: now
         )
-        XCTAssertEqual(timer, .timerExpired)
+        XCTAssertNil(timer)
 
         let lpm = AutoOffEvaluator.reason(
             engaged: true,

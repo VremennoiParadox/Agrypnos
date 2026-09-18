@@ -25,7 +25,7 @@ public enum AgrypnosCopy: Sendable {
     public static let launchAtLogin = "Launch at login"
     public static let quit = "Quit Agrypnos"
     public static let agentsHint =
-        "Stays awake until you turn it off. Local busy signals and the settle buffer only gate Notif."
+        "Stays on until you turn it off (battery / thermal still apply)."
     public static let timedHint =
         "Stays on until you turn it off (battery / thermal still apply)."
     // User-armed watches do not auto-off on Low Power Mode, so it is not listed here.
@@ -74,9 +74,7 @@ public enum AgrypnosCopy: Sendable {
         _ = engaged
         _ = remainingSeconds
         switch option {
-        case .untilAgentsSettle:
-            return agentsHint
-        case .oneHour, .threeHours, .custom, .indefinite:
+        case .untilAgentsSettle, .oneHour, .threeHours, .custom, .indefinite:
             return indefiniteHint(thermalAutoOff: thermalAutoOff)
         }
     }
