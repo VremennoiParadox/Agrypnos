@@ -38,10 +38,10 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var rampControl: NSSegmentedControl!
     var thermalSwitch: NSSwitch!
     var notifSwitch: NSSwitch!
-    var discordField: NSTextField!
+    var discordSecrets: SecretRevealRow!
     var discordStatus: NSTextField!
-    var telegramTokenField: NSTextField!
-    var telegramChatField: NSTextField!
+    var telegramTokenSecrets: SecretRevealRow!
+    var telegramChatSecrets: SecretRevealRow!
     var discordInvalid = false
     var loginSwitch: NSSwitch!
     var hotkeyHint: NSTextField!
@@ -319,7 +319,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         stopRecordingIfNeeded()
         NSApp.activate(ignoringOtherApps: true)
         (obj.object as? NSView)?.window?.makeKey()
-        if obj.object as? NSTextField === discordField {
+        if let field = obj.object as? NSTextField, discordSecrets?.contains(field) == true {
             discordInvalid = false
             discordStatus?.stringValue = ""
         }
@@ -334,7 +334,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
             refresh()
             return
         }
-        if field === discordField {
+        if discordSecrets?.contains(field) == true {
             discordInvalid = false
             discordStatus?.stringValue = ""
         }
