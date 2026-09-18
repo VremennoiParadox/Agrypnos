@@ -67,7 +67,7 @@ V1 controls exist in the menu-bar popover. There is no separate settings window.
 
 - **Watch:** Keep the watch, duration presets plus custom minutes, arming caption
 - **Power:** brightness floor % (default **15%**; range 1–40; never 0%), keyboard backlight off, low-battery auto-off **5–100%** (default 15%), brightness return when the lid opens **1 / 2 / 3 s** (default **2s**), thermal auto-off (default on)
-- **Agents:** idle wait after local busy signals stop (**2 minutes – 15 minutes**, default **2 minutes** / 120s; stored prefs below 2m clamp up to 2m) before allowing sleep. Settle buffer on local process and session activity — not “still thinking,” not “agent finished.” Per-tool include still locked.
+- **Agents:** idle wait after local busy signals stop (**2 minutes – 15 minutes**, default **2 minutes** / 120s; stored prefs below 2m clamp up to 2m) before the idle-after-wait POST. Keep the watch stays on until you turn it off. Settle buffer on local process and session activity — not “still thinking,” not “agent finished.” Per-tool include still locked.
 - **Notif:** opt-in idle-after-wait POST (default **off**). Opt-in switch, Discord URL, Telegram token + chat id, and Clear secrets. Self-serve setup lives in the Notif section; same steps: [Notif](#notif).
 - **General:** remappable global hotkey (default `⌥⌘A`), launch at login, quit
 

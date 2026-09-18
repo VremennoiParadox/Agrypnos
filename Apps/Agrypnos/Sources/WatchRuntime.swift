@@ -30,7 +30,7 @@ final class WatchRuntime {
     var unbindHotkey: (() -> Void)?
     private(set) var lastFailedHotkey: HotkeyChord?
     private var hotkeySuspendedForRecord = false
-    /// Hold SleepDisabled until the idle-after-wait POST attempt finishes, then disarm.
+    /// Skip poll only when an idle-after-wait POST is in flight after a safety disarm.
     private var idleOutbound = NotifIdleOutboundCoordinator()
     private var idlePostTask: Task<Void, Never>?
 

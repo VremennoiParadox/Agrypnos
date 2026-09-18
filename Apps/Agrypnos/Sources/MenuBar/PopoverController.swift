@@ -25,6 +25,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var headerMark: NSImageView!
     var sectionControl: NSSegmentedControl!
     var durationControl: NSSegmentedControl!
+    var applyingDurationChrome = false
     var minutesField: NSTextField!
     var durationHint: NSTextField!
     var keyboardSwitch: NSSwitch!
@@ -199,6 +200,8 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
 
     func applyDuration(_ chrome: DurationPickerChrome) {
         guard let durationControl else { return }
+        applyingDurationChrome = true
+        defer { applyingDurationChrome = false }
         for (index, title) in chrome.segmentTitles.enumerated() where index < durationControl.segmentCount {
             durationControl.setLabel(title, forSegment: index)
         }
@@ -292,6 +295,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     }
 
     @objc func durationChanged(_ sender: NSSegmentedControl) {
+        guard !applyingDurationChrome else { return }
         stopRecordingIfNeeded()
         let on = (0..<sender.segmentCount).filter { sender.isSelected(forSegment: $0) }
         let previous = DurationPickerChrome.make(

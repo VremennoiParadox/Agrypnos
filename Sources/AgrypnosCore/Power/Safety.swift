@@ -26,6 +26,16 @@ public enum DisengageReason: String, Equatable, Sendable, CaseIterable, Codable 
     case thermal
     case agentsSettled
     case lowPowerMode
+
+    /// Keep the watch / How long are user settings. Timer and Agents idle must not flip them.
+    public var turnsWatchOff: Bool {
+        switch self {
+        case .batteryFloor, .thermal, .lowPowerMode:
+            return true
+        case .user, .timerExpired, .agentsSettled:
+            return false
+        }
+    }
 }
 
 public struct LastWatchEnd: Equatable, Sendable, Codable {

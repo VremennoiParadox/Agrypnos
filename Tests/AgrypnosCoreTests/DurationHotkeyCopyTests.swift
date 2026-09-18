@@ -161,7 +161,7 @@ final class AgrypnosCopyTests: XCTestCase {
     func testDurationHintsArePlainAndFitTheDurationCard() {
         XCTAssertEqual(
             AgrypnosCopy.agentsHint,
-            "Stays awake while local busy signals run. Allows sleep after the settle buffer."
+            "Stays awake until you turn it off. Local busy signals and the settle buffer only gate Notif."
         )
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .untilAgentsSettle, engaged: true, remainingSeconds: nil),
@@ -189,7 +189,7 @@ final class AgrypnosCopyTests: XCTestCase {
         XCTAssertFalse(AgrypnosCopy.indefiniteHint.lowercased().contains("low power"))
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .oneHour, engaged: false, remainingSeconds: nil),
-            "Runs for the selected time, then turns the watch off."
+            AgrypnosCopy.indefiniteHint
         )
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .threeHours, engaged: false, remainingSeconds: nil),
@@ -197,7 +197,7 @@ final class AgrypnosCopyTests: XCTestCase {
         )
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .oneHour, engaged: true, remainingSeconds: 125),
-            "Auto-off in 2:05"
+            AgrypnosCopy.indefiniteHint
         )
         assertFitsDurationHint(AgrypnosCopy.agentsHint)
         assertFitsDurationHint(AgrypnosCopy.timedHint)
@@ -362,7 +362,7 @@ final class AgrypnosCopyTests: XCTestCase {
         XCTAssertTrue(AgrypnosCopy.settleGrace.lowercased().contains("idle"))
         XCTAssertEqual(
             AgrypnosCopy.settleGraceHelp,
-            "How long to wait after local busy signals stop, before allowing sleep. Agents mode needs this buffer so a quiet gap mid-run (no file write / low CPU) doesn’t look finished and sleep the Mac. Not still thinking — we only see local process and session activity."
+            "How long to wait after local busy signals stop, before the idle-after-wait POST. Agents mode needs this buffer so a quiet gap mid-run (no file write / low CPU) doesn’t look finished. Not still thinking — we only see local process and session activity."
         )
         XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("local busy signals"))
         XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("not still thinking"))
