@@ -253,6 +253,40 @@ final class WatchEngineTests: XCTestCase {
             engine.tick(now: t0.addingTimeInterval(10), safety: .acPower, agents: .idle).isEmpty
         )
     }
+
+    func testAgentsIdleAfterWaitDoesNotPostWhileSubagentWindowStillBusy() {
+        var prefs = UserPreferences.default
+        prefs.duration = .untilAgentsSettle
+        prefs.notifEnabled = true
+        var engine = WatchEngine(preferences: prefs)
+        _ = engine.userSetEngaged(true, now: t0)
+
+        let snapshot = AgentHeuristicEngine().evaluate(
+            processes: [ProcessRecord(pid: 1, cpuPercent: 1, name: "Cursor")],
+            sessionWrites: [
+                SessionFileSignal(
+                    url: URL(fileURLWithPath: "/Users/a/.cursor/projects/x/agent-transcripts/p/p.jsonl"),
+                    modified: t0.addingTimeInterval(-600),
+                    kind: .cursor
+                ),
+                SessionFileSignal(
+                    url: URL(fileURLWithPath: "/Users/a/.cursor/projects/x/agent-transcripts/p/subagents/c.jsonl"),
+                    modified: t0.addingTimeInterval(-600),
+                    kind: .cursor
+                )
+            ],
+            now: t0
+        )
+        XCTAssertTrue(snapshot.anyBusy)
+
+        XCTAssertTrue(engine.tick(now: t0, safety: .acPower, agents: snapshot).isEmpty)
+        XCTAssertTrue(
+            engine.tick(now: t0.addingTimeInterval(120), safety: .acPower, agents: snapshot).isEmpty
+        )
+        XCTAssertTrue(engine.engaged)
+        XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
+        XCTAssertFalse(engine.postedThisUserArm)
+    }
 }
 
 private extension SafetyInputs {
