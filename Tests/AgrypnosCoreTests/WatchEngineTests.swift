@@ -29,16 +29,16 @@ final class WatchEngineTests: XCTestCase {
         XCTAssertFalse(engine.engaged)
     }
 
-    func testTimedWatchExpires() {
+    func testTimedWatchStaysOnAfterTheClock() {
         var prefs = UserPreferences.default
         prefs.duration = .oneHour
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0)
-        XCTAssertEqual(
-            engine.tick(now: t0.addingTimeInterval(3600), safety: .acPower, agents: .idle),
-            [.disengage(.timerExpired)]
+        XCTAssertTrue(
+            engine.tick(now: t0.addingTimeInterval(3600), safety: .acPower, agents: .idle).isEmpty
         )
-        XCTAssertFalse(engine.engaged)
+        XCTAssertTrue(engine.engaged)
+        XCTAssertEqual(engine.preferences.duration, .oneHour)
     }
 
     func testAgentsModeHoldsUntilSettled() {
@@ -67,14 +67,15 @@ final class WatchEngineTests: XCTestCase {
             ).isEmpty
         )
 
-        XCTAssertEqual(
+        XCTAssertTrue(
             engine.tick(
                 now: t0.addingTimeInterval(20 + 120),
                 safety: .acPower,
                 agents: .idle
-            ),
-            [.disengage(.agentsSettled)]
+            ).isEmpty
         )
+        XCTAssertTrue(engine.engaged)
+        XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
     }
 
     func testDroppedKernelWhileEngagedReassertsAndStaysOn() {
@@ -111,15 +112,15 @@ final class WatchEngineTests: XCTestCase {
                 kernelSleepDisabled: true
             ).isEmpty
         )
-        XCTAssertEqual(
+        XCTAssertTrue(
             engine.tick(
                 now: t0.addingTimeInterval(120),
                 safety: .acPower,
                 agents: .idle,
                 kernelSleepDisabled: true
-            ),
-            [.disengage(.agentsSettled)]
+            ).isEmpty
         )
+        XCTAssertTrue(engine.engaged)
     }
 
     func testAdoptLeftoverArmsWithoutBlankingWhenLidIsOpen() {

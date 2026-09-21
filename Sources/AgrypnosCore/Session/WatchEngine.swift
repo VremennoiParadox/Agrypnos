@@ -94,13 +94,17 @@ public struct WatchEngine: Equatable, Sendable {
             userForcedThisSession: userForcedThisSession,
             thermalAutoOff: preferences.thermalAutoOff,
             now: now
-        ) {
+        ), reason.turnsWatchOff {
             return disengage(reason, at: now)
         }
         if mode == .untilAgentsSettle {
             let activity = settle.observe(busy: agents.anyBusy, now: now)
             if activity == .settled {
-                return disengage(.agentsSettled, at: now)
+                var commands = idleAfterWaitCommands()
+                if !kernelSleepDisabled {
+                    commands.append(.assertSleepDisabled)
+                }
+                return commands
             }
         }
         if !kernelSleepDisabled {
@@ -148,6 +152,18 @@ public struct WatchEngine: Equatable, Sendable {
             lidHygieneApplied = false
         }
         return commands
+    }
+
+    mutating func idleAfterWaitCommands() -> [WatchCommand] {
+        guard !postedThisUserArm, NotifIdlePostPolicy.shouldPost(
+            enabled: preferences.notifEnabled,
+            reason: .agentsSettled,
+            sawBusy: settle.sawBusy
+        ) else {
+            return []
+        }
+        postedThisUserArm = true
+        return [.postIdleAfterWaitNotif]
     }
 
     mutating func applyDuration(now: Date) {

@@ -25,6 +25,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var headerMark: NSImageView!
     var sectionControl: NSSegmentedControl!
     var durationControl: NSSegmentedControl!
+    var applyingDurationChrome = false
     var minutesField: NSTextField!
     var durationHint: NSTextField!
     var keyboardSwitch: NSSwitch!
@@ -124,9 +125,11 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         applyDuration(
             DurationPickerChrome.make(
                 duration: runtime.preferences.duration,
-                minutesDraft: minutesField?.currentEditor() != nil
-                    ? (minutesField?.stringValue ?? "")
-                    : nil
+                minutesDraft: DurationPickerChrome.minutesDraft(
+                    isEditing: minutesField?.currentEditor() != nil,
+                    fieldText: minutesField?.stringValue ?? "",
+                    editorText: minutesField?.currentEditor()?.string
+                )
             )
         )
         durationHint?.stringValue = hintCopy(for: runtime)
@@ -173,7 +176,12 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         refresh()
         NSApp.activate(ignoringOtherApps: true)
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-        popover.contentViewController?.view.window?.makeKey()
+        let window = popover.contentViewController?.view.window
+        window?.makeKey()
+        // Watch's Minutes field is the first NSTextField; AppKit focuses it on
+        // makeKey and that used to look like a custom-duration change.
+        window?.makeFirstResponder(nil)
+        refresh()
         popoverScroll?.documentView?.scroll(.zero)
         startCountdown()
         clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
@@ -199,6 +207,8 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
 
     func applyDuration(_ chrome: DurationPickerChrome) {
         guard let durationControl else { return }
+        applyingDurationChrome = true
+        defer { applyingDurationChrome = false }
         for (index, title) in chrome.segmentTitles.enumerated() where index < durationControl.segmentCount {
             durationControl.setLabel(title, forSegment: index)
         }
@@ -212,6 +222,9 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         if chrome.selectedSegment >= 0 || minutesField?.currentEditor() == nil {
             minutesField?.stringValue = chrome.minutesText
         }
+        minutesField?.placeholderString = chrome.selectedSegment >= 0
+            ? ""
+            : AgrypnosCopy.minutesPlaceholder
     }
 
     func layoutHotkeyButton() {
@@ -292,6 +305,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     }
 
     @objc func durationChanged(_ sender: NSSegmentedControl) {
+        guard !applyingDurationChrome else { return }
         stopRecordingIfNeeded()
         let on = (0..<sender.segmentCount).filter { sender.isSelected(forSegment: $0) }
         let previous = DurationPickerChrome.make(

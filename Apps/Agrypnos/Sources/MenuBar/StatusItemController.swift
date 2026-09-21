@@ -60,7 +60,11 @@ final class StatusItemController: NSObject {
                 onBattery: battery.onBatteryDischarging,
                 lidClosed: runtime.engine.lidClosed
             )
-            if runtime.preferences.duration == .untilAgentsSettle, runtime.engine.settle.sawBusy {
+            if runtime.preferences.duration == .untilAgentsSettle,
+               runtime.engine.settle.sawBusy,
+               let last = runtime.engine.settle.lastBusyAt,
+               Date().timeIntervalSince(last) < runtime.preferences.agentSettleGrace
+            {
                 glyph = busyGlyph
             }
         }

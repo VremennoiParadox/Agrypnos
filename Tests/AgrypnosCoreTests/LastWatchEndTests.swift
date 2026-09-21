@@ -103,7 +103,8 @@ final class LastWatchEndTests: XCTestCase {
         XCTAssertEqual(manual.preferences.lastWatchEnd, LastWatchEnd(endedAt: t0.addingTimeInterval(1), reason: .user))
 
         let timer = record(.oneHour, safety: .acPower, wait: 3600)
-        XCTAssertEqual(timer.preferences.lastWatchEnd, LastWatchEnd(endedAt: t0.addingTimeInterval(3600), reason: .timerExpired))
+        XCTAssertNil(timer.preferences.lastWatchEnd)
+        XCTAssertTrue(timer.engaged)
 
         let battery = record(.indefinite, safety: SafetyInputs(batteryPercent: 12, onBatteryDischarging: true, thermalSerious: false, lowPowerMode: false), wait: 1)
         XCTAssertEqual(battery.preferences.lastWatchEnd?.reason, .batteryFloor)
@@ -112,7 +113,8 @@ final class LastWatchEndTests: XCTestCase {
         XCTAssertEqual(thermal.preferences.lastWatchEnd?.reason, .thermal)
 
         let agents = record(.untilAgentsSettle, safety: .acPower, wait: 120, busyFirst: true)
-        XCTAssertEqual(agents.preferences.lastWatchEnd, LastWatchEnd(endedAt: t0.addingTimeInterval(120), reason: .agentsSettled))
+        XCTAssertNil(agents.preferences.lastWatchEnd)
+        XCTAssertTrue(agents.engaged)
 
         var leftover = WatchEngine(preferences: .default)
         _ = leftover.adoptLeftoverKernel(now: t0)
@@ -148,13 +150,21 @@ final class LastWatchEndTests: XCTestCase {
         _ = engine.userSetEngaged(false, now: t0.addingTimeInterval(5))
         let previous = engine.preferences.lastWatchEnd
         _ = engine.userSetEngaged(true, now: t0.addingTimeInterval(10))
-        _ = engine.userSetDuration(.oneHour, now: t0.addingTimeInterval(10))
         XCTAssertEqual(
-            engine.tick(now: t0.addingTimeInterval(10 + 3600), safety: .acPower, agents: .idle),
-            [.disengage(.timerExpired)]
+            engine.tick(
+                now: t0.addingTimeInterval(11),
+                safety: SafetyInputs(
+                    batteryPercent: 12,
+                    onBatteryDischarging: true,
+                    thermalSerious: false,
+                    lowPowerMode: false
+                ),
+                agents: .idle
+            ),
+            [.disengage(.batteryFloor)]
         )
-        XCTAssertEqual(engine.preferences.lastWatchEnd?.reason, .timerExpired)
-        _ = engine.rollbackDisarmFailure(now: t0.addingTimeInterval(3611), lidClosed: false)
+        XCTAssertEqual(engine.preferences.lastWatchEnd?.reason, .batteryFloor)
+        _ = engine.rollbackDisarmFailure(now: t0.addingTimeInterval(12), lidClosed: false)
         XCTAssertTrue(engine.engaged)
         XCTAssertEqual(engine.preferences.lastWatchEnd, previous)
     }

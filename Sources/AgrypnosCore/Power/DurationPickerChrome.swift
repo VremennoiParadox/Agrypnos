@@ -60,6 +60,16 @@ public struct DurationPickerChrome: Equatable, Sendable {
         }
     }
 
+    /// Live typing can lag the stored field text. Prefer editorText while editing.
+    public static func minutesDraft(
+        isEditing: Bool,
+        fieldText: String,
+        editorText: String? = nil
+    ) -> String? {
+        guard isEditing else { return nil }
+        return editorText ?? fieldText
+    }
+
     public static func parseMinutes(_ text: String) -> Int? {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, let value = Int(trimmed) else { return nil }

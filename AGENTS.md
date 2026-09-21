@@ -1,6 +1,6 @@
 # Agrypnos — agent bar
 
-Agrypnos is a native Swift macOS **menu-bar extra**. It keeps a Mac awake with the lid closed while coding agents work, then lets the machine sleep when the watch ends. Personality: warm and direct — playful tone is fine, mysterious capability copy is not. Greek *agrypnos* = sleepless. It is not a Sleepless clone and it is not a watt-marketing page.
+Agrypnos is a native Swift macOS **menu-bar extra**. It keeps a Mac awake with the lid closed while coding agents work, then lets the machine sleep when you turn the watch off (or safety auto-off). Personality: warm and direct — playful tone is fine, mysterious capability copy is not. Greek *agrypnos* = sleepless. It is not a Sleepless clone and it is not a watt-marketing page.
 
 This file is the project bar. Follow it. If a request fights this file, stop and say so.
 
@@ -48,13 +48,13 @@ Ship these, and stop:
 | Keep the watch (armed) | ON = **armed** while the lid is open. Machine may already be held awake (`pmset disablesleep` / SleepDisabled) as needed for the watch, but **no** display blank, **no** `displaysleepnow`, **no** keyboard backlight off on toggle. |
 | Lid-closed keep-awake | With the watch armed, lid close keeps the Mac awake via `pmset disablesleep` (SleepDisabled). IOKit assertions do **not** survive lid close; use them only as extra idle prevention, never as the lid story. |
 | Lid-close hygiene | On lid **close** (not on toggle): set brightness to the **user floor %** (default **15%**, range 1–40; never 0%) and turn **keyboard backlight off**. Brightness write only — not display sleep, not “screen off”. Do **not** use `displaysleepnow` for this path. |
-| Lid-open restore | If the lid opens again while the watch is still armed (timer/agents not finished): gradual brightness ramp (**1 / 2 / 3 s**, default **2s**) + keyboard backlight on. |
-| Hold until end | Stay armed until the selected timer ends or Agents mode waits the settle buffer after local busy signals stop (then allow sleep). |
-| Auto-off timer | Segmented presets `∞` / `1h` / `3h` / `Agents`, plus **custom minutes** (e.g. 33) the user can set. |
+| Lid-open restore | If the lid opens again while the watch is still armed: gradual brightness ramp (**1 / 2 / 3 s**, default **2s**) + keyboard backlight on. Keep the watch and How long stay as the user set them. |
+| Hold until user off | Stay armed until the user turns Keep the watch off. Timer and Agents idle must not flip the toggle or How long. |
+| Auto-off timer | Segmented presets `∞` / `1h` / `3h` / `Agents`, plus **custom minutes** (e.g. 33) the user can set. Remembered only — they do not auto-off. |
 | Auto-off low battery | Slider **5–100%**, default 15%, on discharging battery. |
-| Thermal auto-off | Power toggle, **default ON**. ON (unchanged): while armed, auto-off on `ProcessInfo.thermalState` `.serious` or `.critical`. OFF: skip that thermal path (battery / timer / Agents / LPM unchanged). Toggle only — not °C, not SMC sensors. |
+| Thermal auto-off | Power toggle, **default ON**. ON (unchanged): while armed, auto-off on `ProcessInfo.thermalState` `.serious` or `.critical`. OFF: skip that thermal path (battery / leftover LPM unchanged). Toggle only — not °C, not SMC sensors. |
 | Low Power Mode | Auto-off when LPM is on and discharging **unless** the user deliberately armed this session (forced watch). **Copy honesty:** do not show “ended / standing down” copy while the Mac is still held awake by that forced watch. |
-| Agent watch | Busy → stay awake. After **local busy signals** stop, wait **user settle grace** (`agentSettleGrace`: **2m–15m**, default **2m** / 120s; prefs below 2m clamp up) then allow sleep. Cursor + Claude Code + Codex first. Process + session/transcript mtimes; Claude/Codex may also use CPU. Not think-detection. |
+| Agent watch | Busy → stay awake. After **local busy signals** stop, wait **user settle grace** (`agentSettleGrace`: **2m–15m**, default **2m** / 120s; prefs below 2m clamp up) then idle-after-wait POST if Notif is on. Do **not** disarm. Cursor + Claude Code + Codex first. Process + session/transcript mtimes; Claude/Codex may also use CPU. Not think-detection. |
 | Safety | Reboot clears SleepDisabled. Launch-at-login never re-arms the watch. One-time scoped sudoers grant for *exactly* two `pmset disablesleep` commands. |
 
 ### V1 popover sections (landed)
@@ -79,14 +79,14 @@ V1 switcher is **landed**: **Watch** · **Power** · **Agents** · **General**. 
 - Custom duration in minutes (beyond fixed presets)
 - Low-battery auto-off threshold **5–100%** (default 15%)
 - Brightness floor **%** — Core + popover control; default **15%**; range 1–40; never 0%; lid-close uses this floor (brightness write only — not display sleep, not “screen off”)
-- Idle wait after local busy signals stop (`agentSettleGrace`) — Core + popover control; **2 minutes – 15 minutes**; default **2 minutes** (120s). Never advertise 15s or 30s as the min. Existing prefs below 2m clamp up to 2m. Then allow sleep in Agents mode.
+- Idle wait after local busy signals stop (`agentSettleGrace`) — Core + popover control; **2 minutes – 15 minutes**; default **2 minutes** (120s). Never advertise 15s or 30s as the min. Existing prefs below 2m clamp up to 2m. Gates the idle-after-wait POST. Does not turn Keep the watch off.
   - **What:** settle buffer after **local busy signals** stop (process + session/transcript mtimes; Claude/Codex may also use CPU).
-  - **Why:** a quiet gap mid-run (tool pause, think with no file write) can look “done” and the Mac may sleep too soon. The buffer keeps Agents mode from sleeping between those gaps.
+  - **Why:** a quiet gap mid-run (tool pause, think with no file write) can look “done” and fire Notif too soon. The buffer keeps that POST from firing between those gaps.
   - **Not:** not a stuck-agent detector; not mind-reading; we do **not** know “still thinking” or “agent finished the job.” Ban copy that claims that.
-  - Title may stay short (e.g. “Wait after agents go idle” or “Idle wait”). Help carries the detail, in this spirit: “How long to wait after local busy signals stop, before allowing sleep. Agents mode needs this buffer so a quiet gap mid-run (no file write / low CPU) doesn’t look finished and sleep the Mac. Not still thinking — we only see local process and session activity.”
+  - Title may stay short (e.g. “Wait after agents go idle” or “Idle wait”). Help carries the detail, in this spirit: “How long to wait after local busy signals stop, before the idle-after-wait POST. Agents mode needs this buffer so a quiet gap mid-run (no file write / low CPU) doesn’t look finished. Not still thinking — we only see local process and session activity.”
 - Brightness return when the lid opens — Core + popover control; **1 / 2 / 3 s**, default **2s**
 
-**Unlocked (Core + Agrypnos UI):** thermal auto-off — Power toggle, **default ON**. ON: while armed, `.serious` / `.critical` ends the watch. OFF: skip that path in Core (battery / timer / Agents / LPM unchanged). Stays in Power with floor / battery / ramp. No settings window. Plain caption only (thermal pressure turns the watch off). Ban °C, “safe temp”, health-gauge, warranty claims. Duration / arming copy must not say thermal still applies when the toggle is off.
+**Unlocked (Core + Agrypnos UI):** thermal auto-off — Power toggle, **default ON**. ON: while armed, `.serious` / `.critical` ends the watch. OFF: skip that path in Core (battery / leftover LPM unchanged). Stays in Power with floor / battery / ramp. No settings window. Plain caption only (thermal pressure turns the watch off). Ban °C, “safe temp”, health-gauge, warranty claims. Duration / arming copy must not say thermal still applies when the toggle is off.
 
 Still **locked** until Boss unlocks after Mac prove:
 
@@ -163,11 +163,11 @@ Parallel foundations are forbidden. One track. If you find a second scaffold, de
 
 Warm and direct. Not a mascot. Not a coffee-cup clone. Light personality in **tone** is fine; capability captions must be **plain**.
 
-**Hard:** every popover caption says what the control does. Ban mysterious metaphors for real behavior — no “kill the keys,” “floor the panel,” “sleeps with you,” or vague “when they settle” / “go quiet” as the only explanation. (Internal/product terms like *settle grace* in this file are fine; idle-wait **title** may stay short; **help** must say local busy signals → settle buffer → allow sleep. Ban “still thinking” / “agent finished.”)
+**Hard:** every popover caption says what the control does. Ban mysterious metaphors for real behavior — no “kill the keys,” “floor the panel,” “sleeps with you,” or vague “when they settle” / “go quiet” as the only explanation. (Internal/product terms like *settle grace* in this file are fine; idle-wait **title** may stay short; **help** must say local busy signals → settle buffer → idle-after-wait POST. Ban “still thinking” / “agent finished.”)
 
 Good: “Armed. Waiting for lid close — then brightness floor + keyboard backlight off. Auto-off at 15% battery.”
-Good: “Stays awake while agents are busy. Allows sleep after they go idle.” (short Agents-mode caption is fine; idle-wait **help** must carry the buffer.)
-Good: “How long to wait after local busy signals stop, before allowing sleep. Agents mode needs this buffer so a quiet gap mid-run (no file write / low CPU) doesn’t look finished and sleep the Mac. Not still thinking — we only see local process and session activity.”
+Good: “Stays on until you turn it off (battery / thermal still apply).”
+Good: “How long to wait after local busy signals stop, before the idle-after-wait POST. Agents mode needs this buffer so a quiet gap mid-run (no file write / low CPU) doesn’t look finished. Not still thinking — we only see local process and session activity.”
 Good: “Keeps the Mac awake with the lid closed.”
 Good: “Thermal pressure turns the watch off.”
 Good: “POST to *your* webhook when Agents stay idle after the wait.”

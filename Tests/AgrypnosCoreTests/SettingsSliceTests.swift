@@ -78,7 +78,7 @@ final class SettingsSliceTests: XCTestCase {
         XCTAssertEqual(decoded.duration.minutes, 180)
     }
 
-    func testCustomWatchExpiresAfterThoseMinutes() {
+    func testCustomMinutesStayArmedAfterThoseMinutes() {
         var prefs = UserPreferences.default
         prefs.duration = .customMinutes(33)
         var engine = WatchEngine(preferences: prefs)
@@ -92,14 +92,15 @@ final class SettingsSliceTests: XCTestCase {
                 agents: .idle
             ).isEmpty
         )
-        XCTAssertEqual(
+        XCTAssertTrue(
             engine.tick(
                 now: t0.addingTimeInterval(33 * 60),
                 safety: .acPower,
                 agents: .idle
-            ),
-            [.disengage(.timerExpired)]
+            ).isEmpty
         )
+        XCTAssertTrue(engine.engaged)
+        XCTAssertEqual(engine.preferences.duration, .custom(minutes: 33))
     }
 
     func testChangingToCustomMinutesWhileArmedResetsTimer() {
@@ -114,11 +115,11 @@ final class SettingsSliceTests: XCTestCase {
     func testTimedHintTreatsCustomMinutesLikeOtherTimers() {
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .customMinutes(33), engaged: false, remainingSeconds: nil),
-            "33 minutes, then the watch turns off."
+            AgrypnosCopy.indefiniteHint
         )
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .customMinutes(33), engaged: true, remainingSeconds: 125),
-            "Auto-off in 2:05"
+            AgrypnosCopy.indefiniteHint
         )
     }
 

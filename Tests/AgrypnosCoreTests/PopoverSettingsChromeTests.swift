@@ -56,12 +56,24 @@ final class DurationPickerChromeTests: XCTestCase {
             [false, false, false, false]
         )
 
+        // Minutes focus (empty or digits) is the custom option — presets off.
         let focusing = DurationPickerChrome.make(
             duration: .untilAgentsSettle,
             minutesDraft: ""
         )
         XCTAssertEqual(focusing.selectedSegment, -1)
         XCTAssertEqual(focusing.minutesText, "")
+        XCTAssertEqual(
+            DurationPickerChrome.segmentSelection(selectedSegment: focusing.selectedSegment, count: 4),
+            [false, false, false, false]
+        )
+
+        // Live typing lives in the field editor; stringValue can still be empty.
+        XCTAssertEqual(
+            DurationPickerChrome.minutesDraft(isEditing: true, fieldText: "", editorText: "33"),
+            "33"
+        )
+        XCTAssertNil(DurationPickerChrome.minutesDraft(isEditing: false, fieldText: "33", editorText: nil))
     }
 
     func testPresetSelectionStaysOnTheFourPresets() {

@@ -199,6 +199,7 @@ final class CorePrefsMathTests: XCTestCase {
     func testAgentsSettleUsesPreferenceGraceNotHardcodedDefault() {
         var prefs = UserPreferences(agentSettleGrace: 180)
         prefs.duration = .untilAgentsSettle
+        prefs.notifEnabled = true
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
         XCTAssertTrue(
@@ -209,13 +210,16 @@ final class CorePrefsMathTests: XCTestCase {
         )
         XCTAssertEqual(
             engine.tick(now: t0.addingTimeInterval(180), safety: .acPower, agents: .idle),
-            [.disengage(.agentsSettled)]
+            [.postIdleAfterWaitNotif]
         )
+        XCTAssertTrue(engine.engaged)
+        XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
     }
 
     func testShorteningSettleGraceWhileArmedUsesTheNewWindow() {
         var prefs = UserPreferences(agentSettleGrace: 300)
         prefs.duration = .untilAgentsSettle
+        prefs.notifEnabled = true
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
         XCTAssertTrue(engine.tick(now: t0, safety: .acPower, agents: .busy).isEmpty)
@@ -226,8 +230,9 @@ final class CorePrefsMathTests: XCTestCase {
         XCTAssertEqual(engine.preferences.agentSettleGrace, 120)
         XCTAssertEqual(
             engine.tick(now: t0.addingTimeInterval(150), safety: .acPower, agents: .idle),
-            [.disengage(.agentsSettled)]
+            [.postIdleAfterWaitNotif]
         )
+        XCTAssertTrue(engine.engaged)
     }
 
     func testShorteningSettleGraceBelowTwoMinutesClampsUp() {
