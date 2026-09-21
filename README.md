@@ -1,6 +1,6 @@
 # Agrypnos
 
-Native Swift menu-bar extra for macOS. Keep the Mac awake with the lid closed while coding agents work, then let it sleep when you turn the watch off (or safety auto-off). Greek *agrypnos*: sleepless.
+Native Swift menu-bar extra for macOS. Keep the Mac awake with the lid closed while coding agents work, then let it sleep when you turn the watch off, when Agents stay idle through the wait, or on safety auto-off. Greek *agrypnos*: sleepless.
 
 MIT. No telemetry. No stealth network.
 
@@ -9,7 +9,7 @@ MIT. No telemetry. No stealth network.
 - **Keep the watch** — ON = armed while the lid is open. The machine may already be held awake (`pmset disablesleep`). The display stays usable; Agrypnos does **not** blank the panel, call `displaysleepnow`, or turn the keyboard backlight off on that toggle.
 - **Lid close** — with the watch armed, sleep is blocked via `pmset disablesleep`. Brightness drops to the **floor %** you set (default 15%, range 1–40; never 0%). Keyboard backlight off. Brightness write only — not `displaysleepnow`, not display sleep, not “screen off”.
 - **Lid open mid-watch** — brightness ramps back over **1 / 2 / 3 seconds** (default 2s). Keyboard backlight on.
-- **Hold until you turn it off** — Keep the watch and How long stay as you set them. Timer and Agents idle do not flip the toggle. Battery / thermal (and leftover Low Power Mode) still can.
+- **Hold until you turn it off** — How long stays as you set it. Timer does not flip Keep the watch. Duration **Agents** turns Keep the watch off after local busy this arm, then idle through the wait. Battery / thermal (and leftover Low Power Mode) still can.
 - **Safety** — low battery (slider 5–100%, default 15%), thermal auto-off on `.serious` / `.critical` (Power toggle, default on), reboot clears SleepDisabled, launch-at-login never re-arms.
 
 V1 agents: Cursor, Claude Code, Codex. Local heuristics (process list + session-file mtimes; Claude/Codex may also use CPU). Correctness over coverage.
@@ -67,7 +67,7 @@ V1 controls exist in the menu-bar popover. There is no separate settings window.
 
 - **Watch:** Keep the watch, duration presets plus custom minutes, arming caption
 - **Power:** brightness floor % (default **15%**; range 1–40; never 0%), keyboard backlight off, low-battery auto-off **5–100%** (default 15%), brightness return when the lid opens **1 / 2 / 3 s** (default **2s**), thermal auto-off (default on)
-- **Agents:** idle wait after local busy signals stop (**2 minutes – 15 minutes**, default **2 minutes** / 120s; stored prefs below 2m clamp up to 2m) before the idle-after-wait POST. Keep the watch stays on until you turn it off. Settle buffer on local process and session activity — not “still thinking,” not “agent finished.” Per-tool include still locked.
+- **Agents:** idle wait after local busy signals stop (**2 minutes – 15 minutes**, default **2 minutes** / 120s; stored prefs below 2m clamp up to 2m) before the idle-after-wait POST and turning Keep the watch off. Settle buffer on local process and session activity — not “still thinking,” not “agent finished.” Per-tool include still locked.
 - **Notif:** opt-in idle-after-wait POST (default **off**). Opt-in switch, Discord URL, Telegram token + chat id, and Clear secrets. Self-serve setup lives in the Notif section; same steps: [Notif](#notif).
 - **General:** remappable global hotkey (default `⌥⌘A`), launch at login, quit
 
@@ -126,7 +126,7 @@ Use one channel, or both. Leave a field empty if you do not use that channel. No
 2. In **Watch**, arm Keep the watch with duration **Agents** (`∞` / `1h` / `3h` / custom do not send this POST).
 3. Run a V1 agent Agrypnos can see (Cursor, Claude Code, or Codex) so a **local busy signal** is recorded this arm.
 4. Let that go idle, then wait the idle wait (**Agents** section; default 2 minutes, range 2–15).
-5. Expect **one** Discord webhook POST and/or **one** message from *your* Telegram bot. Copy should say idle after wait — not that the agent stopped or the job finished.
+5. Expect **one** Discord webhook POST and/or **one** message from *your* Telegram bot. Copy should say idle after wait — not that the agent stopped or the job finished. Keep the watch turns off. How long stays **Agents**.
 6. If nothing arrives: Notif off, missing/wrong secret, duration was not Agents, this arm never saw busy, or busy signals are still counting as activity. Agrypnos will not POST to a destination you did not configure.
 
 ### Turn off / clear secrets

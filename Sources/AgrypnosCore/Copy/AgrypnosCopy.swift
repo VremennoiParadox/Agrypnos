@@ -15,7 +15,7 @@ public enum AgrypnosCopy: Sendable {
         "When the lid closes, brightness drops to this percent."
     public static let settleGrace = "Wait after agents go idle"
     public static let settleGraceHelp =
-        "How long to wait after local busy signals stop, before the idle-after-wait POST. Agents mode needs this buffer so a quiet gap mid-run (no file write / low CPU) doesn’t look finished. Not still thinking — we only see local process and session activity."
+        "How long to wait after local busy signals stop, before the idle-after-wait POST. Then Keep the watch turns off. Buffer so a quiet gap mid-run (no file write / low CPU) doesn’t look finished. Not still thinking — we only see local process and session activity."
     public static let lidOpenRamp = "Brightness return when lid opens"
     public static let lidOpenRampHelp =
         "How long brightness takes to come back when the lid opens."
@@ -25,7 +25,7 @@ public enum AgrypnosCopy: Sendable {
     public static let launchAtLogin = "Launch at login"
     public static let quit = "Quit Agrypnos"
     public static let agentsHint =
-        "Stays on until you turn it off (battery / thermal still apply)."
+        "Watch turns off after local busy signals stay idle through the wait (battery / thermal still apply)."
     public static let timedHint =
         "Stays on until you turn it off (battery / thermal still apply)."
     // User-armed watches do not auto-off on Low Power Mode, so it is not listed here.
@@ -37,6 +37,13 @@ public enum AgrypnosCopy: Sendable {
             return AgrypnosCopy.indefiniteHint
         }
         return "Stays on until you turn it off (battery still applies)."
+    }
+
+    public static func agentsHint(thermalAutoOff: Bool) -> String {
+        if thermalAutoOff {
+            return AgrypnosCopy.agentsHint
+        }
+        return "Watch turns off after local busy signals stay idle through the wait (battery still applies)."
     }
 
     public static let captionOff = "Keeps the Mac awake with the lid closed."
@@ -74,7 +81,9 @@ public enum AgrypnosCopy: Sendable {
         _ = engaged
         _ = remainingSeconds
         switch option {
-        case .untilAgentsSettle, .oneHour, .threeHours, .custom, .indefinite:
+        case .untilAgentsSettle:
+            return agentsHint(thermalAutoOff: thermalAutoOff)
+        case .oneHour, .threeHours, .custom, .indefinite:
             return indefiniteHint(thermalAutoOff: thermalAutoOff)
         }
     }

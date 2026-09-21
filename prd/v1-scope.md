@@ -4,7 +4,7 @@ Status: foundation track. Implement this, not a second personality.
 
 ## User / business goal
 
-A human closes a MacBook lid overnight while Cursor / Claude Code / Codex work. The machine must stay up. The display must actually sleep. The keyboard must go dark. Keep the watch stays on until the user turns it off. Safety auto-offs exist so the notebook is not cooked or drained.
+A human closes a MacBook lid overnight while Cursor / Claude Code / Codex work. The machine must stay up. The display must actually sleep. The keyboard must go dark. Keep the watch stays on until the user turns it off, except duration Agents: after local busy this arm then idle through the wait, Keep the watch turns off. Safety auto-offs exist so the notebook is not cooked or drained.
 
 ## Personality
 
@@ -16,8 +16,8 @@ Playful with the user, professional in the mechanism. Greek *agrypnos* = sleeple
 2. Global hotkey toggles the watch. Default Option-Command-A.
 3. Engaged watch sets `pmset -a disablesleep 1` and reads `SleepDisabled` back. Disengage sets `0`.
 4. Engage requests real display sleep, keyboard backlight off, brightness floor. Lid-close while engaged re-applies those, not brightness 0 as the sleep method.
-5. Auto-off: battery floor while discharging, thermal serious/critical, leftover Low Power Mode on battery (hard battery floor always wins). Timer and Agents idle do not auto-off.
-6. Agents mode: busy holds awake; after busy, idle for grace may POST (Notif). Does not disarm. Cursor + Claude Code + Codex only. Process + session mtime. (Core tests.)
+5. Auto-off: battery floor while discharging, thermal serious/critical, leftover Low Power Mode on battery (hard battery floor always wins). Timer does not auto-off. Agents idle-after-wait turns Keep the watch off (How long stays Agents).
+6. Agents mode: busy holds awake; after busy, idle for grace may POST (Notif) and disengages Keep the watch. Never-busy this arm: no POST, no disarm. Cursor + Claude Code + Codex only. Process + session mtime, including nested `/subagents/*.jsonl` within 45s. (Core tests.)
 7. Launch at login never re-arms SleepDisabled.
 8. No watt claims in UI or README. No Wi-Fi/BT kill. No file over 600 lines.
 
