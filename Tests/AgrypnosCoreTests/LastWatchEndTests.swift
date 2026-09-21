@@ -113,8 +113,16 @@ final class LastWatchEndTests: XCTestCase {
         XCTAssertEqual(thermal.preferences.lastWatchEnd?.reason, .thermal)
 
         let agents = record(.untilAgentsSettle, safety: .acPower, wait: 120, busyFirst: true)
-        XCTAssertNil(agents.preferences.lastWatchEnd)
-        XCTAssertTrue(agents.engaged)
+        XCTAssertEqual(
+            agents.preferences.lastWatchEnd,
+            LastWatchEnd(endedAt: t0.addingTimeInterval(120), reason: .agentsSettled)
+        )
+        XCTAssertFalse(agents.engaged)
+        XCTAssertEqual(agents.preferences.duration, .untilAgentsSettle)
+
+        let neverBusy = record(.untilAgentsSettle, safety: .acPower, wait: 120)
+        XCTAssertNil(neverBusy.preferences.lastWatchEnd)
+        XCTAssertTrue(neverBusy.engaged)
 
         var leftover = WatchEngine(preferences: .default)
         _ = leftover.adoptLeftoverKernel(now: t0)

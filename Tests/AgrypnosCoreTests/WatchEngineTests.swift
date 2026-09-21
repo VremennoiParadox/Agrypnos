@@ -41,7 +41,22 @@ final class WatchEngineTests: XCTestCase {
         XCTAssertEqual(engine.preferences.duration, .oneHour)
     }
 
-    func testAgentsModeHoldsUntilSettled() {
+    func testNeverBusyThisArmDoesNotDisengageAgentsWatch() {
+        var prefs = UserPreferences.default
+        prefs.duration = .untilAgentsSettle
+        var engine = WatchEngine(preferences: prefs)
+        _ = engine.userSetEngaged(true, now: t0)
+
+        XCTAssertTrue(engine.tick(now: t0.addingTimeInterval(10), safety: .acPower, agents: .idle).isEmpty)
+        XCTAssertTrue(
+            engine.tick(now: t0.addingTimeInterval(10_000), safety: .acPower, agents: .idle).isEmpty
+        )
+        XCTAssertTrue(engine.engaged)
+        XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
+        XCTAssertNil(engine.preferences.lastWatchEnd)
+    }
+
+    func testAgentsModeDisengagesAfterBusyThenGrace() {
         var prefs = UserPreferences.default
         prefs.duration = .untilAgentsSettle
         var engine = WatchEngine(preferences: prefs)
@@ -66,15 +81,17 @@ final class WatchEngineTests: XCTestCase {
                 agents: .idle
             ).isEmpty
         )
+        XCTAssertTrue(engine.engaged)
 
-        XCTAssertTrue(
+        XCTAssertEqual(
             engine.tick(
                 now: t0.addingTimeInterval(20 + 120),
                 safety: .acPower,
                 agents: .idle
-            ).isEmpty
+            ),
+            [.disengage(.agentsSettled)]
         )
-        XCTAssertTrue(engine.engaged)
+        XCTAssertFalse(engine.engaged)
         XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
     }
 
@@ -91,7 +108,7 @@ final class WatchEngineTests: XCTestCase {
         XCTAssertTrue(engine.engaged)
     }
 
-    func testAgentsStillSettleWhenKernelIsHeld() {
+    func testAgentsSettleDisengagesWhenKernelIsHeld() {
         var prefs = UserPreferences.default
         prefs.duration = .untilAgentsSettle
         var engine = WatchEngine(preferences: prefs)
@@ -112,15 +129,17 @@ final class WatchEngineTests: XCTestCase {
                 kernelSleepDisabled: true
             ).isEmpty
         )
-        XCTAssertTrue(
+        XCTAssertEqual(
             engine.tick(
                 now: t0.addingTimeInterval(120),
                 safety: .acPower,
                 agents: .idle,
                 kernelSleepDisabled: true
-            ).isEmpty
+            ),
+            [.disengage(.agentsSettled)]
         )
-        XCTAssertTrue(engine.engaged)
+        XCTAssertFalse(engine.engaged)
+        XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
     }
 
     func testAdoptLeftoverArmsWithoutBlankingWhenLidIsOpen() {
@@ -286,9 +305,10 @@ final class WatchEngineTests: XCTestCase {
         XCTAssertTrue(engine.engaged)
         XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
         XCTAssertFalse(engine.postedThisUserArm)
+        XCTAssertNil(engine.preferences.lastWatchEnd)
     }
 
-    func testAgentsIdleAfterWaitPostsWhenNestedSubagentTranscriptIsStale() {
+    func testAgentsIdleAfterWaitPostsAndDisengagesWhenNestedSubagentTranscriptIsStale() {
         var prefs = UserPreferences.default
         prefs.duration = .untilAgentsSettle
         prefs.notifEnabled = true
@@ -314,6 +334,28 @@ final class WatchEngineTests: XCTestCase {
         XCTAssertTrue(busy.anyBusy)
         XCTAssertTrue(engine.tick(now: t0, safety: .acPower, agents: busy).isEmpty)
 
+        let staleBeforeGrace = AgentHeuristicEngine().evaluate(
+            processes: [ProcessRecord(pid: 1, cpuPercent: 1, name: "Cursor")],
+            sessionWrites: [
+                SessionFileSignal(
+                    url: URL(fileURLWithPath: "/Users/a/.cursor/projects/x/agent-transcripts/p/p.jsonl"),
+                    modified: t0.addingTimeInterval(-600),
+                    kind: .cursor
+                ),
+                SessionFileSignal(
+                    url: URL(fileURLWithPath: "/Users/a/.cursor/projects/x/agent-transcripts/p/subagents/c.jsonl"),
+                    modified: t0.addingTimeInterval(-10),
+                    kind: .cursor
+                )
+            ],
+            now: t0.addingTimeInterval(46)
+        )
+        XCTAssertFalse(staleBeforeGrace.anyBusy)
+        XCTAssertTrue(
+            engine.tick(now: t0.addingTimeInterval(46), safety: .acPower, agents: staleBeforeGrace).isEmpty
+        )
+        XCTAssertTrue(engine.engaged)
+
         let stale = AgentHeuristicEngine().evaluate(
             processes: [ProcessRecord(pid: 1, cpuPercent: 1, name: "Cursor")],
             sessionWrites: [
@@ -333,9 +375,9 @@ final class WatchEngineTests: XCTestCase {
         XCTAssertFalse(stale.anyBusy)
         XCTAssertEqual(
             engine.tick(now: t0.addingTimeInterval(120), safety: .acPower, agents: stale),
-            [.postIdleAfterWaitNotif]
+            [.disengage(.agentsSettled), .postIdleAfterWaitNotif]
         )
-        XCTAssertTrue(engine.engaged)
+        XCTAssertFalse(engine.engaged)
         XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
         XCTAssertTrue(engine.postedThisUserArm)
     }

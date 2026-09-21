@@ -4,7 +4,7 @@ import XCTest
 final class StickyWatchTests: XCTestCase {
     let t0 = Date(timeIntervalSince1970: 10_000)
 
-    func testAgentsIdleKeepsTheWatchOnAndLeavesDurationAlone() {
+    func testAgentsIdleTurnsTheWatchOffAndLeavesDurationAlone() {
         var prefs = UserPreferences.default
         prefs.duration = .untilAgentsSettle
         var engine = WatchEngine(preferences: prefs)
@@ -16,10 +16,13 @@ final class StickyWatchTests: XCTestCase {
             safety: .acPower,
             agents: .idle
         )
-        XCTAssertFalse(commands.contains { if case .disengage = $0 { return true }; return false })
-        XCTAssertTrue(engine.engaged)
+        XCTAssertEqual(commands, [.disengage(.agentsSettled)])
+        XCTAssertFalse(engine.engaged)
         XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
-        XCTAssertNil(engine.preferences.lastWatchEnd)
+        XCTAssertEqual(
+            engine.preferences.lastWatchEnd,
+            LastWatchEnd(endedAt: t0.addingTimeInterval(20 + 120), reason: .agentsSettled)
+        )
     }
 
     func testTimerEndKeepsTheWatchOnAndLeavesDurationAlone() {
@@ -45,16 +48,18 @@ final class StickyWatchTests: XCTestCase {
         _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
         _ = engine.tick(now: t0.addingTimeInterval(5), safety: .acPower, agents: .busy)
         _ = engine.lidDidClose(now: t0.addingTimeInterval(10))
-        _ = engine.tick(now: t0.addingTimeInterval(10 + 120), safety: .acPower, agents: .idle)
+        XCTAssertTrue(
+            engine.tick(now: t0.addingTimeInterval(15), safety: .acPower, agents: .busy).isEmpty
+        )
         XCTAssertTrue(engine.engaged)
         XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
 
-        let open = engine.lidDidOpen(now: t0.addingTimeInterval(11))
+        let open = engine.lidDidOpen(now: t0.addingTimeInterval(16))
         XCTAssertFalse(open.contains { if case .disengage = $0 { return true }; return false })
         let afterOpen = engine.tick(
-            now: t0.addingTimeInterval(11 + 120),
+            now: t0.addingTimeInterval(20),
             safety: .acPower,
-            agents: .idle
+            agents: .busy
         )
         XCTAssertFalse(afterOpen.contains { if case .disengage = $0 { return true }; return false })
         XCTAssertTrue(engine.engaged)
@@ -91,7 +96,7 @@ final class StickyWatchTests: XCTestCase {
         XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
     }
 
-    func testAgentsSettleCanPostWithoutDisengage() {
+    func testAgentsSettlePostsAndTurnsTheWatchOff() {
         var prefs = UserPreferences.default
         prefs.duration = .untilAgentsSettle
         prefs.notifEnabled = true
@@ -100,9 +105,9 @@ final class StickyWatchTests: XCTestCase {
         XCTAssertTrue(engine.tick(now: t0.addingTimeInterval(20), safety: .acPower, agents: .busy).isEmpty)
         XCTAssertEqual(
             engine.tick(now: t0.addingTimeInterval(20 + 120), safety: .acPower, agents: .idle),
-            [.postIdleAfterWaitNotif]
+            [.disengage(.agentsSettled), .postIdleAfterWaitNotif]
         )
-        XCTAssertTrue(engine.engaged)
+        XCTAssertFalse(engine.engaged)
         XCTAssertTrue(engine.postedThisUserArm)
         XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
         XCTAssertTrue(
@@ -110,7 +115,7 @@ final class StickyWatchTests: XCTestCase {
         )
     }
 
-    func testAgentsIdleWithDroppedKernelReassertsSleepDisabled() {
+    func testAgentsIdleWithDroppedKernelDisengagesWithoutReasserting() {
         var prefs = UserPreferences.default
         prefs.duration = .untilAgentsSettle
         prefs.notifEnabled = true
@@ -124,17 +129,17 @@ final class StickyWatchTests: XCTestCase {
                 agents: .idle,
                 kernelSleepDisabled: false
             ),
-            [.postIdleAfterWaitNotif, .assertSleepDisabled]
+            [.disengage(.agentsSettled), .postIdleAfterWaitNotif]
         )
-        XCTAssertTrue(engine.engaged)
-        XCTAssertEqual(
+        XCTAssertFalse(engine.engaged)
+        XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
+        XCTAssertTrue(
             engine.tick(
                 now: t0.addingTimeInterval(20 + 180),
                 safety: .acPower,
                 agents: .idle,
                 kernelSleepDisabled: false
-            ),
-            [.assertSleepDisabled]
+            ).isEmpty
         )
     }
 
@@ -160,9 +165,9 @@ final class StickyWatchTests: XCTestCase {
         XCTAssertEqual(engine.preferences.duration, .oneHour)
     }
 
-    func testTimerAndAgentsIdleDoNotCountAsTurningTheWatchOff() {
+    func testTimerDoesNotTurnTheWatchOffAndAgentsIdleDoes() {
         XCTAssertFalse(DisengageReason.timerExpired.turnsWatchOff)
-        XCTAssertFalse(DisengageReason.agentsSettled.turnsWatchOff)
+        XCTAssertTrue(DisengageReason.agentsSettled.turnsWatchOff)
         XCTAssertFalse(DisengageReason.user.turnsWatchOff)
         XCTAssertTrue(DisengageReason.batteryFloor.turnsWatchOff)
         XCTAssertTrue(DisengageReason.thermal.turnsWatchOff)
