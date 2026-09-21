@@ -19,12 +19,13 @@ public enum StatusItemState: Equatable, Sendable {
     }
 
     /// Remaining-time digits only if this returns a date Core will actually turn the watch off.
+    /// Sticky How long is remembered only; do not read `timerEnd` as that clock.
     public static func autoOffEndClock(
         engaged: Bool,
         duration: DurationOption,
         timerEnd: Date?
     ) -> Date? {
-        _ = engaged
+        guard engaged else { return nil }
         _ = timerEnd
         switch duration {
         case .indefinite, .oneHour, .threeHours, .custom, .untilAgentsSettle:

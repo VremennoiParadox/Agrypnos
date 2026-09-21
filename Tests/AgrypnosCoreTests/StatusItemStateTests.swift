@@ -5,13 +5,21 @@ final class StatusItemStateTests: XCTestCase {
     let t0 = Date(timeIntervalSince1970: 10_000)
 
     func testDisengagedIsOffForEveryHowLong() {
+        XCTAssertEqual(AgrypnosCopy.statusItemTitle(.off), "")
         for duration in stickyHowLong {
             XCTAssertEqual(
                 StatusItemState.from(engaged: false, duration: duration),
                 .off,
                 "disengaged \(duration) must be off, not a leftover Agents/armed title"
             )
-            XCTAssertEqual(AgrypnosCopy.statusItemTitle(.off), "")
+            XCTAssertNil(
+                StatusItemState.remainingSeconds(
+                    engaged: false,
+                    duration: duration,
+                    timerEnd: t0.addingTimeInterval(3600),
+                    now: t0
+                )
+            )
         }
     }
 
