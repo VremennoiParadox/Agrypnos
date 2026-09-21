@@ -171,6 +171,8 @@ public enum AgrypnosCopy: Sendable {
         "Discord: Server Settings → Integrations → Webhooks → New Webhook → copy URL → paste above. Empty skips Discord. Telegram: @BotFather /newbot → token. Message the bot. Chat id from https://api.telegram.org/botYOUR_TOKEN/getUpdates — find \"chat\":{\"id\":. Empty result: message the bot, then reload. Paste token + chat id. Test: turn Notif on, save secrets, arm Agents, produce a local busy signal, wait the idle wait, expect one POST to your webhook and/or your Telegram bot. The event is idle after wait. Off: switch Notif off. Clear secrets deletes those saved values."
     public static let notifIdleBody =
         "Agrypnos: local busy signals went idle after the wait."
+    public static let statusItemArmed = "Armed."
+    public static let statusItemAgents = "Agents."
     public static let menuTooltipOff = "Agrypnos: watch is off."
     public static let menuTooltipOn =
         "Agrypnos: armed. Waiting for lid close — then brightness floor + keyboard backlight off."
@@ -182,6 +184,14 @@ public enum AgrypnosCopy: Sendable {
         "Agrypnos: adopted leftover SleepDisabled. Waiting for lid close — then brightness floor + keyboard backlight off."
     public static let menuTooltipLeftoverLidClosed =
         "Agrypnos: adopted leftover SleepDisabled. Lid closed. Brightness floor + keyboard backlight off."
+
+    public static func statusItemTitle(_ state: StatusItemState) -> String {
+        switch state {
+        case .off: return ""
+        case .armed: return statusItemArmed
+        case .agents: return statusItemAgents
+        }
+    }
 
     public static func leftoverCaption(floor: Int, lidClosed: Bool = false) -> String {
         if lidClosed {
