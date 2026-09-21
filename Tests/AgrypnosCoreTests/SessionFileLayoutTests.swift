@@ -116,4 +116,15 @@ final class SessionFileLayoutTests: XCTestCase {
         XCTAssertTrue(SessionFileLayout.isRelevantFile(claudeChild, kind: .claudeCode))
         XCTAssertEqual(SessionFileLayout.classify(claudeChild), .claudeCode)
     }
+
+    func testAgentToolsAndClaudeMetaAreNotSessionFiles() {
+        let tools = URL(fileURLWithPath: "/Users/ada/.cursor/projects/foo/agent-tools/out.txt")
+        let meta = URL(
+            fileURLWithPath: "/Users/ada/.claude/projects/p/s/subagents/agent-1.meta.json"
+        )
+        XCTAssertFalse(SessionFileLayout.isRelevantFile(tools, kind: .cursor))
+        XCTAssertFalse(SessionFileLayout.isSubagentSessionPath(tools))
+        XCTAssertFalse(SessionFileLayout.isRelevantFile(meta, kind: .claudeCode))
+        XCTAssertTrue(SessionFileLayout.isSubagentSessionPath(meta))
+    }
 }
