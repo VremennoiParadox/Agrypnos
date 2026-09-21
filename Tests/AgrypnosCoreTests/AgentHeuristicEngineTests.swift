@@ -194,6 +194,52 @@ final class AgentHeuristicEngineTests: XCTestCase {
         XCTAssertEqual(snap.report(.claudeCode)?.processRunning, false)
         XCTAssertFalse(snap.report(.claudeCode)?.isBusy ?? true)
     }
+
+    func testCursorParentStaleSubagentTranscriptWithinSubagentWindowIsBusy() {
+        let engine = AgentHeuristicEngine()
+        let snap = engine.evaluate(
+            processes: [ProcessRecord(pid: 1, cpuPercent: 1, name: "Cursor")],
+            sessionWrites: [
+                SessionFileSignal(
+                    url: URL(fileURLWithPath: "/Users/a/.cursor/projects/x/agent-transcripts/p/p.jsonl"),
+                    modified: now.addingTimeInterval(-600),
+                    kind: .cursor
+                ),
+                SessionFileSignal(
+                    url: URL(fileURLWithPath: "/Users/a/.cursor/projects/x/agent-transcripts/p/subagents/c.jsonl"),
+                    modified: now.addingTimeInterval(-600),
+                    kind: .cursor
+                )
+            ],
+            now: now
+        )
+        XCTAssertTrue(snap.anyBusy)
+        XCTAssertEqual(snap.report(.cursor)?.recentSessionWrite, true)
+        XCTAssertEqual(snap.report(.cursor)?.isBusy, true)
+    }
+
+    func testClaudeParentStaleSubagentJSONLWithinSubagentWindowIsBusy() {
+        let engine = AgentHeuristicEngine()
+        let snap = engine.evaluate(
+            processes: [ProcessRecord(pid: 9, cpuPercent: 0.2, name: "claude")],
+            sessionWrites: [
+                SessionFileSignal(
+                    url: URL(fileURLWithPath: "/Users/a/.claude/projects/p/s.jsonl"),
+                    modified: now.addingTimeInterval(-600),
+                    kind: .claudeCode
+                ),
+                SessionFileSignal(
+                    url: URL(fileURLWithPath: "/Users/a/.claude/projects/p/s/subagents/agent-1.jsonl"),
+                    modified: now.addingTimeInterval(-600),
+                    kind: .claudeCode
+                )
+            ],
+            now: now
+        )
+        XCTAssertTrue(snap.report(.claudeCode)?.isBusy ?? false)
+        XCTAssertEqual(snap.report(.claudeCode)?.cpuBusy, false)
+        XCTAssertEqual(snap.report(.claudeCode)?.recentSessionWrite, true)
+    }
 }
 
 private extension AgentSnapshot {

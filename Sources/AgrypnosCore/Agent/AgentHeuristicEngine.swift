@@ -47,14 +47,19 @@ public struct AgentSnapshot: Equatable, Sendable {
 }
 
 public struct AgentHeuristicConfig: Equatable, Sendable {
+    public static let defaultSubagentSessionFreshness: TimeInterval = 900
+
     public var sessionFreshness: TimeInterval
+    public var subagentSessionFreshness: TimeInterval
     public var claudeCodexCPUBusyThreshold: Double
 
     public init(
         sessionFreshness: TimeInterval = UserPreferences.defaultSessionFreshness,
+        subagentSessionFreshness: TimeInterval = AgentHeuristicConfig.defaultSubagentSessionFreshness,
         claudeCodexCPUBusyThreshold: Double = 5
     ) {
         self.sessionFreshness = sessionFreshness
+        self.subagentSessionFreshness = subagentSessionFreshness
         self.claudeCodexCPUBusyThreshold = claudeCodexCPUBusyThreshold
     }
 }
@@ -90,7 +95,14 @@ public struct AgentHeuristicEngine: Equatable, Sendable {
                 && $0.cpuPercent >= config.claudeCodexCPUBusyThreshold
         }
         let recentSessionWrite = sessionWrites.contains { signal in
-            signal.kind == kind && now.timeIntervalSince(signal.modified) <= config.sessionFreshness
+            guard signal.kind == kind else { return false }
+            // ponytail: 15m flush window only for /subagents/ paths. Cursor Task jsonl
+            // often writes at turn start, not per tool. If short subagents delay Notif
+            // too long, drop this to sessionFreshness (45s) instead of adding detectors.
+            let window = SessionFileLayout.isSubagentSessionPath(signal.url)
+                ? config.subagentSessionFreshness
+                : config.sessionFreshness
+            return now.timeIntervalSince(signal.modified) <= window
         }
         let isBusy: Bool
         switch kind {
