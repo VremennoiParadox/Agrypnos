@@ -43,7 +43,7 @@ Ship these, and stop:
 
 | Piece | Behavior |
 |---|---|
-| Menu-bar extra + popover | Cards, toggles, duration (presets + custom minutes), remappable hotkey, low-battery slider (5–100%), brightness floor %, idle wait, brightness return 1/2/3s, thermal auto-off (Power toggle, default ON), launch-at-login, quit. Agrypnos glyph (eye, not a coffee cup). **Plain captions only** — every control says what it does (armed / waiting for lid close → brightness floor + keyboard backlight off). No poetry. **No separate settings window** — controls stay in the popover behind **Watch** · **Power** · **Agents** · **Notif** · **General**. |
+| Menu-bar extra + popover | Cards, toggles, duration (presets + custom minutes), remappable hotkey, low-battery slider (5–100%), brightness floor %, idle wait, brightness return 1/2/3s, thermal auto-off (Power toggle, default ON), launch-at-login, quit. Agrypnos glyph (eye, not a coffee cup). **Plain captions only** — every control says what it does (armed / waiting for lid close → brightness floor + keyboard backlight off). No poetry. **No separate settings window** — V1 controls stay in the popover. **Notif** is landed V2 in the same switcher (see Popover sections), not a V1 add-on. |
 | Global hotkey | Activate/toggle the watch. Default `⌥⌘A`. **Remappable** in the popover (conflict-safe). Required V1. Surface bind failure honestly when the chord cannot register. |
 | Keep the watch (armed) | ON = **armed** while the lid is open. Machine may already be held awake (`pmset disablesleep` / SleepDisabled) as needed for the watch, but **no** display blank, **no** `displaysleepnow`, **no** keyboard backlight off on toggle. |
 | Lid-closed keep-awake | With the watch armed, lid close keeps the Mac awake via `pmset disablesleep` (SleepDisabled). IOKit assertions do **not** survive lid close; use them only as extra idle prevention, never as the lid story. |
@@ -111,11 +111,11 @@ Still **locked** until Boss unlocks after Mac prove:
 
 ### Unlocked (implement next)
 
-**Status-item remaining time** — Core + Agrypnos UI. Boss unlocked after Mac prove. Implement this. Do not grow it. Do not treat it as parked. Per-tool Agents include stays locked.
+**Status-item remaining time** — Core + Agrypnos UI. Boss unlocked after Mac prove. The honest slice is **not** a countdown. Implement this. Do not grow it. Do not treat it as parked. Per-tool Agents include stays locked.
 
-- Menu-bar status item shows remaining time while armed **when it is meaningful**.
-- Honest with sticky How long: `∞` / `Agents` / custom — do **not** invent a fake countdown for Agents or `∞`. Timed presets (`1h` / `3h` / custom minutes) are **remembered only** and do not auto-off — do **not** claim a timer that will turn the watch off.
-- **Honest smallest bar:** while armed, a **non-countdown** status — **armed**, or **Agents** when How long is Agents. Remaining-time digits only if Core has a **real end clock** that will actually turn the watch off. Sticky How long is not that clock. Agents idle-after-wait turns Keep the watch off; that is not a countdown.
+- **Honest smallest bar:** while armed, a **non-countdown** status — **armed**, or **Agents** when How long is Agents.
+- Do **not** invent a fake countdown for `∞`, Agents, or remembered-only timed presets (`1h` / `3h` / custom minutes). Those How long values do not auto-off. Sticky How long is not an end clock.
+- Remaining-time digits only if Core has a **real end clock** that will actually turn the watch off. Agents idle-after-wait turns Keep the watch off; that is not a countdown.
 - Plain copy. No watt fiction. Ban “1h left” / ticking remaining when nothing will auto-off at that time.
 
 ### V2 park (do not implement)
