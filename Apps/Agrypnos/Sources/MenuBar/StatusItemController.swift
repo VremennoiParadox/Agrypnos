@@ -85,11 +85,14 @@ final class StatusItemController: NSObject {
 
     private func apply(_ chrome: StatusItemChrome, to button: NSButton) {
         button.title = chrome.title
+        button.setAccessibilityTitle(chrome.accessibilityTitle)
         switch chrome.imagePosition {
         case .imageOnly:
             button.imagePosition = .imageOnly
+            button.imageHugsTitle = false
         case .imageLeading:
             button.imagePosition = .imageLeading
+            button.imageHugsTitle = true
         }
         switch chrome.length {
         case .square:

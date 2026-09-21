@@ -18,6 +18,10 @@ public struct StatusItemChrome: Equatable, Sendable {
     public let length: Length
     public let imagePosition: ImagePosition
 
+    public var accessibilityTitle: String {
+        title.isEmpty ? AgrypnosCopy.appName : "\(AgrypnosCopy.appName), \(title)"
+    }
+
     public init(title: String, length: Length, imagePosition: ImagePosition) {
         self.title = title
         self.length = length

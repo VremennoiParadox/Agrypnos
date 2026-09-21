@@ -11,9 +11,11 @@ final class StatusItemChromeTests: XCTestCase {
         )
         XCTAssertEqual(chrome.title, "")
         XCTAssertEqual(chrome.title, AgrypnosCopy.statusItemTitle(.off))
+        XCTAssertEqual(chrome.accessibilityTitle, AgrypnosCopy.appName)
         XCTAssertEqual(chrome.length, .square)
         XCTAssertEqual(chrome.imagePosition, .imageOnly)
         assertNoCountdownFiction(chrome.title)
+        assertNoCountdownFiction(chrome.accessibilityTitle)
     }
 
     func testArmedHowLongShowsArmedWithGlyphAndNoCountdown() {
@@ -26,9 +28,11 @@ final class StatusItemChromeTests: XCTestCase {
             XCTAssertEqual(state, .armed)
             XCTAssertEqual(chrome.title, "Armed.")
             XCTAssertEqual(chrome.title, AgrypnosCopy.statusItemArmed)
+            XCTAssertEqual(chrome.accessibilityTitle, "Agrypnos, Armed.")
             XCTAssertEqual(chrome.length, .variable)
             XCTAssertEqual(chrome.imagePosition, .imageLeading)
             assertNoCountdownFiction(chrome.title)
+            assertNoCountdownFiction(chrome.accessibilityTitle)
         }
     }
 
@@ -39,9 +43,11 @@ final class StatusItemChromeTests: XCTestCase {
         )
         XCTAssertEqual(chrome.title, "Agents.")
         XCTAssertEqual(chrome.title, AgrypnosCopy.statusItemAgents)
+        XCTAssertEqual(chrome.accessibilityTitle, "Agrypnos, Agents.")
         XCTAssertEqual(chrome.length, .variable)
         XCTAssertEqual(chrome.imagePosition, .imageLeading)
         assertNoCountdownFiction(chrome.title)
+        assertNoCountdownFiction(chrome.accessibilityTitle)
     }
 
     func testNilRemainingSecondsDoesNotInventDigits() {
@@ -49,6 +55,7 @@ final class StatusItemChromeTests: XCTestCase {
             let chrome = StatusItemChrome.make(state: state, remainingSeconds: nil)
             XCTAssertEqual(chrome.title, AgrypnosCopy.statusItemTitle(state))
             assertNoCountdownFiction(chrome.title)
+            assertNoCountdownFiction(chrome.accessibilityTitle)
         }
     }
 
@@ -102,7 +109,9 @@ final class StatusItemChromeTests: XCTestCase {
             StatusItemChrome.make(state: .agents, remainingSeconds: 0),
         ] {
             assertNoCountdownFiction(chrome.title)
+            assertNoCountdownFiction(chrome.accessibilityTitle)
             XCTAssertFalse(chrome.title.lowercased().contains("watt"))
+            XCTAssertFalse(chrome.accessibilityTitle.lowercased().contains("watt"))
             XCTAssertFalse(chrome.title.lowercased().contains("1.76"))
             XCTAssertFalse(chrome.title.contains("1h left"))
         }
