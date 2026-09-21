@@ -71,7 +71,7 @@ Controls live in the menu-bar popover. There is no separate settings window. A s
 - **Notif:** opt-in idle-after-wait POST (default **off**). Opt-in switch, Discord URL, Telegram token + chat id, and Clear secrets. Self-serve setup lives in the Notif section; same steps: [Notif](#notif).
 - **General:** remappable global hotkey (default `⌥⌘A`), launch at login, quit
 
-The menu-bar extra does not show a remaining-time countdown. How long timers do not auto-off. Still locked: per-tool Agents include list. Donate stays gated until there is a live URL.
+The menu-bar extra shows **Armed.** while Keep the watch is on for ∞ / 1h / 3h / custom minutes, and **Agents.** while it is on and How long is Agents. Off is the glyph only. Not a remaining-time countdown — How long timers do not auto-off. Still locked: per-tool Agents include list. Donate stays gated until there is a live URL.
 
 ## Notif
 
