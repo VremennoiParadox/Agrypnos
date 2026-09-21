@@ -174,7 +174,12 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         refresh()
         NSApp.activate(ignoringOtherApps: true)
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-        popover.contentViewController?.view.window?.makeKey()
+        let window = popover.contentViewController?.view.window
+        window?.makeKey()
+        // Watch's Minutes field is the first NSTextField; AppKit focuses it on
+        // makeKey and that used to look like a custom-duration change.
+        window?.makeFirstResponder(nil)
+        refresh()
         popoverScroll?.documentView?.scroll(.zero)
         startCountdown()
         clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in

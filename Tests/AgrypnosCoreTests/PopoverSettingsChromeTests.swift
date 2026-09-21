@@ -56,12 +56,22 @@ final class DurationPickerChromeTests: XCTestCase {
             [false, false, false, false]
         )
 
+        // Focusing Minutes with no digits must not look like a custom duration.
+        // Popover open often focuses that field; empty draft used to unselect Agents.
         let focusing = DurationPickerChrome.make(
             duration: .untilAgentsSettle,
             minutesDraft: ""
         )
-        XCTAssertEqual(focusing.selectedSegment, -1)
+        XCTAssertEqual(focusing.selectedSegment, 3)
         XCTAssertEqual(focusing.minutesText, "")
+        XCTAssertEqual(
+            DurationPickerChrome.segmentSelection(selectedSegment: focusing.selectedSegment, count: 4),
+            [false, false, false, true]
+        )
+        XCTAssertEqual(
+            DurationPickerChrome.make(duration: .indefinite, minutesDraft: "  ").selectedSegment,
+            0
+        )
     }
 
     func testPresetSelectionStaysOnTheFourPresets() {

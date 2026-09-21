@@ -28,18 +28,13 @@ public struct DurationPickerChrome: Equatable, Sendable {
         minutesDraft: String? = nil
     ) -> DurationPickerChrome {
         let titles = DurationOption.presets.map(\.segmentTitle)
-        if let draft = minutesDraft {
-            if let minutes = parseMinutes(draft) {
-                return DurationPickerChrome(
-                    segmentTitles: titles,
-                    selectedSegment: -1,
-                    minutesText: "\(minutes)"
-                )
-            }
+        // Digits in Minutes are a custom-duration draft. Empty/junk focus must
+        // not unselect a preset — popover open often focuses that field.
+        if let draft = minutesDraft, let minutes = parseMinutes(draft) {
             return DurationPickerChrome(
                 segmentTitles: titles,
                 selectedSegment: -1,
-                minutesText: draft
+                minutesText: "\(minutes)"
             )
         }
         switch duration {
@@ -48,14 +43,14 @@ public struct DurationPickerChrome: Equatable, Sendable {
             return DurationPickerChrome(
                 segmentTitles: titles,
                 selectedSegment: -1,
-                minutesText: "\(value)"
+                minutesText: minutesDraft ?? "\(value)"
             )
         default:
             let index = DurationOption.presets.firstIndex(of: duration) ?? 0
             return DurationPickerChrome(
                 segmentTitles: titles,
                 selectedSegment: index,
-                minutesText: ""
+                minutesText: minutesDraft ?? ""
             )
         }
     }
