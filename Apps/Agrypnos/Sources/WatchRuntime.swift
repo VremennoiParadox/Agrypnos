@@ -24,6 +24,8 @@ final class WatchRuntime {
 
     var preferences: UserPreferences { engine.preferences }
     var engaged: Bool { engine.engaged }
+    var statusItemState: StatusItemState { engine.statusItemState }
+    var statusItemTitle: String { AgrypnosCopy.statusItemTitle(engine.statusItemState) }
     var hotkeyRegistered = false
     var adoptedLeftover: Bool { engine.leftoverAdopted }
     var bindHotkey: ((HotkeyChord) -> Bool)?
