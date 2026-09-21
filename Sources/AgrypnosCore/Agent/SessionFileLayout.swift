@@ -56,6 +56,10 @@ public enum SessionFileLayout: Sendable {
         }
     }
 
+    public static func isSubagentSessionPath(_ url: URL) -> Bool {
+        url.path.contains("/subagents/")
+    }
+
     public static let cursorSubtreeNames = ["agent-transcripts", "terminals"]
 
     public static func shouldSkipDirectory(_ name: String) -> Bool {
