@@ -68,12 +68,35 @@ final class StatusItemController: NSObject {
                 glyph = busyGlyph
             }
         }
-        if let button = item.button, button.image !== glyph {
-            button.image = glyph
-            pulse(button)
+        let chrome = StatusItemChrome.make(
+            state: runtime.statusItemState,
+            remainingSeconds: runtime.engine.statusItemRemainingSeconds(now: Date())
+        )
+        if let button = item.button {
+            if button.image !== glyph {
+                button.image = glyph
+                pulse(button)
+            }
+            apply(chrome, to: button)
         }
         item.button?.toolTip = tooltip
         popover.refresh()
+    }
+
+    private func apply(_ chrome: StatusItemChrome, to button: NSButton) {
+        button.title = chrome.title
+        switch chrome.imagePosition {
+        case .imageOnly:
+            button.imagePosition = .imageOnly
+        case .imageLeading:
+            button.imagePosition = .imageLeading
+        }
+        switch chrome.length {
+        case .square:
+            item.length = NSStatusItem.squareLength
+        case .variable:
+            item.length = NSStatusItem.variableLength
+        }
     }
 
     private func pulse(_ button: NSButton) {
