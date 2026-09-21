@@ -100,11 +100,7 @@ public struct WatchEngine: Equatable, Sendable {
         if mode == .untilAgentsSettle {
             let activity = settle.observe(busy: agents.anyBusy, now: now)
             if activity == .settled {
-                var commands = idleAfterWaitCommands()
-                if !kernelSleepDisabled {
-                    commands.append(.assertSleepDisabled)
-                }
-                return commands
+                return disengage(.agentsSettled, at: now)
             }
         }
         if !kernelSleepDisabled {
@@ -152,18 +148,6 @@ public struct WatchEngine: Equatable, Sendable {
             lidHygieneApplied = false
         }
         return commands
-    }
-
-    mutating func idleAfterWaitCommands() -> [WatchCommand] {
-        guard !postedThisUserArm, NotifIdlePostPolicy.shouldPost(
-            enabled: preferences.notifEnabled,
-            reason: .agentsSettled,
-            sawBusy: settle.sawBusy
-        ) else {
-            return []
-        }
-        postedThisUserArm = true
-        return [.postIdleAfterWaitNotif]
     }
 
     mutating func applyDuration(now: Date) {

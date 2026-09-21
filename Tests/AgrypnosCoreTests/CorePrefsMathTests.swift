@@ -210,9 +210,9 @@ final class CorePrefsMathTests: XCTestCase {
         )
         XCTAssertEqual(
             engine.tick(now: t0.addingTimeInterval(180), safety: .acPower, agents: .idle),
-            [.postIdleAfterWaitNotif]
+            [.disengage(.agentsSettled), .postIdleAfterWaitNotif]
         )
-        XCTAssertTrue(engine.engaged)
+        XCTAssertFalse(engine.engaged)
         XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
     }
 
@@ -230,9 +230,9 @@ final class CorePrefsMathTests: XCTestCase {
         XCTAssertEqual(engine.preferences.agentSettleGrace, 120)
         XCTAssertEqual(
             engine.tick(now: t0.addingTimeInterval(150), safety: .acPower, agents: .idle),
-            [.postIdleAfterWaitNotif]
+            [.disengage(.agentsSettled), .postIdleAfterWaitNotif]
         )
-        XCTAssertTrue(engine.engaged)
+        XCTAssertFalse(engine.engaged)
     }
 
     func testShorteningSettleGraceBelowTwoMinutesClampsUp() {

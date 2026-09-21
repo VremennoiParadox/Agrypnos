@@ -116,7 +116,7 @@ final class WatchLidHygieneTests: XCTestCase {
         XCTAssertFalse(engine.lidHygieneApplied)
     }
 
-    func testAgentsIdleWithLidClosedDoesNotSleepTheMac() {
+    func testAgentsIdleWithLidClosedTurnsWatchOffAndRequestsSleep() {
         var prefs = UserPreferences.default
         prefs.duration = .untilAgentsSettle
         var engine = WatchEngine(preferences: prefs)
@@ -136,10 +136,11 @@ final class WatchLidHygieneTests: XCTestCase {
                 ])
             ).isEmpty
         )
-        let commands = engine.tick(now: t0.addingTimeInterval(120), safety: .acPower, agents: .idle)
-        XCTAssertFalse(commands.contains { if case .disengage = $0 { return true }; return false })
-        XCTAssertFalse(commands.contains(.requestSleep))
-        XCTAssertTrue(engine.engaged)
+        XCTAssertEqual(
+            engine.tick(now: t0.addingTimeInterval(120), safety: .acPower, agents: .idle),
+            [.disengage(.agentsSettled), .requestSleep]
+        )
+        XCTAssertFalse(engine.engaged)
         XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
     }
 

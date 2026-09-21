@@ -162,11 +162,21 @@ final class AgrypnosCopyTests: XCTestCase {
     func testDurationHintsArePlainAndFitTheDurationCard() {
         XCTAssertEqual(
             AgrypnosCopy.agentsHint,
-            AgrypnosCopy.indefiniteHint
+            "Watch turns off after local busy signals stay idle through the wait (battery / thermal still apply)."
         )
+        XCTAssertNotEqual(AgrypnosCopy.agentsHint, AgrypnosCopy.indefiniteHint)
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .untilAgentsSettle, engaged: true, remainingSeconds: nil),
             AgrypnosCopy.agentsHint
+        )
+        XCTAssertEqual(
+            AgrypnosCopy.durationHint(option: .untilAgentsSettle, engaged: true, remainingSeconds: nil, thermalAutoOff: false),
+            "Watch turns off after local busy signals stay idle through the wait (battery still applies)."
+        )
+        XCTAssertFalse(
+            AgrypnosCopy.durationHint(option: .untilAgentsSettle, engaged: false, remainingSeconds: nil, thermalAutoOff: false)
+                .lowercased()
+                .contains("thermal")
         )
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .indefinite, engaged: false, remainingSeconds: nil),
@@ -201,6 +211,9 @@ final class AgrypnosCopyTests: XCTestCase {
             AgrypnosCopy.indefiniteHint
         )
         assertFitsDurationHint(AgrypnosCopy.agentsHint)
+        assertFitsDurationHint(
+            AgrypnosCopy.durationHint(option: .untilAgentsSettle, engaged: false, remainingSeconds: nil, thermalAutoOff: false)
+        )
         assertFitsDurationHint(AgrypnosCopy.timedHint)
         assertFitsDurationHint(AgrypnosCopy.indefiniteHint)
         assertFitsDurationHint(
@@ -363,9 +376,10 @@ final class AgrypnosCopyTests: XCTestCase {
         XCTAssertTrue(AgrypnosCopy.settleGrace.lowercased().contains("idle"))
         XCTAssertEqual(
             AgrypnosCopy.settleGraceHelp,
-            "How long to wait after local busy signals stop, before the idle-after-wait POST. Agents mode needs this buffer so a quiet gap mid-run (no file write / low CPU) doesn’t look finished. Not still thinking — we only see local process and session activity."
+            "How long to wait after local busy signals stop, before the idle-after-wait POST. Then Keep the watch turns off. Buffer so a quiet gap mid-run (no file write / low CPU) doesn’t look finished. Not still thinking — we only see local process and session activity."
         )
         XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("local busy signals"))
+        XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("keep the watch"))
         XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("not still thinking"))
         XCTAssertFalse(AgrypnosCopy.settleGraceHelp.lowercased().contains("agent finished"))
         XCTAssertTrue(AgrypnosCopy.lidOpenRamp.lowercased().contains("brightness"))
@@ -479,6 +493,7 @@ final class AgrypnosCopyTests: XCTestCase {
             AgrypnosCopy.hotkeyHint(.defaultToggle, registered: false),
             AgrypnosCopy.hotkeyHint(HotkeyChord(keyCode: 0, option: false, command: false), registered: false),
             AgrypnosCopy.durationHint(option: .untilAgentsSettle, engaged: false, remainingSeconds: nil),
+            AgrypnosCopy.durationHint(option: .untilAgentsSettle, engaged: false, remainingSeconds: nil, thermalAutoOff: false),
             AgrypnosCopy.durationHint(option: .indefinite, engaged: false, remainingSeconds: nil),
             AgrypnosCopy.durationHint(option: .indefinite, engaged: false, remainingSeconds: nil, thermalAutoOff: false),
             AgrypnosCopy.durationHint(option: .oneHour, engaged: false, remainingSeconds: nil),

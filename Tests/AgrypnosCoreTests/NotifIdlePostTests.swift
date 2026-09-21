@@ -210,10 +210,13 @@ final class NotifWatchEngineTests: XCTestCase {
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0)
         busyThenSettle(&engine)
-        XCTAssertTrue(
-            engine.tick(now: t0.addingTimeInterval(20 + 120), safety: .acPower, agents: .idle).isEmpty
+        XCTAssertEqual(
+            engine.tick(now: t0.addingTimeInterval(20 + 120), safety: .acPower, agents: .idle),
+            [.disengage(.agentsSettled)]
         )
-        XCTAssertTrue(engine.engaged)
+        XCTAssertFalse(engine.engaged)
+        XCTAssertFalse(engine.postedThisUserArm)
+        XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
     }
 
     func testEnabledEmitsIdleNotifOnlyAfterBusyThenSettle() {
@@ -229,9 +232,10 @@ final class NotifWatchEngineTests: XCTestCase {
         busyThenSettle(&engine)
         XCTAssertEqual(
             engine.tick(now: t0.addingTimeInterval(20 + 120), safety: .acPower, agents: .idle),
-            [.postIdleAfterWaitNotif]
+            [.disengage(.agentsSettled), .postIdleAfterWaitNotif]
         )
-        XCTAssertTrue(engine.engaged)
+        XCTAssertFalse(engine.engaged)
+        XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
     }
 
     func testNeverBusyDoesNotEmitIdleNotifWhenEnabled() {
@@ -330,7 +334,7 @@ final class NotifWatchEngineTests: XCTestCase {
         )
     }
 
-    func testLidClosedAgentsSettlePostsWithoutSleeping() {
+    func testLidClosedAgentsSettleDisengagesAndRequestsSleep() {
         var prefs = UserPreferences.default
         prefs.duration = .untilAgentsSettle
         prefs.notifEnabled = true
@@ -339,9 +343,9 @@ final class NotifWatchEngineTests: XCTestCase {
         busyThenSettle(&engine)
         XCTAssertEqual(
             engine.tick(now: t0.addingTimeInterval(20 + 120), safety: .acPower, agents: .idle),
-            [.postIdleAfterWaitNotif]
+            [.disengage(.agentsSettled), .postIdleAfterWaitNotif, .requestSleep]
         )
-        XCTAssertTrue(engine.engaged)
+        XCTAssertFalse(engine.engaged)
         XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
     }
 
@@ -354,24 +358,11 @@ final class NotifWatchEngineTests: XCTestCase {
         busyThenSettle(&engine)
         XCTAssertEqual(
             engine.tick(now: t0.addingTimeInterval(20 + 120), safety: .acPower, agents: .idle),
-            [.postIdleAfterWaitNotif]
+            [.disengage(.agentsSettled), .postIdleAfterWaitNotif]
         )
         XCTAssertTrue(engine.postedThisUserArm)
-        XCTAssertTrue(engine.engaged)
+        XCTAssertFalse(engine.engaged)
 
-        XCTAssertEqual(
-            engine.tick(
-                now: t0.addingTimeInterval(21),
-                safety: SafetyInputs(
-                    batteryPercent: 12,
-                    onBatteryDischarging: true,
-                    thermalSerious: false,
-                    lowPowerMode: false
-                ),
-                agents: .idle
-            ),
-            [.disengage(.batteryFloor)]
-        )
         let rollback = engine.rollbackDisarmFailure(now: t0.addingTimeInterval(22), lidClosed: false)
         XCTAssertTrue(engine.engaged)
         XCTAssertTrue(engine.postedThisUserArm)
@@ -383,11 +374,12 @@ final class NotifWatchEngineTests: XCTestCase {
         XCTAssertTrue(
             engine.tick(now: t0.addingTimeInterval(40 + 119), safety: .acPower, agents: .idle).isEmpty
         )
-        XCTAssertTrue(
-            engine.tick(now: t0.addingTimeInterval(40 + 120), safety: .acPower, agents: .idle).isEmpty,
-            "same user arm must not POST again after disarm-failure rollback"
+        XCTAssertEqual(
+            engine.tick(now: t0.addingTimeInterval(40 + 120), safety: .acPower, agents: .idle),
+            [.disengage(.agentsSettled)]
         )
-        XCTAssertTrue(engine.engaged)
+        XCTAssertFalse(engine.engaged)
+        XCTAssertTrue(engine.postedThisUserArm)
     }
 
     func testGenuineUserRearmAllowsAnotherIdlePost() {
@@ -399,9 +391,9 @@ final class NotifWatchEngineTests: XCTestCase {
         busyThenSettle(&engine)
         XCTAssertEqual(
             engine.tick(now: t0.addingTimeInterval(20 + 120), safety: .acPower, agents: .idle),
-            [.postIdleAfterWaitNotif]
+            [.disengage(.agentsSettled), .postIdleAfterWaitNotif]
         )
-        XCTAssertTrue(engine.engaged)
+        XCTAssertFalse(engine.engaged)
 
         _ = engine.userSetEngaged(false, now: t0.addingTimeInterval(200))
         _ = engine.userSetEngaged(true, now: t0.addingTimeInterval(201))
@@ -414,9 +406,10 @@ final class NotifWatchEngineTests: XCTestCase {
         )
         XCTAssertEqual(
             engine.tick(now: t0.addingTimeInterval(220 + 120), safety: .acPower, agents: .idle),
-            [.postIdleAfterWaitNotif]
+            [.disengage(.agentsSettled), .postIdleAfterWaitNotif]
         )
-        XCTAssertTrue(engine.engaged)
+        XCTAssertFalse(engine.engaged)
+        XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
     }
 
     private func busyThenSettle(_ engine: inout WatchEngine) {
