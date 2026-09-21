@@ -61,17 +61,17 @@ Until someone proves **Low Power Mode** while the watch is armed (lid open and l
 
 Until someone proves a **wedge** (clamshell + power + external display, or a sleep assertion Agrypnos did not take) and confirms `pmset disablesleep` is not enough under a closed lid, do not claim Agents detection plus drop-keep-awake is the whole closed-lid story.
 
-## V1 settings (popover only)
+## Settings (popover only)
 
-V1 controls exist in the menu-bar popover. There is no separate settings window. A slim text switcher at the top shows one section at a time. **Watch** · **Power** · **Agents** · **Notif** · **General**. The popover opens on Watch.
+Controls live in the menu-bar popover. There is no separate settings window. A slim text switcher at the top shows one section at a time. **Watch** · **Power** · **Agents** · **Notif** · **General**. The popover opens on Watch.
 
-- **Watch:** Keep the watch, duration presets plus custom minutes, arming caption
+- **Watch:** Keep the watch, duration presets plus custom minutes, arming caption, last-end caption (last real watch end)
 - **Power:** brightness floor % (default **15%**; range 1–40; never 0%), keyboard backlight off, low-battery auto-off **5–100%** (default 15%), brightness return when the lid opens **1 / 2 / 3 s** (default **2s**), thermal auto-off (default on)
 - **Agents:** idle wait after local busy signals stop (**2 minutes – 15 minutes**, default **2 minutes** / 120s; stored prefs below 2m clamp up to 2m) before the idle-after-wait POST and turning Keep the watch off. Settle buffer on local process and session activity — not “still thinking,” not “agent finished.” Per-tool include still locked.
 - **Notif:** opt-in idle-after-wait POST (default **off**). Opt-in switch, Discord URL, Telegram token + chat id, and Clear secrets. Self-serve setup lives in the Notif section; same steps: [Notif](#notif).
 - **General:** remappable global hotkey (default `⌥⌘A`), launch at login, quit
 
-Still locked until after Mac prove: status-item remaining time, per-tool Agents include list. Donate stays gated until there is a live URL.
+Implement next: honest menu-bar status while armed (**armed** / **Agents** — not a fake countdown). How long timers do not auto-off; remaining-time digits only if there is a real end clock. Still locked: per-tool Agents include list. Donate stays gated until there is a live URL.
 
 ## Notif
 
