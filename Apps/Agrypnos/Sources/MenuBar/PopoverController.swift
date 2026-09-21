@@ -125,9 +125,11 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         applyDuration(
             DurationPickerChrome.make(
                 duration: runtime.preferences.duration,
-                minutesDraft: minutesField?.currentEditor() != nil
-                    ? (minutesField?.stringValue ?? "")
-                    : nil
+                minutesDraft: DurationPickerChrome.minutesDraft(
+                    isEditing: minutesField?.currentEditor() != nil,
+                    fieldText: minutesField?.stringValue ?? "",
+                    editorText: minutesField?.currentEditor()?.string
+                )
             )
         )
         durationHint?.stringValue = hintCopy(for: runtime)
@@ -220,6 +222,9 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         if chrome.selectedSegment >= 0 || minutesField?.currentEditor() == nil {
             minutesField?.stringValue = chrome.minutesText
         }
+        minutesField?.placeholderString = chrome.selectedSegment >= 0
+            ? ""
+            : AgrypnosCopy.minutesPlaceholder
     }
 
     func layoutHotkeyButton() {

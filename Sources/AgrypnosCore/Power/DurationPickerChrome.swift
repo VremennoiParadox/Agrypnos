@@ -28,13 +28,18 @@ public struct DurationPickerChrome: Equatable, Sendable {
         minutesDraft: String? = nil
     ) -> DurationPickerChrome {
         let titles = DurationOption.presets.map(\.segmentTitle)
-        // Digits in Minutes are a custom-duration draft. Empty/junk focus must
-        // not unselect a preset — popover open often focuses that field.
-        if let draft = minutesDraft, let minutes = parseMinutes(draft) {
+        if let draft = minutesDraft {
+            if let minutes = parseMinutes(draft) {
+                return DurationPickerChrome(
+                    segmentTitles: titles,
+                    selectedSegment: -1,
+                    minutesText: "\(minutes)"
+                )
+            }
             return DurationPickerChrome(
                 segmentTitles: titles,
                 selectedSegment: -1,
-                minutesText: "\(minutes)"
+                minutesText: draft
             )
         }
         switch duration {
@@ -43,16 +48,26 @@ public struct DurationPickerChrome: Equatable, Sendable {
             return DurationPickerChrome(
                 segmentTitles: titles,
                 selectedSegment: -1,
-                minutesText: minutesDraft ?? "\(value)"
+                minutesText: "\(value)"
             )
         default:
             let index = DurationOption.presets.firstIndex(of: duration) ?? 0
             return DurationPickerChrome(
                 segmentTitles: titles,
                 selectedSegment: index,
-                minutesText: minutesDraft ?? ""
+                minutesText: ""
             )
         }
+    }
+
+    /// Live typing can lag the stored field text. Prefer editorText while editing.
+    public static func minutesDraft(
+        isEditing: Bool,
+        fieldText: String,
+        editorText: String? = nil
+    ) -> String? {
+        guard isEditing else { return nil }
+        return editorText ?? fieldText
     }
 
     public static func parseMinutes(_ text: String) -> Int? {
