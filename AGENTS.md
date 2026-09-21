@@ -147,6 +147,8 @@ Commit and push when the work is a coherent slice. Do not ask the user for permi
 
 **Commit messages (hard):** product-only. Describe the Agrypnos change. Do **not** mention overnight runs, session framing, breakfast, agent drama, or other meta. Do **not** name competing products. Agrypnos is its own project.
 
+**Release tags:** When a new version ships, create an annotated git tag matching `MARKETING_VERSION` / `CFBundleShortVersionString`: `git tag -a vX.Y.Z -m "…"`. Push it with the release: `git push origin vX.Y.Z`. Tag messages follow the same product-only rules as commits. Do not tag unreleased work.
+
 ## Fleet roles
 
 | Role | Owns | Does not own |
