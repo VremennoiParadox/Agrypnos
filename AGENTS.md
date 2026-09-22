@@ -33,7 +33,7 @@ No giant god-objects. No “just one more helper” that becomes AppDelegate 2.
 - **Menu-bar only.** No Dock-first UI. **No separate settings window** (no traffic-lights titled prefs). Sections stay in the popover. Switcher is **Watch · Power · Agents · Notif · General** — Notif is the landed V2 slice in that order. Still no Licence/About tabs. `LSUIElement`.
 - **Open source** (MIT). No telemetry. No stealth network.
 - **Do not claim watt numbers you did not measure.** Do not cite other products’ watt studies or invent comparisons. Agrypnos stands alone — do not name competitors in product docs or commits.
-- **Do not promise every agent provider.** V1 is Cursor, Claude Code, and Codex, local heuristics, correctness over coverage.
+- **Do not promise every agent provider.** V1 is Cursor, Claude Code, Codex, and OpenCode. Local heuristics only. Correctness over coverage. Still not every provider. Still not think-detection.
 - **Do not kill Wi-Fi or Bluetooth.** Out of scope forever unless a later spec says otherwise.
 - **Armed ≠ black screen.** Toggling Keep the watch must **not** call `displaysleepnow`, blank the panel, or kill the keyboard backlight while the lid is open. Do not claim “we force display asleep”, “screen off”, or “dim ≠ asleep / real display sleep” for the toggle — V1 lid-close honesty is **brightness floor + keyboard off**.
 
@@ -54,7 +54,7 @@ Ship these, and stop:
 | Auto-off low battery | Slider **5–100%**, default 15%, on discharging battery. |
 | Thermal auto-off | Power toggle, **default ON**. ON (unchanged): while armed, auto-off on `ProcessInfo.thermalState` `.serious` or `.critical`. OFF: skip that thermal path (battery / leftover LPM unchanged). Toggle only — not °C, not SMC sensors. |
 | Low Power Mode | Auto-off when LPM is on and discharging **unless** the user deliberately armed this session (forced watch). **Copy honesty:** do not show “ended / standing down” copy while the Mac is still held awake by that forced watch. |
-| Agent watch | Busy → stay awake. After **local busy signals** stop, wait **user settle grace** (`agentSettleGrace`: **2m–15m**, default **2m** / 120s; prefs below 2m clamp up) then idle-after-wait POST if Notif is on **and** `disengage(.agentsSettled)` so Keep the watch turns off. Never-busy this arm: no POST, no disarm. How long stays **Agents**. Cursor + Claude Code + Codex first. Process + session/transcript mtimes, including nested `/subagents/*.jsonl` within `sessionFreshness` (45s); Claude/Codex may also use CPU. Not think-detection. |
+| Agent watch | Busy → stay awake. After **local busy signals** stop, wait **user settle grace** (`agentSettleGrace`: **2m–15m**, default **2m** / 120s; prefs below 2m clamp up) then idle-after-wait POST if Notif is on **and** `disengage(.agentsSettled)` so Keep the watch turns off. Never-busy this arm: no POST, no disarm. How long stays **Agents**. Providers: Cursor, Claude Code, Codex, and OpenCode. Local heuristics only. Busy signals only from the user’s multi-select (require ≥1 selected; default all four ON). Process + session/transcript mtimes, including nested `/subagents/*.jsonl` within `sessionFreshness` (45s) only when that parent tool is selected (Cursor path); Claude/Codex may also use CPU. OpenCode: local process + session files (prove on Mac). Not think-detection. Not every provider. |
 | Safety | Reboot clears SleepDisabled. Launch-at-login never re-arms the watch. One-time scoped sudoers grant for *exactly* two `pmset disablesleep` commands. |
 
 ### Popover sections (landed)
@@ -65,12 +65,16 @@ Switcher is **landed**: **Watch** · **Power** · **Agents** · **Notif** · **G
 - Card map:
   - **Watch:** Keep the watch (arm) + duration presets/custom + arming caption + last-end honesty (caption-only last watch end from real `DisengageReason`)
   - **Power:** brightness floor % + keyboard backlight off, battery auto-off, brightness return ramp, thermal auto-off toggle (default ON; unlocked)
-  - **Agents:** idle wait after local busy signals stop (per-tool include still locked until Mac prove)
+  - **Agents:** idle wait after local busy signals stop + per-tool include (multi-select; implement next)
   - **Notif:** opt-in idle-after-wait POST (default OFF); Discord URL; Telegram token + chat id; dotted fields + reveal; clear secrets
   - **General:** remappable hotkey, launch at login, quit
 - No **Licence** tab. No **About** as a toolbar tab. Do not drop **Notif** from the switcher. Do not add Licence/About.
 - Goal: shorter height per section; reduce long scroll when possible.
 - Plain captions only (personality rules below).
+
+### Menu-bar status item (landed)
+
+While Keep the watch is on: **Armed.** for ∞ / 1h / 3h / custom minutes, **Agents.** when How long is Agents. Off is the glyph only. Non-countdown. Do not invent remaining-time digits unless Core has a real end clock that will turn the watch off. Agents idle-after-wait is not that clock. Ban “1h left” / ticking remaining when How long does not auto-off.
 
 ### Settings (popover only)
 
@@ -81,7 +85,7 @@ Switcher is **landed**: **Watch** · **Power** · **Agents** · **Notif** · **G
 - Low-battery auto-off threshold **5–100%** (default 15%)
 - Brightness floor **%** — Core + popover control; default **15%**; range 1–40; never 0%; lid-close uses this floor (brightness write only — not display sleep, not “screen off”)
 - Idle wait after local busy signals stop (`agentSettleGrace`) — Core + popover control; **2 minutes – 15 minutes**; default **2 minutes** (120s). Never advertise 15s or 30s as the min. Existing prefs below 2m clamp up to 2m. Gates the idle-after-wait POST **and** turning Keep the watch off in Agents mode.
-  - **What:** settle buffer after **local busy signals** stop (process + session/transcript mtimes, including nested `/subagents/*.jsonl` within 45s; Claude/Codex may also use CPU).
+  - **What:** settle buffer after **local busy signals** from selected tools stop (process + session/transcript mtimes, including nested `/subagents/*.jsonl` within 45s when that parent tool is selected; Claude/Codex may also use CPU; OpenCode: local process + session files, prove on Mac).
   - **Why:** a quiet gap mid-run (tool pause, think with no file write) can look “done” and fire Notif / turn the watch off too soon. The buffer keeps that from happening between those gaps.
   - **Not:** not a stuck-agent detector; not mind-reading; we do **not** know “still thinking” or “agent finished the job.” Ban copy that claims that.
   - Title may stay short (e.g. “Wait after agents go idle” or “Idle wait”). Help carries the detail, in this spirit: “How long to wait after local busy signals stop, before the idle-after-wait POST. Then Keep the watch turns off. Buffer so a quiet gap mid-run (no file write / low CPU) doesn’t look finished. Not still thinking — we only see local process and session activity.”
@@ -103,20 +107,18 @@ Switcher is **landed**: **Watch** · **Power** · **Agents** · **Notif** · **G
 
 **Unlocked (Core + Agrypnos UI):** thermal auto-off — Power toggle, **default ON**. ON: while armed, `.serious` / `.critical` ends the watch. OFF: skip that path in Core (battery / leftover LPM unchanged). Stays in Power with floor / battery / ramp. No settings window. Plain caption only (thermal pressure turns the watch off). Ban °C, “safe temp”, health-gauge, warranty claims. Duration / arming copy must not say thermal still applies when the toggle is off.
 
-Still **locked** until Boss unlocks after Mac prove:
-
-- Per-tool Agents include list
-
 **Gated:** donate — no donate control until there is a live URL.
 
 ### Unlocked (implement next)
 
-**Status-item remaining time** — Core + Agrypnos UI. Boss unlocked after Mac prove. The honest slice is **not** a countdown. Implement this. Do not grow it. Do not treat it as parked. Per-tool Agents include stays locked.
+**Per-tool Agents include** — Core + Agrypnos UI. Boss unlocked. Multi-select. Implement this. Do not grow it. Do not treat it as parked. No separate “track all” toggle. Status item stays landed (do not reopen it here).
 
-- **Honest smallest bar:** while armed, a **non-countdown** status — **armed**, or **Agents** when How long is Agents.
-- Do **not** invent a fake countdown for `∞`, Agents, or remembered-only timed presets (`1h` / `3h` / custom minutes). Those How long values do not auto-off. Sticky How long is not an end clock.
-- Remaining-time digits only if Core has a **real end clock** that will actually turn the watch off. Agents idle-after-wait turns Keep the watch off; that is not a countdown.
-- Plain copy. No watt fiction. Ban “1h left” / ticking remaining when nothing will auto-off at that time.
+- Popover **Agents**: multi-select checkboxes or toggles for **Cursor · Claude Code · Codex · OpenCode**. The user picks any subset at once. Selecting every listed tool is how all of them count as busy.
+- **Default:** all four ON. Existing installs keep Cursor, Claude Code, and Codex ON, and OpenCode defaults ON — same result as a new install: all current providers on.
+- **Empty selection:** forbidden. Require **≥1** selected. Clamp back to the previous selection (or reject the change) so the saved set is never empty. Empty does not mean “watch no agents” and does not mean “watch everything.”
+- Busy signals only from **selected** tools. Nested `/subagents/*.jsonl` counts only when the parent tool is selected (Cursor path).
+- OpenCode: local process + session files (prove on Mac). Do not invent session paths in this bar. Cursor, Claude Code, and Codex stay local heuristics (process + session/transcript mtimes; Claude/Codex may also use CPU). Not think-detection. Still not every provider.
+- Plain copy: “Which tools count as busy.” Ban “we track every AI” and think-detection claims.
 
 ### V2 park (do not implement)
 
@@ -126,7 +128,7 @@ Opt-in panel sleep stays parked / idea-only — do not unlock.
 
 ### Out of V1
 
-App Store sandbox, notarization pipeline, every provider, fake benchmarks, Wi-Fi/BT kill, Dock UI, separate settings window, **Licence** tab, **About** as a toolbar tab, donate without a live URL, `displaysleepnow` on engage, claiming display sleep or “screen off” when we only floored brightness, think-detection / “still thinking” claims, opt-in panel sleep (parked / idea-only — do not unlock), two-way remote, rich status, a shared Agrypnos bot, Notification Center as the Notif path.
+App Store sandbox, notarization pipeline, providers beyond Cursor, Claude Code, Codex, and OpenCode, fake benchmarks, Wi-Fi/BT kill, Dock UI, separate settings window, **Licence** tab, **About** as a toolbar tab, donate without a live URL, `displaysleepnow` on engage, claiming display sleep or “screen off” when we only floored brightness, think-detection / “still thinking” claims, opt-in panel sleep (parked / idea-only — do not unlock), two-way remote, rich status, a shared Agrypnos bot, Notification Center as the Notif path.
 
 ## Layout
 
@@ -162,7 +164,7 @@ Commit and push when the work is a coherent slice. Do not ask the user for permi
 | **Rules** | `AGENTS.md`, this bar, scope fights | Feature code |
 | **Swift core** | `AgrypnosCore`, heuristics, watch engine, lid/hygiene, safety | AppKit chrome |
 | **UI** | Menu bar, popover (section switcher + cards), personality copy, glyph | Kernel sleep flag |
-| **Review** | Gates. File size, TDD, no watt fiction, no god files, no false display-sleep claims, plain popover copy, no false ended-copy under LPM forced-watch, no settings window, no Licence/About tabs, Notif is landed V2 (popover switcher **Watch · Power · Agents · Notif · General**, one-way idle-after-wait, Application Support secrets `0600` + dotted/reveal, self-serve Discord/Telegram, no shared bot, no Keychain login prompt; two-way/rich status stay idea-only), status-item remaining time is unlocked implement next (honest non-countdown; no fake timer), per-tool Agents include still locked, donate gated on live URL | Shipping unreviewed slop |
+| **Review** | Gates. File size, TDD, no watt fiction, no god files, no false display-sleep claims, plain popover copy, no false ended-copy under LPM forced-watch, no settings window, no Licence/About tabs, Notif is landed V2 (popover switcher **Watch · Power · Agents · Notif · General**, one-way idle-after-wait, Application Support secrets `0600` + dotted/reveal, self-serve Discord/Telegram, no shared bot, no Keychain login prompt; two-way/rich status stay idea-only), status item is landed (**Armed.** / **Agents.** non-countdown; no fake timer), per-tool Agents include is unlocked implement next (multi-select Cursor · Claude Code · Codex · OpenCode; require ≥1; default all on; no separate track-all toggle; busy signals only from selected tools; OpenCode is local process + session files, prove on Mac), donate gated on live URL | Shipping unreviewed slop |
 | **Boss** | Sequence, merge order, “stop” on parked V2 (two-way/rich status, panel-sleep) | Writing all the code |
 
 Parallel foundations are forbidden. One track. If you find a second scaffold, delete yours or stop.
@@ -181,8 +183,10 @@ Good: “Keeps the Mac awake with the lid closed.”
 Good: “Thermal pressure turns the watch off.”
 Good: “POST to *your* webhook when Agents stay idle after the wait.”
 Good: “Message *your* Telegram bot. Agrypnos does not run a shared bot.”
-Good: “Armed.” / “Agents.” (status item — not a countdown)
+Good: “Armed.” / “Agents.” (status item — landed, not a countdown)
+Good: “Which tools count as busy.”
 Bad: “Sleeps with you when the lid closes.” / “I’ll floor the panel and kill the keys.” / “When they settle, sleep may return.”
+Bad: “We track every AI.”
 Bad: “1h 12m remaining” on the status item when How long is remembered-only and will not auto-off.
 Bad: “after the agent finishes thinking” / “we know it’s still thinking” / “when the job is done.”
 Bad: °C, “safe temp”, health-gauge, or warranty claims for thermal auto-off.
