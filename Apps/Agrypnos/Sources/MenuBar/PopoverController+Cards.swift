@@ -80,6 +80,40 @@ extension PopoverController {
         floorPercentSlider.setAccessibilityHelp(AgrypnosCopy.brightnessFloorHelp)
     }
 
+    func addAgentIncludeCard(
+        _ card: CardView,
+        contentW: CGFloat,
+        ci: CGFloat,
+        cw: CGFloat,
+        swW: CGFloat,
+        swH: CGFloat
+    ) {
+        addPrefTitle(AgrypnosCopy.agentInclude, in: card, ci: ci, width: cw)
+        _ = PopoverForm.help(
+            AgrypnosCopy.agentIncludeHelp,
+            in: card,
+            y: CGFloat(PopoverStackLayout.prefHelpY),
+            x: ci,
+            width: cw
+        )
+        includeSwitches = AgentKind.allCases.enumerated().map { index, kind in
+            let toggle = PopoverForm.switchRow(
+                in: card,
+                y: CGFloat(PopoverStackLayout.includeSwitchY(index: index)),
+                title: kind.displayName,
+                contentW: contentW,
+                ci: ci,
+                cw: cw,
+                swW: swW,
+                swH: swH,
+                target: self,
+                action: #selector(includeToggled(_:))
+            )
+            toggle.state = AgentIncludeChrome.defaultIncluded.contains(kind) ? .on : .off
+            return toggle
+        }
+    }
+
     func addSettleCard(_ card: CardView, contentW: CGFloat, ci: CGFloat, cw: CGFloat) {
         addPrefTitle(
             AgrypnosCopy.settleGrace,

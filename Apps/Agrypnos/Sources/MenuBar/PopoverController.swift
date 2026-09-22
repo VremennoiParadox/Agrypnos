@@ -36,6 +36,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var batteryValue: NSTextField!
     var settleSlider: NSSlider!
     var settleValue: NSTextField!
+    var includeSwitches: [NSSwitch] = []
     var rampControl: NSSegmentedControl!
     var thermalSwitch: NSSwitch!
     var notifSwitch: NSSwitch!
@@ -58,6 +59,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var lastWatchEndLabel: NSTextField!
     var hygieneCard: CardView!
     var batteryCard: CardView!
+    var agentIncludeCard: CardView!
     var settleCard: CardView!
     var rampCard: CardView!
     var thermalCard: CardView!
@@ -147,6 +149,9 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         settleValue?.stringValue = AgentSettleGraceChrome.valueLabel(
             seconds: runtime.preferences.agentSettleGrace
         )
+        for (toggle, kind) in zip(includeSwitches, AgentKind.allCases) {
+            toggle.state = runtime.preferences.includedAgentKinds.contains(kind) ? .on : .off
+        }
         rampControl?.selectedSegment = LidOpenRampChrome.selectedSegment(
             seconds: runtime.preferences.lidOpenRampSeconds
         )
@@ -404,6 +409,25 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     @objc func thermalToggled(_ sender: NSSwitch) {
         stopRecordingIfNeeded()
         runtime?.setThermalAutoOff(sender.state == .on)
+        refresh()
+    }
+
+    @objc func includeToggled(_ sender: NSSwitch) {
+        stopRecordingIfNeeded()
+        guard let runtime,
+              let index = includeSwitches.firstIndex(where: { $0 === sender }),
+              AgentKind.allCases.indices.contains(index)
+        else {
+            refresh()
+            return
+        }
+        let kind = AgentKind.allCases[index]
+        guard let next = AgentIncludeChrome.toggling(kind, in: runtime.preferences.includedAgentKinds) else {
+            sender.state = .on
+            refresh()
+            return
+        }
+        runtime.setIncludedAgentKinds(next)
         refresh()
     }
 
