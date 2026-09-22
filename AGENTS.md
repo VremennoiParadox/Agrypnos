@@ -65,7 +65,7 @@ Switcher is **landed**: **Watch** · **Power** · **Agents** · **Notif** · **G
 - Card map:
   - **Watch:** Keep the watch (arm) + duration presets/custom + arming caption + last-end honesty (caption-only last watch end from real `DisengageReason`)
   - **Power:** brightness floor % + keyboard backlight off, battery auto-off, brightness return ramp, thermal auto-off toggle (default ON; unlocked)
-  - **Agents:** idle wait after local busy signals stop + per-tool include (multi-select; implement next)
+  - **Agents:** idle wait after local busy signals stop + per-tool include multi-select (landed)
   - **Notif:** opt-in idle-after-wait POST (default OFF); Discord URL; Telegram token + chat id; dotted fields + reveal; clear secrets
   - **General:** remappable hotkey, launch at login, quit
 - No **Licence** tab. No **About** as a toolbar tab. Do not drop **Notif** from the switcher. Do not add Licence/About.
@@ -91,6 +91,14 @@ While Keep the watch is on: **Armed.** for ∞ / 1h / 3h / custom minutes, **Age
   - Title may stay short (e.g. “Wait after agents go idle” or “Idle wait”). Help carries the detail, in this spirit: “How long to wait after local busy signals stop, before the idle-after-wait POST. Then Keep the watch turns off. Buffer so a quiet gap mid-run (no file write / low CPU) doesn’t look finished. Not still thinking — we only see local process and session activity.”
 - Brightness return when the lid opens — Core + popover control; **1 / 2 / 3 s**, default **2s**
 - Last-end honesty — Watch caption-only card. Last watch end from a real `DisengageReason` (time + reason). No history log, no invented reasons.
+- **Per-tool Agents include** — popover-only, **landed**. Do not grow it. No separate “track all” toggle.
+  - Popover **Agents**: multi-select checkboxes or toggles for **Cursor · Claude Code · Codex · OpenCode**. The user picks any subset at once. Selecting every listed tool is how all of them count as busy.
+  - **Default:** all four ON. Existing installs keep Cursor, Claude Code, and Codex ON, and OpenCode defaults ON — same result as a new install: all current providers on.
+  - **Empty selection:** forbidden. Require **≥1** selected. Clamp back to the previous selection (or reject the change) so the saved set is never empty. Empty does not mean “watch no agents” and does not mean “watch everything.”
+  - Busy signals only from **selected** tools. Nested `/subagents/*.jsonl` counts only when the parent tool is selected (Cursor path).
+  - OpenCode: local process + session files (prove on Mac). Do not invent session paths in this bar. Cursor, Claude Code, and Codex stay local heuristics (process + session/transcript mtimes; Claude/Codex may also use CPU). Not think-detection. Still not every provider.
+  - **Honesty:** Mac optical on the Agents picker and OpenCode process/session prove remain **soft** — do not claim Mac-proven.
+  - Plain copy: “Which tools count as busy.” Ban “we track every AI” and think-detection claims.
 - **Notif** — V2 slice, popover-only, **landed**. Do not grow it.
   - **One-way outbound only.** One-shot POST when Agents mode is armed, local busy signals were **seen this arm**, then stayed quiet through the idle wait (`agentSettleGrace`). Event is **idle after wait**, not “agent stopped / job done / still thinking.” Never-busy this arm is not that event — do not POST. That same settle also turns Keep the watch off. Do not POST for timer, battery, thermal, LPM, or manual off. Outbound body uses the same idle-after-wait honesty (ban “agent stopped” / “job finished” there too).
   - **Default OFF.** One opt-in. Discord fires only if a webhook URL is set; Telegram fires only if token **and** chat id are set. Empty fields: no POST, no shared bot.
@@ -108,17 +116,6 @@ While Keep the watch is on: **Armed.** for ∞ / 1h / 3h / custom minutes, **Age
 **Unlocked (Core + Agrypnos UI):** thermal auto-off — Power toggle, **default ON**. ON: while armed, `.serious` / `.critical` ends the watch. OFF: skip that path in Core (battery / leftover LPM unchanged). Stays in Power with floor / battery / ramp. No settings window. Plain caption only (thermal pressure turns the watch off). Ban °C, “safe temp”, health-gauge, warranty claims. Duration / arming copy must not say thermal still applies when the toggle is off.
 
 **Gated:** donate — no donate control until there is a live URL.
-
-### Unlocked (implement next)
-
-**Per-tool Agents include** — Core + Agrypnos UI. Boss unlocked. Multi-select. Implement this. Do not grow it. Do not treat it as parked. No separate “track all” toggle. Status item stays landed (do not reopen it here).
-
-- Popover **Agents**: multi-select checkboxes or toggles for **Cursor · Claude Code · Codex · OpenCode**. The user picks any subset at once. Selecting every listed tool is how all of them count as busy.
-- **Default:** all four ON. Existing installs keep Cursor, Claude Code, and Codex ON, and OpenCode defaults ON — same result as a new install: all current providers on.
-- **Empty selection:** forbidden. Require **≥1** selected. Clamp back to the previous selection (or reject the change) so the saved set is never empty. Empty does not mean “watch no agents” and does not mean “watch everything.”
-- Busy signals only from **selected** tools. Nested `/subagents/*.jsonl` counts only when the parent tool is selected (Cursor path).
-- OpenCode: local process + session files (prove on Mac). Do not invent session paths in this bar. Cursor, Claude Code, and Codex stay local heuristics (process + session/transcript mtimes; Claude/Codex may also use CPU). Not think-detection. Still not every provider.
-- Plain copy: “Which tools count as busy.” Ban “we track every AI” and think-detection claims.
 
 ### V2 park (do not implement)
 
@@ -164,7 +161,7 @@ Commit and push when the work is a coherent slice. Do not ask the user for permi
 | **Rules** | `AGENTS.md`, this bar, scope fights | Feature code |
 | **Swift core** | `AgrypnosCore`, heuristics, watch engine, lid/hygiene, safety | AppKit chrome |
 | **UI** | Menu bar, popover (section switcher + cards), personality copy, glyph | Kernel sleep flag |
-| **Review** | Gates. File size, TDD, no watt fiction, no god files, no false display-sleep claims, plain popover copy, no false ended-copy under LPM forced-watch, no settings window, no Licence/About tabs, Notif is landed V2 (popover switcher **Watch · Power · Agents · Notif · General**, one-way idle-after-wait, Application Support secrets `0600` + dotted/reveal, self-serve Discord/Telegram, no shared bot, no Keychain login prompt; two-way/rich status stay idea-only), status item is landed (**Armed.** / **Agents.** non-countdown; no fake timer), per-tool Agents include is unlocked implement next (multi-select Cursor · Claude Code · Codex · OpenCode; require ≥1; default all on; no separate track-all toggle; busy signals only from selected tools; OpenCode is local process + session files, prove on Mac), donate gated on live URL | Shipping unreviewed slop |
+| **Review** | Gates. File size, TDD, no watt fiction, no god files, no false display-sleep claims, plain popover copy, no false ended-copy under LPM forced-watch, no settings window, no Licence/About tabs, Notif is landed V2 (popover switcher **Watch · Power · Agents · Notif · General**, one-way idle-after-wait, Application Support secrets `0600` + dotted/reveal, self-serve Discord/Telegram, no shared bot, no Keychain login prompt; two-way/rich status stay idea-only), status item is landed (**Armed.** / **Agents.** non-countdown; no fake timer), per-tool Agents include is landed (multi-select Cursor · Claude Code · Codex · OpenCode; require ≥1; default all on; no separate track-all toggle; busy signals only from selected tools; OpenCode is local process + session files, prove on Mac), donate gated on live URL | Shipping unreviewed slop |
 | **Boss** | Sequence, merge order, “stop” on parked V2 (two-way/rich status, panel-sleep) | Writing all the code |
 
 Parallel foundations are forbidden. One track. If you find a second scaffold, delete yours or stop.
