@@ -10,6 +10,9 @@ public enum AgentKindClassifier: Sendable {
         if isClaudeCodeCLI(basename: n, loweredCommand: lowered) { return .claudeCode }
         if n == "codex" || n.hasPrefix("codex") { return .codex }
         if isCodexNodeWrapper(basename: n, loweredCommand: lowered) { return .codex }
+
+        if isOpenCodeDesktop(basename: n, loweredCommand: lowered) { return nil }
+        if isOpenCodeCLI(basename: n, loweredCommand: lowered) { return .openCode }
         return nil
     }
 
@@ -23,7 +26,7 @@ public enum AgentKindClassifier: Sendable {
 
     public static func cpuCountsTowardBusy(processName: String) -> Bool {
         switch classify(processName: processName) {
-        case .claudeCode, .codex:
+        case .claudeCode, .codex, .openCode:
             return true
         case .cursor, .none:
             return false
@@ -50,6 +53,22 @@ public enum AgentKindClassifier: Sendable {
     static func isCodexNodeWrapper(basename n: String, loweredCommand: String) -> Bool {
         guard n == "node" || n == "nodejs" else { return false }
         if loweredCommand.contains("codex") { return true }
+        return false
+    }
+
+    static func isOpenCodeDesktop(basename n: String, loweredCommand: String) -> Bool {
+        if n == "opencode-cli" || n.hasPrefix("opencode-cli") { return false }
+        if loweredCommand.contains("opencode helper") { return true }
+        if loweredCommand.contains(".app/") && loweredCommand.contains("opencode") { return true }
+        return false
+    }
+
+    static func isOpenCodeCLI(basename n: String, loweredCommand: String) -> Bool {
+        if n == "opencode" || n.hasPrefix("opencode") { return true }
+        if n == "node" || n == "nodejs" || n == "bun" {
+            return loweredCommand.contains("/opencode")
+                || loweredCommand.contains("opencode/bin")
+        }
         return false
     }
 }

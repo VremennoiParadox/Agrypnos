@@ -67,6 +67,8 @@ final class AgrypnosCopyTests: XCTestCase {
             "agent stopped",
             "job finished",
             "1h left",
+            "we track every ai",
+            "we track every",
         ]
         for phrase in banned {
             XCTAssertFalse(blob.contains(phrase), "banned phrase still in copy: \(phrase)")
@@ -435,6 +437,8 @@ final class AgrypnosCopyTests: XCTestCase {
             AgrypnosCopy.brightnessFloorHelp,
             AgrypnosCopy.settleGrace,
             AgrypnosCopy.settleGraceHelp,
+            AgrypnosCopy.agentInclude,
+            AgrypnosCopy.agentIncludeHelp,
             AgrypnosCopy.lidOpenRamp,
             AgrypnosCopy.lidOpenRampHelp,
             AgrypnosCopy.batteryFloor,

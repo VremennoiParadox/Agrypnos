@@ -16,6 +16,9 @@ public enum AgrypnosCopy: Sendable {
     public static let settleGrace = "Wait after agents go idle"
     public static let settleGraceHelp =
         "How long to wait after local busy signals stop, before the idle-after-wait POST. Then Keep the watch turns off. Buffer so a quiet gap mid-run (no file write / low CPU) doesn’t look finished. Not still thinking — we only see local process and session activity."
+    public static let agentInclude = "Which tools count as busy."
+    public static let agentIncludeHelp =
+        "Only selected tools count as busy. Keep at least one on."
     public static let lidOpenRamp = "Brightness return when lid opens"
     public static let lidOpenRampHelp =
         "How long brightness takes to come back when the lid opens."

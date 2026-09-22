@@ -42,7 +42,11 @@ public struct AgentSnapshot: Equatable, Sendable {
     }
 
     public var anyBusy: Bool {
-        reports.contains { $0.isBusy }
+        anyBusy(included: Set(AgentKind.allCases))
+    }
+
+    public func anyBusy(included: Set<AgentKind>) -> Bool {
+        reports.contains { $0.isBusy && included.contains($0.kind) }
     }
 }
 
@@ -96,7 +100,7 @@ public struct AgentHeuristicEngine: Equatable, Sendable {
         switch kind {
         case .cursor:
             isBusy = processRunning && recentSessionWrite
-        case .claudeCode, .codex:
+        case .claudeCode, .codex, .openCode:
             isBusy = processRunning && (cpuBusy || recentSessionWrite)
         }
         return AgentReport(

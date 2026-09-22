@@ -358,6 +358,74 @@ final class AgentHeuristicEngineTests: XCTestCase {
         XCTAssertTrue(snap.report(.codex)?.isBusy ?? false)
         XCTAssertTrue(snap.report(.codex)?.cpuBusy ?? false)
     }
+
+    func testOpenCodeRecentSessionJSONIsBusy() {
+        let snap = engine.evaluate(
+            processes: [ProcessRecord(pid: 11, cpuPercent: 0.2, name: "opencode")],
+            sessionWrites: [
+                SessionFileSignal(
+                    url: URL(fileURLWithPath: "/Users/ada/.local/share/opencode/project/p/storage/session/ses_1.json"),
+                    modified: now.addingTimeInterval(-8),
+                    kind: .openCode
+                )
+            ],
+            now: now
+        )
+        XCTAssertTrue(snap.report(.openCode)?.isBusy ?? false)
+    }
+
+    func testOpenCodeHighCPUWithoutFreshFilesIsBusy() {
+        let snap = engine.evaluate(
+            processes: [ProcessRecord(pid: 11, cpuPercent: 22, name: "opencode")],
+            sessionWrites: [
+                SessionFileSignal(
+                    url: URL(fileURLWithPath: "/Users/ada/.local/share/opencode/storage/session/ses_1.json"),
+                    modified: now.addingTimeInterval(-10_000),
+                    kind: .openCode
+                )
+            ],
+            now: now
+        )
+        XCTAssertTrue(snap.report(.openCode)?.isBusy ?? false)
+        XCTAssertTrue(snap.report(.openCode)?.cpuBusy ?? false)
+    }
+
+    func testOpenCodeIdlePromptIsNotBusy() {
+        let snap = engine.evaluate(
+            processes: [ProcessRecord(pid: 11, cpuPercent: 0.4, name: "opencode")],
+            sessionWrites: [
+                SessionFileSignal(
+                    url: URL(fileURLWithPath: "/Users/ada/.local/share/opencode/project/p/storage/session/ses_1.json"),
+                    modified: now.addingTimeInterval(-120),
+                    kind: .openCode
+                )
+            ],
+            now: now
+        )
+        XCTAssertFalse(snap.report(.openCode)?.isBusy ?? true)
+    }
+
+    func testOpenCodeDesktopAppIsNotOpenCodeBusy() {
+        let snap = engine.evaluate(
+            processes: [
+                ProcessRecord(
+                    pid: 2,
+                    cpuPercent: 40,
+                    name: "/Applications/OpenCode.app/Contents/MacOS/OpenCode"
+                )
+            ],
+            sessionWrites: [
+                SessionFileSignal(
+                    url: URL(fileURLWithPath: "/Users/ada/.local/share/opencode/project/p/storage/session/ses_1.json"),
+                    modified: now.addingTimeInterval(-1),
+                    kind: .openCode
+                )
+            ],
+            now: now
+        )
+        XCTAssertEqual(snap.report(.openCode)?.processRunning, false)
+        XCTAssertFalse(snap.report(.openCode)?.isBusy ?? true)
+    }
 }
 
 private extension AgentSnapshot {
