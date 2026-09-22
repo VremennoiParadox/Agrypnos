@@ -89,6 +89,12 @@ final class WatchRuntime {
         delegate?.watchRuntimeDidChange(self)
     }
 
+    func setIncludedAgentKinds(_ kinds: Set<AgentKind>) {
+        guard engine.preferences.applyIncludedAgentKinds(kinds) else { return }
+        store.save(engine.preferences)
+        delegate?.watchRuntimeDidChange(self)
+    }
+
     func setNotifEnabled(_ on: Bool) {
         engine.preferences.notifEnabled = on
         store.save(engine.preferences)

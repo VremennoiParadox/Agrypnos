@@ -16,6 +16,13 @@ final class SessionFileLayoutTests: XCTestCase {
         )
         XCTAssertTrue(roots[.cursor]!.contains(URL(fileURLWithPath: "/Users/ada/.cursor/projects")))
         XCTAssertTrue(roots[.cursor]!.contains(URL(fileURLWithPath: "/Users/ada/.cursor/chats")))
+        XCTAssertEqual(
+            roots[.openCode],
+            [
+                URL(fileURLWithPath: "/Users/ada/.local/share/opencode/project"),
+                URL(fileURLWithPath: "/Users/ada/.local/share/opencode/storage"),
+            ]
+        )
     }
 
     func testHonorsClaudeAndCodexEnv() {
@@ -28,6 +35,43 @@ final class SessionFileLayoutTests: XCTestCase {
         )
         XCTAssertEqual(roots[.claudeCode], [URL(fileURLWithPath: "/tmp/claude-home/projects")])
         XCTAssertEqual(roots[.codex], [URL(fileURLWithPath: "/tmp/codex-home/sessions")])
+    }
+
+    func testOpenCodeHonorsXDGDataHome() {
+        let roots = SessionFileLayout.roots(
+            home: home,
+            env: ["XDG_DATA_HOME": "/tmp/xdg-data"]
+        )
+        XCTAssertEqual(
+            roots[.openCode],
+            [
+                URL(fileURLWithPath: "/tmp/xdg-data/opencode/project"),
+                URL(fileURLWithPath: "/tmp/xdg-data/opencode/storage"),
+            ]
+        )
+    }
+
+    func testOpenCodeSessionFilesAreRelevantAndAuthLogAreNot() {
+        let session = URL(
+            fileURLWithPath: "/Users/ada/.local/share/opencode/project/demo/storage/session/ses_1.json"
+        )
+        let legacy = URL(
+            fileURLWithPath: "/Users/ada/.local/share/opencode/storage/session/ses_2.json"
+        )
+        let sqlite = URL(fileURLWithPath: "/Users/ada/.local/share/opencode/storage/opencode.db")
+        let auth = URL(fileURLWithPath: "/Users/ada/.local/share/opencode/auth.json")
+        let log = URL(fileURLWithPath: "/Users/ada/.local/share/opencode/log/2026-09-22T123456.log")
+        let config = URL(fileURLWithPath: "/Users/ada/.config/opencode/opencode.json")
+
+        XCTAssertEqual(SessionFileLayout.classify(session), .openCode)
+        XCTAssertEqual(SessionFileLayout.classify(legacy), .openCode)
+        XCTAssertTrue(SessionFileLayout.isRelevantFile(session, kind: .openCode))
+        XCTAssertTrue(SessionFileLayout.isRelevantFile(legacy, kind: .openCode))
+        XCTAssertTrue(SessionFileLayout.isRelevantFile(sqlite, kind: .openCode))
+        XCTAssertFalse(SessionFileLayout.isRelevantFile(auth, kind: .openCode))
+        XCTAssertFalse(SessionFileLayout.isRelevantFile(log, kind: .openCode))
+        XCTAssertNil(SessionFileLayout.classify(config))
+        XCTAssertFalse(SessionFileLayout.isRelevantFile(config, kind: .openCode))
     }
 
     func testCursorXDGChatsAreIncluded() {

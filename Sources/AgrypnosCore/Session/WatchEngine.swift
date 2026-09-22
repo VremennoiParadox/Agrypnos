@@ -98,7 +98,10 @@ public struct WatchEngine: Equatable, Sendable {
             return disengage(reason, at: now)
         }
         if mode == .untilAgentsSettle {
-            let activity = settle.observe(busy: agents.anyBusy, now: now)
+            let activity = settle.observe(
+                busy: agents.anyBusy(included: preferences.includedAgentKinds),
+                now: now
+            )
             if activity == .settled {
                 return disengage(.agentsSettled, at: now)
             }

@@ -76,5 +76,27 @@ final class AgentKindClassifierTests: XCTestCase {
         XCTAssertFalse(AgentKindClassifier.cpuCountsTowardBusy(processName: "Cursor Helper (GPU)"))
         XCTAssertTrue(AgentKindClassifier.cpuCountsTowardBusy(processName: "claude"))
         XCTAssertTrue(AgentKindClassifier.cpuCountsTowardBusy(processName: "codex"))
+        XCTAssertTrue(AgentKindClassifier.cpuCountsTowardBusy(processName: "opencode"))
+        XCTAssertFalse(AgentKindClassifier.cpuCountsTowardBusy(processName: "OpenCode Helper"))
+    }
+
+    func testOpenCodeCLIClassifiesAndDesktopAppDoesNot() {
+        XCTAssertEqual(AgentKindClassifier.classify(processName: "opencode"), .openCode)
+        XCTAssertEqual(AgentKindClassifier.classify(processName: "/opt/homebrew/bin/opencode"), .openCode)
+        XCTAssertEqual(AgentKindClassifier.classify(processName: "opencode-cli"), .openCode)
+        XCTAssertEqual(
+            AgentKindClassifier.classify(processName: "bun /Users/ada/.bun/bin/opencode run"),
+            .openCode
+        )
+        XCTAssertEqual(
+            AgentKindClassifier.classify(processName: "node /usr/local/lib/node_modules/opencode/bin/opencode"),
+            .openCode
+        )
+        XCTAssertNil(AgentKindClassifier.classify(processName: "/Applications/OpenCode.app/Contents/MacOS/OpenCode"))
+        XCTAssertNil(AgentKindClassifier.classify(processName: "OpenCode Helper"))
+        XCTAssertEqual(
+            AgentKindClassifier.classify(processName: "/Applications/OpenCode.app/Contents/MacOS/opencode-cli"),
+            .openCode
+        )
     }
 }

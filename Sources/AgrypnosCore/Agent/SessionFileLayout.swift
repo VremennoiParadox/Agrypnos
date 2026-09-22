@@ -4,6 +4,8 @@ public enum SessionFileLayout: Sendable {
     public static func roots(home: URL, env: [String: String] = [:]) -> [AgentKind: [URL]] {
         let claudeHome = path(env["CLAUDE_CONFIG_DIR"]) ?? home.appendingPathComponent(".claude")
         let codexHome = path(env["CODEX_HOME"]) ?? home.appendingPathComponent(".codex")
+        let dataHome = path(env["XDG_DATA_HOME"]) ?? home.appendingPathComponent(".local/share")
+        let openCodeHome = dataHome.appendingPathComponent("opencode")
 
         var cursorRoots = [
             home.appendingPathComponent(".cursor/projects"),
@@ -23,6 +25,12 @@ public enum SessionFileLayout: Sendable {
             .claudeCode: [claudeHome.appendingPathComponent("projects")],
             .codex: [codexHome.appendingPathComponent("sessions")],
             .cursor: cursorRoots,
+            .openCode: [
+                // Official docs: ~/.local/share/opencode (XDG_DATA_HOME). Sessions live under
+                // project/<slug>/storage and legacy storage/. Process/mtime still need a Mac prove.
+                openCodeHome.appendingPathComponent("project"),
+                openCodeHome.appendingPathComponent("storage"),
+            ],
         ]
     }
 
@@ -33,6 +41,10 @@ public enum SessionFileLayout: Sendable {
         if p.contains("/.cursor/") || p.contains("/cursor/chats") || p.contains("/cursor/projects") {
             return .cursor
         }
+        if p.contains("/opencode/project/") || p.contains("/opencode/storage/") {
+            return .openCode
+        }
+        if p.contains("/.local/share/opencode/") { return .openCode }
         return nil
     }
 
@@ -53,7 +65,24 @@ public enum SessionFileLayout: Sendable {
                 || path.contains("acp-sessions")
                 || path.contains("/terminals/")
             return inAgentTree && (ext == "jsonl" || ext == "json" || ext == "txt" || ext == "db")
+        case .openCode:
+            return isOpenCodeSessionFile(url)
         }
+    }
+
+    static func isOpenCodeSessionFile(_ url: URL) -> Bool {
+        let ext = url.pathExtension.lowercased()
+        let name = url.lastPathComponent.lowercased()
+        let path = url.path
+        if name == "auth.json" { return false }
+        if path.contains("/log/") || name.hasSuffix(".log") { return false }
+        if path.contains("/.config/opencode/") { return false }
+        let inDataTree =
+            path.contains("/opencode/project/")
+            || path.contains("/opencode/storage/")
+            || path.contains("/.local/share/opencode/")
+        guard inDataTree else { return false }
+        return ext == "json" || ext == "jsonl" || ext == "db"
     }
 
     public static func isSubagentSessionPath(_ url: URL) -> Bool {

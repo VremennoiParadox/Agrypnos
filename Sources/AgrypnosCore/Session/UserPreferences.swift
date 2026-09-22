@@ -30,6 +30,8 @@ public struct UserPreferences: Equatable, Sendable, Codable {
     public var notifEnabled: Bool
     /// Last time the watch ended, with why. Nil until a watch has ended on this Mac.
     public var lastWatchEnd: LastWatchEnd?
+    /// Tools whose local busy signals count. Never empty. Default all current providers.
+    public var includedAgentKinds: Set<AgentKind>
 
     /// 0...1 unit the Mac brightness adapter writes. Derived from floor %.
     public var brightnessFloor: Double {
@@ -48,7 +50,8 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         lidOpenRampSeconds: Int = 2,
         thermalAutoOff: Bool = true,
         notifEnabled: Bool = false,
-        lastWatchEnd: LastWatchEnd? = nil
+        lastWatchEnd: LastWatchEnd? = nil,
+        includedAgentKinds: Set<AgentKind> = AgentIncludeChrome.defaultIncluded
     ) {
         self.batteryFloorPercent = Self.clampBatteryFloor(batteryFloorPercent)
         self.duration = duration
@@ -62,6 +65,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         self.thermalAutoOff = thermalAutoOff
         self.notifEnabled = notifEnabled
         self.lastWatchEnd = lastWatchEnd
+        self.includedAgentKinds = Self.clampIncludedAgentKinds(includedAgentKinds)
     }
 
     public static let `default` = UserPreferences()
@@ -87,6 +91,20 @@ public struct UserPreferences: Equatable, Sendable, Codable {
 
     public static func clampLidOpenRamp(_ seconds: Int) -> Int {
         min(max(seconds, lidOpenRampRange.lowerBound), lidOpenRampRange.upperBound)
+    }
+
+    public static func clampIncludedAgentKinds(_ kinds: Set<AgentKind>) -> Set<AgentKind> {
+        let known = Set(AgentKind.allCases.filter { kinds.contains($0) })
+        return known.isEmpty ? AgentIncludeChrome.defaultIncluded : known
+    }
+
+    /// Reject an empty selection so the saved set is never empty.
+    @discardableResult
+    public mutating func applyIncludedAgentKinds(_ kinds: Set<AgentKind>) -> Bool {
+        let next = Set(AgentKind.allCases.filter { kinds.contains($0) })
+        guard !next.isEmpty else { return false }
+        includedAgentKinds = next
+        return true
     }
 
     public static func clampSessionFreshness(_ seconds: TimeInterval) -> TimeInterval {
@@ -120,6 +138,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         case thermalAutoOff
         case notifEnabled
         case lastWatchEnd
+        case includedAgentKinds
     }
 
     public init(from decoder: Decoder) throws {
@@ -144,7 +163,8 @@ public struct UserPreferences: Equatable, Sendable, Codable {
             lidOpenRampSeconds: try container.decodeIfPresent(Int.self, forKey: .lidOpenRampSeconds) ?? 2,
             thermalAutoOff: try container.decodeIfPresent(Bool.self, forKey: .thermalAutoOff) ?? true,
             notifEnabled: try container.decodeIfPresent(Bool.self, forKey: .notifEnabled) ?? false,
-            lastWatchEnd: try container.decodeIfPresent(LastWatchEnd.self, forKey: .lastWatchEnd)
+            lastWatchEnd: try container.decodeIfPresent(LastWatchEnd.self, forKey: .lastWatchEnd),
+            includedAgentKinds: try AgentIncludeFlags.decode(from: container)
         )
     }
 
@@ -163,6 +183,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         try container.encode(thermalAutoOff, forKey: .thermalAutoOff)
         try container.encode(notifEnabled, forKey: .notifEnabled)
         try container.encodeIfPresent(lastWatchEnd, forKey: .lastWatchEnd)
+        try container.encode(AgentIncludeFlags(includedAgentKinds), forKey: .includedAgentKinds)
     }
 }
 
