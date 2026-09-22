@@ -6,7 +6,7 @@ This file is the project bar. Follow it. If a request fights this file, stop and
 
 ## Model (non-negotiable)
 
-For any coding, architecture, tests, or review on this repo, use **Grok 4.7 Extra High, non-fast**. Do not switch to a fast variant to save time. Do not silently downgrade.
+For any coding, architecture, tests, or review on this repo, use **Grok 4.6 Extra High, non-fast**. Do not switch to a fast variant to save time. Do not silently downgrade.
 
 ## Session start
 
