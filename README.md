@@ -12,7 +12,7 @@ MIT. No telemetry. No stealth network.
 - **Hold until you turn it off** — How long stays as you set it. Timer does not flip Keep the watch. Duration **Agents** turns Keep the watch off after local busy this arm, then idle through the wait. Battery / thermal (and leftover Low Power Mode) still can.
 - **Safety** — low battery (slider 5–100%, default 15%), thermal auto-off on `.serious` / `.critical` (Power toggle, default on), reboot clears SleepDisabled, launch-at-login never re-arms.
 
-V1 agents: Cursor, Claude Code, Codex. Local heuristics (process list + session-file mtimes; Claude/Codex may also use CPU). Correctness over coverage.
+V1 agents: Cursor, Claude Code, Codex, and OpenCode. Local heuristics only (process list + session-file mtimes; Claude/Codex may also use CPU). OpenCode is local process + session files — prove that on a Mac before claiming detection. You choose which of those tools count as busy (multi-select; at least one stays on; default all on). Correctness over coverage. Not every provider.
 
 ## Not this product
 
@@ -67,11 +67,11 @@ Controls live in the menu-bar popover. There is no separate settings window. A s
 
 - **Watch:** Keep the watch, duration presets plus custom minutes, arming caption, last-end caption (last real watch end)
 - **Power:** brightness floor % (default **15%**; range 1–40; never 0%), keyboard backlight off, low-battery auto-off **5–100%** (default 15%), brightness return when the lid opens **1 / 2 / 3 s** (default **2s**), thermal auto-off (default on)
-- **Agents:** idle wait after local busy signals stop (**2 minutes – 15 minutes**, default **2 minutes** / 120s; stored prefs below 2m clamp up to 2m) before the idle-after-wait POST and turning Keep the watch off. Settle buffer on local process and session activity — not “still thinking,” not “agent finished.” Per-tool include still locked.
+- **Agents:** idle wait after local busy signals stop (**2 minutes – 15 minutes**, default **2 minutes** / 120s; stored prefs below 2m clamp up to 2m) before the idle-after-wait POST and turning Keep the watch off. Settle buffer on local process and session activity — not “still thinking,” not “agent finished.” Which tools count as busy: multi-select Cursor, Claude Code, Codex, and OpenCode. At least one stays selected (default all on). Busy signals come only from the tools left on. Selecting all of them is how every listed tool counts.
 - **Notif:** opt-in idle-after-wait POST (default **off**). Opt-in switch, Discord URL, Telegram token + chat id, and Clear secrets. Self-serve setup lives in the Notif section; same steps: [Notif](#notif).
 - **General:** remappable global hotkey (default `⌥⌘A`), launch at login, quit
 
-The menu-bar extra shows **Armed.** while Keep the watch is on for ∞ / 1h / 3h / custom minutes, and **Agents.** while it is on and How long is Agents. Off is the glyph only. Not a remaining-time countdown — How long timers do not auto-off. Still locked: per-tool Agents include list. Donate stays gated until there is a live URL.
+The menu-bar extra shows **Armed.** while Keep the watch is on for ∞ / 1h / 3h / custom minutes, and **Agents.** while it is on and How long is Agents. Off is the glyph only. Not a remaining-time countdown — How long timers do not auto-off. Donate stays gated until there is a live URL.
 
 ## Notif
 
@@ -124,7 +124,7 @@ Use one channel, or both. Leave a field empty if you do not use that channel. No
 
 1. Turn **Notif** on and save at least one channel’s secrets.
 2. In **Watch**, arm Keep the watch with duration **Agents** (`∞` / `1h` / `3h` / custom do not send this POST).
-3. Run a V1 agent Agrypnos can see (Cursor, Claude Code, or Codex) so a **local busy signal** is recorded this arm.
+3. Run a selected agent Agrypnos can see (Cursor, Claude Code, Codex, or OpenCode) so a **local busy signal** is recorded this arm. Only tools you left on in **Agents** count. OpenCode counts after its local process + session-file heuristic is proven on a Mac.
 4. Let that go idle, then wait the idle wait (**Agents** section; default 2 minutes, range 2–15).
 5. Expect **one** Discord webhook POST and/or **one** message from *your* Telegram bot. Copy should say idle after wait — not that the agent stopped or the job finished. Keep the watch turns off. How long stays **Agents**.
 6. If nothing arrives: Notif off, missing/wrong secret, duration was not Agents, this arm never saw busy, or busy signals are still counting as activity. Agrypnos will not POST to a destination you did not configure.
