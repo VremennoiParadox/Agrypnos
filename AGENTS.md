@@ -65,12 +65,16 @@ Switcher is **landed**: **Watch** · **Power** · **Agents** · **Notif** · **G
 - Card map:
   - **Watch:** Keep the watch (arm) + duration presets/custom + arming caption + last-end honesty (caption-only last watch end from real `DisengageReason`)
   - **Power:** brightness floor % + keyboard backlight off, battery auto-off, brightness return ramp, thermal auto-off toggle (default ON; unlocked)
-  - **Agents:** idle wait after local busy signals stop + per-tool include (multi-select)
+  - **Agents:** idle wait after local busy signals stop + per-tool include (multi-select; implement next)
   - **Notif:** opt-in idle-after-wait POST (default OFF); Discord URL; Telegram token + chat id; dotted fields + reveal; clear secrets
   - **General:** remappable hotkey, launch at login, quit
 - No **Licence** tab. No **About** as a toolbar tab. Do not drop **Notif** from the switcher. Do not add Licence/About.
 - Goal: shorter height per section; reduce long scroll when possible.
 - Plain captions only (personality rules below).
+
+### Menu-bar status item (landed)
+
+While Keep the watch is on: **Armed.** for ∞ / 1h / 3h / custom minutes, **Agents.** when How long is Agents. Off is the glyph only. Non-countdown. Do not invent remaining-time digits unless Core has a real end clock that will turn the watch off. Agents idle-after-wait is not that clock. Ban “1h left” / ticking remaining when How long does not auto-off.
 
 ### Settings (popover only)
 
@@ -87,7 +91,6 @@ Switcher is **landed**: **Watch** · **Power** · **Agents** · **Notif** · **G
   - Title may stay short (e.g. “Wait after agents go idle” or “Idle wait”). Help carries the detail, in this spirit: “How long to wait after local busy signals stop, before the idle-after-wait POST. Then Keep the watch turns off. Buffer so a quiet gap mid-run (no file write / low CPU) doesn’t look finished. Not still thinking — we only see local process and session activity.”
 - Brightness return when the lid opens — Core + popover control; **1 / 2 / 3 s**, default **2s**
 - Last-end honesty — Watch caption-only card. Last watch end from a real `DisengageReason` (time + reason). No history log, no invented reasons.
-- Status item — **landed**. While Keep the watch is on: **Armed.** for ∞ / 1h / 3h / custom minutes, **Agents.** when How long is Agents. Off is the glyph only. Non-countdown. Do not invent remaining-time digits unless Core has a real end clock that will turn the watch off. Agents idle-after-wait is not that clock. Ban “1h left” / ticking remaining when How long does not auto-off.
 - **Notif** — V2 slice, popover-only, **landed**. Do not grow it.
   - **One-way outbound only.** One-shot POST when Agents mode is armed, local busy signals were **seen this arm**, then stayed quiet through the idle wait (`agentSettleGrace`). Event is **idle after wait**, not “agent stopped / job done / still thinking.” Never-busy this arm is not that event — do not POST. That same settle also turns Keep the watch off. Do not POST for timer, battery, thermal, LPM, or manual off. Outbound body uses the same idle-after-wait honesty (ban “agent stopped” / “job finished” there too).
   - **Default OFF.** One opt-in. Discord fires only if a webhook URL is set; Telegram fires only if token **and** chat id are set. Empty fields: no POST, no shared bot.
