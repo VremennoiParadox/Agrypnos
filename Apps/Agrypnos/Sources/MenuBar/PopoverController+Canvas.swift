@@ -105,6 +105,9 @@ extension PopoverController {
         batteryCard = PopoverForm.card(in: document, slot: power.battery!, pad: pad, width: contentW)
         addBatteryCard(batteryCard, contentW: contentW, ci: ci, cw: cw)
 
+        agentIncludeCard = PopoverForm.card(in: document, slot: agents.agentInclude!, pad: pad, width: contentW)
+        addAgentIncludeCard(agentIncludeCard, contentW: contentW, ci: ci, cw: cw, swW: swW, swH: swH)
+
         settleCard = PopoverForm.card(in: document, slot: agents.settle!, pad: pad, width: contentW)
         addSettleCard(settleCard, contentW: contentW, ci: ci, cw: cw)
 

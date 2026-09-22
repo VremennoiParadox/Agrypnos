@@ -48,7 +48,9 @@ final class PopoverSectionTests: XCTestCase {
         XCTAssertEqual(PopoverSection.power.cards, [.hygiene, .battery, .ramp, .thermal])
         XCTAssertTrue(PopoverSection.power.cards.contains(.thermal))
         XCTAssertEqual(PopoverSection.power.cards.last, .thermal)
-        XCTAssertEqual(PopoverSection.agents.cards, [.settle])
+        XCTAssertEqual(PopoverSection.agents.cards, [.agentInclude, .settle])
+        XCTAssertEqual(PopoverSection.agents.cards.first, .agentInclude)
+        XCTAssertEqual(PopoverSection.agents.cards.last, .settle)
         XCTAssertEqual(
             PopoverSection.notif.cards,
             [.notifEnable, .notifDiscord, .notifTelegram, .notifSetup, .notifClear]
@@ -56,6 +58,9 @@ final class PopoverSectionTests: XCTestCase {
         XCTAssertEqual(PopoverSection.general.cards, [.login])
         XCTAssertFalse(PopoverSection.agents.cards.contains(.watch))
         XCTAssertFalse(PopoverSection.power.cards.contains(.settle))
+        XCTAssertFalse(PopoverSection.power.cards.contains(.agentInclude))
+        XCTAssertFalse(PopoverSection.watch.cards.contains(.agentInclude))
+        XCTAssertFalse(PopoverSection.notif.cards.contains(.agentInclude))
         XCTAssertFalse(PopoverSection.notif.cards.isEmpty)
     }
 }
@@ -104,16 +109,18 @@ final class PopoverSectionLayoutTests: XCTestCase {
         XCTAssertNil(layout.watch)
         XCTAssertNil(layout.duration)
         XCTAssertNil(layout.settle)
+        XCTAssertNil(layout.agentInclude)
         XCTAssertNil(layout.login)
         XCTAssertNil(layout.quitY)
         XCTAssertEqual(layout.contentHeight, layout.thermal!.maxY + PopoverStackLayout.pad)
     }
 
-    func testAgentsSectionShowsIdleWaitOnly() {
+    func testAgentsSectionShowsIncludeThenIdleWait() {
         let layout = PopoverStackLayout.make(section: .agents)
         XCTAssertEqual(layout.section, .agents)
-        XCTAssertEqual(layout.stackedCards, [layout.settle!])
-        XCTAssertEqual(layout.settle?.y, PopoverStackLayout.firstCardY)
+        XCTAssertEqual(layout.stackedCards, [layout.agentInclude!, layout.settle!])
+        XCTAssertEqual(layout.agentInclude?.y, PopoverStackLayout.firstCardY)
+        XCTAssertEqual(layout.settle?.y, layout.agentInclude!.maxY + PopoverStackLayout.cardGap)
         XCTAssertNil(layout.watch)
         XCTAssertNil(layout.duration)
         XCTAssertNil(layout.hygiene)
@@ -122,6 +129,52 @@ final class PopoverSectionLayoutTests: XCTestCase {
         XCTAssertNil(layout.thermal)
         XCTAssertNil(layout.login)
         XCTAssertEqual(layout.contentHeight, layout.settle!.maxY + PopoverStackLayout.pad)
+        XCTAssertFalse(layout.needsScroll)
+        XCTAssertLessThan(layout.contentHeight, PopoverStackLayout.maxVisibleHeight)
+    }
+
+    func testAgentIncludeCardFitsFourSwitchesAndHelp() {
+        let layout = PopoverStackLayout.make(section: .agents)
+        XCTAssertEqual(AgentKind.allCases.count, 4)
+        XCTAssertEqual(AgentIncludeChrome.titles, ["Cursor", "Claude Code", "Codex", "OpenCode"])
+        XCTAssertEqual(
+            layout.agentInclude!.height,
+            PopoverStackLayout.inset
+                + PopoverStackLayout.titleRowHeight
+                + PopoverCopyLayout.helpHeightPoints
+                + AgentKind.allCases.count * PopoverStackLayout.switchRowHeight
+                + PopoverStackLayout.inset
+        )
+        XCTAssertEqual(PopoverStackLayout.includeSwitchY(index: 0), PopoverStackLayout.prefControlY)
+        XCTAssertEqual(
+            PopoverStackLayout.includeSwitchY(index: 3),
+            PopoverStackLayout.prefControlY + 3 * PopoverStackLayout.switchRowHeight
+        )
+        XCTAssertEqual(
+            PopoverStackLayout.includeSwitchY(index: 3) + PopoverStackLayout.switchRowHeight
+                + PopoverStackLayout.inset,
+            layout.agentInclude!.height
+        )
+        XCTAssertLessThanOrEqual(
+            CopyWrap.lineCount(AgrypnosCopy.agentIncludeHelp, columns: PopoverCopyLayout.innerColumns),
+            PopoverCopyLayout.helpMaxLines
+        )
+        XCTAssertLessThanOrEqual(
+            CopyWrap.lineCount(AgrypnosCopy.agentInclude, columns: PopoverCopyLayout.innerColumns),
+            1
+        )
+        XCTAssertEqual(AgrypnosCopy.agentInclude, "Which tools count as busy.")
+        XCTAssertEqual(
+            AgrypnosCopy.agentIncludeHelp,
+            "Only selected tools count as busy. Keep at least one on."
+        )
+        XCTAssertFalse(AgrypnosCopy.agentInclude.lowercased().contains("we track every"))
+        XCTAssertFalse(AgrypnosCopy.agentIncludeHelp.lowercased().contains("every ai"))
+        XCTAssertFalse(AgrypnosCopy.agentIncludeHelp.lowercased().contains("still thinking"))
+        XCTAssertNil(PopoverStackLayout.make(section: .watch).agentInclude)
+        XCTAssertNil(PopoverStackLayout.make(section: .power).agentInclude)
+        XCTAssertNil(PopoverStackLayout.make(section: .notif).agentInclude)
+        XCTAssertNil(PopoverStackLayout.make(section: .general).agentInclude)
     }
 
     func testNotifSectionShowsEnableDiscordTelegramSetupAndClear() {
@@ -136,6 +189,7 @@ final class PopoverSectionLayoutTests: XCTestCase {
         XCTAssertNil(layout.ramp)
         XCTAssertNil(layout.thermal)
         XCTAssertNil(layout.settle)
+        XCTAssertNil(layout.agentInclude)
         XCTAssertNil(layout.login)
         XCTAssertNil(layout.shortcutY)
         XCTAssertNil(layout.quitY)
@@ -156,6 +210,7 @@ final class PopoverSectionLayoutTests: XCTestCase {
         XCTAssertNil(layout.hygiene)
         XCTAssertNil(layout.thermal)
         XCTAssertNil(layout.settle)
+        XCTAssertNil(layout.agentInclude)
         XCTAssertEqual(layout.shortcutY, layout.login!.maxY + PopoverStackLayout.cardGap)
         XCTAssertEqual(layout.hotkeyHint?.y, layout.shortcutY! + 26)
         XCTAssertEqual(layout.quitY, layout.hotkeyHint!.maxY + 10)
@@ -193,7 +248,8 @@ final class PopoverSectionLayoutTests: XCTestCase {
         let power = PopoverStackLayout.make(section: .power).contentHeight
         let agents = PopoverStackLayout.make(section: .agents).contentHeight
         let general = PopoverStackLayout.make(section: .general).contentHeight
-        XCTAssertLessThan(agents, watch)
+        XCTAssertGreaterThan(agents, watch)
+        XCTAssertLessThan(agents, power)
         XCTAssertLessThan(watch, power)
         XCTAssertLessThan(general, power)
     }

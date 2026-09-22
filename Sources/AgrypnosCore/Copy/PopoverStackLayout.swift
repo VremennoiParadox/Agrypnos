@@ -53,6 +53,11 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static var prefMinMaxY: Int { prefControlY + 24 }
     public static var settleControlY: Int { prefHelpY + PopoverCopyLayout.settleHelpHeightPoints }
     public static var settleMinMaxY: Int { settleControlY + 24 }
+
+    public static func includeSwitchY(index: Int) -> Int {
+        prefControlY + index * switchRowHeight
+    }
+
     public static var notifEnableHelpY: Int { prefTitleY + titleRowHeight }
     public static var notifEnableSwitchY: Int {
         notifEnableHelpY + PopoverCopyLayout.notifEnableHelpHeightPoints
@@ -72,6 +77,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public let lastWatchEnd: PopoverSlot?
     public let hygiene: PopoverSlot?
     public let battery: PopoverSlot?
+    public let agentInclude: PopoverSlot?
     public let settle: PopoverSlot?
     public let ramp: PopoverSlot?
     public let thermal: PopoverSlot?
@@ -100,6 +106,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
         case .lastWatchEnd: return lastWatchEnd
         case .hygiene: return hygiene
         case .battery: return battery
+        case .agentInclude: return agentInclude
         case .settle: return settle
         case .ramp: return ramp
         case .thermal: return thermal
@@ -119,6 +126,12 @@ public struct PopoverStackLayout: Equatable, Sendable {
             + 2 * switchRowHeight
             + PopoverCopyLayout.helpHeightPoints
             + sliderBlockHeight
+            + inset
+        let includeHeight =
+            inset
+            + titleRowHeight
+            + PopoverCopyLayout.helpHeightPoints
+            + AgentKind.allCases.count * switchRowHeight
             + inset
         let settleHeight =
             inset
@@ -170,6 +183,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
             case .lastWatchEnd: return inset + PopoverCopyLayout.lastWatchEndHeightPoints + inset
             case .hygiene: return hygieneHeight
             case .battery: return batteryCardHeight
+            case .agentInclude: return includeHeight
             case .settle: return settleHeight
             case .ramp: return rampHeight
             case .thermal: return thermalHeight
@@ -222,6 +236,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
             lastWatchEnd: placed[.lastWatchEnd],
             hygiene: placed[.hygiene],
             battery: placed[.battery],
+            agentInclude: placed[.agentInclude],
             settle: placed[.settle],
             ramp: placed[.ramp],
             thermal: placed[.thermal],
