@@ -22,6 +22,8 @@ enum SessionFileWalker {
                     for sub in SessionFileLayout.cursorWalkRoots(projectsRoot: root, projectNames: names) {
                         collected.append(contentsOf: walk(root: sub, kind: kind))
                     }
+                } else if kind == .openCode {
+                    collected.append(contentsOf: openCodeSignals(dataHome: root))
                 } else {
                     collected.append(contentsOf: walk(root: root, kind: kind))
                 }
@@ -44,6 +46,29 @@ enum SessionFileWalker {
             if SessionFileLayout.shouldSkipDirectory(name) { return nil }
             return name
         }.sorted()
+    }
+
+    static func openCodeSignals(dataHome: URL) -> [SessionFileSignal] {
+        var collected: [SessionFileSignal] = []
+        for file in SessionFileLayout.openCodeDataRootFiles(dataHome: dataHome) {
+            collected.append(contentsOf: fileSignal(url: file, kind: .openCode))
+        }
+        let names = projectDirectoryNames(in: dataHome.appendingPathComponent("project"))
+        for sub in SessionFileLayout.openCodeWalkRoots(dataHome: dataHome, projectNames: names) {
+            collected.append(contentsOf: walk(root: sub, kind: .openCode))
+        }
+        return collected
+    }
+
+    static func fileSignal(url: URL, kind: AgentKind) -> [SessionFileSignal] {
+        guard SessionFileLayout.isRelevantFile(url, kind: kind) else { return [] }
+        let fm = FileManager.default
+        var isDir: ObjCBool = false
+        guard fm.fileExists(atPath: url.path, isDirectory: &isDir), !isDir.boolValue else { return [] }
+        guard let values = try? url.resourceValues(forKeys: [.contentModificationDateKey]),
+              let modified = values.contentModificationDate
+        else { return [] }
+        return [SessionFileSignal(url: url, modified: modified, kind: kind)]
     }
 
     static func walk(root: URL, kind: AgentKind) -> [SessionFileSignal] {

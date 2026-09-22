@@ -97,6 +97,18 @@ public enum SessionFileLayout: Sendable {
         }
     }
 
+    /// Data-root SQLite lives next to `project/` / `storage/`, not inside them.
+    public static func openCodeDataRootFiles(dataHome: URL) -> [URL] {
+        [dataHome.appendingPathComponent("opencode.db")]
+    }
+
+    /// Walk session trees only — not the whole data home (logs, auth, plugins).
+    public static func openCodeWalkRoots(dataHome: URL, projectNames: [String]) -> [URL] {
+        [dataHome.appendingPathComponent("storage")] + projectNames.map {
+            dataHome.appendingPathComponent("project").appendingPathComponent($0).appendingPathComponent("storage")
+        }
+    }
+
     private static func path(_ raw: String?) -> URL? {
         guard let raw, !raw.isEmpty else { return nil }
         return URL(fileURLWithPath: raw)

@@ -98,7 +98,36 @@ final class AgentIncludeTests: XCTestCase {
         XCTAssertFalse(listed.includedAgentKinds.contains(.openCode))
     }
 
-    func testExplicitSubsetWithoutOpenCodePersistsAndRoundTrips() throws {
+    func testFirstThreeOnOpenCodeOffRoundTripsAsFlags() throws {
+        var prefs = UserPreferences.default
+        let firstThree: Set<AgentKind> = [.cursor, .claudeCode, .codex]
+        XCTAssertTrue(prefs.applyIncludedAgentKinds(firstThree))
+        XCTAssertEqual(prefs.includedAgentKinds, firstThree)
+        XCTAssertFalse(prefs.includedAgentKinds.contains(.openCode))
+
+        let data = try JSONEncoder().encode(prefs)
+        let root = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let flags = try XCTUnwrap(root["includedAgentKinds"] as? [String: Any])
+        XCTAssertEqual(flags["cursor"] as? Bool, true)
+        XCTAssertEqual(flags["claudeCode"] as? Bool, true)
+        XCTAssertEqual(flags["codex"] as? Bool, true)
+        XCTAssertEqual(flags["openCode"] as? Bool, false)
+
+        let loaded = try JSONDecoder().decode(UserPreferences.self, from: data)
+        XCTAssertEqual(loaded.includedAgentKinds, firstThree)
+        XCTAssertFalse(loaded.includedAgentKinds.contains(.openCode))
+    }
+
+    func testMissingOpenCodeFlagKeyDefaultsOn() throws {
+        let json = """
+        {"batteryFloorPercent":15,"duration":"indefinite","keyboardBacklightOff":true,"applyBrightnessFloor":true,"brightnessFloorPercent":15,"agentSettleGrace":120,"sessionFreshness":45,"lidOpenRampSeconds":2,"hotkey":{"keyCode":0,"option":true,"command":true,"shift":false,"control":false},"includedAgentKinds":{"cursor":true,"claudeCode":false,"codex":false}}
+        """
+        let decoded = try JSONDecoder().decode(UserPreferences.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.includedAgentKinds, [.cursor, .openCode])
+        XCTAssertTrue(decoded.includedAgentKinds.contains(.openCode))
+    }
+
+    func testCursorAndOpenCodeSubsetRoundTrips() throws {
         var prefs = UserPreferences.default
         XCTAssertTrue(prefs.applyIncludedAgentKinds([.cursor, .openCode]))
         let loaded = try roundTrip(prefs)

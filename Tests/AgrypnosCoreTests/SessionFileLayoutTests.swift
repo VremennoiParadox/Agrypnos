@@ -109,6 +109,22 @@ final class SessionFileLayoutTests: XCTestCase {
         XCTAssertFalse(SessionFileLayout.shouldSkipDirectory("agent-transcripts"))
     }
 
+    func testOpenCodeWalkRootsAreStorageTreesPlusDataRootDB() {
+        let dataHome = URL(fileURLWithPath: "/Users/ada/.local/share/opencode")
+        XCTAssertEqual(
+            SessionFileLayout.openCodeDataRootFiles(dataHome: dataHome),
+            [URL(fileURLWithPath: "/Users/ada/.local/share/opencode/opencode.db")]
+        )
+        XCTAssertEqual(
+            SessionFileLayout.openCodeWalkRoots(dataHome: dataHome, projectNames: ["demo", "global"]),
+            [
+                URL(fileURLWithPath: "/Users/ada/.local/share/opencode/storage"),
+                URL(fileURLWithPath: "/Users/ada/.local/share/opencode/project/demo/storage"),
+                URL(fileURLWithPath: "/Users/ada/.local/share/opencode/project/global/storage"),
+            ]
+        )
+    }
+
     func testCursorWalkRootsAreTranscriptsAndTerminalsNotWholeProject() {
         let projects = URL(fileURLWithPath: "/Users/ada/.cursor/projects")
         let urls = SessionFileLayout.cursorWalkRoots(
