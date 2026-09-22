@@ -423,6 +423,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         }
         let kind = AgentKind.allCases[index]
         guard let next = AgentIncludeChrome.toggling(kind, in: runtime.preferences.includedAgentKinds) else {
+            sender.state = .on
             refresh()
             return
         }

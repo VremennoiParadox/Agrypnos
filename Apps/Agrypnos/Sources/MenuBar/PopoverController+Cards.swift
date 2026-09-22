@@ -110,8 +110,6 @@ extension PopoverController {
                 action: #selector(includeToggled(_:))
             )
             toggle.state = AgentIncludeChrome.defaultIncluded.contains(kind) ? .on : .off
-            toggle.setAccessibilityLabel(kind.displayName)
-            toggle.setAccessibilityHelp(AgrypnosCopy.agentIncludeHelp)
             return toggle
         }
     }
