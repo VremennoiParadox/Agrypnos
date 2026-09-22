@@ -27,9 +27,8 @@ public enum SessionFileLayout: Sendable {
             .cursor: cursorRoots,
             .openCode: [
                 // Official docs: ~/.local/share/opencode (XDG_DATA_HOME). Sessions live under
-                // project/<slug>/storage and legacy storage/. Process/mtime still need a Mac prove.
-                openCodeHome.appendingPathComponent("project"),
-                openCodeHome.appendingPathComponent("storage"),
+                // project/<slug>/storage, legacy storage/, and a data-root .db. Prove on a Mac.
+                openCodeHome,
             ],
         ]
     }
@@ -41,10 +40,8 @@ public enum SessionFileLayout: Sendable {
         if p.contains("/.cursor/") || p.contains("/cursor/chats") || p.contains("/cursor/projects") {
             return .cursor
         }
-        if p.contains("/opencode/project/") || p.contains("/opencode/storage/") {
-            return .openCode
-        }
-        if p.contains("/.local/share/opencode/") { return .openCode }
+        if p.contains("/.config/opencode/") { return nil }
+        if p.contains("/opencode/") { return .openCode }
         return nil
     }
 
@@ -77,11 +74,7 @@ public enum SessionFileLayout: Sendable {
         if name == "auth.json" { return false }
         if path.contains("/log/") || name.hasSuffix(".log") { return false }
         if path.contains("/.config/opencode/") { return false }
-        let inDataTree =
-            path.contains("/opencode/project/")
-            || path.contains("/opencode/storage/")
-            || path.contains("/.local/share/opencode/")
-        guard inDataTree else { return false }
+        guard path.contains("/opencode/") else { return false }
         return ext == "json" || ext == "jsonl" || ext == "db"
     }
 
@@ -93,7 +86,7 @@ public enum SessionFileLayout: Sendable {
 
     public static func shouldSkipDirectory(_ name: String) -> Bool {
         let n = name.lowercased()
-        if n == "node_modules" || n == ".git" { return true }
+        if n == "node_modules" || n == ".git" || n == "log" { return true }
         if n.hasPrefix(".") && n != ".cursor" { return true }
         return false
     }

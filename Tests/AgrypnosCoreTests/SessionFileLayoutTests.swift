@@ -18,10 +18,7 @@ final class SessionFileLayoutTests: XCTestCase {
         XCTAssertTrue(roots[.cursor]!.contains(URL(fileURLWithPath: "/Users/ada/.cursor/chats")))
         XCTAssertEqual(
             roots[.openCode],
-            [
-                URL(fileURLWithPath: "/Users/ada/.local/share/opencode/project"),
-                URL(fileURLWithPath: "/Users/ada/.local/share/opencode/storage"),
-            ]
+            [URL(fileURLWithPath: "/Users/ada/.local/share/opencode")]
         )
     }
 
@@ -44,10 +41,7 @@ final class SessionFileLayoutTests: XCTestCase {
         )
         XCTAssertEqual(
             roots[.openCode],
-            [
-                URL(fileURLWithPath: "/tmp/xdg-data/opencode/project"),
-                URL(fileURLWithPath: "/tmp/xdg-data/opencode/storage"),
-            ]
+            [URL(fileURLWithPath: "/tmp/xdg-data/opencode")]
         )
     }
 
@@ -59,6 +53,8 @@ final class SessionFileLayoutTests: XCTestCase {
             fileURLWithPath: "/Users/ada/.local/share/opencode/storage/session/ses_2.json"
         )
         let sqlite = URL(fileURLWithPath: "/Users/ada/.local/share/opencode/storage/opencode.db")
+        let dataRootDB = URL(fileURLWithPath: "/Users/ada/.local/share/opencode/opencode.db")
+        let xdgDB = URL(fileURLWithPath: "/tmp/xdg-data/opencode/opencode.db")
         let auth = URL(fileURLWithPath: "/Users/ada/.local/share/opencode/auth.json")
         let log = URL(fileURLWithPath: "/Users/ada/.local/share/opencode/log/2026-09-22T123456.log")
         let config = URL(fileURLWithPath: "/Users/ada/.config/opencode/opencode.json")
@@ -68,6 +64,10 @@ final class SessionFileLayoutTests: XCTestCase {
         XCTAssertTrue(SessionFileLayout.isRelevantFile(session, kind: .openCode))
         XCTAssertTrue(SessionFileLayout.isRelevantFile(legacy, kind: .openCode))
         XCTAssertTrue(SessionFileLayout.isRelevantFile(sqlite, kind: .openCode))
+        XCTAssertEqual(SessionFileLayout.classify(dataRootDB), .openCode)
+        XCTAssertTrue(SessionFileLayout.isRelevantFile(dataRootDB, kind: .openCode))
+        XCTAssertEqual(SessionFileLayout.classify(xdgDB), .openCode)
+        XCTAssertTrue(SessionFileLayout.isRelevantFile(xdgDB, kind: .openCode))
         XCTAssertFalse(SessionFileLayout.isRelevantFile(auth, kind: .openCode))
         XCTAssertFalse(SessionFileLayout.isRelevantFile(log, kind: .openCode))
         XCTAssertNil(SessionFileLayout.classify(config))
@@ -105,6 +105,7 @@ final class SessionFileLayoutTests: XCTestCase {
         XCTAssertFalse(SessionFileLayout.isRelevantFile(modules, kind: .cursor))
         XCTAssertTrue(SessionFileLayout.shouldSkipDirectory("node_modules"))
         XCTAssertTrue(SessionFileLayout.shouldSkipDirectory(".git"))
+        XCTAssertTrue(SessionFileLayout.shouldSkipDirectory("log"))
         XCTAssertFalse(SessionFileLayout.shouldSkipDirectory("agent-transcripts"))
     }
 

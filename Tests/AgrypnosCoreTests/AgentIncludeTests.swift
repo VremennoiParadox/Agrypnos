@@ -74,6 +74,30 @@ final class AgentIncludeTests: XCTestCase {
         XCTAssertEqual(AgentIncludeChrome.toggling(.codex, in: [.cursor]), [.cursor, .codex])
     }
 
+    func testOpenCodeOffRoundTrips() throws {
+        var prefs = UserPreferences.default
+        XCTAssertTrue(prefs.applyIncludedAgentKinds([.cursor]))
+        XCTAssertEqual(prefs.includedAgentKinds, [.cursor])
+        XCTAssertFalse(prefs.includedAgentKinds.contains(.openCode))
+        let loaded = try roundTrip(prefs)
+        XCTAssertEqual(loaded.includedAgentKinds, [.cursor])
+        XCTAssertFalse(loaded.includedAgentKinds.contains(.openCode))
+
+        let json = """
+        {"batteryFloorPercent":15,"duration":"indefinite","keyboardBacklightOff":true,"applyBrightnessFloor":true,"brightnessFloorPercent":15,"agentSettleGrace":120,"sessionFreshness":45,"lidOpenRampSeconds":2,"hotkey":{"keyCode":0,"option":true,"command":true,"shift":false,"control":false},"includedAgentKinds":{"cursor":true,"claudeCode":false,"codex":false,"openCode":false}}
+        """
+        let decoded = try JSONDecoder().decode(UserPreferences.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.includedAgentKinds, [.cursor])
+        XCTAssertFalse(decoded.includedAgentKinds.contains(.openCode))
+
+        let cursorOnlyList = """
+        {"batteryFloorPercent":15,"duration":"indefinite","keyboardBacklightOff":true,"applyBrightnessFloor":true,"brightnessFloorPercent":15,"agentSettleGrace":120,"sessionFreshness":45,"lidOpenRampSeconds":2,"hotkey":{"keyCode":0,"option":true,"command":true,"shift":false,"control":false},"includedAgentKinds":["cursor"]}
+        """
+        let listed = try JSONDecoder().decode(UserPreferences.self, from: Data(cursorOnlyList.utf8))
+        XCTAssertEqual(listed.includedAgentKinds, [.cursor])
+        XCTAssertFalse(listed.includedAgentKinds.contains(.openCode))
+    }
+
     func testExplicitSubsetWithoutOpenCodePersistsAndRoundTrips() throws {
         var prefs = UserPreferences.default
         XCTAssertTrue(prefs.applyIncludedAgentKinds([.cursor, .openCode]))

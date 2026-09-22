@@ -47,8 +47,8 @@ struct AgentIncludeFlags: Codable {
         if let listed = try? container.decode([AgentKind].self, forKey: .includedAgentKinds) {
             if listed.isEmpty { return AgentIncludeChrome.defaultIncluded }
             var kinds = Set(listed)
-            // Existing installs named the first three; OpenCode defaults on.
-            if !kinds.contains(.openCode) { kinds.insert(.openCode) }
+            let legacyThree: Set<AgentKind> = [.cursor, .claudeCode, .codex]
+            if kinds == legacyThree { kinds.insert(.openCode) }
             return UserPreferences.clampIncludedAgentKinds(kinds)
         }
         return AgentIncludeChrome.defaultIncluded
