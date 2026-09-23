@@ -37,8 +37,8 @@ final class PopoverSectionResizeTests: XCTestCase {
         XCTAssertEqual(same.durationSeconds, 0)
         XCTAssertEqual(same.timing, .none)
         XCTAssertFalse(same.allowsImplicitAnimation)
-        XCTAssertFalse(same.clipsOutgoingUntilComplete)
         XCTAssertTrue(same.hidesOutgoingImmediately)
+        XCTAssertEqual(same.documentHeightDuringMotion, same.toContentHeight)
 
         let initial = PopoverSectionResize.make(from: .power, to: .watch, animated: false)
         XCTAssertFalse(initial.animatesHeight)
@@ -46,9 +46,34 @@ final class PopoverSectionResizeTests: XCTestCase {
         XCTAssertEqual(initial.timing, .none)
         XCTAssertFalse(initial.allowsImplicitAnimation)
         XCTAssertTrue(initial.hidesOutgoingImmediately)
+        XCTAssertEqual(initial.documentHeightDuringMotion, initial.toContentHeight)
     }
 
-    func testShrinkClipsOutgoingUntilCompleteGrowHidesOutgoingNow() {
+    func testSwitchHidesOutgoingImmediatelyAndSizesDocumentToDestination() {
+        for from in PopoverSection.allCases {
+            for to in PopoverSection.allCases {
+                let motion = PopoverSectionResize.make(from: from, to: to, animated: true)
+                let destination = PopoverStackLayout.make(section: to)
+                XCTAssertTrue(
+                    motion.hidesOutgoingImmediately,
+                    "\(from.title) → \(to.title) would keep the old section painted"
+                )
+                XCTAssertEqual(
+                    motion.documentHeightDuringMotion,
+                    destination.contentHeight,
+                    "\(from.title) → \(to.title) document must match destination, not the taller leftover"
+                )
+                XCTAssertEqual(motion.documentHeightDuringMotion, motion.toContentHeight)
+                XCTAssertEqual(motion.incomingCards, to.cards)
+                XCTAssertEqual(motion.outgoingCards, from.cards)
+                if from != to {
+                    XCTAssertTrue(Set(motion.outgoingCards).isDisjoint(with: motion.incomingCards))
+                }
+            }
+        }
+    }
+
+    func testGrowAndShrinkBothHideOutgoingNow() {
         let watch = PopoverStackLayout.make(section: .watch)
         let power = PopoverStackLayout.make(section: .power)
         XCTAssertLessThan(watch.popoverHeight, power.popoverHeight)
@@ -56,54 +81,54 @@ final class PopoverSectionResizeTests: XCTestCase {
         let grow = PopoverSectionResize.make(from: .watch, to: .power, animated: true)
         XCTAssertTrue(grow.animatesHeight)
         XCTAssertGreaterThan(grow.toHeight, grow.fromHeight)
-        XCTAssertFalse(grow.clipsOutgoingUntilComplete)
         XCTAssertTrue(grow.hidesOutgoingImmediately)
-        XCTAssertEqual(grow.documentHeightDuringMotion, grow.toContentHeight)
-        XCTAssertEqual(grow.toContentHeight, power.contentHeight)
+        XCTAssertEqual(grow.documentHeightDuringMotion, power.contentHeight)
 
         let shrink = PopoverSectionResize.make(from: .power, to: .watch, animated: true)
         XCTAssertTrue(shrink.animatesHeight)
         XCTAssertLessThan(shrink.toHeight, shrink.fromHeight)
-        XCTAssertTrue(shrink.clipsOutgoingUntilComplete)
-        XCTAssertFalse(shrink.hidesOutgoingImmediately)
-        XCTAssertEqual(
-            shrink.documentHeightDuringMotion,
-            max(shrink.fromContentHeight, shrink.toContentHeight)
-        )
-        XCTAssertEqual(shrink.fromContentHeight, power.contentHeight)
-        XCTAssertEqual(shrink.toContentHeight, watch.contentHeight)
+        XCTAssertTrue(shrink.hidesOutgoingImmediately)
+        XCTAssertEqual(shrink.documentHeightDuringMotion, watch.contentHeight)
+        XCTAssertLessThan(shrink.documentHeightDuringMotion, shrink.fromContentHeight)
     }
 
-    func testLiveWindowTallerThanDestinationKeepsOutgoingEvenIfFromSectionIsShort() {
+    func testMidEaseUsesLiveWindowHeightWithoutKeepingOutgoing() {
         let watch = PopoverStackLayout.make(section: .watch)
         let agents = PopoverStackLayout.make(section: .agents)
         let power = PopoverStackLayout.make(section: .power)
         XCTAssertLessThan(watch.popoverHeight, agents.popoverHeight)
         XCTAssertLessThan(agents.popoverHeight, power.popoverHeight)
 
-        // Mid Power → Watch, user hits Agents. From-section is already Watch
-        // (short), but the window is still at Power height.
         let rest = PopoverSectionResize.make(from: .watch, to: .agents, animated: true)
-        XCTAssertFalse(rest.clipsOutgoingUntilComplete)
         XCTAssertTrue(rest.hidesOutgoingImmediately)
+        XCTAssertEqual(rest.documentHeightDuringMotion, agents.contentHeight)
 
         let midEase = PopoverSectionResize.make(
             from: .watch,
             to: .agents,
             animated: true,
-            currentHeight: power.popoverHeight,
-            currentContentHeight: power.contentHeight
+            currentHeight: power.popoverHeight
         )
         XCTAssertTrue(midEase.animatesHeight)
         XCTAssertEqual(midEase.fromHeight, watch.popoverHeight)
         XCTAssertEqual(midEase.toHeight, agents.popoverHeight)
-        XCTAssertTrue(midEase.clipsOutgoingUntilComplete)
-        XCTAssertFalse(midEase.hidesOutgoingImmediately)
-        XCTAssertGreaterThanOrEqual(midEase.documentHeightDuringMotion, power.contentHeight)
-        XCTAssertEqual(
-            midEase.documentHeightDuringMotion,
-            max(power.contentHeight, agents.contentHeight)
-        )
+        XCTAssertTrue(midEase.hidesOutgoingImmediately)
+        XCTAssertEqual(midEase.documentHeightDuringMotion, agents.contentHeight)
+        XCTAssertLessThan(midEase.toHeight, power.popoverHeight)
+        XCTAssertNotEqual(midEase.toHeight, power.popoverHeight)
+    }
+
+    func testNotifDocumentKeepsFullContentHeightNotThe720Clip() {
+        let notif = PopoverStackLayout.make(section: .notif)
+        XCTAssertTrue(notif.needsScroll)
+        XCTAssertEqual(notif.popoverHeight, PopoverStackLayout.maxVisibleHeight)
+        XCTAssertGreaterThan(notif.contentHeight, notif.popoverHeight)
+
+        let motion = PopoverSectionResize.make(from: .watch, to: .notif, animated: true)
+        XCTAssertTrue(motion.hidesOutgoingImmediately)
+        XCTAssertEqual(motion.documentHeightDuringMotion, notif.contentHeight)
+        XCTAssertGreaterThan(motion.documentHeightDuringMotion, motion.toHeight)
+        XCTAssertEqual(motion.toHeight, notif.popoverHeight)
     }
 
     func testIncomingAndOutgoingCardsAreTheSectionCardSets() {
@@ -113,26 +138,5 @@ final class PopoverSectionResizeTests: XCTestCase {
         XCTAssertTrue(Set(motion.outgoingCards).isDisjoint(with: motion.incomingCards))
         XCTAssertFalse(motion.incomingCards.isEmpty)
         XCTAssertFalse(motion.outgoingCards.isEmpty)
-    }
-
-    func testShrinkKeepsOutgoingContentUntilTheWindowCatchesUp() {
-        for from in PopoverSection.allCases {
-            for to in PopoverSection.allCases {
-                let motion = PopoverSectionResize.make(from: from, to: to, animated: true)
-                XCTAssertEqual(
-                    motion.clipsOutgoingUntilComplete,
-                    motion.animatesHeight && motion.toHeight < motion.fromHeight,
-                    "\(from.title) → \(to.title) rest-state clip"
-                )
-                XCTAssertEqual(motion.hidesOutgoingImmediately, !motion.clipsOutgoingUntilComplete)
-                if motion.clipsOutgoingUntilComplete {
-                    XCTAssertGreaterThanOrEqual(
-                        motion.documentHeightDuringMotion,
-                        motion.fromContentHeight,
-                        "\(from.title) → \(to.title) would drop outgoing cards before the window shrinks"
-                    )
-                }
-            }
-        }
     }
 }
