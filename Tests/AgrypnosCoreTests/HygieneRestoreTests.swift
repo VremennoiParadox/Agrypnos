@@ -26,7 +26,7 @@ final class HygieneRestoreTests: XCTestCase {
         XCTAssertEqual(HygieneRestore.displayBrightnessToRestore(captured: 0.05, floor: 0.15), 0.15)
     }
 
-    func testDisplayRestoreUsesFloorWhenCaptureFailed() {
-        XCTAssertEqual(HygieneRestore.displayBrightnessToRestore(captured: nil, floor: 0.15), 0.15)
+    func testDisplayRestoreSkipsWhenCaptureFailed() {
+        XCTAssertNil(HygieneRestore.displayBrightnessToRestore(captured: nil, floor: 0.15))
     }
 }

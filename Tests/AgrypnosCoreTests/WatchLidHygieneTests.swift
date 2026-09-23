@@ -4,6 +4,39 @@ import XCTest
 final class WatchLidHygieneTests: XCTestCase {
     let t0 = Date(timeIntervalSince1970: 10_000)
 
+    func testOneClosedSampleWhileArmedDoesNotFloor() {
+        var engine = WatchEngine(preferences: .default)
+        _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
+        XCTAssertTrue(engine.observeLid(closed: true, now: t0).isEmpty)
+        XCTAssertFalse(engine.lidHygieneApplied)
+        XCTAssertFalse(engine.lidClosed)
+        XCTAssertTrue(engine.engaged)
+    }
+
+    func testClosedThenOpenBeforeConfirmDoesNotFloor() {
+        var engine = WatchEngine(preferences: .default)
+        _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
+        XCTAssertTrue(engine.observeLid(closed: true, now: t0).isEmpty)
+        XCTAssertTrue(engine.observeLid(closed: false, now: t0.addingTimeInterval(0.1)).isEmpty)
+        XCTAssertTrue(
+            engine.observeLid(closed: false, now: t0.addingTimeInterval(LidCloseConfirm.pulseInterval)).isEmpty
+        )
+        XCTAssertFalse(engine.lidHygieneApplied)
+        XCTAssertFalse(engine.lidClosed)
+    }
+
+    func testTwoClosedPulseSamplesWhileArmedApplyFloor() {
+        var engine = WatchEngine(preferences: .default)
+        _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
+        XCTAssertTrue(engine.observeLid(closed: true, now: t0).isEmpty)
+        XCTAssertEqual(
+            engine.observeLid(closed: true, now: t0.addingTimeInterval(LidCloseConfirm.pulseInterval)),
+            [.assertSleepDisabled, .applyBrightnessFloor, .requestKeyboardBacklightOff]
+        )
+        XCTAssertTrue(engine.lidHygieneApplied)
+        XCTAssertTrue(engine.lidClosed)
+    }
+
     func testLidCloseReassertsSleepDisabledThenHygiene() {
         var engine = WatchEngine(preferences: .default)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: false)

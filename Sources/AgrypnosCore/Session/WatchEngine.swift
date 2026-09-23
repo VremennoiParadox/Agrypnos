@@ -13,6 +13,7 @@ public struct WatchEngine: Equatable, Sendable {
     /// One idle-after-wait POST per genuine user arm. Survives disarm-failure rollback.
     public private(set) var postedThisUserArm: Bool
     var lastWatchEndRollback: LastWatchEnd?
+    private var lidConfirm: LidCloseConfirm
 
     public init(preferences: UserPreferences = .default) {
         self.preferences = preferences
@@ -26,6 +27,7 @@ public struct WatchEngine: Equatable, Sendable {
         self.lidHygieneApplied = false
         self.postedThisUserArm = false
         self.lastWatchEndRollback = nil
+        self.lidConfirm = LidCloseConfirm()
     }
 
     public mutating func userSetEngaged(_ on: Bool, now: Date, lidClosed: Bool = false) -> [WatchCommand] {
@@ -56,6 +58,7 @@ public struct WatchEngine: Equatable, Sendable {
         if engaged {
             if lidClosed {
                 lidHygieneApplied = true
+                lidConfirm.markConfirmedClosed()
                 return lidCloseHygieneCommands()
             }
             return []
@@ -114,6 +117,7 @@ public struct WatchEngine: Equatable, Sendable {
 
     public mutating func lidDidClose(now: Date) -> [WatchCommand] {
         lidClosed = true
+        lidConfirm.markConfirmedClosed()
         _ = now
         guard engaged else { return [] }
         guard !lidHygieneApplied else { return [] }
@@ -123,11 +127,24 @@ public struct WatchEngine: Equatable, Sendable {
 
     public mutating func lidDidOpen(now: Date) -> [WatchCommand] {
         lidClosed = false
+        lidConfirm.reset()
         _ = now
         guard engaged else { return [] }
         guard lidHygieneApplied else { return [] }
         lidHygieneApplied = false
         return lidOpenRestoreCommands()
+    }
+
+    /// Raw clamshell samples. Floor only after a stable closed confirm while armed.
+    public mutating func observeLid(closed: Bool, now: Date) -> [WatchCommand] {
+        switch lidConfirm.sample(closed, now: now) {
+        case .closed:
+            return lidDidClose(now: now)
+        case .opened:
+            return lidDidOpen(now: now)
+        case nil:
+            return []
+        }
     }
 
     mutating func engage(
@@ -144,10 +161,12 @@ public struct WatchEngine: Equatable, Sendable {
         applyDuration(now: now)
         var commands: [WatchCommand] = [.engage]
         if lidClosed {
+            lidConfirm.markConfirmedClosed()
             commands.append(.assertSleepDisabled)
             commands.append(contentsOf: lidCloseHygieneCommands())
             lidHygieneApplied = true
         } else {
+            lidConfirm.reset()
             lidHygieneApplied = false
         }
         return commands
@@ -186,6 +205,7 @@ public struct WatchEngine: Equatable, Sendable {
         userForcedThisSession = false
         leftoverAdopted = false
         lidHygieneApplied = false
+        lidConfirm.reset()
         settle.reset()
         var commands: [WatchCommand] = [.disengage(reason)]
         if postIdleAfterWait {

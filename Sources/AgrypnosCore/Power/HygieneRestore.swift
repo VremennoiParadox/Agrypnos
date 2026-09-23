@@ -13,7 +13,9 @@ public enum HygieneRestore: Sendable {
         captured
     }
 
-    public static func displayBrightnessToRestore(captured: Double?, floor: Double) -> Double {
-        max(captured ?? floor, floor)
+    /// Restore only a captured display brightness. Nil means capture failed — never write the floor as a guess.
+    public static func displayBrightnessToRestore(captured: Double?, floor: Double) -> Double? {
+        guard let captured else { return nil }
+        return max(captured, floor)
     }
 }

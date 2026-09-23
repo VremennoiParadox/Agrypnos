@@ -6,6 +6,8 @@ import AgrypnosCore
 #endif
 
 enum LidStateReader {
+    /// One AppleClamshellState read. Floor/hygiene goes through LidCloseConfirm —
+    /// a single raw value is not lid close.
     static func isClosed() -> Bool {
         let service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IOPMrootDomain"))
         guard service != 0 else { return false }
