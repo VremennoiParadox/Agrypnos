@@ -74,7 +74,7 @@ Switcher is **landed**: **Watch** · **Power** · **Agents** · **Notif** · **G
 - No **Licence** tab. No **About** as a toolbar tab. Do not drop **Notif** from the switcher. Do not add Licence/About.
 - Goal: shorter height per section; reduce long scroll when possible.
 - **Section-switch size:** When the section switcher changes, the popover **height must animate** between section sizes — system / macOS-standard motion (spring or ease matching Apple System Settings / menu extras). **No hard cut** / sudden resize. Content may crossfade or swap with the height change; do not leave a blank gap or stretch-distort controls. Prefer native SwiftUI / AppKit layout animation over custom springs that fight the system. Still: native segmented / quiet text switcher; no icon+blue-tile prefs chrome; no settings window; sections stay in the popover.
-- **Honesty:** Mac optical on smooth section-switch remains **soft** — do not claim Mac-proven until a rebuild optically checks every tab switch (Watch ↔ Power ↔ Agents ↔ Notif ↔ General).
+- **Honesty:** Mac optical on smooth section-switch remains **soft** — do not claim Mac-proven until a rebuild optically checks every section switch (Watch ↔ Power ↔ Agents ↔ Notif ↔ General).
 - Plain captions only (personality rules below).
 
 ### Menu-bar status item (landed)
