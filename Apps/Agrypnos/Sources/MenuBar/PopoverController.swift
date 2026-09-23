@@ -73,6 +73,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var shortcutLabel: NSTextField!
     var quitButton: NSButton!
     var currentSection: PopoverSection = .default
+    var sectionMotion = 0
 
     init(runtime: WatchRuntime) {
         self.runtime = runtime

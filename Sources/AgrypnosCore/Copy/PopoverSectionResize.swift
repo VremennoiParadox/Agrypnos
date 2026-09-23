@@ -1,5 +1,6 @@
 /// Section-switch size. AppKit animates `NSPopover.contentSize` from this plan.
 /// Ease-in-out, not a bounce spring. Cards keep their own frames — no stretch.
+/// Only the destination section is visible; never keep outgoing cards to fill glass.
 public struct PopoverSectionResize: Equatable, Sendable {
     public enum Timing: Equatable, Sendable {
         case none
@@ -19,7 +20,6 @@ public struct PopoverSectionResize: Equatable, Sendable {
     public let durationSeconds: Double
     public let timing: Timing
     public let allowsImplicitAnimation: Bool
-    public let clipsOutgoingUntilComplete: Bool
     public let hidesOutgoingImmediately: Bool
     public let incomingCards: [PopoverCard]
     public let outgoingCards: [PopoverCard]
@@ -29,8 +29,7 @@ public struct PopoverSectionResize: Equatable, Sendable {
         from: PopoverSection,
         to: PopoverSection,
         animated: Bool,
-        currentHeight: Int? = nil,
-        currentContentHeight: Int? = nil
+        currentHeight: Int? = nil
     ) -> PopoverSectionResize {
         let fromLayout = PopoverStackLayout.make(section: from)
         let toLayout = PopoverStackLayout.make(section: to)
@@ -40,9 +39,7 @@ public struct PopoverSectionResize: Equatable, Sendable {
         let toContentHeight = toLayout.contentHeight
         // Mid-ease the window can still be the previous section's size.
         let liveHeight = currentHeight ?? fromHeight
-        let liveContentHeight = currentContentHeight ?? fromContentHeight
         let animatesHeight = animated && from != to && toHeight != liveHeight
-        let clipsOutgoing = animatesHeight && toHeight < liveHeight
         return PopoverSectionResize(
             from: from,
             to: to,
@@ -54,13 +51,10 @@ public struct PopoverSectionResize: Equatable, Sendable {
             durationSeconds: animatesHeight ? standardDurationSeconds : 0,
             timing: animatesHeight ? .easeInEaseOut : .none,
             allowsImplicitAnimation: animatesHeight,
-            clipsOutgoingUntilComplete: clipsOutgoing,
-            hidesOutgoingImmediately: !clipsOutgoing,
+            hidesOutgoingImmediately: true,
             incomingCards: to.cards,
             outgoingCards: from.cards,
-            documentHeightDuringMotion: clipsOutgoing
-                ? max(liveContentHeight, toContentHeight)
-                : toContentHeight
+            documentHeightDuringMotion: toContentHeight
         )
     }
 }

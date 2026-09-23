@@ -12,6 +12,15 @@ final class FlippedView: NSView {
 /// Clip view must match the flipped document. A stock NSClipView shows Quit first.
 final class FlippedClipView: NSClipView {
     override var isFlipped: Bool { true }
+
+    override func constrainBoundsRect(_ proposedBounds: NSRect) -> NSRect {
+        var bounds = super.constrainBoundsRect(proposedBounds)
+        guard let documentView else { return bounds }
+        if bounds.height > documentView.frame.height {
+            bounds.origin.y = 0
+        }
+        return bounds
+    }
 }
 
 final class GlassView: NSVisualEffectView {

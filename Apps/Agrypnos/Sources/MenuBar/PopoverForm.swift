@@ -17,11 +17,13 @@ enum PopoverForm {
             height: CGFloat(slot.height)
         ))
         view.wantsLayer = true
+        view.autoresizingMask = []
         root.addSubview(view)
         return view
     }
 
     static func apply(_ view: NSView, slot: PopoverSlot?, pad: CGFloat, width: CGFloat) {
+        view.autoresizingMask = []
         guard let slot else {
             view.isHidden = true
             return
