@@ -116,6 +116,17 @@ final class PopoverSectionResizeTests: XCTestCase {
         XCTAssertEqual(midEase.documentHeightDuringMotion, agents.contentHeight)
         XCTAssertLessThan(midEase.toHeight, power.popoverHeight)
         XCTAssertNotEqual(midEase.toHeight, power.popoverHeight)
+
+        let alreadyThere = PopoverSectionResize.make(
+            from: .watch,
+            to: .agents,
+            animated: true,
+            currentHeight: agents.popoverHeight
+        )
+        XCTAssertFalse(alreadyThere.animatesHeight)
+        XCTAssertEqual(alreadyThere.durationSeconds, 0)
+        XCTAssertTrue(alreadyThere.hidesOutgoingImmediately)
+        XCTAssertEqual(alreadyThere.documentHeightDuringMotion, agents.contentHeight)
     }
 
     func testNotifDocumentKeepsFullContentHeightNotThe720Clip() {
