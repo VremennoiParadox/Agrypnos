@@ -36,6 +36,9 @@ No giant god-objects. No “just one more helper” that becomes AppDelegate 2.
 - **Do not promise every agent provider.** V1 is Cursor, Claude Code, Codex, and OpenCode. Local heuristics only. Correctness over coverage. Still not every provider. Still not think-detection.
 - **Do not kill Wi-Fi or Bluetooth.** Out of scope forever unless a later spec says otherwise.
 - **Armed ≠ black screen.** Toggling Keep the watch must **not** call `displaysleepnow`, blank the panel, or kill the keyboard backlight while the lid is open. Do not claim “we force display asleep”, “screen off”, or “dim ≠ asleep / real display sleep” for the toggle — V1 lid-close honesty is **brightness floor + keyboard off**.
+- **Floor write gate.** Write the brightness floor **only** when Keep the watch is armed **and** lid-close is confirmed. Never write floor while the lid is open. Never write floor after the watch has disengaged (except restoring a **captured** pre-hygiene brightness). Universal — no M2-only branches.
+- **Nil capture = skip.** On disengage / lid-open restore / any restore path: if captured display brightness is nil, **do not write** brightness (do not fall back to floor). Same honesty as keyboard: nil capture never becomes a guess write.
+- **Lid confirm before hygiene.** Do not apply lid-close hygiene on a single raw `AppleClamshellState` edge. Require a **stable closed** signal (debounce / consecutive closed samples — Swift picks the smallest reliable approach; bar only requires stable confirm, not a named algorithm). No M2-only branches.
 
 ## V1 scope
 
@@ -47,8 +50,8 @@ Ship these, and stop:
 | Global hotkey | Activate/toggle the watch. Default `⌥⌘A`. **Remappable** in the popover (conflict-safe). Required V1. Surface bind failure honestly when the chord cannot register. |
 | Keep the watch (armed) | ON = **armed** while the lid is open. Machine may already be held awake (`pmset disablesleep` / SleepDisabled) as needed for the watch, but **no** display blank, **no** `displaysleepnow`, **no** keyboard backlight off on toggle. |
 | Lid-closed keep-awake | With the watch armed, lid close keeps the Mac awake via `pmset disablesleep` (SleepDisabled). IOKit assertions do **not** survive lid close; use them only as extra idle prevention, never as the lid story. |
-| Lid-close hygiene | On lid **close** (not on toggle): set brightness to the **user floor %** (default **15%**, range 1–40; never 0%) and turn **keyboard backlight off**. Brightness write only — not display sleep, not “screen off”. Do **not** use `displaysleepnow` for this path. |
-| Lid-open restore | If the lid opens again while the watch is still armed: gradual brightness ramp (**1 / 2 / 3 s**, default **2s**) + keyboard backlight on. Keep the watch and How long stay as the user set them. |
+| Lid-close hygiene | On **confirmed** lid **close** (not on toggle, not a single raw `AppleClamshellState` edge): set brightness to the **user floor %** (default **15%**, range 1–40; never 0%) and turn **keyboard backlight off**. Brightness write only — not display sleep, not “screen off”. Do **not** use `displaysleepnow`. Floor write only while armed + lid confirmed closed. Universal — no M2-only branches. |
+| Lid-open restore | If the lid opens again while the watch is still armed: gradual brightness ramp (**1 / 2 / 3 s**, default **2s**) + keyboard backlight on — restore only a **captured** pre-hygiene brightness; if capture is nil, skip the brightness write (do not fall back to floor). Keep the watch and How long stay as the user set them. |
 | Hold until user off | Stay armed until the user turns Keep the watch off, except duration **Agents**: after local busy this arm then idle through the wait, turn Keep the watch off. Timer must not flip How long. Agents idle must not flip How long (it stays **Agents**). Battery / thermal / leftover LPM still apply. |
 | Auto-off timer | Segmented presets `∞` / `1h` / `3h` / `Agents`, plus **custom minutes** (e.g. 33) the user can set. Remembered only — they do not auto-off. |
 | Auto-off low battery | Slider **5–100%**, default 15%, on discharging battery. |
@@ -83,13 +86,13 @@ While Keep the watch is on: **Armed.** for ∞ / 1h / 3h / custom minutes, **Age
 - Remappable global hotkey (default still `⌥⌘A`)
 - Custom duration in minutes (beyond fixed presets)
 - Low-battery auto-off threshold **5–100%** (default 15%)
-- Brightness floor **%** — Core + popover control; default **15%**; range 1–40; never 0%; lid-close uses this floor (brightness write only — not display sleep, not “screen off”)
+- Brightness floor **%** — Core + popover control; default **15%**; range 1–40; never 0%; **confirmed** lid-close uses this floor (brightness write only — not display sleep, not “screen off”). Write only when armed + lid confirmed closed; nil capture never writes floor.
 - Idle wait after local busy signals stop (`agentSettleGrace`) — Core + popover control; **2 minutes – 15 minutes**; default **2 minutes** (120s). Never advertise 15s or 30s as the min. Existing prefs below 2m clamp up to 2m. Gates the idle-after-wait POST **and** turning Keep the watch off in Agents mode.
   - **What:** settle buffer after **local busy signals** from selected tools stop (process + session/transcript mtimes, including nested `/subagents/*.jsonl` within 45s when that parent tool is selected; Claude/Codex may also use CPU; OpenCode: local process + session files, prove on Mac).
   - **Why:** a quiet gap mid-run (tool pause, think with no file write) can look “done” and fire Notif / turn the watch off too soon. The buffer keeps that from happening between those gaps.
   - **Not:** not a stuck-agent detector; not mind-reading; we do **not** know “still thinking” or “agent finished the job.” Ban copy that claims that.
   - Title may stay short (e.g. “Wait after agents go idle” or “Idle wait”). Help carries the detail, in this spirit: “How long to wait after local busy signals stop, before the idle-after-wait POST. Then Keep the watch turns off. Buffer so a quiet gap mid-run (no file write / low CPU) doesn’t look finished. Not still thinking — we only see local process and session activity.”
-- Brightness return when the lid opens — Core + popover control; **1 / 2 / 3 s**, default **2s**
+- Brightness return when the lid opens — Core + popover control; **1 / 2 / 3 s**, default **2s**. Restore captured brightness only; nil capture skips the write (do not fall back to floor).
 - Last-end honesty — Watch caption-only card. Last watch end from a real `DisengageReason` (time + reason). No history log, no invented reasons.
 - **Per-tool Agents include** — popover-only, **landed**. Do not grow it. No separate “track all” toggle.
   - Popover **Agents**: multi-select checkboxes or toggles for **Cursor · Claude Code · Codex · OpenCode**. The user picks any subset at once. Selecting every listed tool is how all of them count as busy.
@@ -143,7 +146,9 @@ prd/                      Product scope. Implement against it.
 
 - Pure logic gets tests first. Watch the test fail, then implement.
 - On Linux: `swift test` and `Scripts/verify-linux.sh`. That is real evidence for Core.
-- On a Mac: build the app, arm Keep the watch with the lid **open** (screen stays usable), close the lid (brightness floor + keyboard dark), reopen mid-watch (ramp length from prefs + keyboard on), then confirm Agents idle-after-wait turns Keep the watch off (How long stays Agents) and safety auto-off allows sleep. Timed How long presets do not auto-off. Until that happens, say so. Do not claim Mac runtime you did not run.
+- On a Mac: build the app, arm Keep the watch with the lid **open** (screen stays usable), close the lid (brightness floor + keyboard dark **after confirmed close**), reopen mid-watch (ramp length from prefs + keyboard on), then confirm Agents idle-after-wait turns Keep the watch off (How long stays Agents) and safety auto-off allows sleep. Timed How long presets do not auto-off. Until that happens, say so. Do not claim Mac runtime you did not run.
+- Soft verify (floor write / nil capture): arm → confirmed close → reopen mid-watch (ramp) → end watch → use the Mac with the lid **open** for a while with **no surprise dim to floor**. Do not claim Mac-proven until that check. Missing capture after disengage must not write the floor. Do not apply hygiene on a single raw clamshell flicker.
+- Core (Linux): nil display capture must **skip** the brightness write (do not return / fall back to floor) — same honesty as keyboard. Floor write only when armed + lid-close confirmed. Unconfirmed close must not apply hygiene.
 - Before you call a PR done: line-count check, Core tests, and an honest “works vs needs a Mac” list.
 
 ## Git
@@ -161,7 +166,7 @@ Commit and push when the work is a coherent slice. Do not ask the user for permi
 | **Rules** | `AGENTS.md`, this bar, scope fights | Feature code |
 | **Swift core** | `AgrypnosCore`, heuristics, watch engine, lid/hygiene, safety | AppKit chrome |
 | **UI** | Menu bar, popover (section switcher + cards), personality copy, glyph | Kernel sleep flag |
-| **Review** | Gates. File size, TDD, no watt fiction, no god files, no false display-sleep claims, plain popover copy, no false ended-copy under LPM forced-watch, no settings window, no Licence/About tabs, Notif is landed V2 (popover switcher **Watch · Power · Agents · Notif · General**, one-way idle-after-wait, Application Support secrets `0600` + dotted/reveal, self-serve Discord/Telegram, no shared bot, no Keychain login prompt; two-way/rich status stay idea-only), status item is landed (**Armed.** / **Agents.** non-countdown; no fake timer), per-tool Agents include is landed (multi-select Cursor · Claude Code · Codex · OpenCode; require ≥1; default all on; no separate track-all toggle; busy signals only from selected tools; OpenCode is local process + session files, prove on Mac), donate gated on live URL | Shipping unreviewed slop |
+| **Review** | Gates. File size, TDD, no watt fiction, no god files, no false display-sleep claims, floor write only on armed + confirmed lid close (not a single raw `AppleClamshellState` edge), nil display capture never writes floor, no surprise dim after disengage with the lid open, no M2-only lid/hygiene branches, do not claim Mac-proven until the open-lid soft check, plain popover copy, no false ended-copy under LPM forced-watch, no settings window, no Licence/About tabs, Notif is landed V2 (popover switcher **Watch · Power · Agents · Notif · General**, one-way idle-after-wait, Application Support secrets `0600` + dotted/reveal, self-serve Discord/Telegram, no shared bot, no Keychain login prompt; two-way/rich status stay idea-only), status item is landed (**Armed.** / **Agents.** non-countdown; no fake timer), per-tool Agents include is landed (multi-select Cursor · Claude Code · Codex · OpenCode; require ≥1; default all on; no separate track-all toggle; busy signals only from selected tools; OpenCode is local process + session files, prove on Mac), donate gated on live URL | Shipping unreviewed slop |
 | **Boss** | Sequence, merge order, “stop” on parked V2 (two-way/rich status, panel-sleep) | Writing all the code |
 
 Parallel foundations are forbidden. One track. If you find a second scaffold, delete yours or stop.
