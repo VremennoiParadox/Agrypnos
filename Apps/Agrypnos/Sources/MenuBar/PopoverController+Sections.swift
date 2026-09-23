@@ -68,6 +68,8 @@ extension PopoverController {
         }
     }
 
+    /// Instant size only. Never call this inside the 0.25s height ease —
+    /// animating `NSScrollView.frame` desyncs the clip from the document.
     private func syncPopoverWindowHeight(_ height: Int, width: CGFloat) {
         let popH = CGFloat(height)
         popoverRoot.frame.size.height = popH
