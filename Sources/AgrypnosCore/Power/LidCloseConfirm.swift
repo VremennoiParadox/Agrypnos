@@ -16,6 +16,12 @@ public struct LidCloseConfirm: Equatable, Sendable {
 
     public init() {}
 
+    /// Snapshot the open-lid panel only while the raw clamshell is open.
+    /// Pending close (raw closed, not yet confirmed) must not overwrite the last open level.
+    public static func shouldRecaptureOpenBrightness(rawClosed: Bool, confirmedClosed: Bool) -> Bool {
+        !rawClosed && !confirmedClosed
+    }
+
     public mutating func reset() {
         confirmedClosed = false
         closedSince = nil

@@ -54,4 +54,11 @@ final class LidCloseConfirmTests: XCTestCase {
         XCTAssertFalse(lid.confirmedClosed)
         XCTAssertNil(lid.sample(true, now: t0.addingTimeInterval(1)))
     }
+
+    func testPendingCloseDoesNotRecaptureOpenBrightness() {
+        XCTAssertTrue(LidCloseConfirm.shouldRecaptureOpenBrightness(rawClosed: false, confirmedClosed: false))
+        XCTAssertFalse(LidCloseConfirm.shouldRecaptureOpenBrightness(rawClosed: true, confirmedClosed: false))
+        XCTAssertFalse(LidCloseConfirm.shouldRecaptureOpenBrightness(rawClosed: false, confirmedClosed: true))
+        XCTAssertFalse(LidCloseConfirm.shouldRecaptureOpenBrightness(rawClosed: true, confirmedClosed: true))
+    }
 }

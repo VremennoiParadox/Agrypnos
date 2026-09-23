@@ -181,9 +181,13 @@ final class WatchRuntime {
             idlePostTask = nil
             idleOutbound.noteUserArm()
             // One raw clamshell read is not close — confirm on the lid pulse.
+            let rawClosed = LidStateReader.isClosed()
             apply(engine.userSetEngaged(true, now: Date(), lidClosed: false))
-            apply(engine.observeLid(closed: LidStateReader.isClosed(), now: Date()))
-            if !engine.lidClosed {
+            apply(engine.observeLid(closed: rawClosed, now: Date()))
+            if LidCloseConfirm.shouldRecaptureOpenBrightness(
+                rawClosed: rawClosed,
+                confirmedClosed: engine.lidClosed
+            ) {
                 recaptureOpenLidHygiene()
             }
             startLidPulse()
@@ -303,7 +307,10 @@ final class WatchRuntime {
             if !commands.isEmpty {
                 apply(commands)
                 lidChanged = true
-            } else if !engine.lidClosed, !engine.lidHygieneApplied, !brightnessRamp.isRunning {
+            } else if LidCloseConfirm.shouldRecaptureOpenBrightness(
+                rawClosed: rawClosed,
+                confirmedClosed: engine.lidClosed
+            ), !engine.lidHygieneApplied, !brightnessRamp.isRunning {
                 recaptureOpenLidHygiene()
             }
             startLidPulse()
@@ -391,9 +398,13 @@ final class WatchRuntime {
                 _ = SleepDisabledController.set(false)
             }
             if SleepDisabledController.read() {
+                let rawClosed = LidStateReader.isClosed()
                 apply(engine.adoptLeftoverKernel(now: Date(), lidClosed: false))
-                apply(engine.observeLid(closed: LidStateReader.isClosed(), now: Date()))
-                if !engine.lidClosed {
+                apply(engine.observeLid(closed: rawClosed, now: Date()))
+                if LidCloseConfirm.shouldRecaptureOpenBrightness(
+                    rawClosed: rawClosed,
+                    confirmedClosed: engine.lidClosed
+                ) {
                     recaptureOpenLidHygiene()
                 }
                 startLidPulse()
