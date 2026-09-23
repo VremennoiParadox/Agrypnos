@@ -10,7 +10,9 @@ extension PopoverController {
         let motion = PopoverSectionResize.make(
             from: currentSection,
             to: section,
-            animated: popover.isShown
+            animated: popover.isShown && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
+            currentHeight: Int(popover.contentSize.height.rounded()),
+            currentContentHeight: Int(popoverDocument.frame.size.height.rounded())
         )
         currentSection = section
         let layout = PopoverStackLayout.make(section: section)

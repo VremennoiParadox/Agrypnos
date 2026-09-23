@@ -74,6 +74,38 @@ final class PopoverSectionResizeTests: XCTestCase {
         XCTAssertEqual(shrink.toContentHeight, watch.contentHeight)
     }
 
+    func testLiveWindowTallerThanDestinationKeepsOutgoingEvenIfFromSectionIsShort() {
+        let watch = PopoverStackLayout.make(section: .watch)
+        let agents = PopoverStackLayout.make(section: .agents)
+        let power = PopoverStackLayout.make(section: .power)
+        XCTAssertLessThan(watch.popoverHeight, agents.popoverHeight)
+        XCTAssertLessThan(agents.popoverHeight, power.popoverHeight)
+
+        // Mid Power → Watch, user hits Agents. From-section is already Watch
+        // (short), but the window is still at Power height.
+        let rest = PopoverSectionResize.make(from: .watch, to: .agents, animated: true)
+        XCTAssertFalse(rest.clipsOutgoingUntilComplete)
+        XCTAssertTrue(rest.hidesOutgoingImmediately)
+
+        let midEase = PopoverSectionResize.make(
+            from: .watch,
+            to: .agents,
+            animated: true,
+            currentHeight: power.popoverHeight,
+            currentContentHeight: power.contentHeight
+        )
+        XCTAssertTrue(midEase.animatesHeight)
+        XCTAssertEqual(midEase.fromHeight, watch.popoverHeight)
+        XCTAssertEqual(midEase.toHeight, agents.popoverHeight)
+        XCTAssertTrue(midEase.clipsOutgoingUntilComplete)
+        XCTAssertFalse(midEase.hidesOutgoingImmediately)
+        XCTAssertGreaterThanOrEqual(midEase.documentHeightDuringMotion, power.contentHeight)
+        XCTAssertEqual(
+            midEase.documentHeightDuringMotion,
+            max(power.contentHeight, agents.contentHeight)
+        )
+    }
+
     func testIncomingAndOutgoingCardsAreTheSectionCardSets() {
         let motion = PopoverSectionResize.make(from: .watch, to: .agents, animated: true)
         XCTAssertEqual(motion.outgoingCards, PopoverSection.watch.cards)
@@ -90,7 +122,7 @@ final class PopoverSectionResizeTests: XCTestCase {
                 XCTAssertEqual(
                     motion.clipsOutgoingUntilComplete,
                     motion.animatesHeight && motion.toHeight < motion.fromHeight,
-                    "\(from.title) → \(to.title)"
+                    "\(from.title) → \(to.title) rest-state clip"
                 )
                 XCTAssertEqual(motion.hidesOutgoingImmediately, !motion.clipsOutgoingUntilComplete)
                 if motion.clipsOutgoingUntilComplete {

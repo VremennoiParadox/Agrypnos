@@ -28,7 +28,9 @@ public struct PopoverSectionResize: Equatable, Sendable {
     public static func make(
         from: PopoverSection,
         to: PopoverSection,
-        animated: Bool
+        animated: Bool,
+        currentHeight: Int? = nil,
+        currentContentHeight: Int? = nil
     ) -> PopoverSectionResize {
         let fromLayout = PopoverStackLayout.make(section: from)
         let toLayout = PopoverStackLayout.make(section: to)
@@ -36,8 +38,11 @@ public struct PopoverSectionResize: Equatable, Sendable {
         let toHeight = toLayout.popoverHeight
         let fromContentHeight = fromLayout.contentHeight
         let toContentHeight = toLayout.contentHeight
-        let animatesHeight = animated && from != to && fromHeight != toHeight
-        let clipsOutgoing = animatesHeight && toHeight < fromHeight
+        // Mid-ease the window can still be the previous section's size.
+        let liveHeight = currentHeight ?? fromHeight
+        let liveContentHeight = currentContentHeight ?? fromContentHeight
+        let animatesHeight = animated && from != to && toHeight != liveHeight
+        let clipsOutgoing = animatesHeight && toHeight < liveHeight
         return PopoverSectionResize(
             from: from,
             to: to,
@@ -54,7 +59,7 @@ public struct PopoverSectionResize: Equatable, Sendable {
             incomingCards: to.cards,
             outgoingCards: from.cards,
             documentHeightDuringMotion: clipsOutgoing
-                ? max(fromContentHeight, toContentHeight)
+                ? max(liveContentHeight, toContentHeight)
                 : toContentHeight
         )
     }
