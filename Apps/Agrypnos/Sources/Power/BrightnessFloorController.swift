@@ -35,7 +35,8 @@ enum BrightnessFloorController {
     }
 
     static func restoreAtLeastFloor(saved: Double?, floor: Double) {
-        set(max(saved ?? floor, floor))
+        guard let target = HygieneRestore.displayBrightnessToRestore(captured: saved, floor: floor) else { return }
+        set(target)
     }
 
     static func builtInID() -> CGDirectDisplayID? {

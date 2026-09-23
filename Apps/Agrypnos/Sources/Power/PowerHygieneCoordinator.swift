@@ -30,11 +30,11 @@ enum PowerHygieneCoordinator {
                 KeyboardBacklightController.setOff()
             case .rampBrightnessRestore:
                 guard canSetBuiltInBrightness else { break }
-                let target = HygieneRestore.displayBrightnessToRestore(
+                guard let target = HygieneRestore.displayBrightnessToRestore(
                     captured: savedBrightness,
                     floor: preferences.brightnessFloor
-                )
-                let from = BrightnessFloorController.current() ?? preferences.brightnessFloor
+                ) else { break }
+                let from = BrightnessFloorController.current() ?? target
                 ramp.start(
                     from: from,
                     to: target,
@@ -55,11 +55,12 @@ enum PowerHygieneCoordinator {
         ramp: BrightnessRampController
     ) {
         ramp.cancel()
-        if preferences.applyBrightnessFloor, canSetBuiltInBrightness {
-            BrightnessFloorController.restoreAtLeastFloor(
-                saved: savedBrightness,
-                floor: preferences.brightnessFloor
-            )
+        if preferences.applyBrightnessFloor, canSetBuiltInBrightness,
+           let target = HygieneRestore.displayBrightnessToRestore(
+               captured: savedBrightness,
+               floor: preferences.brightnessFloor
+           ) {
+            BrightnessFloorController.set(target)
         }
         if preferences.keyboardBacklightOff,
            let brightness = HygieneRestore.keyboardBrightnessToRestore(captured: savedKeyboard) {
