@@ -1,4 +1,5 @@
 import AppKit
+import QuartzCore
 
 #if canImport(AgrypnosCore)
 import AgrypnosCore
@@ -6,6 +7,13 @@ import AgrypnosCore
 
 extension PopoverController {
     func applySection(_ section: PopoverSection) {
+        let motion = PopoverSectionResize.make(
+            from: currentSection,
+            to: section,
+            animated: popover.isShown && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
+            currentHeight: Int(popover.contentSize.height.rounded()),
+            currentContentHeight: Int(popoverDocument.frame.size.height.rounded())
+        )
         currentSection = section
         let layout = PopoverStackLayout.make(section: section)
         let pad = CGFloat(PopoverStackLayout.pad)
@@ -19,33 +27,74 @@ extension PopoverController {
             height: CGFloat(layout.sectionSwitcher.height)
         )
 
-        PopoverForm.apply(watchCard, slot: layout.watch, pad: pad, width: contentW)
-        PopoverForm.apply(durationCard, slot: layout.duration, pad: pad, width: contentW)
-        PopoverForm.apply(lastWatchEndCard, slot: layout.lastWatchEnd, pad: pad, width: contentW)
-        PopoverForm.apply(hygieneCard, slot: layout.hygiene, pad: pad, width: contentW)
-        PopoverForm.apply(batteryCard, slot: layout.battery, pad: pad, width: contentW)
-        PopoverForm.apply(agentIncludeCard, slot: layout.agentInclude, pad: pad, width: contentW)
-        PopoverForm.apply(settleCard, slot: layout.settle, pad: pad, width: contentW)
-        PopoverForm.apply(rampCard, slot: layout.ramp, pad: pad, width: contentW)
-        PopoverForm.apply(thermalCard, slot: layout.thermal, pad: pad, width: contentW)
-        PopoverForm.apply(notifEnableCard, slot: layout.notifEnable, pad: pad, width: contentW)
-        PopoverForm.apply(notifDiscordCard, slot: layout.notifDiscord, pad: pad, width: contentW)
-        PopoverForm.apply(notifTelegramCard, slot: layout.notifTelegram, pad: pad, width: contentW)
-        PopoverForm.apply(notifSetupCard, slot: layout.notifSetup, pad: pad, width: contentW)
-        PopoverForm.apply(notifClearCard, slot: layout.notifClear, pad: pad, width: contentW)
-        PopoverForm.apply(loginCard, slot: layout.login, pad: pad, width: contentW)
+        applyCardSlots(layout, pad: pad, width: contentW, hideOutgoing: motion.hidesOutgoingImmediately)
+        applyGeneralChrome(layout, pad: pad, contentW: contentW, hideIfAbsent: motion.hidesOutgoingImmediately)
+        if motion.clipsOutgoingUntilComplete {
+            bringSectionChromeToFront(section)
+        }
 
-        applyGeneralChrome(layout, pad: pad, contentW: contentW)
+        popoverDocument.frame.size.height = CGFloat(motion.documentHeightDuringMotion)
+        popoverScroll.documentView?.scroll(.zero)
 
-        popoverDocument.frame.size.height = CGFloat(layout.contentHeight)
-        let popH = CGFloat(layout.popoverHeight)
+        if motion.animatesHeight {
+            NSAnimationContext.runAnimationGroup({ context in
+                context.duration = motion.durationSeconds
+                context.allowsImplicitAnimation = motion.allowsImplicitAnimation
+                if motion.timing == .easeInEaseOut {
+                    context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                }
+                self.applyPopoverWindowHeight(layout.popoverHeight, width: width)
+            }, completionHandler: { [weak self] in
+                guard let self, self.currentSection == section else { return }
+                self.applyCardSlots(layout, pad: pad, width: contentW, hideOutgoing: true)
+                self.applyGeneralChrome(layout, pad: pad, contentW: contentW, hideIfAbsent: true)
+                self.popoverDocument.frame.size.height = CGFloat(layout.contentHeight)
+            })
+        } else {
+            applyPopoverWindowHeight(layout.popoverHeight, width: width)
+        }
+    }
+
+    private func applyPopoverWindowHeight(_ height: Int, width: CGFloat) {
+        let popH = CGFloat(height)
         popoverRoot.frame.size.height = popH
         popoverScroll.frame = popoverRoot.bounds
         popover.contentSize = NSSize(width: width, height: popH)
-        popoverScroll.documentView?.scroll(.zero)
     }
 
-    private func applyGeneralChrome(_ layout: PopoverStackLayout, pad: CGFloat, contentW: CGFloat) {
+    private func applyCardSlots(
+        _ layout: PopoverStackLayout,
+        pad: CGFloat,
+        width: CGFloat,
+        hideOutgoing: Bool
+    ) {
+        func apply(_ view: NSView, slot: PopoverSlot?) {
+            if slot == nil, !hideOutgoing { return }
+            PopoverForm.apply(view, slot: slot, pad: pad, width: width)
+        }
+        apply(watchCard, slot: layout.watch)
+        apply(durationCard, slot: layout.duration)
+        apply(lastWatchEndCard, slot: layout.lastWatchEnd)
+        apply(hygieneCard, slot: layout.hygiene)
+        apply(batteryCard, slot: layout.battery)
+        apply(agentIncludeCard, slot: layout.agentInclude)
+        apply(settleCard, slot: layout.settle)
+        apply(rampCard, slot: layout.ramp)
+        apply(thermalCard, slot: layout.thermal)
+        apply(notifEnableCard, slot: layout.notifEnable)
+        apply(notifDiscordCard, slot: layout.notifDiscord)
+        apply(notifTelegramCard, slot: layout.notifTelegram)
+        apply(notifSetupCard, slot: layout.notifSetup)
+        apply(notifClearCard, slot: layout.notifClear)
+        apply(loginCard, slot: layout.login)
+    }
+
+    private func applyGeneralChrome(
+        _ layout: PopoverStackLayout,
+        pad: CGFloat,
+        contentW: CGFloat,
+        hideIfAbsent: Bool
+    ) {
         if let y = layout.shortcutY, let hint = layout.hotkeyHint {
             shortcutLabel.isHidden = false
             shortcutLabel.frame.origin.y = CGFloat(y)
@@ -59,7 +108,7 @@ extension PopoverController {
                 width: contentW,
                 height: CGFloat(hint.height)
             )
-        } else {
+        } else if hideIfAbsent {
             shortcutLabel.isHidden = true
             recorder.button.isHidden = true
             hotkeyHint.isHidden = true
@@ -68,8 +117,24 @@ extension PopoverController {
         if let y = layout.quitY {
             quitButton.isHidden = false
             quitButton.frame.origin.y = CGFloat(y)
-        } else {
+        } else if hideIfAbsent {
             quitButton.isHidden = true
+        }
+    }
+
+    private func bringSectionChromeToFront(_ section: PopoverSection) {
+        for view in chrome(for: section) {
+            view.superview?.addSubview(view)
+        }
+    }
+
+    private func chrome(for section: PopoverSection) -> [NSView] {
+        switch section {
+        case .watch: return [watchCard, durationCard, lastWatchEndCard]
+        case .power: return [hygieneCard, batteryCard, rampCard, thermalCard]
+        case .agents: return [agentIncludeCard, settleCard]
+        case .notif: return [notifEnableCard, notifDiscordCard, notifTelegramCard, notifSetupCard, notifClearCard]
+        case .general: return [loginCard, shortcutLabel, recorder.button, hotkeyHint, quitButton]
         }
     }
 }
