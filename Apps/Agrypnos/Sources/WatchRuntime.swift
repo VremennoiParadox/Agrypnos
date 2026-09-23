@@ -17,7 +17,6 @@ final class WatchRuntime {
     private var pollTimer: Timer?
     private var savedBrightness: Double?
     private var savedKeyboard: Double?
-    private var lastLidClosed = false
     private let brightnessRamp = BrightnessRampController()
     private var lidTimer: Timer?
     weak var delegate: WatchRuntimeDelegate?
@@ -176,15 +175,15 @@ final class WatchRuntime {
     }
 
     func setEngaged(_ on: Bool) {
-        let lidClosed = LidStateReader.isClosed()
-        lastLidClosed = lidClosed
         if on {
             guard armKernel() else { return }
             idlePostTask?.cancel()
             idlePostTask = nil
             idleOutbound.noteUserArm()
-            apply(engine.userSetEngaged(true, now: Date(), lidClosed: lidClosed))
-            if !lidClosed {
+            // One raw clamshell read is not close — confirm on the lid pulse.
+            apply(engine.userSetEngaged(true, now: Date(), lidClosed: false))
+            apply(engine.observeLid(closed: LidStateReader.isClosed(), now: Date()))
+            if !engine.lidClosed {
                 recaptureOpenLidHygiene()
             }
             startLidPulse()
@@ -195,7 +194,7 @@ final class WatchRuntime {
                 return
             }
             stopLidPulse()
-            apply(engine.userSetEngaged(false, now: Date(), lidClosed: lidClosed))
+            apply(engine.userSetEngaged(false, now: Date(), lidClosed: engine.lidClosed))
             restoreHygiene()
             store.save(engine.preferences)
         }
@@ -248,7 +247,7 @@ final class WatchRuntime {
                 if !disarmKernel() {
                     _ = engine.rollbackDisarmFailure(
                         now: Date(),
-                        lidClosed: LidStateReader.isClosed()
+                        lidClosed: engine.lidClosed
                     )
                     UserNotify.post("Couldn't drop SleepDisabled. The watch stays up.")
                     applyCommands = []
@@ -297,23 +296,20 @@ final class WatchRuntime {
     }
 
     func pollLid() {
-        let lidClosed = LidStateReader.isClosed()
+        let rawClosed = LidStateReader.isClosed()
         var lidChanged = false
         if engine.engaged {
-            if lidClosed, !lastLidClosed {
-                apply(engine.lidDidClose(now: Date()))
+            let commands = engine.observeLid(closed: rawClosed, now: Date())
+            if !commands.isEmpty {
+                apply(commands)
                 lidChanged = true
-            } else if !lidClosed, lastLidClosed {
-                apply(engine.lidDidOpen(now: Date()))
-                lidChanged = true
-            } else if !lidClosed, !engine.lidHygieneApplied, !brightnessRamp.isRunning {
+            } else if !engine.lidClosed, !engine.lidHygieneApplied, !brightnessRamp.isRunning {
                 recaptureOpenLidHygiene()
             }
             startLidPulse()
         } else {
             stopLidPulse()
         }
-        lastLidClosed = lidClosed
         if lidChanged {
             delegate?.watchRuntimeDidChange(self)
         }
@@ -330,7 +326,7 @@ final class WatchRuntime {
 
     func startLidPulse() {
         guard engine.engaged, lidTimer == nil else { return }
-        lidTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
+        lidTimer = Timer.scheduledTimer(withTimeInterval: LidCloseConfirm.pulseInterval, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.pollLid() }
         }
     }
@@ -382,7 +378,7 @@ final class WatchRuntime {
             _ = disarmKernel()
         }
         if engine.engaged {
-            apply(engine.userSetEngaged(false, now: Date(), lidClosed: LidStateReader.isClosed()))
+            apply(engine.userSetEngaged(false, now: Date(), lidClosed: engine.lidClosed))
             store.save(engine.preferences)
         }
         restoreHygiene()
@@ -395,10 +391,9 @@ final class WatchRuntime {
                 _ = SleepDisabledController.set(false)
             }
             if SleepDisabledController.read() {
-                let lidClosed = LidStateReader.isClosed()
-                lastLidClosed = lidClosed
-                apply(engine.adoptLeftoverKernel(now: Date(), lidClosed: lidClosed))
-                if !lidClosed {
+                apply(engine.adoptLeftoverKernel(now: Date(), lidClosed: false))
+                apply(engine.observeLid(closed: LidStateReader.isClosed(), now: Date()))
+                if !engine.lidClosed {
                     recaptureOpenLidHygiene()
                 }
                 startLidPulse()
