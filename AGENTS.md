@@ -147,8 +147,8 @@ prd/                      Product scope. Implement against it.
 - Pure logic gets tests first. Watch the test fail, then implement.
 - On Linux: `swift test` and `Scripts/verify-linux.sh`. That is real evidence for Core.
 - On a Mac: build the app, arm Keep the watch with the lid **open** (screen stays usable), close the lid (brightness floor + keyboard dark **after confirmed close**), reopen mid-watch (ramp length from prefs + keyboard on), then confirm Agents idle-after-wait turns Keep the watch off (How long stays Agents) and safety auto-off allows sleep. Timed How long presets do not auto-off. Until that happens, say so. Do not claim Mac runtime you did not run.
-- Soft verify (floor write / nil capture): after the watch ends, use the Mac with the lid **open** for a while with **no surprise dim to floor**. Do not claim Mac-proven until that check. Missing capture after disengage must not write the floor. Do not apply hygiene on a single raw clamshell flicker.
-- Core (Linux): nil display capture must **skip** the brightness write (do not return / fall back to floor) — same honesty as keyboard. Floor write only when armed + lid-close confirmed. Hygiene must not fire on a single raw `AppleClamshellState` edge.
+- Soft verify (floor write / nil capture): arm → confirmed close → reopen mid-watch (ramp) → end watch → use the Mac with the lid **open** for a while with **no surprise dim to floor**. Do not claim Mac-proven until that check. Missing capture after disengage must not write the floor. Do not apply hygiene on a single raw clamshell flicker.
+- Core (Linux): nil display capture must **skip** the brightness write (do not return / fall back to floor) — same honesty as keyboard. Floor write only when armed + lid-close confirmed. Unconfirmed close must not apply hygiene.
 - Before you call a PR done: line-count check, Core tests, and an honest “works vs needs a Mac” list.
 
 ## Git
