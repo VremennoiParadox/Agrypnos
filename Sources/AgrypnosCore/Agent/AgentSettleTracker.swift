@@ -23,14 +23,20 @@ public struct AgentSettleTracker: Equatable, Sendable {
         sawBusy = false
     }
 
+    /// Status and other readers. Does not record busy or move lastBusyAt.
+    public func activity(busy: Bool, now: Date) -> Activity {
+        if busy { return .busy }
+        guard sawBusy, let last = lastBusyAt else { return .quiet }
+        if now.timeIntervalSince(last) >= grace { return .settled }
+        return .settling
+    }
+
     public mutating func observe(busy: Bool, now: Date) -> Activity {
         if busy {
             lastBusyAt = now
             sawBusy = true
             return .busy
         }
-        guard sawBusy, let last = lastBusyAt else { return .quiet }
-        if now.timeIntervalSince(last) >= grace { return .settled }
-        return .settling
+        return activity(busy: false, now: now)
     }
 }

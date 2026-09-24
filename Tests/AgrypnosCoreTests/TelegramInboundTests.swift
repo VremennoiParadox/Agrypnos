@@ -342,33 +342,13 @@ final class TelegramInboundCopyTests: XCTestCase {
             TelegramInboundCopy.reply(intent: .disarm, engaged: false, duration: .indefinite),
             "Disarmed."
         )
-        XCTAssertEqual(
-            TelegramInboundCopy.reply(intent: .status, engaged: true, duration: .indefinite),
-            "Keep the watch is on. How long is ∞."
-        )
-        XCTAssertEqual(
-            TelegramInboundCopy.reply(intent: .status, engaged: true, duration: .untilAgentsSettle),
-            "Keep the watch is on. How long is Agents."
-        )
-        XCTAssertEqual(
-            TelegramInboundCopy.reply(intent: .status, engaged: true, duration: .oneHour),
-            "Keep the watch is on. How long is 1h."
-        )
-        XCTAssertEqual(
-            TelegramInboundCopy.reply(intent: .status, engaged: true, duration: .customMinutes(33)),
-            "Keep the watch is on. How long is 33m."
-        )
-        XCTAssertEqual(
-            TelegramInboundCopy.reply(intent: .status, engaged: false, duration: .untilAgentsSettle),
-            "Keep the watch is off."
-        )
+        XCTAssertNil(TelegramInboundCopy.reply(intent: .status, engaged: true, duration: .indefinite))
+        XCTAssertNil(TelegramInboundCopy.reply(intent: .status, engaged: true, duration: .oneHour))
         XCTAssertNil(TelegramInboundCopy.reply(intent: .ignore, engaged: false, duration: .indefinite))
         XCTAssertEqual(
             TelegramInboundCopy.commandsHelp,
             "Commands on your Telegram bot: arm, disarm, status."
         )
-        XCTAssertFalse(TelegramInboundCopy.status(engaged: true, duration: .oneHour).contains("left"))
-        XCTAssertFalse(TelegramInboundCopy.status(engaged: true, duration: .oneHour).contains("remaining"))
     }
 
     func testInboundCopyBansJobFinishedAndStillThinking() {
@@ -382,12 +362,38 @@ final class TelegramInboundCopyTests: XCTestCase {
             TelegramInboundCopy.commandsHelp,
             TelegramInboundCopy.help,
             TelegramInboundCopy.missedWhileAsleep,
-            TelegramInboundCopy.status(engaged: true, duration: .indefinite),
-            TelegramInboundCopy.status(engaged: true, duration: .untilAgentsSettle),
-            TelegramInboundCopy.status(engaged: true, duration: .oneHour),
-            TelegramInboundCopy.status(engaged: true, duration: .threeHours),
-            TelegramInboundCopy.status(engaged: true, duration: .customMinutes(33)),
-            TelegramInboundCopy.status(engaged: false, duration: .untilAgentsSettle),
+            TelegramWatchStatusCopy.reply(
+                TelegramWatchStatus(
+                    engaged: true,
+                    duration: .indefinite,
+                    lidCloseConfirmed: false,
+                    includedAgentKinds: AgentIncludeChrome.defaultIncluded,
+                    sawBusyThisArm: nil,
+                    settlingAfterBusy: nil,
+                    lastWatchEnd: nil,
+                    batteryFloorPercent: 15,
+                    thermalAutoOff: true,
+                    lowPowerMode: nil,
+                    userForcedThisSession: true
+                ),
+                now: Date(timeIntervalSince1970: 0)
+            ),
+            TelegramWatchStatusCopy.reply(
+                TelegramWatchStatus(
+                    engaged: true,
+                    duration: .untilAgentsSettle,
+                    lidCloseConfirmed: false,
+                    includedAgentKinds: AgentIncludeChrome.defaultIncluded,
+                    sawBusyThisArm: false,
+                    settlingAfterBusy: nil,
+                    lastWatchEnd: nil,
+                    batteryFloorPercent: 15,
+                    thermalAutoOff: true,
+                    lowPowerMode: nil,
+                    userForcedThisSession: true
+                ),
+                now: Date(timeIntervalSince1970: 0)
+            ),
         ].joined(separator: "\n").lowercased()
         for banned in [
             "agent stopped",

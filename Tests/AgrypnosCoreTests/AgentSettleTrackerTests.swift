@@ -27,4 +27,14 @@ final class AgentSettleTrackerTests: XCTestCase {
         tracker.reset()
         XCTAssertEqual(tracker.observe(busy: false, now: t0.addingTimeInterval(1_000)), .quiet)
     }
+
+    func testActivityPeekDoesNotRecordBusy() {
+        var tracker = AgentSettleTracker(grace: 90)
+        XCTAssertEqual(tracker.activity(busy: true, now: t0), .busy)
+        XCTAssertFalse(tracker.sawBusy)
+        XCTAssertEqual(tracker.observe(busy: true, now: t0), .busy)
+        XCTAssertTrue(tracker.sawBusy)
+        XCTAssertEqual(tracker.activity(busy: false, now: t0.addingTimeInterval(89)), .settling)
+        XCTAssertEqual(tracker.observe(busy: false, now: t0.addingTimeInterval(89)), .settling)
+    }
 }

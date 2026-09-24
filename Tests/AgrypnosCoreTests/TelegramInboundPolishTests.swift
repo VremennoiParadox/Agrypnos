@@ -56,6 +56,7 @@ final class TelegramInboundHelpCopyTests: XCTestCase {
         XCTAssertFalse(lower.contains("still thinking"))
         XCTAssertFalse(lower.contains("eta"))
         XCTAssertFalse(lower.contains("always sleep"))
+        XCTAssertTrue(lower.contains("watch facts") || lower.contains("keep the watch, how long"))
     }
 
     func testMissedWhileAsleepCopyIsFactsOnly() {
