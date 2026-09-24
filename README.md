@@ -23,7 +23,7 @@ V1 agents: Cursor, Claude Code, Codex, and OpenCode. Local heuristics only (proc
 - Does **not** force the display asleep when you arm Keep the watch.
 - Does **not** run a shared Discord or Telegram bot, companion app, or stealth network.
 - Does **not** “notify your phone,” claim “agent stopped,” or invent task text / finish ETA. Discord webhook is outbound-only. Notif outbound stays one-way POST to *your* webhook or *your* bot, idle after wait.
-- Telegram two-way (`/arm` `/disarm` `/status` `/help` on *your* bot) is in Notif. Same token + chat id as outbound. No live reply while the Mac is asleep. Do not claim slash menu, `/help`, wake-miss drain, or lid-gated `/disarm` Mac-proven until a Mac checks them. Full steps: [Notif](#notif).
+- Telegram two-way (arm / disarm / status on *your* bot) is in Notif. Same token + chat id as outbound. Slash menu `/arm` `/disarm` `/status` `/help`, wake-miss drain, and lid-gated `/disarm` are the **next slice** — not claimed shipped. Full steps: [Notif](#notif).
 
 ## Privileged work
 
@@ -69,7 +69,7 @@ Controls live in the menu-bar popover. There is no separate settings window. A s
 - **Watch:** Keep the watch, duration presets plus custom minutes, arming caption, last-end caption (last real watch end)
 - **Power:** brightness floor % (default **15%**; range 1–40; never 0%), keyboard backlight off, low-battery auto-off **5–100%** (default 15%), brightness return when the lid opens **1 / 2 / 3 s** (default **2s**), thermal auto-off (default on)
 - **Agents:** idle wait after local busy signals stop (**2 minutes – 15 minutes**, default **2 minutes** / 120s; stored prefs below 2m clamp up to 2m) before the idle-after-wait POST and turning Keep the watch off. Settle buffer on local process and session activity — not “still thinking,” not “agent finished.” Which tools count as busy: multi-select Cursor, Claude Code, Codex, and OpenCode. At least one stays selected (default all on). Busy signals come only from the tools left on. Selecting all of them is how every listed tool counts.
-- **Notif:** opt-in idle-after-wait POST (default **off**). Opt-in switch, Discord URL, Telegram token + chat id, Telegram inbound on/off (default **off**, separate from the POST opt-in) with `/arm` `/disarm` `/status` `/help` on *your* bot, and Clear secrets. Self-serve setup lives in the Notif section; same steps: [Notif](#notif).
+- **Notif:** opt-in idle-after-wait POST (default **off**). Opt-in switch, Discord URL, Telegram token + chat id, Telegram inbound on/off (default **off**, separate from the POST opt-in) with arm / disarm / status on *your* bot, and Clear secrets. Slash `/arm` `/disarm` `/status` `/help`, wake-miss drain, and lid-gated `/disarm` are the next slice. Self-serve setup lives in the Notif section; same steps: [Notif](#notif).
 - **General:** remappable global hotkey (default `⌥⌘A`), launch at login, quit
 
 The menu-bar extra shows **Armed.** while Keep the watch is on for ∞ / 1h / 3h / custom minutes, and **Agents.** while it is on and How long is Agents. Off is the glyph only. Not a remaining-time countdown — How long timers do not auto-off. Donate stays gated until there is a live URL.
@@ -111,26 +111,28 @@ The URL looks like `https://discord.com/api/webhooks/…` — this README will n
 
 Agrypnos does not ship a bot for you to add. If BotFather did not give you the token, you do not have a bot yet.
 
-### Telegram inbound — /arm /disarm /status /help (your bot)
+### Telegram inbound — arm / disarm / status (your bot)
 
 Same BotFather bot and token as outbound. Not a shared Agrypnos bot. Discord webhook stays outbound-only — no Discord inbound here.
 
-Inbound two-way is in Notif (inbound on/off, default **off**, separate from the outbound POST opt-in). The polish in this section — BotFather slash menu `/arm` `/disarm` `/status` `/help`, `/help` asleep honesty, wake-miss drain, lid-gated `/disarm` — is the bar for the next Core + UI slice. Do not claim that polish Mac-proven until a Mac checks it.
+**In Notif today:** inbound on/off (default **off**, separate from the outbound POST opt-in). When inbound is on and token + chat id are set, Core polls `getUpdates` and **arm** / **disarm** / **status** (slash or bare) hit Keep the watch. Only the saved chat id counts; other chats are ignored. Empty token or chat id: no inbound. Replies are facts (armed / disarmed / current status). Not “agent stopped,” not “job finished,” not “still thinking.” Agrypnos does **not** reply while the Mac is asleep (no relay).
 
-Core polls `getUpdates` and drives Keep the watch when inbound is on and token + chat id are set. Each time the poller starts, the first `getUpdates` is immediate (timeout 0) and acks already-queued leftover messages (setup, app quit, inbound off) without running them. After that, Agrypnos long-polls for new commands.
+**Leftover drain (today):** on setup / quit / inbound off, the first `getUpdates` acks leftover messages without running them. That leftover drain is silent and is **not** wake-from-sleep.
 
-Agrypnos does **not** reply while the Mac is asleep (no relay). If the bot isn’t replying, the Mac is likely asleep / Agrypnos isn’t polling — `/help` must say that. On wake, commands that arrived while asleep must be **drained without applying**; the bot then replies facts-only **missed while asleep** (or equivalent plain wording). They do not arm or disarm after the fact. Auto-applying those queued commands on wake is a bug.
+**Not shipped yet** (next Core + UI slice after the bar merge — do not claim it live):
 
-When inbound is on:
+- BotFather slash menu **`/arm`** **`/disarm`** **`/status`** **`/help`**. Agrypnos will register **`setMyCommands`** (or equivalent) so the menu matches. `/help` is facts only.
+- `/help` will say: if the bot isn’t replying, the Mac is likely asleep / Agrypnos isn’t polling. **`/disarm`** with the lid **open** (or lid-close not confirmed): Keep the watch off / wake hold cleared, Mac stays awake. **`/disarm`** with lid-close **confirmed**: Keep the watch off / wake hold cleared, and the Mac goes to sleep (`pmset sleepnow` or equivalent). Lid-open `/disarm` never sleeps the Mac. This sleep path is Telegram `/disarm` only — not the popover or hotkey.
+- **Wake-miss:** commands that arrive while the Mac is asleep must be drained without applying; the bot then replies facts-only **missed while asleep**. They do not arm or disarm after the fact. Auto-applying those queued commands on wake is a bug. A poller restart on wake is this path, not leftover drain.
+
+When inbound is on today:
 
 1. Paste token + chat id as above.
 2. Turn **inbound** on in **Notif** (separate from the outbound POST opt-in). Default inbound is off.
 3. Chat with *your* bot (the same chat id you saved).
-4. Commands are slash forms: **`/arm`** **`/disarm`** **`/status`** **`/help`**. They hit Keep the watch for real (`/help` is facts only). Agrypnos registers BotFather **`setMyCommands`** (or equivalent) so the bot menu matches those four. Only the saved chat id counts; other chats are ignored. Empty token or chat id: no inbound. Replies are facts (armed / disarmed / current status / `/help` / missed while asleep). Not “agent stopped,” not “job finished,” not “still thinking,” not a live reply while the Mac is sleeping.
-5. **`/help`** (facts only) includes: if the bot isn’t replying, the Mac is likely asleep / Agrypnos isn’t polling. **`/disarm`** with the lid **open**: Keep the watch off / wake hold cleared, and the Mac stays awake. **`/disarm`** with the lid **closed**: Keep the watch off / wake hold cleared, and the Mac goes to sleep (`pmset sleepnow` or equivalent). Lid-open `/disarm` never sleeps the Mac. This sleep path is Telegram `/disarm` only — not the popover or hotkey.
-6. Turn inbound off in Notif to stop command handling. Clear secrets still deletes the saved token and chat id.
+4. Send **arm** / **disarm** / **status**. Turn inbound off in Notif to stop command handling. Clear secrets still deletes the saved token and chat id.
 
-How to check inbound after that polish ships: bot menu shows the four slashes; `/help` has the asleep note and lid-gated `/disarm`; queue a command while the Mac is asleep, then on wake expect no apply and a missed-while-asleep reply (no reply during sleep); lid-open `/disarm` turns Keep the watch off and does not sleep; lid-closed `/disarm` turns Keep the watch off and the Mac sleeps.
+After the polish ships, check: bot menu shows the four slashes; `/help` has the asleep note and lid-gated `/disarm`; queue a command while the Mac is asleep, then on wake expect no apply and a missed-while-asleep reply (no reply during sleep); lid-open `/disarm` turns Keep the watch off and does not sleep; confirmed lid-closed `/disarm` turns Keep the watch off and the Mac sleeps. Do not claim that polish Mac-proven until a Mac checks it.
 
 ### What to paste where
 
@@ -168,7 +170,7 @@ Rich status (task text / finish ETA) is not this product. Idea-only. Discord inb
 - Reboot clears SleepDisabled. That is a feature.
 - Launch-at-login never re-arms the watch.
 - Notif POSTs only to *your* webhook or *your* bot, and only when enabled with secrets set.
-- Telegram inbound (`/arm` `/disarm` `/status` `/help`) uses *your* bot when inbound is on and token + chat id are set. No live reply while the Mac is asleep. Wake-miss drain does not apply queued commands. Lid-open `/disarm` does not sleep the Mac; lid-closed `/disarm` does. Mac prove of slash menu, `/help`, wake-miss, and lid-gated `/disarm` remains soft until a Mac checks them.
+- Telegram inbound (arm / disarm / status) uses *your* bot when inbound is on and token + chat id are set. Slash menu, `/help`, wake-miss drain, and lid-gated `/disarm` are **not shipped yet**. After that slice: no live reply while the Mac is asleep; wake-miss drain does not apply queued commands; lid-open `/disarm` does not sleep the Mac; confirmed lid-closed `/disarm` does. Do not claim that polish Mac-proven until a Mac checks it.
 
 ## License
 
