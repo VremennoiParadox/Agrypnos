@@ -23,9 +23,10 @@ enum PowerHygieneCoordinator {
                 guard preferences.panelPowerMode.sleepsDisplay else { break }
                 _ = ProcessRunner.run("/usr/bin/pmset", ["displaysleepnow"])
             case .wakeDisplay:
-                // Smallest honest wake after Power B display sleep. Not a floor write.
-                // Assumption: user-activity pulse wakes the panel. Needs a Mac to prove.
-                _ = ProcessRunner.run("/usr/bin/caffeinate", ["-u", "-t", "1"])
+                // Fire-and-forget user-activity pulse. Do not wait — `caffeinate -u -t 1`
+                // would stall the menu extra and fight a following `sleepnow`.
+                // Assumption: this is enough after `displaysleepnow`. Needs a Mac.
+                ProcessRunner.runDetached("/usr/bin/caffeinate", ["-u", "-t", "1"])
             case .applyBrightnessFloor:
                 guard preferences.panelPowerMode.writesBrightnessFloor else { break }
                 ramp.cancel()
@@ -72,9 +73,6 @@ enum PowerHygieneCoordinator {
                floor: preferences.brightnessFloor
            ) {
             BrightnessFloorController.set(target)
-        }
-        if PanelPowerMode.disengageDisplayCommand(mode: preferences.panelPowerMode) != nil {
-            _ = ProcessRunner.run("/usr/bin/caffeinate", ["-u", "-t", "1"])
         }
         if preferences.keyboardBacklightOff,
            let brightness = HygieneRestore.keyboardBrightnessToRestore(captured: savedKeyboard) {

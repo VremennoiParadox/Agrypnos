@@ -60,6 +60,8 @@ final class PanelPowerHygieneGateTests: XCTestCase {
 
     func testLidCloseCommandsNeverFloorAndDisplaySleepTogether() {
         let floor = PanelPowerMode.lidCloseCommands(
+            armed: true,
+            lidCloseConfirmed: true,
             mode: .floor,
             applyBrightnessFloor: true,
             keyboardBacklightOff: true
@@ -69,6 +71,8 @@ final class PanelPowerHygieneGateTests: XCTestCase {
         XCTAssertFalse(floor.contains(.requestSleep))
 
         let displaySleep = PanelPowerMode.lidCloseCommands(
+            armed: true,
+            lidCloseConfirmed: true,
             mode: .displaySleep,
             applyBrightnessFloor: true,
             keyboardBacklightOff: true
@@ -80,6 +84,8 @@ final class PanelPowerHygieneGateTests: XCTestCase {
 
         for mode in PanelPowerMode.allCases {
             let commands = PanelPowerMode.lidCloseCommands(
+                armed: true,
+                lidCloseConfirmed: true,
                 mode: mode,
                 applyBrightnessFloor: true,
                 keyboardBacklightOff: true
@@ -87,6 +93,29 @@ final class PanelPowerHygieneGateTests: XCTestCase {
             XCTAssertFalse(
                 commands.contains(.applyBrightnessFloor) && commands.contains(.requestDisplaySleep)
             )
+        }
+    }
+
+    func testLidCloseCommandsRequireArmedAndConfirmed() {
+        for mode in PanelPowerMode.allCases {
+            let unconfirmed = PanelPowerMode.lidCloseCommands(
+                armed: true,
+                lidCloseConfirmed: false,
+                mode: mode,
+                applyBrightnessFloor: true,
+                keyboardBacklightOff: true
+            )
+            XCTAssertFalse(unconfirmed.contains(.applyBrightnessFloor))
+            XCTAssertFalse(unconfirmed.contains(.requestDisplaySleep))
+            let disarmed = PanelPowerMode.lidCloseCommands(
+                armed: false,
+                lidCloseConfirmed: true,
+                mode: mode,
+                applyBrightnessFloor: true,
+                keyboardBacklightOff: true
+            )
+            XCTAssertFalse(disarmed.contains(.applyBrightnessFloor))
+            XCTAssertFalse(disarmed.contains(.requestDisplaySleep))
         }
     }
 
@@ -117,9 +146,13 @@ final class PanelPowerHygieneGateTests: XCTestCase {
         XCTAssertFalse(b.contains(.applyBrightnessFloor))
     }
 
-    func testBDisengageWakesDisplayAndDoesNotWriteFloor() {
-        XCTAssertNil(PanelPowerMode.disengageDisplayCommand(mode: .floor))
-        XCTAssertEqual(PanelPowerMode.disengageDisplayCommand(mode: .displaySleep), .wakeDisplay)
+    func testBDisengageWakesOnlyWhenLidIsOpen() {
+        XCTAssertNil(PanelPowerMode.disengageDisplayCommand(mode: .floor, lidCloseConfirmed: false))
+        XCTAssertNil(PanelPowerMode.disengageDisplayCommand(mode: .displaySleep, lidCloseConfirmed: true))
+        XCTAssertEqual(
+            PanelPowerMode.disengageDisplayCommand(mode: .displaySleep, lidCloseConfirmed: false),
+            .wakeDisplay
+        )
         XCTAssertFalse(PanelPowerMode.displaySleep.writesBrightnessFloor)
         XCTAssertNil(HygieneRestore.displayBrightnessToRestore(captured: nil, floor: 0.15))
     }
@@ -245,6 +278,45 @@ final class PanelPowerWatchEngineTests: XCTestCase {
         )
         XCTAssertFalse(engine.engaged)
         XCTAssertEqual(engine.preferences.duration, .indefinite)
+    }
+
+    func testPowerBDisengageWithLidClosedDoesNotWakeDisplay() {
+        var prefs = UserPreferences.default
+        prefs.panelPowerMode = .displaySleep
+        var engine = WatchEngine(preferences: prefs)
+        _ = engine.userSetEngaged(true, now: t0, lidClosed: true)
+        let commands = engine.userSetEngaged(false, now: t0.addingTimeInterval(1), lidClosed: true)
+        XCTAssertEqual(commands, [.disengage(.user)])
+        XCTAssertFalse(commands.contains(.wakeDisplay))
+        XCTAssertFalse(commands.contains(.applyBrightnessFloor))
+        XCTAssertFalse(commands.contains(.requestSleep))
+    }
+
+    func testPowerBOpenLidDisengageAfterHygieneWakesDisplayWithoutFloor() {
+        var prefs = UserPreferences.default
+        prefs.panelPowerMode = .displaySleep
+        var engine = WatchEngine(preferences: prefs)
+        _ = engine.userSetEngaged(true, now: t0, lidClosed: true)
+        XCTAssertTrue(engine.lidHygieneApplied)
+        let commands = engine.userSetEngaged(false, now: t0.addingTimeInterval(1), lidClosed: false)
+        XCTAssertTrue(commands.contains(.disengage(.user)))
+        XCTAssertTrue(commands.contains(.wakeDisplay))
+        XCTAssertFalse(commands.contains(.applyBrightnessFloor))
+        XCTAssertFalse(commands.contains(.requestSleep))
+    }
+
+    func testPowerBFloorToggleOffStillSleepsDisplayOnConfirmedClose() {
+        var prefs = UserPreferences.default
+        prefs.panelPowerMode = .displaySleep
+        prefs.applyBrightnessFloor = false
+        var engine = WatchEngine(preferences: prefs)
+        _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
+        let commands = engine.lidDidClose(now: t0.addingTimeInterval(1))
+        XCTAssertEqual(
+            commands,
+            [.assertSleepDisabled, .requestDisplaySleep, .requestKeyboardBacklightOff]
+        )
+        XCTAssertFalse(commands.contains(.applyBrightnessFloor))
     }
 
     func testPowerBArmWithLidAlreadyClosedSleepsDisplayNotFloor() {

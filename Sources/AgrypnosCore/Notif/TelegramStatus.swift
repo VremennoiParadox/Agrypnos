@@ -113,8 +113,10 @@ public enum TelegramWatchStatusCopy: Sendable {
 
     /// Omit when charge % is unknown. Never invent a percent.
     static func batteryLine(_ status: TelegramWatchStatus) -> String? {
-        guard let percent = status.liveBatteryPercent else { return nil }
-        let source = status.liveBatteryDischarging == true ? "discharging" : "on AC"
+        guard let percent = status.liveBatteryPercent,
+              let discharging = status.liveBatteryDischarging
+        else { return nil }
+        let source = discharging ? "discharging" : "on AC"
         return "Battery \(percent)% · \(source)"
     }
 

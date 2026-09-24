@@ -243,8 +243,9 @@ public struct WatchEngine: Equatable, Sendable {
         timerEnd = nil
         userForcedThisSession = false
         leftoverAdopted = false
-        lidHygieneApplied = false
+        let wasHygieneApplied = lidHygieneApplied
         let wasLidClosed = lidClosed
+        lidHygieneApplied = false
         lidConfirm.reset()
         lidClosed = false
         settle.reset()
@@ -252,6 +253,14 @@ public struct WatchEngine: Equatable, Sendable {
         if postIdleAfterWait {
             postedThisUserArm = true
             commands.append(.postIdleAfterWaitNotif)
+        }
+        if wasHygieneApplied,
+           let wake = PanelPowerMode.disengageDisplayCommand(
+            mode: preferences.panelPowerMode,
+            lidCloseConfirmed: wasLidClosed
+           )
+        {
+            commands.append(wake)
         }
         // Clearing SleepDisabled does not retrigger clamshell sleep.
         if wasLidClosed, reason != .user {
@@ -263,6 +272,8 @@ public struct WatchEngine: Equatable, Sendable {
     /// Confirmed lid close: Power A floor or Power B display sleep. Never both. Never Mac sleep.
     func lidCloseHygieneCommands() -> [WatchCommand] {
         PanelPowerMode.lidCloseCommands(
+            armed: engaged,
+            lidCloseConfirmed: lidCloseConfirmed,
             mode: preferences.panelPowerMode,
             applyBrightnessFloor: preferences.applyBrightnessFloor,
             keyboardBacklightOff: preferences.keyboardBacklightOff

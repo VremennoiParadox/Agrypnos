@@ -14,13 +14,13 @@ public enum PanelPowerMode: String, Equatable, Sendable, CaseIterable {
     public var sleepsDisplay: Bool { self == .displaySleep }
     public var showsLidOpenRamp: Bool { self == .floor }
 
-    /// `/status` line. B is display asleep, not Mac asleep.
+    /// `/status` line. Mode, not live panel state. B with the lid open is not asleep.
     public var statusLine: String {
         switch self {
         case .floor:
             return "Power A: brightness floor + ramp."
         case .displaySleep:
-            return "Power B: display asleep."
+            return "Power B: display sleep on confirmed lid close."
         }
     }
 
@@ -43,18 +43,24 @@ public enum PanelPowerMode: String, Equatable, Sendable, CaseIterable {
     /// Confirmed lid-close panel work. Never floor + display sleep together.
     /// Keyboard off is independent. Never `.requestSleep` (that is the Mac).
     public static func lidCloseCommands(
+        armed: Bool,
+        lidCloseConfirmed: Bool,
         mode: PanelPowerMode,
         applyBrightnessFloor: Bool,
         keyboardBacklightOff: Bool
     ) -> [WatchCommand] {
         var commands: [WatchCommand] = []
-        switch mode {
-        case .floor:
-            if applyBrightnessFloor { commands.append(.applyBrightnessFloor) }
-        case .displaySleep:
+        if shouldWriteFloor(armed: armed, lidCloseConfirmed: lidCloseConfirmed, mode: mode),
+           applyBrightnessFloor
+        {
+            commands.append(.applyBrightnessFloor)
+        }
+        if shouldSleepDisplay(armed: armed, lidCloseConfirmed: lidCloseConfirmed, mode: mode) {
             commands.append(.requestDisplaySleep)
         }
-        if keyboardBacklightOff { commands.append(.requestKeyboardBacklightOff) }
+        if armed, lidCloseConfirmed, keyboardBacklightOff {
+            commands.append(.requestKeyboardBacklightOff)
+        }
         return commands
     }
 
@@ -75,10 +81,12 @@ public enum PanelPowerMode: String, Equatable, Sendable, CaseIterable {
         return commands
     }
 
-    /// Open-lid / disarm must not leave B's panel asleep. Adapter wakes it.
-    /// Assumption: `caffeinate -u -t 1` after `pmset displaysleepnow`. Needs a Mac.
-    public static func disengageDisplayCommand(mode: PanelPowerMode) -> WatchCommand? {
-        mode == .displaySleep ? .wakeDisplay : nil
+    /// Wake only when the Mac is staying awake. Closed-lid B disarm may `sleepnow`.
+    public static func disengageDisplayCommand(
+        mode: PanelPowerMode,
+        lidCloseConfirmed: Bool
+    ) -> WatchCommand? {
+        mode == .displaySleep && !lidCloseConfirmed ? .wakeDisplay : nil
     }
 }
 
