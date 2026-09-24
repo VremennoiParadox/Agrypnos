@@ -27,7 +27,9 @@ When Notif outbound is enabled, Agrypnos may POST **once** to **your** Discord i
 
 ## Telegram inbound (your bot)
 
-When Telegram inbound is on, Agrypnos may poll `getUpdates` and send command replies on **your** BotFather bot using the same token and chat id as outbound. Default **off**. Empty token or chat id: no inbound. Commands (arm / disarm / status) are accepted only from the saved chat id. If that id is a group, anyone who can message that group can send those commands. Discord webhook stays outbound-only. This is not telemetry. Agrypnos does not run a shared bot.
+When Telegram inbound is on, Agrypnos may poll `getUpdates` and send command replies on **your** BotFather bot using the same token and chat id as outbound. Default **off**. Empty token or chat id: no inbound. Landed commands (arm / disarm / status) are accepted only from the saved chat id. Agrypnos does not reply while the Mac is asleep (no relay). If that id is a group, anyone who can message that group can send those commands. Discord webhook stays outbound-only. This is not telemetry. Agrypnos does not run a shared bot.
+
+After Telegram inbound polish ships: commands include `/arm` `/disarm` `/status` `/help`; on wake, queued commands are drained without applying; confirmed lid-closed `/disarm` may call `pmset sleepnow` (same user-level path as safety auto-off; not a new sudoers grant). Lid-open or unconfirmed `/disarm` must not sleep the Mac.
 
 ## What we will not do
 
