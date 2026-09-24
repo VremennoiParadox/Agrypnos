@@ -181,14 +181,18 @@ public enum TelegramInboundCopy: Sendable {
     public static let help = """
     /arm — turn Keep the watch on.
     /disarm — turn Keep the watch off. Always clears Keep the watch. Puts the Mac to sleep only when the lid is closed (confirmed). Never sleeps the Mac when the lid is open.
-    /status — say whether Keep the watch is on.
+    /status — watch facts Agrypnos already knows: Keep the watch, How long, lid, Agents, last end, and safety prefs. Not a remaining-time countdown.
     /help — this list.
     If the bot does not reply, the Mac is likely asleep or Agrypnos is not polling.
     """
 
-    public static func status(engaged: Bool, duration: DurationOption) -> String {
-        guard engaged else { return keepOff }
-        return "\(keepOn) How long is \(duration.segmentTitle)."
+    public static func status(
+        _ snapshot: TelegramWatchStatus,
+        now: Date,
+        calendar: Calendar = .current,
+        locale: Locale? = nil
+    ) -> String {
+        TelegramWatchStatusCopy.reply(snapshot, now: now, calendar: calendar, locale: locale)
     }
 
     public static func reply(
@@ -200,7 +204,39 @@ public enum TelegramInboundCopy: Sendable {
         case .ignore: return nil
         case .arm: return armed
         case .disarm: return disarmed
-        case .status: return status(engaged: engaged, duration: duration)
+        case .status:
+            return status(
+                TelegramWatchStatus(
+                    engaged: engaged,
+                    duration: duration,
+                    lidCloseConfirmed: false,
+                    includedAgentKinds: AgentIncludeChrome.defaultIncluded,
+                    sawBusyThisArm: duration == .untilAgentsSettle && engaged ? false : nil,
+                    settlingAfterBusy: nil,
+                    lastWatchEnd: nil,
+                    batteryFloorPercent: UserPreferences.default.batteryFloorPercent,
+                    thermalAutoOff: true,
+                    lowPowerMode: nil,
+                    userForcedThisSession: engaged
+                ),
+                now: Date()
+            )
+        case .help: return help
+        }
+    }
+
+    public static func reply(
+        intent: TelegramInboundIntent,
+        status snapshot: TelegramWatchStatus,
+        now: Date,
+        calendar: Calendar = .current,
+        locale: Locale? = nil
+    ) -> String? {
+        switch intent {
+        case .ignore: return nil
+        case .arm: return armed
+        case .disarm: return disarmed
+        case .status: return status(snapshot, now: now, calendar: calendar, locale: locale)
         case .help: return help
         }
     }

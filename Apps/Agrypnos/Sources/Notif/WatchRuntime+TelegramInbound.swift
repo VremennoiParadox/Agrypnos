@@ -93,10 +93,20 @@ extension WatchRuntime {
                     chatId: secrets.telegramChatId
                 )
             case .apply(.status):
+                pollLid()
+                let now = Date()
+                let agents = AgentProbeService.snapshot(
+                    now: now,
+                    freshness: engine.preferences.sessionFreshness
+                )
                 sendTelegramInboundReply(
                     TelegramInboundCopy.status(
-                        engaged: engine.engaged,
-                        duration: engine.preferences.duration
+                        engine.telegramWatchStatus(
+                            now: now,
+                            agentsBusy: agents.anyBusy(included: engine.preferences.includedAgentKinds),
+                            lowPowerMode: ProcessInfo.processInfo.isLowPowerModeEnabled
+                        ),
+                        now: now
                     ),
                     token: secrets.telegramBotToken,
                     chatId: secrets.telegramChatId

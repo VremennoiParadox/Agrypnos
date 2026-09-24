@@ -342,33 +342,35 @@ final class TelegramInboundCopyTests: XCTestCase {
             TelegramInboundCopy.reply(intent: .disarm, engaged: false, duration: .indefinite),
             "Disarmed."
         )
-        XCTAssertEqual(
-            TelegramInboundCopy.reply(intent: .status, engaged: true, duration: .indefinite),
-            "Keep the watch is on. How long is ∞."
-        )
-        XCTAssertEqual(
-            TelegramInboundCopy.reply(intent: .status, engaged: true, duration: .untilAgentsSettle),
-            "Keep the watch is on. How long is Agents."
-        )
-        XCTAssertEqual(
-            TelegramInboundCopy.reply(intent: .status, engaged: true, duration: .oneHour),
-            "Keep the watch is on. How long is 1h."
-        )
-        XCTAssertEqual(
-            TelegramInboundCopy.reply(intent: .status, engaged: true, duration: .customMinutes(33)),
-            "Keep the watch is on. How long is 33m."
-        )
-        XCTAssertEqual(
-            TelegramInboundCopy.reply(intent: .status, engaged: false, duration: .untilAgentsSettle),
-            "Keep the watch is off."
-        )
+        let indefinite = TelegramInboundCopy.reply(
+            intent: .status, engaged: true, duration: .indefinite
+        ) ?? ""
+        XCTAssertTrue(indefinite.contains("Keep the watch is on."))
+        XCTAssertTrue(indefinite.contains("How long is ∞."))
+        let agents = TelegramInboundCopy.reply(
+            intent: .status, engaged: true, duration: .untilAgentsSettle
+        ) ?? ""
+        XCTAssertTrue(agents.contains("Keep the watch is on."))
+        XCTAssertTrue(agents.contains("How long is Agents."))
+        let oneHour = TelegramInboundCopy.reply(
+            intent: .status, engaged: true, duration: .oneHour
+        ) ?? ""
+        XCTAssertTrue(oneHour.contains("How long is 1h."))
+        XCTAssertFalse(oneHour.lowercased().contains("left"))
+        let custom = TelegramInboundCopy.reply(
+            intent: .status, engaged: true, duration: .customMinutes(33)
+        ) ?? ""
+        XCTAssertTrue(custom.contains("How long is 33m."))
+        let off = TelegramInboundCopy.reply(
+            intent: .status, engaged: false, duration: .untilAgentsSettle
+        ) ?? ""
+        XCTAssertTrue(off.contains("Keep the watch is off."))
+        XCTAssertTrue(off.contains("How long is Agents."))
         XCTAssertNil(TelegramInboundCopy.reply(intent: .ignore, engaged: false, duration: .indefinite))
         XCTAssertEqual(
             TelegramInboundCopy.commandsHelp,
             "Commands on your Telegram bot: arm, disarm, status."
         )
-        XCTAssertFalse(TelegramInboundCopy.status(engaged: true, duration: .oneHour).contains("left"))
-        XCTAssertFalse(TelegramInboundCopy.status(engaged: true, duration: .oneHour).contains("remaining"))
     }
 
     func testInboundCopyBansJobFinishedAndStillThinking() {
@@ -382,12 +384,12 @@ final class TelegramInboundCopyTests: XCTestCase {
             TelegramInboundCopy.commandsHelp,
             TelegramInboundCopy.help,
             TelegramInboundCopy.missedWhileAsleep,
-            TelegramInboundCopy.status(engaged: true, duration: .indefinite),
-            TelegramInboundCopy.status(engaged: true, duration: .untilAgentsSettle),
-            TelegramInboundCopy.status(engaged: true, duration: .oneHour),
-            TelegramInboundCopy.status(engaged: true, duration: .threeHours),
-            TelegramInboundCopy.status(engaged: true, duration: .customMinutes(33)),
-            TelegramInboundCopy.status(engaged: false, duration: .untilAgentsSettle),
+            TelegramInboundCopy.reply(intent: .status, engaged: true, duration: .indefinite) ?? "",
+            TelegramInboundCopy.reply(intent: .status, engaged: true, duration: .untilAgentsSettle) ?? "",
+            TelegramInboundCopy.reply(intent: .status, engaged: true, duration: .oneHour) ?? "",
+            TelegramInboundCopy.reply(intent: .status, engaged: true, duration: .threeHours) ?? "",
+            TelegramInboundCopy.reply(intent: .status, engaged: true, duration: .customMinutes(33)) ?? "",
+            TelegramInboundCopy.reply(intent: .status, engaged: false, duration: .untilAgentsSettle) ?? "",
         ].joined(separator: "\n").lowercased()
         for banned in [
             "agent stopped",

@@ -65,7 +65,7 @@ public enum TelegramBotCommandMenu: Sendable {
             command: "disarm",
             description: "Turn Keep the watch off. Sleeps the Mac only if the lid is closed."
         ),
-        TelegramBotCommand(command: "status", description: "Say whether Keep the watch is on."),
+        TelegramBotCommand(command: "status", description: "Dump live watch facts Agrypnos already knows."),
         TelegramBotCommand(command: "help", description: "Explain /arm, /disarm, /status, and /help."),
     ]
 }
