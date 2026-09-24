@@ -22,7 +22,8 @@ V1 agents: Cursor, Claude Code, Codex, and OpenCode. Local heuristics only (proc
 - Does **not** kill Wi-Fi or Bluetooth (out of scope unless a later spec says otherwise).
 - Does **not** force the display asleep when you arm Keep the watch.
 - Does **not** run a shared Discord or Telegram bot, companion app, or stealth network.
-- Does **not** “notify your phone,” claim “agent stopped,” or invent task text / finish ETA. Discord webhook is outbound-only. Telegram two-way (arm / disarm / status on *your* bot) is the inbound slice — not in the app until Core + UI ships it. Notif outbound stays one-way POST to *your* webhook or *your* bot, idle after wait.
+- Does **not** “notify your phone,” claim “agent stopped,” or invent task text / finish ETA. Discord webhook is outbound-only. Notif outbound stays one-way POST to *your* webhook or *your* bot, idle after wait.
+- Telegram two-way (arm / disarm / status on *your* bot) is the inbound slice — unlocked in the project bar, not in the app until Core + UI ships it.
 
 ## Privileged work
 
@@ -121,7 +122,7 @@ When it ships:
 1. Paste token + chat id as above.
 2. In **Notif**, turn **inbound** on (separate from the outbound POST opt-in). Default inbound is off.
 3. Chat with *your* bot (the same chat id you saved).
-4. Commands: **arm** / **disarm** / **status** — they hit Keep the watch for real. Replies are facts (armed / disarmed / current status). Not “agent stopped,” not “job finished,” not “still thinking.”
+4. Commands: **arm** / **disarm** / **status** — they hit Keep the watch for real. Only the saved chat id counts; other chats are ignored. Empty token or chat id: no inbound. Replies are facts (armed / disarmed / current status). Not “agent stopped,” not “job finished,” not “still thinking.”
 5. Turn inbound off in Notif to stop command handling. Clear secrets still deletes the saved token and chat id.
 
 ### What to paste where

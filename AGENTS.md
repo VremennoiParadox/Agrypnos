@@ -113,7 +113,7 @@ While Keep the watch is on: **Armed.** for ∞ / 1h / 3h / custom minutes, **Age
   - **Channels:** (1) Discord **incoming webhook URL** the user creates in their own server — outbound POST only; (2) Telegram **user’s own bot** — token + chat id from BotFather / `getUpdates` for outbound; same bot for inbound commands. **No shared Agrypnos bot. No companion app. No telemetry / stealth network.**
   - **Secrets** (webhook URL / bot token / chat id) live in Application Support (`notif-secrets.json`, mode 0600). **Not Keychain** — unsigned builds prompt for the login password, which looks like Agrypnos wants the Mac password. Never plaintext prefs, logs, or README examples with real secrets. Popover fields are dotted; an eye button reveals the value.
   - **UI:** **Notif** after Agents: **Watch · Power · Agents · Notif · General**. Default still **Watch**. Controls: outbound opt-in (default OFF); Discord URL field; Telegram token + chat id fields; reveal buttons on those fields; clear/remove that deletes the saved file; **Telegram inbound on/off + short command list / help** (unlocked). Still **no** separate settings window. Still no Licence/About tabs. Still no fake remote-control panel.
-  - **Plain copy:** “POST to *your* webhook” / “message *your* Telegram bot” / “Commands from *your* Telegram bot: arm, disarm, status.” Ban “we notify your phone”, “agent stopped”, “job finished”.
+  - **Plain copy:** “POST to *your* webhook” / “message *your* Telegram bot” / “Commands on *your* Telegram bot: arm, disarm, status.” Ban “we notify your phone”, “agent stopped”, “job finished”.
   - **Honesty:** the user owns the webhook/bot. Agrypnos only POSTs when outbound Notif is enabled and the matching secrets are set. Agrypnos only accepts Telegram commands when inbound is on and token + chat id are set. Discord webhook is outbound-only.
   - **Docs:** `SECURITY.md` allows opt-in POST to the user’s webhook/bot; still no telemetry / stealth network. Do not write “no network calls” as an absolute. When inbound ships, name that the same user bot may be polled/updated — still no shared bot.
   - **Self-serve docs (required):**
@@ -195,7 +195,7 @@ Good: “Keeps the Mac awake with the lid closed.”
 Good: “Thermal pressure turns the watch off.”
 Good: “POST to *your* webhook when Agents stay idle after the wait.”
 Good: “Message *your* Telegram bot. Agrypnos does not run a shared bot.”
-Good: “Commands from *your* Telegram bot: arm, disarm, status.”
+Good: “Commands on *your* Telegram bot: arm, disarm, status.”
 Good: “Armed.” / “Disarmed.” / “Keep the watch is on.” (Telegram command replies — facts only)
 Good: “Armed.” / “Agents.” (status item — landed, not a countdown)
 Good: “Which tools count as busy.”
