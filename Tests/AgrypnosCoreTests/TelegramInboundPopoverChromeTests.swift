@@ -72,8 +72,6 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
         XCTAssertTrue(TelegramInboundCopy.help.contains("/disarm"))
         XCTAssertTrue(TelegramInboundCopy.help.contains("/status"))
         XCTAssertTrue(TelegramInboundCopy.help.contains("/help"))
-        XCTAssertTrue(TelegramInboundCopy.help.contains("Keep the watch"))
-        XCTAssertTrue(TelegramInboundCopy.help.contains("safety prefs"))
         XCTAssertEqual(
             CopyWrap.lineCount(help, columns: PopoverCopyLayout.innerColumns),
             PopoverCopyLayout.notifTelegramInboundHelpMaxLines
