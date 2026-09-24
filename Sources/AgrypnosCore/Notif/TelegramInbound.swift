@@ -109,6 +109,11 @@ public enum TelegramInboundOffset: Sendable {
     }
 }
 
+public enum TelegramInboundPoll: Sendable {
+    public static let drainSeconds = 0
+    public static let longPollSeconds = 25
+}
+
 /// `getUpdates` offset plus a one-shot backlog drain. Unseeded first poll acks without running commands.
 public struct TelegramInboundCursor: Equatable, Sendable {
     public var offset: Int64
@@ -122,6 +127,11 @@ public struct TelegramInboundCursor: Equatable, Sendable {
     }
 
     public var shouldApplyCommands: Bool { seeded }
+
+    /// Drain poll is timeout 0 so a live first command after start is not swallowed by a long-poll.
+    public var pollTimeout: Int {
+        seeded ? TelegramInboundPoll.longPollSeconds : TelegramInboundPoll.drainSeconds
+    }
 
     /// New process or poll loop: keep the offset, skip leftover commands once.
     public func startingSession() -> TelegramInboundCursor {

@@ -27,7 +27,7 @@ When Notif outbound is enabled, Agrypnos may POST **once** to **your** Discord i
 
 ## Telegram inbound (your bot)
 
-When Telegram inbound is on, Agrypnos may poll `getUpdates` and send command replies on **your** BotFather bot using the same token and chat id as outbound. Default **off**. Empty token or chat id: no inbound. Commands (arm / disarm / status) are accepted only from the saved chat id. Discord webhook stays outbound-only. This is not telemetry. Agrypnos does not run a shared bot.
+When Telegram inbound is on, Agrypnos may poll `getUpdates` and send command replies on **your** BotFather bot using the same token and chat id as outbound. Default **off**. Empty token or chat id: no inbound. Commands (arm / disarm / status) are accepted only from the saved chat id. If that id is a group, anyone who can message that group can send those commands. Discord webhook stays outbound-only. This is not telemetry. Agrypnos does not run a shared bot.
 
 ## What we will not do
 

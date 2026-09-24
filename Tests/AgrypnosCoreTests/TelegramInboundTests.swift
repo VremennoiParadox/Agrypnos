@@ -208,26 +208,37 @@ final class TelegramInboundWatchEngineTests: XCTestCase {
         var engine = WatchEngine(preferences: .default)
         XCTAssertFalse(engine.engaged)
 
-        let arm = engine.applyTelegramInbound(.arm, now: t0, lidClosed: false)
+        let arm = engine.applyTelegramInbound(.arm, now: t0)
         XCTAssertTrue(engine.engaged)
         XCTAssertTrue(arm.contains(.engage))
         XCTAssertFalse(arm.contains(.applyBrightnessFloor))
         XCTAssertFalse(arm.contains(.requestKeyboardBacklightOff))
         XCTAssertEqual(engine.preferences.duration, .indefinite)
 
-        let again = engine.applyTelegramInbound(.arm, now: t0.addingTimeInterval(1), lidClosed: false)
+        let again = engine.applyTelegramInbound(.arm, now: t0.addingTimeInterval(1))
         XCTAssertTrue(engine.engaged)
         XCTAssertTrue(again.isEmpty)
         XCTAssertTrue(engine.postedThisUserArm == false)
 
-        let disarm = engine.applyTelegramInbound(.disarm, now: t0.addingTimeInterval(2), lidClosed: false)
+        let disarm = engine.applyTelegramInbound(.disarm, now: t0.addingTimeInterval(2))
         XCTAssertFalse(engine.engaged)
         XCTAssertEqual(disarm, [.disengage(.user)])
         XCTAssertEqual(engine.preferences.duration, .indefinite)
 
-        let idle = engine.applyTelegramInbound(.disarm, now: t0.addingTimeInterval(3), lidClosed: false)
+        let idle = engine.applyTelegramInbound(.disarm, now: t0.addingTimeInterval(3))
         XCTAssertFalse(engine.engaged)
         XCTAssertTrue(idle.isEmpty)
+    }
+
+    func testTelegramArmDoesNotFloorOnOneClosedLidSample() {
+        var engine = WatchEngine(preferences: .default)
+        let arm = engine.applyTelegramInbound(.arm, now: t0)
+        XCTAssertTrue(engine.engaged)
+        XCTAssertFalse(arm.contains(.applyBrightnessFloor))
+        XCTAssertFalse(arm.contains(.requestKeyboardBacklightOff))
+        XCTAssertTrue(engine.observeLid(closed: true, now: t0).isEmpty)
+        XCTAssertFalse(engine.lidClosed)
+        XCTAssertFalse(engine.lidHygieneApplied)
     }
 
     func testStatusDoesNotMutateTheWatch() {
@@ -282,6 +293,14 @@ final class TelegramInboundWatchEngineTests: XCTestCase {
         XCTAssertTrue(drained.seeded)
         XCTAssertEqual(drained.offset, 42)
         XCTAssertTrue(drained.shouldApplyCommands)
+    }
+
+    func testUnseededPollIsImmediateSoLiveCommandsAreNotSwallowed() {
+        XCTAssertEqual(TelegramInboundCursor.unset.pollTimeout, 0)
+        XCTAssertEqual(TelegramInboundCursor(offset: 40, seeded: true).startingSession().pollTimeout, 0)
+        XCTAssertEqual(TelegramInboundCursor(offset: 40, seeded: true).pollTimeout, 25)
+        XCTAssertEqual(TelegramInboundPoll.drainSeconds, 0)
+        XCTAssertEqual(TelegramInboundPoll.longPollSeconds, 25)
     }
 
     func testStaleGenerationAndTokenChangeDoNotApply() {
@@ -451,6 +470,15 @@ final class TelegramInboundGetUpdatesRequestTests: XCTestCase {
         let items = URLComponents(url: request.url, resolvingAgainstBaseURL: false)?.queryItems ?? []
         XCTAssertEqual(items.first(where: { $0.name == "offset" })?.value, "8")
         XCTAssertEqual(items.first(where: { $0.name == "timeout" })?.value, "25")
+        let drain = try XCTUnwrap(
+            NotifOutboundRequestFactory.telegramGetUpdates(
+                botToken: "123:token",
+                offset: 8,
+                timeout: 0
+            )
+        )
+        let drainItems = URLComponents(url: drain.url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        XCTAssertEqual(drainItems.first(where: { $0.name == "timeout" })?.value, "0")
         XCTAssertNil(
             NotifOutboundRequestFactory.telegramGetUpdates(botToken: "", offset: 1, timeout: 0)
         )

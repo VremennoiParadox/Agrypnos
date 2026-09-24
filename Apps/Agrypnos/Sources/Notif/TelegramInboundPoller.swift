@@ -51,7 +51,6 @@ enum TelegramInboundHTTP {
 /// Long-poll `getUpdates` on the user's bot. Never log the request URL — the token is in the path.
 @MainActor
 final class TelegramInboundPoller {
-    static let longPollTimeout = 25
     static let retryNanos: UInt64 = 5_000_000_000
 
     weak var runtime: WatchRuntime?
@@ -93,7 +92,6 @@ final class TelegramInboundPoller {
     private func startLoop() {
         guard task == nil else { return }
         runtime?.beginTelegramInboundPollSession()
-        let timeout = Self.longPollTimeout
         let retry = Self.retryNanos
         let capturedGeneration = generation
         task = Task.detached { [weak self] in
@@ -110,7 +108,7 @@ final class TelegramInboundPoller {
                     let request = NotifOutboundRequestFactory.telegramGetUpdates(
                         botToken: token,
                         offset: snap.cursor.offset,
-                        timeout: timeout
+                        timeout: snap.cursor.pollTimeout
                     )
                 else {
                     try? await Task.sleep(nanoseconds: 1_000_000_000)

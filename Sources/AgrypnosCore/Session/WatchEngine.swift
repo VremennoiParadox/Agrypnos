@@ -87,16 +87,16 @@ public struct WatchEngine: Equatable, Sendable {
     }
 
     /// Telegram arm/disarm/status. Skip a no-op so a second arm does not reset this user arm.
+    /// Always `lidClosed: false` — one raw clamshell sample is not hygiene.
     public mutating func applyTelegramInbound(
         _ intent: TelegramInboundIntent,
-        now: Date,
-        lidClosed: Bool = false
+        now: Date
     ) -> [WatchCommand] {
         switch intent.shouldSetEngaged(currentlyEngaged: engaged) {
         case .some(true):
-            return userSetEngaged(true, now: now, lidClosed: lidClosed)
+            return userSetEngaged(true, now: now, lidClosed: false)
         case .some(false):
-            return userSetEngaged(false, now: now, lidClosed: lidClosed)
+            return userSetEngaged(false, now: now, lidClosed: false)
         case .none:
             return []
         }
