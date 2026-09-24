@@ -85,6 +85,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public let notifEnable: PopoverSlot?
     public let notifDiscord: PopoverSlot?
     public let notifTelegram: PopoverSlot?
+    public let notifTelegramInbound: PopoverSlot?
     public let notifSetup: PopoverSlot?
     public let notifClear: PopoverSlot?
     public let shortcutY: Int?
@@ -114,6 +115,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
         case .notifEnable: return notifEnable
         case .notifDiscord: return notifDiscord
         case .notifTelegram: return notifTelegram
+        case .notifTelegramInbound: return notifTelegramInbound
         case .notifSetup: return notifSetup
         case .notifClear: return notifClear
         }
@@ -170,6 +172,12 @@ public struct PopoverStackLayout: Equatable, Sendable {
             + PopoverCopyLayout.notifTelegramHelpHeightPoints
             + 2 * secretFieldRowHeight
             + inset
+        let notifTelegramInboundHeight =
+            inset
+            + titleRowHeight
+            + PopoverCopyLayout.helpHeightPoints
+            + switchRowHeight
+            + inset
         let notifSetupHeight =
             inset
             + titleRowHeight
@@ -191,6 +199,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
             case .notifEnable: return notifEnableHeight
             case .notifDiscord: return notifDiscordHeight
             case .notifTelegram: return notifTelegramHeight
+            case .notifTelegramInbound: return notifTelegramInboundHeight
             case .notifSetup: return notifSetupHeight
             case .notifClear: return loginCardHeight
             }
@@ -244,6 +253,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
             notifEnable: placed[.notifEnable],
             notifDiscord: placed[.notifDiscord],
             notifTelegram: placed[.notifTelegram],
+            notifTelegramInbound: placed[.notifTelegramInbound],
             notifSetup: placed[.notifSetup],
             notifClear: placed[.notifClear],
             shortcutY: shortcutY,
