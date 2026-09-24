@@ -118,7 +118,7 @@ extension WatchEngine {
         var sawBusyThisArm: Bool?
         var settlingAfterBusy: Bool?
         if agentsMode, engaged {
-            sawBusyThisArm = settle.sawBusy
+            sawBusyThisArm = settle.sawBusy || agentsBusy == true
             if let busy = agentsBusy {
                 settlingAfterBusy = settle.activity(busy: busy, now: now) == .settling
             }

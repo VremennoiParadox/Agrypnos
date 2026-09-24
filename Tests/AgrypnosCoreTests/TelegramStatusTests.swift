@@ -279,8 +279,50 @@ final class TelegramStatusSnapshotTests: XCTestCase {
         XCTAssertNil(snapshot.lowPowerMode)
     }
 
-    func testDisarmedAgentsSnapshotKeepsSelectedToolsAndDropsThisArmBusy() {
+    func testLiveBusyWithoutTickCountsAsSeenThisArm() {
+        var engine = WatchEngine(preferences: UserPreferences(duration: .untilAgentsSettle))
+        _ = engine.userSetEngaged(true, now: t0)
+        XCTAssertFalse(engine.settle.sawBusy)
+        let snapshot = engine.telegramWatchStatus(now: t0, agentsBusy: true)
+        XCTAssertEqual(snapshot.sawBusyThisArm, true)
+        XCTAssertEqual(snapshot.settlingAfterBusy, false)
+        let text = TelegramWatchStatusCopy.reply(snapshot, now: t0)
+        XCTAssertTrue(text.contains("Local busy signals seen this arm."))
+        XCTAssertFalse(text.contains("No local busy signals seen this arm."))
+        XCTAssertFalse(text.contains("Waiting after local busy signals stop."))
+        XCTAssertFalse(engine.settle.sawBusy)
+    }
+
+    func testEngineSnapshotFormatsLiveDump() {
         var engine = WatchEngine(
+            preferences: UserPreferences(
+                batteryFloorPercent: 18,
+                duration: .untilAgentsSettle,
+                thermalAutoOff: false,
+                lastWatchEnd: LastWatchEnd(endedAt: t0.addingTimeInterval(-10), reason: .user),
+                includedAgentKinds: [.cursor, .openCode]
+            )
+        )
+        _ = engine.userSetEngaged(true, now: t0)
+        let text = TelegramWatchStatusCopy.reply(
+            engine.telegramWatchStatus(now: t0, agentsBusy: true, lowPowerMode: true),
+            now: t0
+        )
+        XCTAssertTrue(text.contains("Keep the watch is on."))
+        XCTAssertTrue(text.contains("How long is Agents."))
+        XCTAssertTrue(text.contains("Lid is open or unconfirmed."))
+        XCTAssertTrue(text.contains("Selected tools: Cursor, OpenCode."))
+        XCTAssertTrue(text.contains("Local busy signals seen this arm."))
+        XCTAssertTrue(text.contains("Auto-off at 18% battery."))
+        XCTAssertTrue(text.contains("Thermal auto-off is off."))
+        XCTAssertTrue(text.contains("Low Power Mode is on. Keep the watch is still on."))
+        XCTAssertTrue(text.contains("Last watch ended"))
+        XCTAssertFalse(text.lowercased().contains("remaining"))
+        XCTAssertFalse(text.lowercased().contains("still thinking"))
+    }
+
+    func testDisarmedAgentsSnapshotKeepsSelectedToolsAndDropsThisArmBusy() {
+        let engine = WatchEngine(
             preferences: UserPreferences(
                 duration: .untilAgentsSettle,
                 includedAgentKinds: [.codex]

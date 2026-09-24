@@ -197,30 +197,13 @@ public enum TelegramInboundCopy: Sendable {
 
     public static func reply(
         intent: TelegramInboundIntent,
-        engaged: Bool,
-        duration: DurationOption
+        engaged _: Bool,
+        duration _: DurationOption
     ) -> String? {
         switch intent {
-        case .ignore: return nil
+        case .ignore, .status: return nil
         case .arm: return armed
         case .disarm: return disarmed
-        case .status:
-            return status(
-                TelegramWatchStatus(
-                    engaged: engaged,
-                    duration: duration,
-                    lidCloseConfirmed: false,
-                    includedAgentKinds: AgentIncludeChrome.defaultIncluded,
-                    sawBusyThisArm: duration == .untilAgentsSettle && engaged ? false : nil,
-                    settlingAfterBusy: nil,
-                    lastWatchEnd: nil,
-                    batteryFloorPercent: UserPreferences.default.batteryFloorPercent,
-                    thermalAutoOff: true,
-                    lowPowerMode: nil,
-                    userForcedThisSession: engaged
-                ),
-                now: Date()
-            )
         case .help: return help
         }
     }

@@ -342,30 +342,8 @@ final class TelegramInboundCopyTests: XCTestCase {
             TelegramInboundCopy.reply(intent: .disarm, engaged: false, duration: .indefinite),
             "Disarmed."
         )
-        let indefinite = TelegramInboundCopy.reply(
-            intent: .status, engaged: true, duration: .indefinite
-        ) ?? ""
-        XCTAssertTrue(indefinite.contains("Keep the watch is on."))
-        XCTAssertTrue(indefinite.contains("How long is ∞."))
-        let agents = TelegramInboundCopy.reply(
-            intent: .status, engaged: true, duration: .untilAgentsSettle
-        ) ?? ""
-        XCTAssertTrue(agents.contains("Keep the watch is on."))
-        XCTAssertTrue(agents.contains("How long is Agents."))
-        let oneHour = TelegramInboundCopy.reply(
-            intent: .status, engaged: true, duration: .oneHour
-        ) ?? ""
-        XCTAssertTrue(oneHour.contains("How long is 1h."))
-        XCTAssertFalse(oneHour.lowercased().contains("left"))
-        let custom = TelegramInboundCopy.reply(
-            intent: .status, engaged: true, duration: .customMinutes(33)
-        ) ?? ""
-        XCTAssertTrue(custom.contains("How long is 33m."))
-        let off = TelegramInboundCopy.reply(
-            intent: .status, engaged: false, duration: .untilAgentsSettle
-        ) ?? ""
-        XCTAssertTrue(off.contains("Keep the watch is off."))
-        XCTAssertTrue(off.contains("How long is Agents."))
+        XCTAssertNil(TelegramInboundCopy.reply(intent: .status, engaged: true, duration: .indefinite))
+        XCTAssertNil(TelegramInboundCopy.reply(intent: .status, engaged: true, duration: .oneHour))
         XCTAssertNil(TelegramInboundCopy.reply(intent: .ignore, engaged: false, duration: .indefinite))
         XCTAssertEqual(
             TelegramInboundCopy.commandsHelp,
@@ -384,12 +362,38 @@ final class TelegramInboundCopyTests: XCTestCase {
             TelegramInboundCopy.commandsHelp,
             TelegramInboundCopy.help,
             TelegramInboundCopy.missedWhileAsleep,
-            TelegramInboundCopy.reply(intent: .status, engaged: true, duration: .indefinite) ?? "",
-            TelegramInboundCopy.reply(intent: .status, engaged: true, duration: .untilAgentsSettle) ?? "",
-            TelegramInboundCopy.reply(intent: .status, engaged: true, duration: .oneHour) ?? "",
-            TelegramInboundCopy.reply(intent: .status, engaged: true, duration: .threeHours) ?? "",
-            TelegramInboundCopy.reply(intent: .status, engaged: true, duration: .customMinutes(33)) ?? "",
-            TelegramInboundCopy.reply(intent: .status, engaged: false, duration: .untilAgentsSettle) ?? "",
+            TelegramWatchStatusCopy.reply(
+                TelegramWatchStatus(
+                    engaged: true,
+                    duration: .indefinite,
+                    lidCloseConfirmed: false,
+                    includedAgentKinds: AgentIncludeChrome.defaultIncluded,
+                    sawBusyThisArm: nil,
+                    settlingAfterBusy: nil,
+                    lastWatchEnd: nil,
+                    batteryFloorPercent: 15,
+                    thermalAutoOff: true,
+                    lowPowerMode: nil,
+                    userForcedThisSession: true
+                ),
+                now: Date(timeIntervalSince1970: 0)
+            ),
+            TelegramWatchStatusCopy.reply(
+                TelegramWatchStatus(
+                    engaged: true,
+                    duration: .untilAgentsSettle,
+                    lidCloseConfirmed: false,
+                    includedAgentKinds: AgentIncludeChrome.defaultIncluded,
+                    sawBusyThisArm: false,
+                    settlingAfterBusy: nil,
+                    lastWatchEnd: nil,
+                    batteryFloorPercent: 15,
+                    thermalAutoOff: true,
+                    lowPowerMode: nil,
+                    userForcedThisSession: true
+                ),
+                now: Date(timeIntervalSince1970: 0)
+            ),
         ].joined(separator: "\n").lowercased()
         for banned in [
             "agent stopped",
