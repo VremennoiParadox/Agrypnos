@@ -172,7 +172,12 @@ public struct PopoverStackLayout: Equatable, Sendable {
             + PopoverCopyLayout.notifTelegramHelpHeightPoints
             + 2 * secretFieldRowHeight
             + inset
-        let notifTelegramInboundHeight = thermalHeight
+        let notifTelegramInboundHeight =
+            inset
+            + titleRowHeight
+            + PopoverCopyLayout.helpHeightPoints
+            + switchRowHeight
+            + inset
         let notifSetupHeight =
             inset
             + titleRowHeight
