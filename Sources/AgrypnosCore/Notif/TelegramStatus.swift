@@ -13,6 +13,10 @@ public struct TelegramWatchStatus: Equatable, Sendable {
     public var thermalAutoOff: Bool
     public var lowPowerMode: Bool?
     public var userForcedThisSession: Bool
+    /// Live charge from the same sensor as low-battery auto-off. Nil = omit.
+    public var liveBatteryPercent: Int?
+    public var liveBatteryDischarging: Bool?
+    public var panelPowerMode: PanelPowerMode
 
     public init(
         engaged: Bool,
@@ -25,7 +29,10 @@ public struct TelegramWatchStatus: Equatable, Sendable {
         batteryFloorPercent: Int,
         thermalAutoOff: Bool,
         lowPowerMode: Bool?,
-        userForcedThisSession: Bool
+        userForcedThisSession: Bool,
+        liveBatteryPercent: Int? = nil,
+        liveBatteryDischarging: Bool? = nil,
+        panelPowerMode: PanelPowerMode = .floor
     ) {
         self.engaged = engaged
         self.duration = duration
@@ -38,6 +45,9 @@ public struct TelegramWatchStatus: Equatable, Sendable {
         self.thermalAutoOff = thermalAutoOff
         self.lowPowerMode = lowPowerMode
         self.userForcedThisSession = userForcedThisSession
+        self.liveBatteryPercent = liveBatteryPercent
+        self.liveBatteryDischarging = liveBatteryDischarging
+        self.panelPowerMode = panelPowerMode
     }
 }
 
@@ -56,6 +66,7 @@ public enum TelegramWatchStatusCopy: Sendable {
                 ? "Lid is confirmed closed."
                 : "Lid is open or unconfirmed.",
         ]
+        lines.append(status.panelPowerMode.statusLine)
         if status.duration == .untilAgentsSettle {
             lines.append(contentsOf: agentLines(status))
         }
@@ -65,6 +76,9 @@ public enum TelegramWatchStatusCopy: Sendable {
                     event: event, now: now, calendar: calendar, locale: locale
                 )
             )
+        }
+        if let battery = batteryLine(status) {
+            lines.append(battery)
         }
         let thermal = status.thermalAutoOff ? "on" : "off"
         lines.append(
@@ -97,6 +111,13 @@ public enum TelegramWatchStatusCopy: Sendable {
         return lines
     }
 
+    /// Omit when charge % is unknown. Never invent a percent.
+    static func batteryLine(_ status: TelegramWatchStatus) -> String? {
+        guard let percent = status.liveBatteryPercent else { return nil }
+        let source = status.liveBatteryDischarging == true ? "discharging" : "on AC"
+        return "Battery \(percent)% · \(source)"
+    }
+
     /// Known LPM only. Forced watch still holding must not read as ended.
     static func lpmLine(_ status: TelegramWatchStatus) -> String? {
         guard status.lowPowerMode == true else { return nil }
@@ -108,11 +129,12 @@ public enum TelegramWatchStatusCopy: Sendable {
 }
 
 extension WatchEngine {
-    /// Snapshot for `/status`. `agentsBusy` / LPM omitted when the caller does not have them.
+    /// Snapshot for `/status`. Live battery comes from the same `SafetyInputs` as auto-off.
     public func telegramWatchStatus(
         now: Date,
         agentsBusy: Bool? = nil,
-        lowPowerMode: Bool? = nil
+        lowPowerMode: Bool? = nil,
+        safety: SafetyInputs? = nil
     ) -> TelegramWatchStatus {
         let agentsMode = preferences.duration == .untilAgentsSettle
         var sawBusyThisArm: Bool?
@@ -123,6 +145,8 @@ extension WatchEngine {
                 settlingAfterBusy = settle.activity(busy: busy, now: now) == .settling
             }
         }
+        let livePercent = safety?.batteryPercent
+        let liveDischarging: Bool? = livePercent == nil ? nil : safety?.onBatteryDischarging
         return TelegramWatchStatus(
             engaged: engaged,
             duration: preferences.duration,
@@ -133,8 +157,11 @@ extension WatchEngine {
             lastWatchEnd: preferences.lastWatchEnd,
             batteryFloorPercent: preferences.batteryFloorPercent,
             thermalAutoOff: preferences.thermalAutoOff,
-            lowPowerMode: lowPowerMode,
-            userForcedThisSession: userForcedThisSession
+            lowPowerMode: lowPowerMode ?? safety?.lowPowerMode,
+            userForcedThisSession: userForcedThisSession,
+            liveBatteryPercent: livePercent,
+            liveBatteryDischarging: liveDischarging,
+            panelPowerMode: preferences.panelPowerMode
         )
     }
 }

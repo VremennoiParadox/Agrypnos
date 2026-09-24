@@ -26,6 +26,8 @@ public struct UserPreferences: Equatable, Sendable, Codable {
     public var lidOpenRampSeconds: Int
     /// Power toggle. Default on. Off skips only the thermal auto-off path.
     public var thermalAutoOff: Bool
+    /// Mutually exclusive panel mode. Default A (floor + ramp). B sleeps the panel only.
+    public var panelPowerMode: PanelPowerMode
     /// Opt-in idle-after-wait POST. Default off. Secrets stay out of this blob.
     public var notifEnabled: Bool
     /// Telegram inbound commands on the same bot. Default off. Separate from outbound POST.
@@ -51,6 +53,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         hotkey: HotkeyChord = .defaultToggle,
         lidOpenRampSeconds: Int = 2,
         thermalAutoOff: Bool = true,
+        panelPowerMode: PanelPowerMode = .default,
         notifEnabled: Bool = false,
         telegramInboundEnabled: Bool = false,
         lastWatchEnd: LastWatchEnd? = nil,
@@ -66,6 +69,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         self.hotkey = hotkey.isBindable ? hotkey : .defaultToggle
         self.lidOpenRampSeconds = Self.clampLidOpenRamp(lidOpenRampSeconds)
         self.thermalAutoOff = thermalAutoOff
+        self.panelPowerMode = panelPowerMode
         self.notifEnabled = notifEnabled
         self.telegramInboundEnabled = telegramInboundEnabled
         self.lastWatchEnd = lastWatchEnd
@@ -111,6 +115,13 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         return true
     }
 
+    static func decodePanelPowerMode(_ container: KeyedDecodingContainer<CodingKeys>) -> PanelPowerMode {
+        guard let raw = try? container.decodeIfPresent(String.self, forKey: .panelPowerMode) else {
+            return .default
+        }
+        return PanelPowerMode(rawValue: raw) ?? .default
+    }
+
     public static func clampSessionFreshness(_ seconds: TimeInterval) -> TimeInterval {
         guard seconds.isFinite else { return defaultSessionFreshness }
         // ponytail: 300…1800 was a hidden 15m settle and blocked sleep after agents stopped.
@@ -140,6 +151,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         case hotkey
         case lidOpenRampSeconds
         case thermalAutoOff
+        case panelPowerMode
         case notifEnabled
         case telegramInboundEnabled
         case lastWatchEnd
@@ -167,6 +179,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
             hotkey: try container.decodeIfPresent(HotkeyChord.self, forKey: .hotkey) ?? .defaultToggle,
             lidOpenRampSeconds: try container.decodeIfPresent(Int.self, forKey: .lidOpenRampSeconds) ?? 2,
             thermalAutoOff: try container.decodeIfPresent(Bool.self, forKey: .thermalAutoOff) ?? true,
+            panelPowerMode: Self.decodePanelPowerMode(container),
             notifEnabled: try container.decodeIfPresent(Bool.self, forKey: .notifEnabled) ?? false,
             telegramInboundEnabled: try container.decodeIfPresent(Bool.self, forKey: .telegramInboundEnabled) ?? false,
             lastWatchEnd: try container.decodeIfPresent(LastWatchEnd.self, forKey: .lastWatchEnd),
@@ -187,6 +200,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         try container.encode(hotkey, forKey: .hotkey)
         try container.encode(lidOpenRampSeconds, forKey: .lidOpenRampSeconds)
         try container.encode(thermalAutoOff, forKey: .thermalAutoOff)
+        try container.encode(panelPowerMode.rawValue, forKey: .panelPowerMode)
         try container.encode(notifEnabled, forKey: .notifEnabled)
         try container.encode(telegramInboundEnabled, forKey: .telegramInboundEnabled)
         try container.encodeIfPresent(lastWatchEnd, forKey: .lastWatchEnd)

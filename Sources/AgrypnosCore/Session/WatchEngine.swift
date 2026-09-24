@@ -53,7 +53,7 @@ public struct WatchEngine: Equatable, Sendable {
     }
 
     /// Kernel `SleepDisabled` was already on and could not be cleared. Adopt visibly.
-    /// Lid-open adopt must not blank the panel; lid-closed adopt reapplies floor + keys.
+    /// Lid-open adopt must not blank the panel; lid-closed adopt reapplies hygiene.
     public mutating func adoptLeftoverKernel(now: Date, lidClosed: Bool = false) -> [WatchCommand] {
         self.lidClosed = lidClosed
         leftoverAdopted = true
@@ -260,26 +260,20 @@ public struct WatchEngine: Equatable, Sendable {
         return commands
     }
 
-    /// Lid close only: brightness floor + keyboard off. Never `displaysleepnow`.
+    /// Confirmed lid close: Power A floor or Power B display sleep. Never both. Never Mac sleep.
     func lidCloseHygieneCommands() -> [WatchCommand] {
-        var commands: [WatchCommand] = []
-        if preferences.applyBrightnessFloor {
-            commands.append(.applyBrightnessFloor)
-        }
-        if preferences.keyboardBacklightOff {
-            commands.append(.requestKeyboardBacklightOff)
-        }
-        return commands
+        PanelPowerMode.lidCloseCommands(
+            mode: preferences.panelPowerMode,
+            applyBrightnessFloor: preferences.applyBrightnessFloor,
+            keyboardBacklightOff: preferences.keyboardBacklightOff
+        )
     }
 
     func lidOpenRestoreCommands() -> [WatchCommand] {
-        var commands: [WatchCommand] = []
-        if preferences.applyBrightnessFloor {
-            commands.append(.rampBrightnessRestore)
-        }
-        if preferences.keyboardBacklightOff {
-            commands.append(.restoreKeyboardBacklight)
-        }
-        return commands
+        PanelPowerMode.lidOpenCommands(
+            mode: preferences.panelPowerMode,
+            applyBrightnessFloor: preferences.applyBrightnessFloor,
+            keyboardBacklightOff: preferences.keyboardBacklightOff
+        )
     }
 }

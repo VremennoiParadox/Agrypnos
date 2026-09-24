@@ -18,7 +18,16 @@ enum PowerHygieneCoordinator {
                 break
             case .requestSleep:
                 _ = ProcessRunner.run("/usr/bin/pmset", ["sleepnow"])
+            case .requestDisplaySleep:
+                // Panel only. Never `sleepnow`. Never with a floor write.
+                guard preferences.panelPowerMode.sleepsDisplay else { break }
+                _ = ProcessRunner.run("/usr/bin/pmset", ["displaysleepnow"])
+            case .wakeDisplay:
+                // Smallest honest wake after Power B display sleep. Not a floor write.
+                // Assumption: user-activity pulse wakes the panel. Needs a Mac to prove.
+                _ = ProcessRunner.run("/usr/bin/caffeinate", ["-u", "-t", "1"])
             case .applyBrightnessFloor:
+                guard preferences.panelPowerMode.writesBrightnessFloor else { break }
                 ramp.cancel()
                 if let saved = savedBrightness {
                     savedBrightness = max(saved, preferences.brightnessFloor)
@@ -29,6 +38,7 @@ enum PowerHygieneCoordinator {
             case .requestKeyboardBacklightOff:
                 KeyboardBacklightController.setOff()
             case .rampBrightnessRestore:
+                guard preferences.panelPowerMode.showsLidOpenRamp else { break }
                 guard canSetBuiltInBrightness else { break }
                 guard let target = HygieneRestore.displayBrightnessToRestore(
                     captured: savedBrightness,
@@ -55,12 +65,16 @@ enum PowerHygieneCoordinator {
         ramp: BrightnessRampController
     ) {
         ramp.cancel()
-        if preferences.applyBrightnessFloor, canSetBuiltInBrightness,
+        if preferences.panelPowerMode.writesBrightnessFloor,
+           preferences.applyBrightnessFloor, canSetBuiltInBrightness,
            let target = HygieneRestore.displayBrightnessToRestore(
                captured: savedBrightness,
                floor: preferences.brightnessFloor
            ) {
             BrightnessFloorController.set(target)
+        }
+        if PanelPowerMode.disengageDisplayCommand(mode: preferences.panelPowerMode) != nil {
+            _ = ProcessRunner.run("/usr/bin/caffeinate", ["-u", "-t", "1"])
         }
         if preferences.keyboardBacklightOff,
            let brightness = HygieneRestore.keyboardBrightnessToRestore(captured: savedKeyboard) {
