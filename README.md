@@ -23,7 +23,7 @@ V1 agents: Cursor, Claude Code, Codex, and OpenCode. Local heuristics only (proc
 - Does **not** force the display asleep when you arm Keep the watch.
 - Does **not** run a shared Discord or Telegram bot, companion app, or stealth network.
 - Does **not** “notify your phone,” claim “agent stopped,” or invent task text / finish ETA. Discord webhook is outbound-only. Notif outbound stays one-way POST to *your* webhook or *your* bot, idle after wait.
-- Telegram two-way (arm / disarm / status on *your* bot) is the inbound slice — unlocked in the project bar, not in the app until Core + UI ships it.
+- Telegram two-way (arm / disarm / status on *your* bot) is Core + Mac poller in this slice. The Notif inbound toggle is a follow-up. Default inbound **off**. Do not claim Mac-proven until a Mac checks arm / disarm / status.
 
 ## Privileged work
 
@@ -69,7 +69,7 @@ Controls live in the menu-bar popover. There is no separate settings window. A s
 - **Watch:** Keep the watch, duration presets plus custom minutes, arming caption, last-end caption (last real watch end)
 - **Power:** brightness floor % (default **15%**; range 1–40; never 0%), keyboard backlight off, low-battery auto-off **5–100%** (default 15%), brightness return when the lid opens **1 / 2 / 3 s** (default **2s**), thermal auto-off (default on)
 - **Agents:** idle wait after local busy signals stop (**2 minutes – 15 minutes**, default **2 minutes** / 120s; stored prefs below 2m clamp up to 2m) before the idle-after-wait POST and turning Keep the watch off. Settle buffer on local process and session activity — not “still thinking,” not “agent finished.” Which tools count as busy: multi-select Cursor, Claude Code, Codex, and OpenCode. At least one stays selected (default all on). Busy signals come only from the tools left on. Selecting all of them is how every listed tool counts.
-- **Notif:** opt-in idle-after-wait POST (default **off**). Opt-in switch, Discord URL, Telegram token + chat id, and Clear secrets. Telegram inbound (arm / disarm / status on *your* bot) is the next slice — inbound on/off + short command list when it ships. Self-serve setup lives in the Notif section; same steps: [Notif](#notif).
+- **Notif:** opt-in idle-after-wait POST (default **off**). Opt-in switch, Discord URL, Telegram token + chat id, and Clear secrets. Telegram inbound (arm / disarm / status on *your* bot) is Core-ready (default **off**; same token + chat id). The inbound on/off control in Notif is a follow-up. Self-serve setup lives in the Notif section; same steps: [Notif](#notif).
 - **General:** remappable global hotkey (default `⌥⌘A`), launch at login, quit
 
 The menu-bar extra shows **Armed.** while Keep the watch is on for ∞ / 1h / 3h / custom minutes, and **Agents.** while it is on and How long is Agents. Off is the glyph only. Not a remaining-time countdown — How long timers do not auto-off. Donate stays gated until there is a live URL.
@@ -115,12 +115,12 @@ Agrypnos does not ship a bot for you to add. If BotFather did not give you the t
 
 Same BotFather bot and token as outbound. Not a shared Agrypnos bot. Discord webhook stays outbound-only — no Discord inbound here.
 
-This inbound slice is **unlocked in the project bar**. It is not in the shipping app until Core + UI implement it. Do not claim Mac-proven from this README.
+Core polls `getUpdates` and drives Keep the watch when inbound is on and token + chat id are set. The popover inbound toggle is a follow-up; inbound stays **off** until that ships (or the Core pref is set). Each time the poller starts, the first `getUpdates` is immediate (timeout 0) and acks already-queued messages without running them, so leftover traffic (setup, app quit, inbound off) does not arm the watch. After that, Agrypnos long-polls for new commands. Do not claim Mac-proven from this README.
 
-When it ships:
+When inbound is on:
 
 1. Paste token + chat id as above.
-2. In **Notif**, turn **inbound** on (separate from the outbound POST opt-in). Default inbound is off.
+2. Turn **inbound** on in **Notif** (separate from the outbound POST opt-in). Default inbound is off.
 3. Chat with *your* bot (the same chat id you saved).
 4. Commands: **arm** / **disarm** / **status** — they hit Keep the watch for real. Only the saved chat id counts; other chats are ignored. Empty token or chat id: no inbound. Replies are facts (armed / disarmed / current status). Not “agent stopped,” not “job finished,” not “still thinking.”
 5. Turn inbound off in Notif to stop command handling. Clear secrets still deletes the saved token and chat id.
@@ -147,7 +147,7 @@ Use one channel, or both. Leave a field empty if you do not use that channel. No
 ### Turn off / clear secrets
 
 - Switch **Notif** off in the popover. POSTs stop. Default is off.
-- When inbound ships: switch Telegram inbound off to stop command handling. Default inbound is off.
+- Switch Telegram inbound off to stop command handling (popover toggle is a follow-up; default inbound is off).
 - Use **Clear secrets** in the Notif section to delete the saved webhook URL, bot token, and chat id.
 - On Discord you can also delete the webhook: **Server Settings → Integrations → Webhooks**.
 - On Telegram you can revoke or delete the bot in BotFather (`/revoke` or `/deletebot`).
@@ -161,7 +161,7 @@ Rich status (task text / finish ETA) is not this product. Idea-only. Discord inb
 - Reboot clears SleepDisabled. That is a feature.
 - Launch-at-login never re-arms the watch.
 - Notif POSTs only to *your* webhook or *your* bot, and only when enabled with secrets set.
-- Telegram inbound (arm / disarm / status) uses *your* bot when that slice ships. Mac prove remains soft until a Mac checks it.
+- Telegram inbound (arm / disarm / status) uses *your* bot when inbound is on and token + chat id are set. Mac prove remains soft until a Mac checks it.
 
 ## License
 

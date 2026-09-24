@@ -34,17 +34,20 @@ final class WatchRuntime {
     /// Skip poll only when an idle-after-wait POST is in flight after a safety disarm.
     private var idleOutbound = NotifIdleOutboundCoordinator()
     private var idlePostTask: Task<Void, Never>?
+    private let inboundPoller = TelegramInboundPoller()
 
     init() {
         engine = WatchEngine(preferences: store.load())
     }
 
     func start() {
+        inboundPoller.runtime = self
         reconcileKernel(preferClearLeftover: true)
         pollTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.poll() }
         }
         poll()
+        inboundPoller.sync()
     }
 
     func setDuration(_ option: DurationOption) {
@@ -100,6 +103,13 @@ final class WatchRuntime {
         delegate?.watchRuntimeDidChange(self)
     }
 
+    func setTelegramInboundEnabled(_ on: Bool) {
+        engine.userSetTelegramInboundEnabled(on)
+        store.save(engine.preferences)
+        inboundPoller.sync()
+        delegate?.watchRuntimeDidChange(self)
+    }
+
     func notifSecrets() -> NotifSecrets {
         NotifSecretsStore.load()
     }
@@ -111,16 +121,25 @@ final class WatchRuntime {
 
     @discardableResult
     func setNotifTelegramBotToken(_ value: String?) -> Bool {
-        NotifSecretsStore.setTelegramBotToken(value)
+        store.resetTelegramInboundCursor()
+        inboundPoller.invalidate()
+        let saved = NotifSecretsStore.setTelegramBotToken(value)
+        inboundPoller.sync()
+        return saved
     }
 
     @discardableResult
     func setNotifTelegramChatId(_ value: String?) -> Bool {
-        NotifSecretsStore.setTelegramChatId(value)
+        let saved = NotifSecretsStore.setTelegramChatId(value)
+        inboundPoller.sync()
+        return saved
     }
 
     func clearNotifSecrets() {
+        store.resetTelegramInboundCursor()
+        inboundPoller.invalidate()
         NotifSecretsStore.clear()
+        inboundPoller.sync()
     }
 
     func setHotkey(_ chord: HotkeyChord) {
@@ -372,6 +391,7 @@ final class WatchRuntime {
 
     /// Quit must clear actual kernel-held SleepDisabled even if the engine already disengaged for POST.
     func prepareForTermination() {
+        inboundPoller.stop()
         let kernelHeld = SleepDisabledController.read()
         let plan = idleOutbound.terminatePlan(
             engineEngaged: engine.engaged,
@@ -411,5 +431,89 @@ final class WatchRuntime {
                 UserNotify.post(AgrypnosCopy.leftoverNotify)
             }
         }
+    }
+
+    func beginTelegramInboundPollSession() {
+        store.saveTelegramInboundCursor(store.loadTelegramInboundCursor().startingSession())
+    }
+
+    func telegramInboundPollSnapshot() -> TelegramInboundPollSnapshot {
+        let secrets = NotifSecretsStore.load()
+        return TelegramInboundPollSnapshot(
+            enabled: engine.preferences.telegramInboundEnabled,
+            token: secrets.telegramBotToken,
+            chatId: secrets.telegramChatId,
+            cursor: store.loadTelegramInboundCursor()
+        )
+    }
+
+    func finishTelegramInboundPoll(
+        generation: UInt64,
+        fetchedToken: String?,
+        cursor: TelegramInboundCursor,
+        updates: [TelegramInboundUpdate]
+    ) {
+        guard inboundPoller.accepts(generation: generation) else { return }
+        let secrets = NotifSecretsStore.load()
+        guard TelegramInboundPolicy.sameBot(
+            fetchedToken: fetchedToken,
+            currentToken: secrets.telegramBotToken
+        ) else { return }
+        if cursor.shouldApplyCommands {
+            applyTelegramUpdates(updates)
+        }
+        store.saveTelegramInboundCursor(cursor.acknowledging(updates))
+    }
+
+    func applyTelegramUpdates(_ updates: [TelegramInboundUpdate]) {
+        let secrets = NotifSecretsStore.load()
+        let enabled = engine.preferences.telegramInboundEnabled
+        for update in updates {
+            let intent = TelegramInboundPolicy.intent(
+                enabled: enabled,
+                botToken: secrets.telegramBotToken,
+                savedChatId: secrets.telegramChatId,
+                update: update
+            )
+            switch intent {
+            case .ignore:
+                continue
+            case .arm:
+                if intent.shouldSetEngaged(currentlyEngaged: engine.engaged) == true {
+                    setEngaged(true)
+                }
+                let text = engine.engaged
+                    ? TelegramInboundCopy.armed
+                    : TelegramInboundCopy.armFailed
+                sendTelegramInboundReply(text, token: secrets.telegramBotToken, chatId: secrets.telegramChatId)
+            case .disarm:
+                if intent.shouldSetEngaged(currentlyEngaged: engine.engaged) == false {
+                    setEngaged(false)
+                }
+                let text = engine.engaged
+                    ? TelegramInboundCopy.disarmFailed
+                    : TelegramInboundCopy.disarmed
+                sendTelegramInboundReply(text, token: secrets.telegramBotToken, chatId: secrets.telegramChatId)
+            case .status:
+                let text = TelegramInboundCopy.status(
+                    engaged: engine.engaged,
+                    duration: engine.preferences.duration
+                )
+                sendTelegramInboundReply(text, token: secrets.telegramBotToken, chatId: secrets.telegramChatId)
+            }
+        }
+    }
+
+    func sendTelegramInboundReply(_ text: String, token: String?, chatId: String?) {
+        guard
+            let token,
+            let chatId,
+            let request = NotifOutboundRequestFactory.telegram(
+                botToken: token,
+                chatId: chatId,
+                text: text
+            )
+        else { return }
+        Task { await TelegramInboundHTTP.send(request) }
     }
 }
