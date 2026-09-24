@@ -256,6 +256,31 @@ final class TelegramInboundDisarmLidTests: XCTestCase {
             [.disengage(.user)]
         )
     }
+
+    func testAfterDisengageLidOpenDoesNotLeaveSleepGateTrue() {
+        var engine = WatchEngine(preferences: .default)
+        _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
+        XCTAssertTrue(engine.observeLid(closed: true, now: t0).isEmpty)
+        _ = engine.observeLid(closed: true, now: t0.addingTimeInterval(LidCloseConfirm.pulseInterval))
+        XCTAssertTrue(engine.lidClosed)
+        XCTAssertTrue(engine.lidCloseConfirmed)
+
+        _ = engine.userSetEngaged(false, now: t0.addingTimeInterval(1), lidClosed: engine.lidClosed)
+        XCTAssertFalse(engine.engaged)
+        XCTAssertFalse(engine.lidCloseConfirmed)
+
+        XCTAssertTrue(engine.observeLid(closed: false, now: t0.addingTimeInterval(2)).isEmpty)
+        XCTAssertFalse(engine.lidClosed)
+        XCTAssertFalse(engine.lidCloseConfirmed)
+        XCTAssertFalse(TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: engine.lidCloseConfirmed))
+        XCTAssertFalse(
+            engine.applyTelegramInbound(
+                .disarm,
+                now: t0.addingTimeInterval(3),
+                lidCloseConfirmed: engine.lidCloseConfirmed
+            ).contains(.requestSleep)
+        )
+    }
 }
 
 final class TelegramSetMyCommandsFactoryTests: XCTestCase {

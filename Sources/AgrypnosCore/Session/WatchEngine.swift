@@ -10,6 +10,8 @@ public struct WatchEngine: Equatable, Sendable {
     public private(set) var leftoverAdopted: Bool
     public private(set) var lidClosed: Bool
     public private(set) var lidHygieneApplied: Bool
+    /// Live confirm from `LidCloseConfirm`. Do not use leftover `lidClosed` after disengage.
+    public var lidCloseConfirmed: Bool { lidConfirm.confirmedClosed }
     /// One idle-after-wait POST per genuine user arm. Survives disarm-failure rollback.
     public private(set) var postedThisUserArm: Bool
     var lastWatchEndRollback: LastWatchEnd?
@@ -171,6 +173,9 @@ public struct WatchEngine: Equatable, Sendable {
 
     /// Raw clamshell samples. Floor only after a stable closed confirm while armed.
     public mutating func observeLid(closed: Bool, now: Date) -> [WatchCommand] {
+        if !closed {
+            lidClosed = false
+        }
         switch lidConfirm.sample(closed, now: now) {
         case .closed:
             return lidDidClose(now: now)
@@ -239,7 +244,9 @@ public struct WatchEngine: Equatable, Sendable {
         userForcedThisSession = false
         leftoverAdopted = false
         lidHygieneApplied = false
+        let wasLidClosed = lidClosed
         lidConfirm.reset()
+        lidClosed = false
         settle.reset()
         var commands: [WatchCommand] = [.disengage(reason)]
         if postIdleAfterWait {
@@ -247,7 +254,7 @@ public struct WatchEngine: Equatable, Sendable {
             commands.append(.postIdleAfterWaitNotif)
         }
         // Clearing SleepDisabled does not retrigger clamshell sleep.
-        if lidClosed, reason != .user {
+        if wasLidClosed, reason != .user {
             commands.append(.requestSleep)
         }
         return commands

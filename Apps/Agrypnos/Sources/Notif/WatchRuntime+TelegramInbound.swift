@@ -26,7 +26,6 @@ extension WatchRuntime {
     func noteMacWillSleep() {
         guard telegramInboundIsPolling() else { return }
         store.saveTelegramInboundCursor(store.loadTelegramInboundCursor().startingWakeMiss())
-        inboundPoller.invalidate()
     }
 
     func noteMacDidWake() {
@@ -127,7 +126,8 @@ extension WatchRuntime {
     }
 
     func applyTelegramDisarm(token: String?, chatId: String?) {
-        let confirmed = engine.lidClosed
+        pollLid()
+        let confirmed = engine.lidCloseConfirmed
         if engine.engaged {
             setEngaged(false)
             if engine.engaged {

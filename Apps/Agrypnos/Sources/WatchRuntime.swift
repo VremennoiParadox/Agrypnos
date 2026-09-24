@@ -219,10 +219,16 @@ final class WatchRuntime {
                 delegate?.watchRuntimeDidChange(self)
                 return
             }
-            stopLidPulse()
+            if !telegramInboundIsPolling() {
+                stopLidPulse()
+            }
             apply(engine.userSetEngaged(false, now: Date(), lidClosed: engine.lidClosed))
             restoreHygiene()
             store.save(engine.preferences)
+            if telegramInboundIsPolling() {
+                startLidPulse()
+                pollLid()
+            }
         }
         delegate?.watchRuntimeDidChange(self)
     }
