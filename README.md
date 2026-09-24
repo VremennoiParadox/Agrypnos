@@ -23,7 +23,7 @@ V1 agents: Cursor, Claude Code, Codex, and OpenCode. Local heuristics only (proc
 - Does **not** force the display asleep when you arm Keep the watch.
 - Does **not** run a shared Discord or Telegram bot, companion app, or stealth network.
 - Does **not** “notify your phone,” claim “agent stopped,” or invent task text / finish ETA. Discord webhook is outbound-only. Notif outbound stays one-way POST to *your* webhook or *your* bot, idle after wait.
-- Telegram two-way (`/arm` `/disarm` `/status` `/help` on *your* bot) is in Notif. Same token + chat id as outbound. Notif lists the slash commands, asleep honesty, and lid-gated `/disarm`. Wake-miss drain stays Core + Mac wiring. Mac prove remains soft. Full steps: [Notif](#notif).
+- Telegram two-way (`/arm` `/disarm` `/status` `/help` on *your* bot) is in Notif. Same token + chat id as outbound. Notif lists the slash commands, asleep honesty, and lid-gated `/disarm`. Wake-miss drain stays Core + Mac wiring. User optical on two-way + polish **passed** (2026-09-24). Full steps: [Notif](#notif).
 
 ## Privileged work
 
@@ -130,7 +130,7 @@ When inbound is on:
 3. Chat with *your* bot (the same chat id you saved).
 4. Send **`/arm`** **`/disarm`** **`/status`** **`/help`**. Turn inbound off in Notif to stop command handling. Clear secrets still deletes the saved token and chat id.
 
-On a Mac, check: bot menu shows the four slashes; `/help` has the asleep note and lid-gated `/disarm`; queue a command while the Mac is asleep, then on wake expect no apply and a missed-while-asleep reply (no reply during sleep); lid-open `/disarm` turns Keep the watch off and does not sleep; confirmed lid-closed `/disarm` turns Keep the watch off and the Mac sleeps. Do not claim that polish Mac-proven until a Mac checks it.
+User optical on Telegram two-way + polish **passed** (2026-09-24): bot menu shows the four slashes; `/help` has the asleep note and lid-gated `/disarm`; commands queued while the Mac is asleep are drained without applying, then **Missed while asleep.** (no reply during sleep); lid-open `/disarm` turns Keep the watch off and does not sleep; confirmed lid-closed `/disarm` turns Keep the watch off and the Mac sleeps.
 
 ### What to paste where
 
@@ -168,7 +168,7 @@ Rich status (task text / finish ETA) is not this product. Idea-only. Discord inb
 - Reboot clears SleepDisabled. That is a feature.
 - Launch-at-login never re-arms the watch.
 - Notif POSTs only to *your* webhook or *your* bot, and only when enabled with secrets set.
-- Telegram inbound (`/arm` `/disarm` `/status` `/help`) uses *your* bot when inbound is on and token + chat id are set. No live reply while the Mac is asleep; wake-miss drain does not apply queued commands; lid-open `/disarm` does not sleep the Mac; confirmed lid-closed `/disarm` does. Do not claim that polish Mac-proven until a Mac checks it.
+- Telegram inbound (`/arm` `/disarm` `/status` `/help`) uses *your* bot when inbound is on and token + chat id are set. No live reply while the Mac is asleep; wake-miss drain does not apply queued commands; lid-open `/disarm` does not sleep the Mac; confirmed lid-closed `/disarm` does. User optical **passed** (2026-09-24).
 
 ## License
 
