@@ -69,14 +69,14 @@ Switcher is **landed**: **Watch** · **Power** · **Agents** · **Notif** · **G
   - **Watch:** Keep the watch (arm) + duration presets/custom + arming caption + last-end honesty (caption-only last watch end from real `DisengageReason`)
   - **Power:** brightness floor % + keyboard backlight off, battery auto-off, brightness return ramp, thermal auto-off toggle (default ON; unlocked)
   - **Agents:** idle wait after local busy signals stop + per-tool include multi-select (landed)
-  - **Notif:** opt-in idle-after-wait POST (default OFF); Discord URL; Telegram token + chat id; dotted fields + reveal; clear secrets
+  - **Notif:** landed outbound POST (Discord URL + Telegram token + chat id; dotted + reveal; clear secrets); unlocked Telegram inbound on/off + short command list
   - **General:** remappable hotkey, launch at login, quit
 - No **Licence** tab. No **About** as a toolbar tab. Do not drop **Notif** from the switcher. Do not add Licence/About.
 - Goal: shorter height per section; reduce long scroll when possible.
 - **Section-switch size:** When the section switcher changes, the popover **height must animate** between section sizes — system / macOS-standard motion (**0.25s ease-in-out**, what UI ships; matching Apple System Settings / menu extras). **No hard cut** / sudden resize. **Reduce Motion** skips the animation. Content may crossfade or swap with the height change; do not leave a blank gap or stretch-distort controls. Prefer native SwiftUI / AppKit layout animation over custom springs that fight the system. Still: native segmented / quiet text switcher; no icon+blue-tile prefs chrome; no settings window; sections stay in the popover.
   - **No cross-section paint:** During and after a section switch, only the **active** section’s cards/chrome may be visible. Outgoing section cards must not remain painted over (or under) the destination — no ghost Watch+Power overlap, no leftover toggles/sliders/labels from another section.
   - **Height hugs active section:** After the switch (and after the height animation settles), popover height must match the active section’s content — no huge empty bottom under short sections; no clipping mid-card while empty space sits below.
-- **Honesty:** Mac optical on smooth section-switch remains **soft** — do not claim Mac-proven until a rebuild optically checks every section switch (Watch ↔ Power ↔ Agents ↔ Notif ↔ General) with **no ghost paint** and **height hugging**.
+- **Honesty:** Mac optical on smooth section-switch **passed** (Watch ↔ Power ↔ Agents ↔ Notif ↔ General — no ghost paint, height hugging). Open-lid brightness and OpenCode stay the separate soft items below — do not claim those Mac-proven from this check.
 - Plain captions only (personality rules below).
 
 ### Menu-bar status item (landed)
@@ -106,33 +106,38 @@ While Keep the watch is on: **Armed.** for ∞ / 1h / 3h / custom minutes, **Age
   - OpenCode: local process + session files (prove on Mac). Do not invent session paths in this bar. Cursor, Claude Code, and Codex stay local heuristics (process + session/transcript mtimes; Claude/Codex may also use CPU). Not think-detection. Still not every provider.
   - **Honesty:** Mac optical on the Agents picker and OpenCode process/session prove remain **soft** — do not claim Mac-proven.
   - Plain copy: “Which tools count as busy.” Ban “we track every AI” and think-detection claims.
-- **Notif** — V2 slice, popover-only, **landed**. Do not grow it.
-  - **One-way outbound only.** One-shot POST when Agents mode is armed, local busy signals were **seen this arm**, then stayed quiet through the idle wait (`agentSettleGrace`). Event is **idle after wait**, not “agent stopped / job done / still thinking.” Never-busy this arm is not that event — do not POST. That same settle also turns Keep the watch off. Do not POST for timer, battery, thermal, LPM, or manual off. Outbound body uses the same idle-after-wait honesty (ban “agent stopped” / “job finished” there too).
-  - **Default OFF.** One opt-in. Discord fires only if a webhook URL is set; Telegram fires only if token **and** chat id are set. Empty fields: no POST, no shared bot.
-  - **Channels:** (1) Discord **incoming webhook URL** the user creates in their own server; (2) Telegram **user’s own bot** — token + chat id from BotFather / `getUpdates`. **No shared Agrypnos bot. No companion app. No telemetry / stealth network.**
+- **Notif** — V2 slice, popover-only. Outbound idle-after-wait POST is **landed**. Telegram inbound two-way is **unlocked** (Core + UI after Review CLEAR + Boss merge of this bar). Do not grow past that.
+  - **One-way outbound (landed).** One-shot POST when Agents mode is armed, local busy signals were **seen this arm**, then stayed quiet through the idle wait (`agentSettleGrace`). Event is **idle after wait**, not “agent stopped / job done / still thinking.” Never-busy this arm is not that event — do not POST. That same settle also turns Keep the watch off. Do not POST for timer, battery, thermal, LPM, or manual off. Outbound body uses the same idle-after-wait honesty (ban “agent stopped” / “job finished” there too). Discord **incoming webhook URL** stays **outbound-only** — no Discord inbound in this slice.
+  - **Default OFF.** One outbound opt-in. Discord fires only if a webhook URL is set; Telegram outbound fires only if token **and** chat id are set. Empty fields: no POST, no shared bot.
+  - **Telegram inbound two-way (unlocked).** User’s own bot — **same token** already required for Telegram outbound. Commands: **arm** / **disarm** / **status** → real WatchEngine arm/disarm/status. Accept commands only from the saved chat id. Empty token or chat id: no inbound. Default inbound **off** (separate from the outbound POST opt-in). Not a shared Agrypnos bot. Not Discord inbound (webhook stays outbound; Discord bot-token inbound stays idea-only / separate). Command replies are plain armed / disarmed / status facts. Ban “agent stopped / job finished / still thinking.” No fake remote-control panel. **Honesty:** Mac prove of Telegram two-way remains **soft** after implement — do not claim Mac-proven until that Mac check.
+  - **Channels:** (1) Discord **incoming webhook URL** the user creates in their own server — outbound POST only; (2) Telegram **user’s own bot** — token + chat id from BotFather / `getUpdates` for outbound; same bot for inbound commands. **No shared Agrypnos bot. No companion app. No telemetry / stealth network.**
   - **Secrets** (webhook URL / bot token / chat id) live in Application Support (`notif-secrets.json`, mode 0600). **Not Keychain** — unsigned builds prompt for the login password, which looks like Agrypnos wants the Mac password. Never plaintext prefs, logs, or README examples with real secrets. Popover fields are dotted; an eye button reveals the value.
-  - **UI:** **Notif** after Agents: **Watch · Power · Agents · Notif · General**. Default still **Watch**. Controls: opt-in (default OFF); Discord URL field; Telegram token + chat id fields; reveal buttons on those fields; clear/remove that deletes the saved file. Still **no** separate settings window. Still no Licence/About tabs.
-  - **Plain copy:** “POST to *your* webhook” / “message *your* Telegram bot”. Ban “we notify your phone”, “agent stopped”, “job finished”.
-  - **Honesty:** the user owns the webhook/bot. Agrypnos only POSTs when Notif is enabled and the matching secrets are set.
-  - **Docs:** `SECURITY.md` allows opt-in POST to the user’s webhook/bot; still no telemetry / stealth network. Do not write “no network calls” as an absolute.
+  - **UI:** **Notif** after Agents: **Watch · Power · Agents · Notif · General**. Default still **Watch**. Controls: outbound opt-in (default OFF); Discord URL field; Telegram token + chat id fields; reveal buttons on those fields; clear/remove that deletes the saved file; **Telegram inbound on/off + short command list / help** (unlocked). Still **no** separate settings window. Still no Licence/About tabs. Still no fake remote-control panel.
+  - **Plain copy:** “POST to *your* webhook” / “message *your* Telegram bot” / “Commands from *your* Telegram bot: arm, disarm, status.” Ban “we notify your phone”, “agent stopped”, “job finished”.
+  - **Honesty:** the user owns the webhook/bot. Agrypnos only POSTs when outbound Notif is enabled and the matching secrets are set. Agrypnos only accepts Telegram commands when inbound is on and token + chat id are set. Discord webhook is outbound-only.
+  - **Docs:** `SECURITY.md` allows opt-in POST to the user’s webhook/bot; still no telemetry / stealth network. Do not write “no network calls” as an absolute. When inbound ships, name that the same user bot may be polled/updated — still no shared bot.
   - **Self-serve docs (required):**
-    - README: step-by-step Discord (Server Settings → Integrations → Webhooks → New Webhook → copy URL) and Telegram (BotFather `/newbot` → token; message the bot; get chat id via `getUpdates` or a clear equivalent). What to paste where in Agrypnos. How to test (arm Agents, produce a local busy signal, wait idle, expect one POST, then Keep the watch off). How to turn off / clear secrets.
+    - README: step-by-step Discord (Server Settings → Integrations → Webhooks → New Webhook → copy URL) and Telegram (BotFather `/newbot` → token; message the bot; get chat id via `getUpdates` or a clear equivalent). What to paste where in Agrypnos. How to test outbound (arm Agents, produce a local busy signal, wait idle, expect one POST, then Keep the watch off). How to enable inbound (same BotFather bot; chat with the bot; inbound on in Notif; commands arm / disarm / status). How to turn off / clear secrets. Discord inbound is not this slice.
     - In-app Notif help must point at the same steps (short in the popover; full detail in README, linked or paraphrased).
-  - **Out of this slice (idea-only):** two-way remote (arm/disarm/status via bot) and rich status (task text / ETA). Not Notification Center as the V2 path. Do not invent them.
+  - **Out of this slice (idea-only):** rich status (task text / finish ETA). Discord inbound (webhook stays outbound; Discord bot-token inbound). Notification Center as the Notif path. Do not invent them.
 
 **Unlocked (Core + Agrypnos UI):** thermal auto-off — Power toggle, **default ON**. ON: while armed, `.serious` / `.critical` ends the watch. OFF: skip that path in Core (battery / leftover LPM unchanged). Stays in Power with floor / battery / ramp. No settings window. Plain caption only (thermal pressure turns the watch off). Ban °C, “safe temp”, health-gauge, warranty claims. Duration / arming copy must not say thermal still applies when the toggle is off.
+
+**Unlocked (implement next, Core + Agrypnos UI):** Telegram inbound two-way — user’s own bot; arm / disarm / status → WatchEngine; inbound on/off + short command list in Notif; after Review CLEAR + Boss merge of this bar. Mac prove remains **soft**. Discord inbound stays parked.
 
 **Gated:** donate — no donate control until there is a live URL.
 
 ### V2 park (do not implement)
 
-Two-way remote commands and rich status (task text / finish ETA) stay idea-only.
+Rich status (task text / finish ETA) stays idea-only — do not unlock.
+
+Discord inbound stays idea-only — webhook is outbound-only; Discord bot-token inbound is a separate slice. Do not unlock.
 
 Opt-in panel sleep stays parked / idea-only — do not unlock.
 
 ### Out of V1
 
-App Store sandbox, notarization pipeline, providers beyond Cursor, Claude Code, Codex, and OpenCode, fake benchmarks, Wi-Fi/BT kill, Dock UI, separate settings window, **Licence** tab, **About** as a toolbar tab, donate without a live URL, `displaysleepnow` on engage, claiming display sleep or “screen off” when we only floored brightness, think-detection / “still thinking” claims, opt-in panel sleep (parked / idea-only — do not unlock), two-way remote, rich status, a shared Agrypnos bot, Notification Center as the Notif path.
+App Store sandbox, notarization pipeline, providers beyond Cursor, Claude Code, Codex, and OpenCode, fake benchmarks, Wi-Fi/BT kill, Dock UI, separate settings window, **Licence** tab, **About** as a toolbar tab, donate without a live URL, `displaysleepnow` on engage, claiming display sleep or “screen off” when we only floored brightness, think-detection / “still thinking” claims, opt-in panel sleep (parked / idea-only — do not unlock), Discord inbound (webhook stays outbound; Discord bot-token inbound stays idea-only), rich status (task text / finish ETA), a shared Agrypnos bot, Notification Center as the Notif path, inventing ETA in Telegram replies.
 
 ## Layout
 
@@ -153,6 +158,7 @@ prd/                      Product scope. Implement against it.
 - On a Mac: build the app, arm Keep the watch with the lid **open** (screen stays usable), close the lid (brightness floor + keyboard dark **after confirmed close**), reopen mid-watch (ramp length from prefs + keyboard on), then confirm Agents idle-after-wait turns Keep the watch off (How long stays Agents) and safety auto-off allows sleep. Timed How long presets do not auto-off. Until that happens, say so. Do not claim Mac runtime you did not run.
 - Soft verify (floor write / nil capture): arm → confirmed close → reopen mid-watch (ramp) → end watch → use the Mac with the lid **open** for a while with **no surprise dim to floor**. Do not claim Mac-proven until that check. Missing capture after disengage must not write the floor. Do not apply hygiene on a single raw clamshell flicker.
 - Core (Linux): nil display capture must **skip** the brightness write (do not return / fall back to floor) — same honesty as keyboard. Floor write only when armed + lid-close confirmed. Unconfirmed close must not apply hygiene.
+- Soft verify (Telegram two-way): after implement, arm / disarm / status on the user’s Telegram bot. Do not claim Mac-proven until that check.
 - Before you call a PR done: line-count check, Core tests, and an honest “works vs needs a Mac” list.
 
 ## Git
@@ -170,8 +176,8 @@ Commit and push when the work is a coherent slice. Do not ask the user for permi
 | **Rules** | `AGENTS.md`, this bar, scope fights | Feature code |
 | **Swift core** | `AgrypnosCore`, heuristics, watch engine, lid/hygiene, safety | AppKit chrome |
 | **UI** | Menu bar, popover (section switcher + cards), personality copy, glyph | Kernel sleep flag |
-| **Review** | Gates. File size, TDD, no watt fiction, no god files, no false display-sleep claims, floor write only on armed + confirmed lid close (not a single raw `AppleClamshellState` edge), nil display capture never writes floor, no surprise dim after disengage with the lid open, no M2-only lid/hygiene branches, do not claim Mac-proven until the open-lid soft check, plain popover copy, no false ended-copy under LPM forced-watch, no settings window, no Licence/About tabs, Notif is landed V2 (popover switcher **Watch · Power · Agents · Notif · General**, one-way idle-after-wait, Application Support secrets `0600` + dotted/reveal, self-serve Discord/Telegram, no shared bot, no Keychain login prompt; two-way/rich status stay idea-only), status item is landed (**Armed.** / **Agents.** non-countdown; no fake timer), per-tool Agents include is landed (multi-select Cursor · Claude Code · Codex · OpenCode; require ≥1; default all on; no separate track-all toggle; busy signals only from selected tools; OpenCode is local process + session files, prove on Mac), section-switch popover height must animate (block sudden resize / hard cut; no cross-section paint; height hugs the active section), donate gated on live URL | Shipping unreviewed slop |
-| **Boss** | Sequence, merge order, “stop” on parked V2 (two-way/rich status, panel-sleep) | Writing all the code |
+| **Review** | Gates. File size, TDD, no watt fiction, no god files, no false display-sleep claims, floor write only on armed + confirmed lid close (not a single raw `AppleClamshellState` edge), nil display capture never writes floor, no surprise dim after disengage with the lid open, no M2-only lid/hygiene branches, do not claim Mac-proven until the open-lid soft check, plain popover copy, no false ended-copy under LPM forced-watch, no settings window, no Licence/About tabs, Notif is landed V2 (popover switcher **Watch · Power · Agents · Notif · General**, one-way idle-after-wait, Application Support secrets `0600` + dotted/reveal, self-serve Discord/Telegram, no shared bot, no Keychain login prompt; Telegram two-way unlocked for Core+UI after this docs merge — user’s bot, arm/disarm/status → WatchEngine, inbound on/off + command help in Notif, replies are facts only, Mac prove remains soft; still block invent ETA, shared bot, Discord-fake-inbound, NC-as-Notif; rich status stays idea-only), status item is landed (**Armed.** / **Agents.** non-countdown; no fake timer), per-tool Agents include is landed (multi-select Cursor · Claude Code · Codex · OpenCode; require ≥1; default all on; no separate track-all toggle; busy signals only from selected tools; OpenCode is local process + session files, prove on Mac), section-switch popover height must animate (block sudden resize / hard cut; no cross-section paint; height hugs the active section), donate gated on live URL | Shipping unreviewed slop |
+| **Boss** | Sequence, merge order, “stop” on parked V2 (rich status, Discord inbound, panel-sleep) | Writing all the code |
 
 Parallel foundations are forbidden. One track. If you find a second scaffold, delete yours or stop.
 
@@ -189,6 +195,8 @@ Good: “Keeps the Mac awake with the lid closed.”
 Good: “Thermal pressure turns the watch off.”
 Good: “POST to *your* webhook when Agents stay idle after the wait.”
 Good: “Message *your* Telegram bot. Agrypnos does not run a shared bot.”
+Good: “Commands from *your* Telegram bot: arm, disarm, status.”
+Good: “Armed.” / “Disarmed.” / “Keep the watch is on.” (Telegram command replies — facts only)
 Good: “Armed.” / “Agents.” (status item — landed, not a countdown)
 Good: “Which tools count as busy.”
 Bad: “Sleeps with you when the lid closes.” / “I’ll floor the panel and kill the keys.” / “When they settle, sleep may return.”
@@ -198,7 +206,7 @@ Bad: “after the agent finishes thinking” / “we know it’s still thinking�
 Bad: °C, “safe temp”, health-gauge, or warranty claims for thermal auto-off.
 Bad: “World-class AI-powered sleep prevention maximizing battery.” / “We force the display asleep on toggle.” / “Lid close turns the screen off.”
 Bad: ended/standing-down copy while Low Power Mode forced-watch is still holding the Mac awake.
-Bad: “We notify your phone.” / “Agent stopped.” / “Job finished.” (Notif event is idle after wait; POST to *your* webhook / message *your* Telegram bot.)
+Bad: “We notify your phone.” / “Agent stopped.” / “Job finished.” (Notif outbound is idle after wait; POST to *your* webhook / message *your* Telegram bot. Telegram command replies stay armed/disarmed/status facts — same ban.)
 
 ## OSS
 
