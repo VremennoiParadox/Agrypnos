@@ -68,6 +68,9 @@ public struct PopoverStackLayout: Equatable, Sendable {
         prefTitleY + titleRowHeight + PopoverCopyLayout.notifTelegramHelpHeightPoints
     }
     public static var notifTelegramChatY: Int { notifTelegramTokenY + secretFieldRowHeight }
+    public static var notifTelegramInboundSwitchY: Int {
+        prefHelpY + PopoverCopyLayout.notifTelegramInboundHelpHeightPoints
+    }
     public static var notifSetupHelpY: Int { prefTitleY + titleRowHeight }
 
     public let section: PopoverSection
@@ -175,7 +178,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
         let notifTelegramInboundHeight =
             inset
             + titleRowHeight
-            + PopoverCopyLayout.helpHeightPoints
+            + PopoverCopyLayout.notifTelegramInboundHelpHeightPoints
             + switchRowHeight
             + inset
         let notifSetupHeight =

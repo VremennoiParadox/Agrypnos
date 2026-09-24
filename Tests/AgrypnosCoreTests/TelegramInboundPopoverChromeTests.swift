@@ -47,29 +47,32 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
         XCTAssertEqual(AgrypnosCopy.notifTelegramInbound, "Telegram inbound")
         XCTAssertEqual(
             AgrypnosCopy.notifTelegramInboundHelp,
-            "Commands on your Telegram bot: arm, disarm, status."
+            "Commands on your Telegram bot: /arm, /disarm, /status, /help. If the bot isn’t replying, the Mac is likely asleep / Agrypnos isn’t polling. /disarm with the lid open turns Keep the watch off and does not sleep the Mac. With the lid confirmed closed it turns Keep the watch off and sends the Mac to sleep."
         )
+        let help = AgrypnosCopy.notifTelegramInboundHelp
+        let lower = help.lowercased()
+        XCTAssertTrue(help.contains("/arm"))
+        XCTAssertTrue(help.contains("/disarm"))
+        XCTAssertTrue(help.contains("/status"))
+        XCTAssertTrue(help.contains("/help"))
+        XCTAssertTrue(lower.contains("your telegram bot"))
+        XCTAssertTrue(lower.contains("likely asleep"))
+        XCTAssertTrue(lower.contains("isn’t polling") || lower.contains("isn't polling"))
+        XCTAssertTrue(lower.contains("lid open"))
+        XCTAssertTrue(lower.contains("does not sleep the mac") || lower.contains("doesn’t sleep the mac"))
+        XCTAssertTrue(lower.contains("confirmed closed"))
+        XCTAssertTrue(lower.contains("sends the mac to sleep"))
+        XCTAssertTrue(TelegramInboundCopy.help.contains("/arm"))
+        XCTAssertTrue(TelegramInboundCopy.help.contains("/disarm"))
+        XCTAssertTrue(TelegramInboundCopy.help.contains("/status"))
+        XCTAssertTrue(TelegramInboundCopy.help.contains("/help"))
         XCTAssertEqual(
-            AgrypnosCopy.notifTelegramInboundHelp,
-            TelegramInboundCopy.commandsHelp
+            CopyWrap.lineCount(help, columns: PopoverCopyLayout.innerColumns),
+            PopoverCopyLayout.notifTelegramInboundHelpMaxLines
         )
-        let help = AgrypnosCopy.notifTelegramInboundHelp.lowercased()
-        XCTAssertTrue(help.contains("your telegram bot"))
-        XCTAssertTrue(help.contains("arm"))
-        XCTAssertTrue(help.contains("disarm"))
-        XCTAssertTrue(help.contains("status"))
-        XCTAssertEqual(
-            CopyWrap.lineCount(
-                AgrypnosCopy.notifTelegramInboundHelp,
-                columns: PopoverCopyLayout.innerColumns
-            ),
-            2
-        )
-        XCTAssertLessThanOrEqual(
-            CopyWrap.lineCount(
-                AgrypnosCopy.notifTelegramInboundHelp,
-                columns: PopoverCopyLayout.innerColumns
-            ),
+        XCTAssertEqual(PopoverCopyLayout.notifTelegramInboundHelpMaxLines, 9)
+        XCTAssertGreaterThan(
+            CopyWrap.lineCount(help, columns: PopoverCopyLayout.innerColumns),
             PopoverCopyLayout.helpMaxLines
         )
         XCTAssertEqual(
@@ -96,9 +99,13 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
             layout.notifTelegramInbound!.height,
             PopoverStackLayout.inset
                 + PopoverStackLayout.titleRowHeight
-                + PopoverCopyLayout.helpHeightPoints
+                + PopoverCopyLayout.notifTelegramInboundHelpHeightPoints
                 + PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset
+        )
+        XCTAssertEqual(
+            PopoverStackLayout.notifTelegramInboundSwitchY,
+            PopoverStackLayout.prefHelpY + PopoverCopyLayout.notifTelegramInboundHelpHeightPoints
         )
         XCTAssertEqual(
             layout.stackedCards.map(\.y),
@@ -123,16 +130,24 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
             layout.notifTelegramInbound!.height,
             PopoverStackLayout.switchRowHeight
         )
-        XCTAssertLessThan(
+        XCTAssertGreaterThan(
             layout.notifTelegramInbound!.height,
             layout.notifTelegram!.height
+        )
+        XCTAssertLessThan(
+            layout.notifTelegramInbound!.height,
+            layout.notifSetup!.height
         )
     }
 
     func testInboundCopyBansJobFinishedPhoneNotifyAndRichStatus() {
         let blob = inboundChromeBlob()
         XCTAssertTrue(blob.contains("your telegram bot"))
-        XCTAssertTrue(blob.contains("arm, disarm, status"))
+        XCTAssertTrue(blob.contains("/arm"))
+        XCTAssertTrue(blob.contains("/disarm"))
+        XCTAssertTrue(blob.contains("/status"))
+        XCTAssertTrue(blob.contains("/help"))
+        XCTAssertTrue(blob.contains("likely asleep"))
         XCTAssertTrue(blob.contains("telegram inbound"))
         XCTAssertFalse(blob.contains("keychain"))
         for banned in [
@@ -150,6 +165,8 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
             "remote control",
             "shared agrypnos bot",
             "discord inbound",
+            "disarm always sleeps",
+            "the mac is asleep.",
         ] {
             XCTAssertFalse(blob.contains(banned), "banned phrase in inbound chrome: \(banned)")
         }
@@ -172,7 +189,7 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
         let help = AgrypnosCopy.notifSetupHelp
         let lower = help.lowercased()
         XCTAssertTrue(lower.contains("telegram inbound"))
-        XCTAssertTrue(lower.contains("arm") && lower.contains("disarm") && lower.contains("status"))
+        XCTAssertTrue(help.contains("/arm") && help.contains("/disarm") && help.contains("/status") && help.contains("/help"))
         XCTAssertTrue(lower.contains("separate from") && lower.contains("post"))
         XCTAssertFalse(lower.contains("mac-proven"))
         XCTAssertFalse(lower.contains("mac proven"))
@@ -181,10 +198,10 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
             CopyWrap.lineCount(help, columns: PopoverCopyLayout.innerColumns),
             PopoverCopyLayout.notifSetupHelpMaxLines
         )
-        XCTAssertEqual(PopoverCopyLayout.notifSetupHelpMaxLines, 20)
+        XCTAssertEqual(PopoverCopyLayout.notifSetupHelpMaxLines, 21)
         XCTAssertEqual(
             PopoverCopyLayout.notifSetupHelpHeightPoints,
-            20 * PopoverCopyLayout.lineHeightPoints
+            21 * PopoverCopyLayout.lineHeightPoints
         )
     }
 

@@ -201,11 +201,11 @@ final class NotifPopoverChromeTests: XCTestCase {
         let lines = CopyWrap.lineCount(help, columns: PopoverCopyLayout.innerColumns)
         XCTAssertEqual(PopoverCopyLayout.helpMaxLines, 2)
         XCTAssertGreaterThan(lines, PopoverCopyLayout.helpMaxLines)
-        XCTAssertEqual(lines, 20)
-        XCTAssertEqual(PopoverCopyLayout.notifSetupHelpMaxLines, 20)
+        XCTAssertEqual(lines, 21)
+        XCTAssertEqual(PopoverCopyLayout.notifSetupHelpMaxLines, 21)
         XCTAssertEqual(
             PopoverCopyLayout.notifSetupHelpHeightPoints,
-            20 * PopoverCopyLayout.lineHeightPoints
+            21 * PopoverCopyLayout.lineHeightPoints
         )
         XCTAssertGreaterThanOrEqual(
             PopoverCopyLayout.notifSetupHelpMaxLines,

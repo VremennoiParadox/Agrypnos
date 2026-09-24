@@ -23,7 +23,7 @@ V1 agents: Cursor, Claude Code, Codex, and OpenCode. Local heuristics only (proc
 - Does **not** force the display asleep when you arm Keep the watch.
 - Does **not** run a shared Discord or Telegram bot, companion app, or stealth network.
 - Does **not** “notify your phone,” claim “agent stopped,” or invent task text / finish ETA. Discord webhook is outbound-only. Notif outbound stays one-way POST to *your* webhook or *your* bot, idle after wait.
-- Telegram two-way (arm / disarm / status / help on *your* bot) is in Notif. Same token + chat id as outbound. Slash menu, wake-miss drain, and lid-gated `/disarm` are Core + Mac wiring; Notif chrome is unchanged. Mac prove remains soft. Full steps: [Notif](#notif).
+- Telegram two-way (`/arm` `/disarm` `/status` `/help` on *your* bot) is in Notif. Same token + chat id as outbound. Notif lists the slash commands, asleep honesty, and lid-gated `/disarm`. Wake-miss drain stays Core + Mac wiring. Mac prove remains soft. Full steps: [Notif](#notif).
 
 ## Privileged work
 
