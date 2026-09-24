@@ -5,6 +5,7 @@ public enum TelegramInboundIntent: Equatable, Sendable {
     case arm
     case disarm
     case status
+    case help
 
     /// Shared Mac + Core decision. nil means do not call WatchEngine engage.
     public func shouldSetEngaged(currentlyEngaged: Bool) -> Bool? {
@@ -13,7 +14,7 @@ public enum TelegramInboundIntent: Equatable, Sendable {
             return currentlyEngaged ? nil : true
         case .disarm:
             return currentlyEngaged ? false : nil
-        case .ignore, .status:
+        case .ignore, .status, .help:
             return nil
         }
     }
@@ -23,6 +24,7 @@ public enum TelegramInboundCommand: Equatable, Sendable {
     case arm
     case disarm
     case status
+    case help
 
     public static func parse(_ text: String) -> TelegramInboundCommand? {
         var trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -36,6 +38,7 @@ public enum TelegramInboundCommand: Equatable, Sendable {
         case "arm": return .arm
         case "disarm": return .disarm
         case "status": return .status
+        case "help": return .help
         default: return nil
         }
     }
@@ -45,6 +48,7 @@ public enum TelegramInboundCommand: Equatable, Sendable {
         case .arm: return .arm
         case .disarm: return .disarm
         case .status: return .status
+        case .help: return .help
         }
     }
 }
@@ -118,30 +122,43 @@ public enum TelegramInboundPoll: Sendable {
 public struct TelegramInboundCursor: Equatable, Sendable {
     public var offset: Int64
     public var seeded: Bool
+    public var wakeMiss: Bool
 
-    public static let unset = TelegramInboundCursor(offset: 0, seeded: false)
+    public static let unset = TelegramInboundCursor(offset: 0, seeded: false, wakeMiss: false)
 
-    public init(offset: Int64, seeded: Bool) {
+    public init(offset: Int64, seeded: Bool, wakeMiss: Bool = false) {
         self.offset = max(0, offset)
         self.seeded = seeded
+        self.wakeMiss = seeded ? false : wakeMiss
     }
 
     public var shouldApplyCommands: Bool { seeded }
+
+    public var drain: TelegramInboundDrain {
+        if seeded { return .live }
+        return wakeMiss ? .wakeMiss : .leftover
+    }
 
     /// Drain poll is timeout 0 so a live first command after start is not swallowed by a long-poll.
     public var pollTimeout: Int {
         seeded ? TelegramInboundPoll.longPollSeconds : TelegramInboundPoll.drainSeconds
     }
 
-    /// New process or poll loop: keep the offset, skip leftover commands once.
+    /// Setup / quit / inbound off: keep the offset, skip leftover commands once, silent.
     public func startingSession() -> TelegramInboundCursor {
-        TelegramInboundCursor(offset: offset, seeded: false)
+        TelegramInboundCursor(offset: offset, seeded: false, wakeMiss: false)
+    }
+
+    /// Sleep wake: drain queued commands without applying, then reply missed-while-asleep.
+    public func startingWakeMiss() -> TelegramInboundCursor {
+        TelegramInboundCursor(offset: offset, seeded: false, wakeMiss: true)
     }
 
     public func acknowledging(_ updates: [TelegramInboundUpdate]) -> TelegramInboundCursor {
         TelegramInboundCursor(
             offset: TelegramInboundOffset.next(current: offset, updates: updates),
-            seeded: true
+            seeded: true,
+            wakeMiss: false
         )
     }
 }
@@ -160,6 +177,14 @@ public enum TelegramInboundCopy: Sendable {
     public static let armFailed = "Couldn't keep the watch."
     public static let disarmFailed = "Couldn't drop SleepDisabled."
     public static let commandsHelp = "Commands on your Telegram bot: arm, disarm, status."
+    public static let missedWhileAsleep = "Missed while asleep."
+    public static let help = """
+    /arm — turn Keep the watch on.
+    /disarm — turn Keep the watch off. Always clears Keep the watch. Puts the Mac to sleep only when the lid is closed (confirmed). Never sleeps the Mac when the lid is open.
+    /status — say whether Keep the watch is on.
+    /help — this list.
+    If the bot does not reply, the Mac is likely asleep or Agrypnos is not polling.
+    """
 
     public static func status(engaged: Bool, duration: DurationOption) -> String {
         guard engaged else { return keepOff }
@@ -176,6 +201,7 @@ public enum TelegramInboundCopy: Sendable {
         case .arm: return armed
         case .disarm: return disarmed
         case .status: return status(engaged: engaged, duration: duration)
+        case .help: return help
         }
     }
 }

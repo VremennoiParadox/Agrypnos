@@ -323,6 +323,7 @@ final class TelegramInboundWatchEngineTests: XCTestCase {
         XCTAssertEqual(TelegramInboundIntent.disarm.shouldSetEngaged(currentlyEngaged: true), false)
         XCTAssertNil(TelegramInboundIntent.disarm.shouldSetEngaged(currentlyEngaged: false))
         XCTAssertNil(TelegramInboundIntent.status.shouldSetEngaged(currentlyEngaged: true))
+        XCTAssertNil(TelegramInboundIntent.help.shouldSetEngaged(currentlyEngaged: true))
         XCTAssertNil(TelegramInboundIntent.ignore.shouldSetEngaged(currentlyEngaged: false))
     }
 }
@@ -379,6 +380,8 @@ final class TelegramInboundCopyTests: XCTestCase {
             TelegramInboundCopy.armFailed,
             TelegramInboundCopy.disarmFailed,
             TelegramInboundCopy.commandsHelp,
+            TelegramInboundCopy.help,
+            TelegramInboundCopy.missedWhileAsleep,
             TelegramInboundCopy.status(engaged: true, duration: .indefinite),
             TelegramInboundCopy.status(engaged: true, duration: .untilAgentsSettle),
             TelegramInboundCopy.status(engaged: true, duration: .oneHour),

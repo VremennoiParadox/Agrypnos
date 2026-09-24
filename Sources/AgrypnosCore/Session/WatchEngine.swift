@@ -10,6 +10,8 @@ public struct WatchEngine: Equatable, Sendable {
     public private(set) var leftoverAdopted: Bool
     public private(set) var lidClosed: Bool
     public private(set) var lidHygieneApplied: Bool
+    /// Live confirm from `LidCloseConfirm`. Do not use leftover `lidClosed` after disengage.
+    public var lidCloseConfirmed: Bool { lidConfirm.confirmedClosed }
     /// One idle-after-wait POST per genuine user arm. Survives disarm-failure rollback.
     public private(set) var postedThisUserArm: Bool
     var lastWatchEndRollback: LastWatchEnd?
@@ -86,18 +88,32 @@ public struct WatchEngine: Equatable, Sendable {
         preferences.telegramInboundEnabled = on
     }
 
-    /// Telegram arm/disarm/status. Skip a no-op so a second arm does not reset this user arm.
-    /// Always `lidClosed: false` — one raw clamshell sample is not hygiene.
+    /// Telegram arm/disarm/status/help. Skip a no-op so a second arm does not reset this user arm.
+    /// Arm always `lidClosed: false` — one raw clamshell sample is not hygiene.
+    /// Disarm sleeps only when lid-close is already confirmed.
     public mutating func applyTelegramInbound(
         _ intent: TelegramInboundIntent,
-        now: Date
+        now: Date,
+        lidCloseConfirmed: Bool = false
     ) -> [WatchCommand] {
-        switch intent.shouldSetEngaged(currentlyEngaged: engaged) {
-        case .some(true):
-            return userSetEngaged(true, now: now, lidClosed: false)
-        case .some(false):
-            return userSetEngaged(false, now: now, lidClosed: false)
-        case .none:
+        switch intent {
+        case .arm:
+            switch intent.shouldSetEngaged(currentlyEngaged: engaged) {
+            case .some(true):
+                return userSetEngaged(true, now: now, lidClosed: false)
+            case .some(false), .none:
+                return []
+            }
+        case .disarm:
+            var commands: [WatchCommand] = []
+            if intent.shouldSetEngaged(currentlyEngaged: engaged) == false {
+                commands.append(contentsOf: userSetEngaged(false, now: now, lidClosed: lidCloseConfirmed))
+            }
+            if TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: lidCloseConfirmed) {
+                commands.append(.requestSleep)
+            }
+            return commands
+        case .status, .help, .ignore:
             return []
         }
     }
@@ -157,6 +173,9 @@ public struct WatchEngine: Equatable, Sendable {
 
     /// Raw clamshell samples. Floor only after a stable closed confirm while armed.
     public mutating func observeLid(closed: Bool, now: Date) -> [WatchCommand] {
+        if !closed {
+            lidClosed = false
+        }
         switch lidConfirm.sample(closed, now: now) {
         case .closed:
             return lidDidClose(now: now)
@@ -225,7 +244,9 @@ public struct WatchEngine: Equatable, Sendable {
         userForcedThisSession = false
         leftoverAdopted = false
         lidHygieneApplied = false
+        let wasLidClosed = lidClosed
         lidConfirm.reset()
+        lidClosed = false
         settle.reset()
         var commands: [WatchCommand] = [.disengage(reason)]
         if postIdleAfterWait {
@@ -233,7 +254,7 @@ public struct WatchEngine: Equatable, Sendable {
             commands.append(.postIdleAfterWaitNotif)
         }
         // Clearing SleepDisabled does not retrigger clamshell sleep.
-        if lidClosed, reason != .user {
+        if wasLidClosed, reason != .user {
             commands.append(.requestSleep)
         }
         return commands
