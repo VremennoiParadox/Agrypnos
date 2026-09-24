@@ -5,6 +5,18 @@ public enum TelegramInboundIntent: Equatable, Sendable {
     case arm
     case disarm
     case status
+
+    /// Shared Mac + Core decision. nil means do not call WatchEngine engage.
+    public func shouldSetEngaged(currentlyEngaged: Bool) -> Bool? {
+        switch self {
+        case .arm:
+            return currentlyEngaged ? nil : true
+        case .disarm:
+            return currentlyEngaged ? false : nil
+        case .ignore, .status:
+            return nil
+        }
+    }
 }
 
 public enum TelegramInboundCommand: Equatable, Sendable {
@@ -76,6 +88,11 @@ public enum TelegramInboundPolicy: Sendable {
         return TelegramInboundCommand.parse(text)?.intent ?? .ignore
     }
 
+    public static func sameBot(fetchedToken: String?, currentToken: String?) -> Bool {
+        NotifSecretsPayload.present(fetchedToken) != nil
+            && NotifSecretsPayload.present(fetchedToken) == NotifSecretsPayload.present(currentToken)
+    }
+
     static func chatMatches(saved: String?, incoming: String) -> Bool {
         guard let saved = NotifSecretsPayload.present(saved) else { return false }
         let incomingTrimmed = incoming.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -89,6 +106,34 @@ public enum TelegramInboundOffset: Sendable {
     public static func next(current: Int64, updates: [TelegramInboundUpdate]) -> Int64 {
         guard let maxId = updates.map(\.updateId).max() else { return current }
         return max(current, maxId + 1)
+    }
+}
+
+/// `getUpdates` offset plus a one-shot backlog drain. Unseeded first poll acks without running commands.
+public struct TelegramInboundCursor: Equatable, Sendable {
+    public var offset: Int64
+    public var seeded: Bool
+
+    public static let unset = TelegramInboundCursor(offset: 0, seeded: false)
+
+    public init(offset: Int64, seeded: Bool) {
+        self.offset = max(0, offset)
+        self.seeded = seeded
+    }
+
+    public var shouldApplyCommands: Bool { seeded }
+
+    public func acknowledging(_ updates: [TelegramInboundUpdate]) -> TelegramInboundCursor {
+        TelegramInboundCursor(
+            offset: TelegramInboundOffset.next(current: offset, updates: updates),
+            seeded: true
+        )
+    }
+}
+
+public enum TelegramInboundGeneration: Sendable {
+    public static func allowsApply(current: UInt64, captured: UInt64) -> Bool {
+        current == captured
     }
 }
 

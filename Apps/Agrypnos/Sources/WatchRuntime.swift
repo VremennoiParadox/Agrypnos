@@ -121,6 +121,8 @@ final class WatchRuntime {
 
     @discardableResult
     func setNotifTelegramBotToken(_ value: String?) -> Bool {
+        store.resetTelegramInboundCursor()
+        inboundPoller.invalidate()
         let saved = NotifSecretsStore.setTelegramBotToken(value)
         inboundPoller.sync()
         return saved
@@ -134,6 +136,8 @@ final class WatchRuntime {
     }
 
     func clearNotifSecrets() {
+        store.resetTelegramInboundCursor()
+        inboundPoller.invalidate()
         NotifSecretsStore.clear()
         inboundPoller.sync()
     }
@@ -435,12 +439,26 @@ final class WatchRuntime {
             enabled: engine.preferences.telegramInboundEnabled,
             token: secrets.telegramBotToken,
             chatId: secrets.telegramChatId,
-            offset: store.loadTelegramInboundOffset()
+            cursor: store.loadTelegramInboundCursor()
         )
     }
 
-    func saveTelegramInboundOffset(_ value: Int64) {
-        store.saveTelegramInboundOffset(value)
+    func finishTelegramInboundPoll(
+        generation: UInt64,
+        fetchedToken: String?,
+        cursor: TelegramInboundCursor,
+        updates: [TelegramInboundUpdate]
+    ) {
+        guard inboundPoller.accepts(generation: generation) else { return }
+        let secrets = NotifSecretsStore.load()
+        guard TelegramInboundPolicy.sameBot(
+            fetchedToken: fetchedToken,
+            currentToken: secrets.telegramBotToken
+        ) else { return }
+        if cursor.shouldApplyCommands {
+            applyTelegramUpdates(updates)
+        }
+        store.saveTelegramInboundCursor(cursor.acknowledging(updates))
     }
 
     func applyTelegramUpdates(_ updates: [TelegramInboundUpdate]) {
@@ -457,13 +475,17 @@ final class WatchRuntime {
             case .ignore:
                 continue
             case .arm:
-                if !engine.engaged { setEngaged(true) }
+                if intent.shouldSetEngaged(currentlyEngaged: engine.engaged) == true {
+                    setEngaged(true)
+                }
                 let text = engine.engaged
                     ? TelegramInboundCopy.armed
                     : TelegramInboundCopy.armFailed
                 sendTelegramInboundReply(text, token: secrets.telegramBotToken, chatId: secrets.telegramChatId)
             case .disarm:
-                if engine.engaged { setEngaged(false) }
+                if intent.shouldSetEngaged(currentlyEngaged: engine.engaged) == false {
+                    setEngaged(false)
+                }
                 let text = engine.engaged
                     ? TelegramInboundCopy.disarmFailed
                     : TelegramInboundCopy.disarmed

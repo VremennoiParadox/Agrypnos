@@ -25,12 +25,22 @@ final class PreferencesStore {
     }
 
     static let telegramInboundOffsetKey = "agrypnos.telegramInbound.offset"
+    static let telegramInboundSeededKey = "agrypnos.telegramInbound.seeded"
 
-    func loadTelegramInboundOffset() -> Int64 {
-        Int64(defaults.integer(forKey: Self.telegramInboundOffsetKey))
+    func loadTelegramInboundCursor() -> TelegramInboundCursor {
+        TelegramInboundCursor(
+            offset: Int64(defaults.integer(forKey: Self.telegramInboundOffsetKey)),
+            seeded: defaults.bool(forKey: Self.telegramInboundSeededKey)
+        )
     }
 
-    func saveTelegramInboundOffset(_ value: Int64) {
-        defaults.set(value, forKey: Self.telegramInboundOffsetKey)
+    func saveTelegramInboundCursor(_ cursor: TelegramInboundCursor) {
+        defaults.set(cursor.offset, forKey: Self.telegramInboundOffsetKey)
+        defaults.set(cursor.seeded, forKey: Self.telegramInboundSeededKey)
+    }
+
+    func resetTelegramInboundCursor() {
+        defaults.removeObject(forKey: Self.telegramInboundOffsetKey)
+        defaults.removeObject(forKey: Self.telegramInboundSeededKey)
     }
 }

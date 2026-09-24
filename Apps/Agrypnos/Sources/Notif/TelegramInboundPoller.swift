@@ -8,7 +8,7 @@ struct TelegramInboundPollSnapshot: Equatable, Sendable {
     var enabled: Bool
     var token: String?
     var chatId: String?
-    var offset: Int64
+    var cursor: TelegramInboundCursor
 }
 
 enum TelegramInboundHTTP {
@@ -56,17 +56,28 @@ final class TelegramInboundPoller {
 
     weak var runtime: WatchRuntime?
     private var task: Task<Void, Never>?
+    private var generation: UInt64 = 0
 
     func sync() {
         if shouldPoll() {
             startLoop()
         } else {
-            stopLoop()
+            invalidate()
         }
     }
 
     func stop() {
-        stopLoop()
+        invalidate()
+    }
+
+    func invalidate() {
+        generation &+= 1
+        task?.cancel()
+        task = nil
+    }
+
+    func accepts(generation captured: UInt64) -> Bool {
+        TelegramInboundGeneration.allowsApply(current: generation, captured: captured)
     }
 
     private func shouldPoll() -> Bool {
@@ -83,6 +94,7 @@ final class TelegramInboundPoller {
         guard task == nil else { return }
         let timeout = Self.longPollTimeout
         let retry = Self.retryNanos
+        let capturedGeneration = generation
         task = Task.detached { [weak self] in
             while !Task.isCancelled {
                 let snap = await MainActor.run { self?.runtime?.telegramInboundPollSnapshot() }
@@ -96,7 +108,7 @@ final class TelegramInboundPoller {
                     let token = snap.token,
                     let request = NotifOutboundRequestFactory.telegramGetUpdates(
                         botToken: token,
-                        offset: snap.offset,
+                        offset: snap.cursor.offset,
                         timeout: timeout
                     )
                 else {
@@ -110,17 +122,15 @@ final class TelegramInboundPoller {
                     continue
                 }
                 let updates = TelegramGetUpdatesParser.parse(data)
-                let next = TelegramInboundOffset.next(current: snap.offset, updates: updates)
                 await MainActor.run {
-                    self?.runtime?.applyTelegramUpdates(updates)
-                    self?.runtime?.saveTelegramInboundOffset(next)
+                    self?.runtime?.finishTelegramInboundPoll(
+                        generation: capturedGeneration,
+                        fetchedToken: token,
+                        cursor: snap.cursor,
+                        updates: updates
+                    )
                 }
             }
         }
-    }
-
-    private func stopLoop() {
-        task?.cancel()
-        task = nil
     }
 }

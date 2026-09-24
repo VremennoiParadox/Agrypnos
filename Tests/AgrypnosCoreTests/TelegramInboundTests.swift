@@ -254,6 +254,45 @@ final class TelegramInboundWatchEngineTests: XCTestCase {
         XCTAssertEqual(TelegramInboundOffset.next(current: 40, updates: updates), 40)
         XCTAssertEqual(TelegramInboundOffset.next(current: 7, updates: []), 7)
     }
+
+    func testUnseededCursorAcksBacklogWithoutApplyingCommands() {
+        let updates = [TelegramInboundUpdate(updateId: 10, chatId: "99", text: "arm")]
+        XCTAssertFalse(TelegramInboundCursor.unset.shouldApplyCommands)
+        let next = TelegramInboundCursor.unset.acknowledging(updates)
+        XCTAssertTrue(next.seeded)
+        XCTAssertEqual(next.offset, 11)
+        XCTAssertTrue(next.shouldApplyCommands)
+    }
+
+    func testEmptyAcceptedPollSeedsSoLaterUpdatesAreNew() {
+        let next = TelegramInboundCursor.unset.acknowledging([])
+        XCTAssertTrue(next.seeded)
+        XCTAssertEqual(next.offset, 0)
+        XCTAssertTrue(next.shouldApplyCommands)
+    }
+
+    func testStaleGenerationAndTokenChangeDoNotApply() {
+        XCTAssertTrue(TelegramInboundGeneration.allowsApply(current: 3, captured: 3))
+        XCTAssertFalse(TelegramInboundGeneration.allowsApply(current: 4, captured: 3))
+        XCTAssertTrue(
+            TelegramInboundPolicy.sameBot(fetchedToken: "123:token", currentToken: "123:token")
+        )
+        XCTAssertFalse(
+            TelegramInboundPolicy.sameBot(fetchedToken: "123:old", currentToken: "123:new")
+        )
+        XCTAssertFalse(
+            TelegramInboundPolicy.sameBot(fetchedToken: "123:token", currentToken: nil)
+        )
+    }
+
+    func testShouldSetEngagedIsTheSharedArmDisarmDecision() {
+        XCTAssertEqual(TelegramInboundIntent.arm.shouldSetEngaged(currentlyEngaged: false), true)
+        XCTAssertNil(TelegramInboundIntent.arm.shouldSetEngaged(currentlyEngaged: true))
+        XCTAssertEqual(TelegramInboundIntent.disarm.shouldSetEngaged(currentlyEngaged: true), false)
+        XCTAssertNil(TelegramInboundIntent.disarm.shouldSetEngaged(currentlyEngaged: false))
+        XCTAssertNil(TelegramInboundIntent.status.shouldSetEngaged(currentlyEngaged: true))
+        XCTAssertNil(TelegramInboundIntent.ignore.shouldSetEngaged(currentlyEngaged: false))
+    }
 }
 
 final class TelegramInboundCopyTests: XCTestCase {

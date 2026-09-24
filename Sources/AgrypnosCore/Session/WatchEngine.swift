@@ -92,15 +92,13 @@ public struct WatchEngine: Equatable, Sendable {
         now: Date,
         lidClosed: Bool = false
     ) -> [WatchCommand] {
-        switch intent {
-        case .ignore, .status:
-            return []
-        case .arm:
-            guard !engaged else { return [] }
+        switch intent.shouldSetEngaged(currentlyEngaged: engaged) {
+        case .some(true):
             return userSetEngaged(true, now: now, lidClosed: lidClosed)
-        case .disarm:
-            guard engaged else { return [] }
+        case .some(false):
             return userSetEngaged(false, now: now, lidClosed: lidClosed)
+        case .none:
+            return []
         }
     }
 
