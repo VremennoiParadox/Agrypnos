@@ -126,11 +126,12 @@ extension PopoverController {
             in: card,
             y: CGFloat(PopoverStackLayout.prefHelpY),
             x: ci,
-            width: cw
+            width: cw,
+            lines: PopoverCopyLayout.notifTelegramInboundHelpMaxLines
         )
         telegramInboundSwitch = PopoverForm.switchControl(
             in: card,
-            y: CGFloat(PopoverStackLayout.prefControlY),
+            y: CGFloat(PopoverStackLayout.notifTelegramInboundSwitchY),
             contentW: contentW,
             ci: ci,
             swW: swW,
