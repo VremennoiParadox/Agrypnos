@@ -43,7 +43,7 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
         XCTAssertFalse(engine.preferences.telegramInboundEnabled)
     }
 
-    func testInboundCopyIsCommandHelpOnYourBotAndBindsCore() {
+    func testInboundCopyListsSlashCommandsAsleepAndLidGatedDisarm() {
         XCTAssertEqual(AgrypnosCopy.notifTelegramInbound, "Telegram inbound")
         XCTAssertEqual(
             AgrypnosCopy.notifTelegramInboundHelp,
