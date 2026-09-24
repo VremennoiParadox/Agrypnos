@@ -53,7 +53,14 @@ final class PopoverSectionTests: XCTestCase {
         XCTAssertEqual(PopoverSection.agents.cards.last, .settle)
         XCTAssertEqual(
             PopoverSection.notif.cards,
-            [.notifEnable, .notifDiscord, .notifTelegram, .notifSetup, .notifClear]
+            [
+                .notifEnable,
+                .notifDiscord,
+                .notifTelegram,
+                .notifTelegramInbound,
+                .notifSetup,
+                .notifClear,
+            ]
         )
         XCTAssertEqual(PopoverSection.general.cards, [.login])
         XCTAssertFalse(PopoverSection.agents.cards.contains(.watch))
@@ -177,10 +184,10 @@ final class PopoverSectionLayoutTests: XCTestCase {
         XCTAssertNil(PopoverStackLayout.make(section: .general).agentInclude)
     }
 
-    func testNotifSectionShowsEnableDiscordTelegramSetupAndClear() {
+    func testNotifSectionShowsEnableDiscordTelegramInboundSetupAndClear() {
         let layout = PopoverStackLayout.make(section: .notif)
         XCTAssertEqual(layout.section, .notif)
-        XCTAssertEqual(layout.stackedCards.count, 5)
+        XCTAssertEqual(layout.stackedCards.count, 6)
         XCTAssertEqual(layout.notifEnable?.y, PopoverStackLayout.firstCardY)
         XCTAssertNil(layout.watch)
         XCTAssertNil(layout.duration)

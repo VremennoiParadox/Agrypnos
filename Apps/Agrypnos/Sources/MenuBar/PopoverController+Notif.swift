@@ -112,6 +112,37 @@ extension PopoverController {
         )
     }
 
+    func addNotifTelegramInboundCard(
+        _ card: CardView,
+        contentW: CGFloat,
+        ci: CGFloat,
+        cw: CGFloat,
+        swW: CGFloat,
+        swH: CGFloat
+    ) {
+        addPrefTitle(AgrypnosCopy.notifTelegramInbound, in: card, ci: ci, width: cw)
+        _ = PopoverForm.help(
+            AgrypnosCopy.notifTelegramInboundHelp,
+            in: card,
+            y: CGFloat(PopoverStackLayout.prefHelpY),
+            x: ci,
+            width: cw
+        )
+        telegramInboundSwitch = PopoverForm.switchControl(
+            in: card,
+            y: CGFloat(PopoverStackLayout.prefControlY),
+            contentW: contentW,
+            ci: ci,
+            swW: swW,
+            swH: swH,
+            target: self,
+            action: #selector(telegramInboundToggled(_:))
+        )
+        telegramInboundSwitch.state = TelegramInboundChrome.defaultEnabled ? .on : .off
+        telegramInboundSwitch.setAccessibilityLabel(AgrypnosCopy.notifTelegramInbound)
+        telegramInboundSwitch.setAccessibilityHelp(AgrypnosCopy.notifTelegramInboundHelp)
+    }
+
     func addNotifSetupCard(_ card: CardView, ci: CGFloat, cw: CGFloat) {
         addPrefTitle(AgrypnosCopy.notifSetup, in: card, ci: ci, width: cw)
         _ = PopoverForm.help(
@@ -144,6 +175,7 @@ extension PopoverController {
 
     func refreshNotifChrome(runtime: WatchRuntime) {
         notifSwitch?.state = runtime.preferences.notifEnabled ? .on : .off
+        telegramInboundSwitch?.state = runtime.preferences.telegramInboundEnabled ? .on : .off
         discordStatus?.stringValue = discordInvalid ? AgrypnosCopy.notifDiscordInvalid : ""
     }
 
@@ -174,6 +206,12 @@ extension PopoverController {
     @objc func notifToggled(_ sender: NSSwitch) {
         stopRecordingIfNeeded()
         runtime?.setNotifEnabled(sender.state == .on)
+        refresh()
+    }
+
+    @objc func telegramInboundToggled(_ sender: NSSwitch) {
+        stopRecordingIfNeeded()
+        runtime?.setTelegramInboundEnabled(sender.state == .on)
         refresh()
     }
 
