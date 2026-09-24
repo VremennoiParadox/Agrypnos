@@ -15,10 +15,10 @@ public enum PopoverCopyLayout: Sendable {
     public static let captionHeightPoints = captionMaxLines * lineHeightPoints
     public static let helpHeightPoints = helpMaxLines * lineHeightPoints
     public static let settleHelpHeightPoints = settleHelpMaxLines * lineHeightPoints
-    /// `AgrypnosCopy.notifSetupHelp` wraps to 21 lines at `innerColumns`. Enable 4, Telegram 3, inbound 9.
+    /// `AgrypnosCopy.notifSetupHelp` wraps to 21 lines at `innerColumns`. Enable 4, Telegram 3, inbound 12.
     public static let notifEnableHelpMaxLines = 4
     public static let notifTelegramHelpMaxLines = 3
-    public static let notifTelegramInboundHelpMaxLines = 9
+    public static let notifTelegramInboundHelpMaxLines = 12
     public static let notifSetupHelpMaxLines = 21
     public static let notifDiscordStatusMaxLines = 2
     public static let notifEnableHelpHeightPoints = notifEnableHelpMaxLines * lineHeightPoints
