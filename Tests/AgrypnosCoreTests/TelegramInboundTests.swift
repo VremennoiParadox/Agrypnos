@@ -271,6 +271,19 @@ final class TelegramInboundWatchEngineTests: XCTestCase {
         XCTAssertTrue(next.shouldApplyCommands)
     }
 
+    func testNewPollSessionKeepsOffsetAndSkipsQueuedCommands() {
+        let saved = TelegramInboundCursor(offset: 40, seeded: true)
+        let session = saved.startingSession()
+        XCTAssertEqual(session.offset, 40)
+        XCTAssertFalse(session.shouldApplyCommands)
+        let drained = session.acknowledging([
+            TelegramInboundUpdate(updateId: 41, chatId: "99", text: "arm"),
+        ])
+        XCTAssertTrue(drained.seeded)
+        XCTAssertEqual(drained.offset, 42)
+        XCTAssertTrue(drained.shouldApplyCommands)
+    }
+
     func testStaleGenerationAndTokenChangeDoNotApply() {
         XCTAssertTrue(TelegramInboundGeneration.allowsApply(current: 3, captured: 3))
         XCTAssertFalse(TelegramInboundGeneration.allowsApply(current: 4, captured: 3))

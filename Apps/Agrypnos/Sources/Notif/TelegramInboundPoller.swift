@@ -92,6 +92,7 @@ final class TelegramInboundPoller {
 
     private func startLoop() {
         guard task == nil else { return }
+        runtime?.beginTelegramInboundPollSession()
         let timeout = Self.longPollTimeout
         let retry = Self.retryNanos
         let capturedGeneration = generation

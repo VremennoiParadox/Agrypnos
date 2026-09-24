@@ -115,7 +115,7 @@ Agrypnos does not ship a bot for you to add. If BotFather did not give you the t
 
 Same BotFather bot and token as outbound. Not a shared Agrypnos bot. Discord webhook stays outbound-only — no Discord inbound here.
 
-Core polls `getUpdates` and drives Keep the watch when inbound is on and token + chat id are set. The popover inbound toggle is a follow-up; inbound stays **off** until that ships (or the Core pref is set). The first successful poll acks already-queued messages without running them, so leftover setup traffic does not arm the watch. Do not claim Mac-proven from this README.
+Core polls `getUpdates` and drives Keep the watch when inbound is on and token + chat id are set. The popover inbound toggle is a follow-up; inbound stays **off** until that ships (or the Core pref is set). Each time the poller starts, the first successful poll acks already-queued messages without running them, so leftover traffic (setup, app quit, inbound off) does not arm the watch. Do not claim Mac-proven from this README.
 
 When inbound is on:
 

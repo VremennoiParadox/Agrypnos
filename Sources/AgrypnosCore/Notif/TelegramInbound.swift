@@ -123,6 +123,11 @@ public struct TelegramInboundCursor: Equatable, Sendable {
 
     public var shouldApplyCommands: Bool { seeded }
 
+    /// New process or poll loop: keep the offset, skip leftover commands once.
+    public func startingSession() -> TelegramInboundCursor {
+        TelegramInboundCursor(offset: offset, seeded: false)
+    }
+
     public func acknowledging(_ updates: [TelegramInboundUpdate]) -> TelegramInboundCursor {
         TelegramInboundCursor(
             offset: TelegramInboundOffset.next(current: offset, updates: updates),

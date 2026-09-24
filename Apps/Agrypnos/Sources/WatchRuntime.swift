@@ -433,6 +433,10 @@ final class WatchRuntime {
         }
     }
 
+    func beginTelegramInboundPollSession() {
+        store.saveTelegramInboundCursor(store.loadTelegramInboundCursor().startingSession())
+    }
+
     func telegramInboundPollSnapshot() -> TelegramInboundPollSnapshot {
         let secrets = NotifSecretsStore.load()
         return TelegramInboundPollSnapshot(
