@@ -43,6 +43,22 @@ public enum NotifOutboundRequestFactory: Sendable {
         )
     }
 
+    public static func telegramSetMyCommands(botToken: String) -> NotifOutboundRequest? {
+        guard let url = telegramAPIURL(botToken: botToken, method: "setMyCommands") else { return nil }
+        let commands = TelegramBotCommandMenu.commands.map {
+            ["command": $0.command, "description": $0.description]
+        }
+        guard let body = try? JSONSerialization.data(withJSONObject: ["commands": commands]) else {
+            return nil
+        }
+        return NotifOutboundRequest(
+            url: url,
+            httpMethod: "POST",
+            headers: jsonHeaders,
+            body: body
+        )
+    }
+
     public static func telegramGetUpdates(
         botToken: String,
         offset: Int64,

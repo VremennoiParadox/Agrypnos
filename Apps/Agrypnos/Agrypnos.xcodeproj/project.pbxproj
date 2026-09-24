@@ -15,12 +15,16 @@
 		31713455EC90405270582CED /* HotkeyRecorderControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71AB415778ADE64BF7D1B20 /* HotkeyRecorderControl.swift */; };
 		EE4DE2012E8891D5E35D9C27 /* PopoverChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = F94178055CD17CB0C1E4EBE4 /* PopoverChrome.swift */; };
 		87299C24812BC138E73D77BC /* PopoverController+Canvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50D9BE7A9730D85A15B6E96E /* PopoverController+Canvas.swift */; };
-		C4E81B9A6D2F40B7A1C35E08 /* PopoverController+Cards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F2A1C6D4B90E37C5D1A2F44 /* PopoverController+Cards.swift */; };
-		A9D47E12B6C58F30E4A21B77 /* PopoverController+Sections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B7C9E41F05A62D8C4E18A90 /* PopoverController+Sections.swift */; };
-		D4C81E0A7B2F9461C5E8A013 /* PopoverController+Notif.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A6F2B19E4C07D53A1B90E27 /* PopoverController+Notif.swift */; };
+		83E9538CE09AAA2166595788 /* PopoverController+Cards.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9704B117A23E378C79A3883 /* PopoverController+Cards.swift */; };
+		3E342BC9083A87088493456F /* PopoverController+Notif.swift in Sources */ = {isa = PBXBuildFile; fileRef = D36BE0786C01BFCA5770EAE1 /* PopoverController+Notif.swift */; };
+		946833446CCD0F60CEC3EABD /* PopoverController+Sections.swift in Sources */ = {isa = PBXBuildFile; fileRef = D48DE8BD25DF8F38E91DBE39 /* PopoverController+Sections.swift */; };
 		40DF44DBC43DE8B05319E1F5 /* PopoverController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 329EC7D50E7C6B456084BE11 /* PopoverController.swift */; };
 		6ED04DCF9683E5F466136641 /* PopoverForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E6799E8B24D782B3151D901 /* PopoverForm.swift */; };
 		EC7A8AAC019F71CCB4D3623D /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8607BE8FEC94DD9191D5842B /* StatusItemController.swift */; };
+		B6CAAC6325F70B0F1AB1E2DA /* NotifIdlePoster.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8193A6EAE0A4E045C57C12C /* NotifIdlePoster.swift */; };
+		8DA2AF8DFDB960B9DF98724A /* NotifSecretsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD41C9A6FD60A6E47BE3AFC /* NotifSecretsStore.swift */; };
+		74189A8A7BDBD266D792FCE0 /* TelegramInboundPoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 013219EDBCB9C28115D79007 /* TelegramInboundPoller.swift */; };
+		FACF7AB4E66AFD37CCE4A152 /* WatchRuntime+TelegramInbound.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C149123F4E7CCF53624D71 /* WatchRuntime+TelegramInbound.swift */; };
 		B54A11BE04F7B909BA1DAA45 /* BrightnessFloorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 664053E9C3461C2FA95B19F5 /* BrightnessFloorController.swift */; };
 		B90D244D2FCD3BF4C0C2FA52 /* BrightnessRampController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AEA59356C52ACE1D2FD1C57 /* BrightnessRampController.swift */; };
 		3E912B96C1EA4A6340DF6B81 /* KeyboardBacklightController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2F4F53E617135F5861F4EE6 /* KeyboardBacklightController.swift */; };
@@ -31,9 +35,6 @@
 		436DA0943AEB42FDD30C5580 /* GrantAndNotify.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD7C3F5A1565378FE3CC9B8A /* GrantAndNotify.swift */; };
 		E62F9714A04AB0D4F946A4FE /* ProcessRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D433AFEE00C6137709B3A3C /* ProcessRunner.swift */; };
 		1A07C28A481816CBE4F20A60 /* WatchRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41663A701EAD0DB8779BE8A5 /* WatchRuntime.swift */; };
-		2F8A1C4E6B9D03F5A7C2E814 /* NotifSecretsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4E91A02B8D4F6A9E13C5D8 /* NotifSecretsStore.swift */; };
-		4A7E2C9F1B5D8036E0A4C718 /* NotifIdlePoster.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D3B70E15A4C8F2E6B1D90A3 /* NotifIdlePoster.swift */; };
-		D1E2F3A4B5061728394A5B6C /* TelegramInboundPoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D1E2F3A4B5061728394A5B /* TelegramInboundPoller.swift */; };
 		095E19E7CB28F7EE95D82908 /* AgrypnosCore in Frameworks */ = {isa = PBXBuildFile; productRef = C81CD5F22406E4B780AC870D /* AgrypnosCore */; };
 		6B8001DABC00C7B45D3BFA0C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8B40A3F1CAC9ADB66B78DD5C /* Assets.xcassets */; };
 		BBE0CDF003CDB2E92B81738B /* grant.sh in Resources */ = {isa = PBXBuildFile; fileRef = 9A657A8A538B844742E8496C /* grant.sh */; };
@@ -49,12 +50,16 @@
 		A71AB415778ADE64BF7D1B20 /* HotkeyRecorderControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyRecorderControl.swift; sourceTree = "<group>"; };
 		F94178055CD17CB0C1E4EBE4 /* PopoverChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverChrome.swift; sourceTree = "<group>"; };
 		50D9BE7A9730D85A15B6E96E /* PopoverController+Canvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Canvas.swift"; sourceTree = "<group>"; };
-		8F2A1C6D4B90E37C5D1A2F44 /* PopoverController+Cards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Cards.swift"; sourceTree = "<group>"; };
-		3B7C9E41F05A62D8C4E18A90 /* PopoverController+Sections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Sections.swift"; sourceTree = "<group>"; };
-		8A6F2B19E4C07D53A1B90E27 /* PopoverController+Notif.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Notif.swift"; sourceTree = "<group>"; };
+		C9704B117A23E378C79A3883 /* PopoverController+Cards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Cards.swift"; sourceTree = "<group>"; };
+		D36BE0786C01BFCA5770EAE1 /* PopoverController+Notif.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Notif.swift"; sourceTree = "<group>"; };
+		D48DE8BD25DF8F38E91DBE39 /* PopoverController+Sections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Sections.swift"; sourceTree = "<group>"; };
 		329EC7D50E7C6B456084BE11 /* PopoverController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverController.swift; sourceTree = "<group>"; };
 		6E6799E8B24D782B3151D901 /* PopoverForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverForm.swift; sourceTree = "<group>"; };
 		8607BE8FEC94DD9191D5842B /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
+		C8193A6EAE0A4E045C57C12C /* NotifIdlePoster.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotifIdlePoster.swift; sourceTree = "<group>"; };
+		ECD41C9A6FD60A6E47BE3AFC /* NotifSecretsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotifSecretsStore.swift; sourceTree = "<group>"; };
+		013219EDBCB9C28115D79007 /* TelegramInboundPoller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramInboundPoller.swift; sourceTree = "<group>"; };
+		D9C149123F4E7CCF53624D71 /* WatchRuntime+TelegramInbound.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+TelegramInbound.swift"; sourceTree = "<group>"; };
 		664053E9C3461C2FA95B19F5 /* BrightnessFloorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessFloorController.swift; sourceTree = "<group>"; };
 		2AEA59356C52ACE1D2FD1C57 /* BrightnessRampController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessRampController.swift; sourceTree = "<group>"; };
 		B2F4F53E617135F5861F4EE6 /* KeyboardBacklightController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardBacklightController.swift; sourceTree = "<group>"; };
@@ -65,9 +70,6 @@
 		BD7C3F5A1565378FE3CC9B8A /* GrantAndNotify.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrantAndNotify.swift; sourceTree = "<group>"; };
 		1D433AFEE00C6137709B3A3C /* ProcessRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessRunner.swift; sourceTree = "<group>"; };
 		41663A701EAD0DB8779BE8A5 /* WatchRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRuntime.swift; sourceTree = "<group>"; };
-		7C4E91A02B8D4F6A9E13C5D8 /* NotifSecretsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotifSecretsStore.swift; sourceTree = "<group>"; };
-		9D3B70E15A4C8F2E6B1D90A3 /* NotifIdlePoster.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotifIdlePoster.swift; sourceTree = "<group>"; };
-		C0D1E2F3A4B5061728394A5B /* TelegramInboundPoller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramInboundPoller.swift; sourceTree = "<group>"; };
 		38ED30322495D02C679CFD76 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0111024D5CF6358695630612 /* Agrypnos.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Agrypnos.entitlements; sourceTree = "<group>"; };
 		8B40A3F1CAC9ADB66B78DD5C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -92,11 +94,11 @@
 				83A43E56C10CD6D41E834FFE /* AppDelegate.swift */,
 				AD5204D1B4D62DE6D2D8B414 /* AppMain.swift */,
 				41663A701EAD0DB8779BE8A5 /* WatchRuntime.swift */,
-				A4C81E0F2B7D4A9C8E15F603 /* Notif */,
 				7BC2CAB9094C6A3F6E6AF09E /* Agent */,
 				3E81BE9F451039AECD508BDD /* Hotkey */,
 				88B94530079532860173BE0F /* Launch */,
 				E7C22297E41D96897BEBC32C /* MenuBar */,
+				5913BA042BB61CF261FD559C /* Notif */,
 				3A741AA2944FECC4DD57D0E6 /* Power */,
 				E00B57B6F57F8169DF300C19 /* Preferences */,
 				B2ADD567ADCD61F91327283F /* Support */,
@@ -110,16 +112,6 @@
 				BBF2CB7D5165F5AC6740623A /* AgentProbeService.swift */,
 			);
 			path = Agent;
-			sourceTree = "<group>";
-		};
-		A4C81E0F2B7D4A9C8E15F603 /* Notif */ = {
-			isa = PBXGroup;
-			children = (
-				7C4E91A02B8D4F6A9E13C5D8 /* NotifSecretsStore.swift */,
-				9D3B70E15A4C8F2E6B1D90A3 /* NotifIdlePoster.swift */,
-				C0D1E2F3A4B5061728394A5B /* TelegramInboundPoller.swift */,
-			);
-			path = Notif;
 			sourceTree = "<group>";
 		};
 		3E81BE9F451039AECD508BDD /* Hotkey */ = {
@@ -144,14 +136,25 @@
 				A71AB415778ADE64BF7D1B20 /* HotkeyRecorderControl.swift */,
 				F94178055CD17CB0C1E4EBE4 /* PopoverChrome.swift */,
 				50D9BE7A9730D85A15B6E96E /* PopoverController+Canvas.swift */,
-				8F2A1C6D4B90E37C5D1A2F44 /* PopoverController+Cards.swift */,
-				8A6F2B19E4C07D53A1B90E27 /* PopoverController+Notif.swift */,
-				3B7C9E41F05A62D8C4E18A90 /* PopoverController+Sections.swift */,
+				C9704B117A23E378C79A3883 /* PopoverController+Cards.swift */,
+				D36BE0786C01BFCA5770EAE1 /* PopoverController+Notif.swift */,
+				D48DE8BD25DF8F38E91DBE39 /* PopoverController+Sections.swift */,
 				329EC7D50E7C6B456084BE11 /* PopoverController.swift */,
 				6E6799E8B24D782B3151D901 /* PopoverForm.swift */,
 				8607BE8FEC94DD9191D5842B /* StatusItemController.swift */,
 			);
 			path = MenuBar;
+			sourceTree = "<group>";
+		};
+		5913BA042BB61CF261FD559C /* Notif */ = {
+			isa = PBXGroup;
+			children = (
+				C8193A6EAE0A4E045C57C12C /* NotifIdlePoster.swift */,
+				ECD41C9A6FD60A6E47BE3AFC /* NotifSecretsStore.swift */,
+				013219EDBCB9C28115D79007 /* TelegramInboundPoller.swift */,
+				D9C149123F4E7CCF53624D71 /* WatchRuntime+TelegramInbound.swift */,
+			);
+			path = Notif;
 			sourceTree = "<group>";
 		};
 		3A741AA2944FECC4DD57D0E6 /* Power */ = {
@@ -291,12 +294,16 @@
 				31713455EC90405270582CED /* HotkeyRecorderControl.swift in Sources */,
 				EE4DE2012E8891D5E35D9C27 /* PopoverChrome.swift in Sources */,
 				87299C24812BC138E73D77BC /* PopoverController+Canvas.swift in Sources */,
-				C4E81B9A6D2F40B7A1C35E08 /* PopoverController+Cards.swift in Sources */,
-				D4C81E0A7B2F9461C5E8A013 /* PopoverController+Notif.swift in Sources */,
-				A9D47E12B6C58F30E4A21B77 /* PopoverController+Sections.swift in Sources */,
+				83E9538CE09AAA2166595788 /* PopoverController+Cards.swift in Sources */,
+				3E342BC9083A87088493456F /* PopoverController+Notif.swift in Sources */,
+				946833446CCD0F60CEC3EABD /* PopoverController+Sections.swift in Sources */,
 				40DF44DBC43DE8B05319E1F5 /* PopoverController.swift in Sources */,
 				6ED04DCF9683E5F466136641 /* PopoverForm.swift in Sources */,
 				EC7A8AAC019F71CCB4D3623D /* StatusItemController.swift in Sources */,
+				B6CAAC6325F70B0F1AB1E2DA /* NotifIdlePoster.swift in Sources */,
+				8DA2AF8DFDB960B9DF98724A /* NotifSecretsStore.swift in Sources */,
+				74189A8A7BDBD266D792FCE0 /* TelegramInboundPoller.swift in Sources */,
+				FACF7AB4E66AFD37CCE4A152 /* WatchRuntime+TelegramInbound.swift in Sources */,
 				B54A11BE04F7B909BA1DAA45 /* BrightnessFloorController.swift in Sources */,
 				B90D244D2FCD3BF4C0C2FA52 /* BrightnessRampController.swift in Sources */,
 				3E912B96C1EA4A6340DF6B81 /* KeyboardBacklightController.swift in Sources */,
@@ -307,9 +314,6 @@
 				436DA0943AEB42FDD30C5580 /* GrantAndNotify.swift in Sources */,
 				E62F9714A04AB0D4F946A4FE /* ProcessRunner.swift in Sources */,
 				1A07C28A481816CBE4F20A60 /* WatchRuntime.swift in Sources */,
-				2F8A1C4E6B9D03F5A7C2E814 /* NotifSecretsStore.swift in Sources */,
-				4A7E2C9F1B5D8036E0A4C718 /* NotifIdlePoster.swift in Sources */,
-				D1E2F3A4B5061728394A5B6C /* TelegramInboundPoller.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -86,18 +86,32 @@ public struct WatchEngine: Equatable, Sendable {
         preferences.telegramInboundEnabled = on
     }
 
-    /// Telegram arm/disarm/status. Skip a no-op so a second arm does not reset this user arm.
-    /// Always `lidClosed: false` — one raw clamshell sample is not hygiene.
+    /// Telegram arm/disarm/status/help. Skip a no-op so a second arm does not reset this user arm.
+    /// Arm always `lidClosed: false` — one raw clamshell sample is not hygiene.
+    /// Disarm sleeps only when lid-close is already confirmed.
     public mutating func applyTelegramInbound(
         _ intent: TelegramInboundIntent,
-        now: Date
+        now: Date,
+        lidCloseConfirmed: Bool = false
     ) -> [WatchCommand] {
-        switch intent.shouldSetEngaged(currentlyEngaged: engaged) {
-        case .some(true):
-            return userSetEngaged(true, now: now, lidClosed: false)
-        case .some(false):
-            return userSetEngaged(false, now: now, lidClosed: false)
-        case .none:
+        switch intent {
+        case .arm:
+            switch intent.shouldSetEngaged(currentlyEngaged: engaged) {
+            case .some(true):
+                return userSetEngaged(true, now: now, lidClosed: false)
+            case .some(false), .none:
+                return []
+            }
+        case .disarm:
+            var commands: [WatchCommand] = []
+            if intent.shouldSetEngaged(currentlyEngaged: engaged) == false {
+                commands.append(contentsOf: userSetEngaged(false, now: now, lidClosed: lidCloseConfirmed))
+            }
+            if TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: lidCloseConfirmed) {
+                commands.append(.requestSleep)
+            }
+            return commands
+        case .status, .help, .ignore:
             return []
         }
     }

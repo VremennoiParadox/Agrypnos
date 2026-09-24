@@ -59,10 +59,17 @@ final class TelegramInboundPoller {
 
     func sync() {
         if shouldPoll() {
-            startLoop()
+            startLoop(session: .leftover)
         } else {
             invalidate()
         }
+    }
+
+    func restartForWakeMiss() {
+        invalidate()
+        guard shouldPoll() else { return }
+        runtime?.beginTelegramInboundWakeMissSession()
+        startLoop(session: .keepCursor)
     }
 
     func stop() {
@@ -89,9 +96,20 @@ final class TelegramInboundPoller {
         )
     }
 
-    private func startLoop() {
+    private enum SessionStart {
+        case leftover
+        case keepCursor
+    }
+
+    private func startLoop(session: SessionStart) {
         guard task == nil else { return }
-        runtime?.beginTelegramInboundPollSession()
+        switch session {
+        case .leftover:
+            runtime?.beginTelegramInboundPollSession()
+        case .keepCursor:
+            break
+        }
+        runtime?.registerTelegramBotCommands()
         let retry = Self.retryNanos
         let capturedGeneration = generation
         task = Task.detached { [weak self] in

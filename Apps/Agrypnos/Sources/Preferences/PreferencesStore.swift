@@ -26,21 +26,25 @@ final class PreferencesStore {
 
     static let telegramInboundOffsetKey = "agrypnos.telegramInbound.offset"
     static let telegramInboundSeededKey = "agrypnos.telegramInbound.seeded"
+    static let telegramInboundWakeMissKey = "agrypnos.telegramInbound.wakeMiss"
 
     func loadTelegramInboundCursor() -> TelegramInboundCursor {
         TelegramInboundCursor(
             offset: Int64(defaults.integer(forKey: Self.telegramInboundOffsetKey)),
-            seeded: defaults.bool(forKey: Self.telegramInboundSeededKey)
+            seeded: defaults.bool(forKey: Self.telegramInboundSeededKey),
+            wakeMiss: defaults.bool(forKey: Self.telegramInboundWakeMissKey)
         )
     }
 
     func saveTelegramInboundCursor(_ cursor: TelegramInboundCursor) {
         defaults.set(cursor.offset, forKey: Self.telegramInboundOffsetKey)
         defaults.set(cursor.seeded, forKey: Self.telegramInboundSeededKey)
+        defaults.set(cursor.wakeMiss, forKey: Self.telegramInboundWakeMissKey)
     }
 
     func resetTelegramInboundCursor() {
         defaults.removeObject(forKey: Self.telegramInboundOffsetKey)
         defaults.removeObject(forKey: Self.telegramInboundSeededKey)
+        defaults.removeObject(forKey: Self.telegramInboundWakeMissKey)
     }
 }

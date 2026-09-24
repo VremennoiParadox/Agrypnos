@@ -12,7 +12,7 @@ protocol WatchRuntimeDelegate: AnyObject {
 
 @MainActor
 final class WatchRuntime {
-    private let store = PreferencesStore()
+    let store = PreferencesStore()
     private(set) var engine: WatchEngine
     private var pollTimer: Timer?
     private var savedBrightness: Double?
@@ -34,7 +34,8 @@ final class WatchRuntime {
     /// Skip poll only when an idle-after-wait POST is in flight after a safety disarm.
     private var idleOutbound = NotifIdleOutboundCoordinator()
     private var idlePostTask: Task<Void, Never>?
-    private let inboundPoller = TelegramInboundPoller()
+    let inboundPoller = TelegramInboundPoller()
+    private var workspaceObservers: [NSObjectProtocol] = []
 
     init() {
         engine = WatchEngine(preferences: store.load())
@@ -42,6 +43,7 @@ final class WatchRuntime {
 
     func start() {
         inboundPoller.runtime = self
+        observeMacSleepWake()
         reconcileKernel(preferClearLeftover: true)
         pollTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.poll() }
@@ -107,6 +109,7 @@ final class WatchRuntime {
         engine.userSetTelegramInboundEnabled(on)
         store.save(engine.preferences)
         inboundPoller.sync()
+        pollLid()
         delegate?.watchRuntimeDidChange(self)
     }
 
@@ -320,17 +323,20 @@ final class WatchRuntime {
 
     func pollLid() {
         let rawClosed = LidStateReader.isClosed()
+        let trackLid = engine.engaged || telegramInboundIsPolling()
         var lidChanged = false
-        if engine.engaged {
+        if trackLid {
             let commands = engine.observeLid(closed: rawClosed, now: Date())
-            if !commands.isEmpty {
-                apply(commands)
-                lidChanged = true
-            } else if LidCloseConfirm.shouldRecaptureOpenBrightness(
-                rawClosed: rawClosed,
-                confirmedClosed: engine.lidClosed
-            ), !engine.lidHygieneApplied, !brightnessRamp.isRunning {
-                recaptureOpenLidHygiene()
+            if engine.engaged {
+                if !commands.isEmpty {
+                    apply(commands)
+                    lidChanged = true
+                } else if LidCloseConfirm.shouldRecaptureOpenBrightness(
+                    rawClosed: rawClosed,
+                    confirmedClosed: engine.lidClosed
+                ), !engine.lidHygieneApplied, !brightnessRamp.isRunning {
+                    recaptureOpenLidHygiene()
+                }
             }
             startLidPulse()
         } else {
@@ -351,7 +357,8 @@ final class WatchRuntime {
     }
 
     func startLidPulse() {
-        guard engine.engaged, lidTimer == nil else { return }
+        guard lidTimer == nil else { return }
+        guard engine.engaged || telegramInboundIsPolling() else { return }
         lidTimer = Timer.scheduledTimer(withTimeInterval: LidCloseConfirm.pulseInterval, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.pollLid() }
         }
@@ -391,6 +398,7 @@ final class WatchRuntime {
 
     /// Quit must clear actual kernel-held SleepDisabled even if the engine already disengaged for POST.
     func prepareForTermination() {
+        stopObservingMacSleepWake()
         inboundPoller.stop()
         let kernelHeld = SleepDisabledController.read()
         let plan = idleOutbound.terminatePlan(
@@ -433,87 +441,33 @@ final class WatchRuntime {
         }
     }
 
-    func beginTelegramInboundPollSession() {
-        store.saveTelegramInboundCursor(store.loadTelegramInboundCursor().startingSession())
-    }
-
-    func telegramInboundPollSnapshot() -> TelegramInboundPollSnapshot {
-        let secrets = NotifSecretsStore.load()
-        return TelegramInboundPollSnapshot(
-            enabled: engine.preferences.telegramInboundEnabled,
-            token: secrets.telegramBotToken,
-            chatId: secrets.telegramChatId,
-            cursor: store.loadTelegramInboundCursor()
+    func observeMacSleepWake() {
+        let center = NSWorkspace.shared.notificationCenter
+        workspaceObservers.append(
+            center.addObserver(
+                forName: NSWorkspace.willSleepNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor in self?.noteMacWillSleep() }
+            }
+        )
+        workspaceObservers.append(
+            center.addObserver(
+                forName: NSWorkspace.didWakeNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor in self?.noteMacDidWake() }
+            }
         )
     }
 
-    func finishTelegramInboundPoll(
-        generation: UInt64,
-        fetchedToken: String?,
-        cursor: TelegramInboundCursor,
-        updates: [TelegramInboundUpdate]
-    ) {
-        guard inboundPoller.accepts(generation: generation) else { return }
-        let secrets = NotifSecretsStore.load()
-        guard TelegramInboundPolicy.sameBot(
-            fetchedToken: fetchedToken,
-            currentToken: secrets.telegramBotToken
-        ) else { return }
-        if cursor.shouldApplyCommands {
-            applyTelegramUpdates(updates)
+    func stopObservingMacSleepWake() {
+        let center = NSWorkspace.shared.notificationCenter
+        for observer in workspaceObservers {
+            center.removeObserver(observer)
         }
-        store.saveTelegramInboundCursor(cursor.acknowledging(updates))
-    }
-
-    func applyTelegramUpdates(_ updates: [TelegramInboundUpdate]) {
-        let secrets = NotifSecretsStore.load()
-        let enabled = engine.preferences.telegramInboundEnabled
-        for update in updates {
-            let intent = TelegramInboundPolicy.intent(
-                enabled: enabled,
-                botToken: secrets.telegramBotToken,
-                savedChatId: secrets.telegramChatId,
-                update: update
-            )
-            switch intent {
-            case .ignore:
-                continue
-            case .arm:
-                if intent.shouldSetEngaged(currentlyEngaged: engine.engaged) == true {
-                    setEngaged(true)
-                }
-                let text = engine.engaged
-                    ? TelegramInboundCopy.armed
-                    : TelegramInboundCopy.armFailed
-                sendTelegramInboundReply(text, token: secrets.telegramBotToken, chatId: secrets.telegramChatId)
-            case .disarm:
-                if intent.shouldSetEngaged(currentlyEngaged: engine.engaged) == false {
-                    setEngaged(false)
-                }
-                let text = engine.engaged
-                    ? TelegramInboundCopy.disarmFailed
-                    : TelegramInboundCopy.disarmed
-                sendTelegramInboundReply(text, token: secrets.telegramBotToken, chatId: secrets.telegramChatId)
-            case .status:
-                let text = TelegramInboundCopy.status(
-                    engaged: engine.engaged,
-                    duration: engine.preferences.duration
-                )
-                sendTelegramInboundReply(text, token: secrets.telegramBotToken, chatId: secrets.telegramChatId)
-            }
-        }
-    }
-
-    func sendTelegramInboundReply(_ text: String, token: String?, chatId: String?) {
-        guard
-            let token,
-            let chatId,
-            let request = NotifOutboundRequestFactory.telegram(
-                botToken: token,
-                chatId: chatId,
-                text: text
-            )
-        else { return }
-        Task { await TelegramInboundHTTP.send(request) }
+        workspaceObservers = []
     }
 }
