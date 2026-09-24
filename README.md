@@ -12,7 +12,7 @@ MIT. No telemetry. No stealth network.
 - **Hold until you turn it off** — How long stays as you set it. Timer does not flip Keep the watch. Duration **Agents** turns Keep the watch off after local busy this arm, then idle through the wait. Battery / thermal (and leftover Low Power Mode) still can.
 - **Safety** — low battery (slider 5–100%, default 15%), thermal auto-off on `.serious` / `.critical` (Power toggle, default on), reboot clears SleepDisabled, launch-at-login never re-arms.
 
-V1 agents: Cursor, Claude Code, Codex, and OpenCode. Local heuristics only (process list + session-file mtimes; Claude/Codex/OpenCode may also use CPU). OpenCode looks at `~/.local/share/opencode` (or `$XDG_DATA_HOME/opencode`) — prove that process + session mtime on a Mac before claiming detection. Which tools count as busy is a multi-select of those four in the **Agents** popover (at least one stays on; default all on). Busy signals come only from the tools left on. Correctness over coverage. Not every provider.
+V1 agents: Cursor, Claude Code, Codex, and OpenCode. Local heuristics only (process list + session-file mtimes; Claude/Codex/OpenCode may also use CPU). OpenCode looks at `~/.local/share/opencode` (or `$XDG_DATA_HOME/opencode`) — local process + session mtime (Mac-proven). Which tools count as busy is a multi-select of those four in the **Agents** popover (at least one stays on; default all on). Busy signals come only from the tools left on. Correctness over coverage. Not every provider.
 
 ## Not this product
 
@@ -56,7 +56,7 @@ swift test
 ./Scripts/build.sh
 ```
 
-Needs a Mac to run the menu-bar extra. Until someone arms Keep the watch with the lid **open** (screen stays usable), closes the lid (brightness floor + keyboard dark), reopens mid-watch (ramp from prefs + keyboard on, Keep the watch still on), do not claim that path is proven.
+Needs a Mac to run the menu-bar extra. User optical on open-lid brightness **passed** (2026-09-24): arm with the lid open (screen stays usable); confirmed lid close (brightness floor + keyboard dark); reopen mid-watch (ramp + keyboard on, Keep the watch still on); after the watch ends, lid-open use with no surprise dim to floor.
 
 Until someone proves **Low Power Mode** while the watch is armed (lid open and lid closed) and confirms the Mac stays awake, do not claim LPM cannot force a leftover watch. Until someone proves **lid-closed safety auto-off** (battery, thermal) **requests sleep** with the lid still closed, do not claim that path.
 
@@ -146,7 +146,7 @@ Use one channel, or both. Leave a field empty if you do not use that channel. No
 
 1. Turn **Notif** on and save at least one channel’s secrets.
 2. In **Watch**, arm Keep the watch with duration **Agents** (`∞` / `1h` / `3h` / custom do not send this POST).
-3. Run an agent Agrypnos can see so a **local busy signal** is recorded this arm. Cursor, Claude Code, Codex, and OpenCode all count by default. In **Agents**, leave on only the tools that should count (at least one stays on). OpenCode’s local process + session-file paths still need a Mac prove.
+3. Run an agent Agrypnos can see so a **local busy signal** is recorded this arm. Cursor, Claude Code, Codex, and OpenCode all count by default. In **Agents**, leave on only the tools that should count (at least one stays on). OpenCode local process + session files are Mac-proven.
 4. Let that go idle, then wait the idle wait (**Agents** section; default 2 minutes, range 2–15).
 5. Expect **one** Discord webhook POST and/or **one** message from *your* Telegram bot. Copy should say idle after wait — not that the agent stopped or the job finished. Keep the watch turns off. How long stays **Agents**.
 6. If nothing arrives: Notif off, missing/wrong secret, duration was not Agents, this arm never saw busy, or busy signals are still counting as activity. Agrypnos will not POST to a destination you did not configure.
@@ -169,6 +169,8 @@ Rich status (task text / finish ETA) is not this product. Idea-only. Discord inb
 - Launch-at-login never re-arms the watch.
 - Notif POSTs only to *your* webhook or *your* bot, and only when enabled with secrets set.
 - Telegram inbound (`/arm` `/disarm` `/status` `/help`) uses *your* bot when inbound is on and token + chat id are set. No live reply while the Mac is asleep; wake-miss drain does not apply queued commands; lid-open `/disarm` does not sleep the Mac; confirmed lid-closed `/disarm` does. User optical **passed** (2026-09-24).
+- Open-lid brightness: after the watch ends, lid-open use does not surprise-dim to floor. User optical **passed** (2026-09-24).
+- Agents picker + OpenCode local process/session: user optical **passed** (2026-09-24). Still not every provider. Still not think-detection.
 
 ## License
 
