@@ -31,19 +31,9 @@ public enum NotifOutboundRequestFactory: Sendable {
         chatId: String,
         text: String
     ) -> NotifOutboundRequest? {
-        let token = botToken.trimmingCharacters(in: .whitespacesAndNewlines)
         let chat = chatId.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !token.isEmpty, !chat.isEmpty else { return nil }
-        var pathAllowed = CharacterSet.urlPathAllowed
-        pathAllowed.insert(charactersIn: ":")
-        let encodedToken = token.addingPercentEncoding(withAllowedCharacters: pathAllowed) ?? token
-        guard
-            let url = URL(string: "https://api.telegram.org/bot\(encodedToken)/sendMessage"),
-            url.scheme == "https",
-            url.host == "api.telegram.org"
-        else {
-            return nil
-        }
+        guard !chat.isEmpty else { return nil }
+        guard let url = telegramAPIURL(botToken: botToken, method: "sendMessage") else { return nil }
         guard let body = telegramBody(chatId: chat, text: text) else { return nil }
         return NotifOutboundRequest(
             url: url,
@@ -51,6 +41,56 @@ public enum NotifOutboundRequestFactory: Sendable {
             headers: jsonHeaders,
             body: body
         )
+    }
+
+    public static func telegramGetUpdates(
+        botToken: String,
+        offset: Int64,
+        timeout: Int
+    ) -> NotifOutboundRequest? {
+        guard
+            let url = telegramAPIURL(
+                botToken: botToken,
+                method: "getUpdates",
+                query: [
+                    URLQueryItem(name: "offset", value: String(offset)),
+                    URLQueryItem(name: "timeout", value: String(max(timeout, 0))),
+                ]
+            )
+        else {
+            return nil
+        }
+        return NotifOutboundRequest(
+            url: url,
+            httpMethod: "GET",
+            headers: [:],
+            body: Data()
+        )
+    }
+
+    static func telegramAPIURL(
+        botToken: String,
+        method: String,
+        query: [URLQueryItem] = []
+    ) -> URL? {
+        let token = botToken.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !token.isEmpty else { return nil }
+        var pathAllowed = CharacterSet.urlPathAllowed
+        pathAllowed.insert(charactersIn: ":")
+        let encodedToken = token.addingPercentEncoding(withAllowedCharacters: pathAllowed) ?? token
+        guard
+            let base = URL(string: "https://api.telegram.org/bot\(encodedToken)/\(method)"),
+            base.scheme == "https",
+            base.host == "api.telegram.org"
+        else {
+            return nil
+        }
+        guard !query.isEmpty else { return base }
+        guard var components = URLComponents(url: base, resolvingAgainstBaseURL: false) else {
+            return nil
+        }
+        components.queryItems = query
+        return components.url
     }
 
     static let jsonHeaders = ["Content-Type": "application/json"]

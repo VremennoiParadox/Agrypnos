@@ -28,6 +28,8 @@ public struct UserPreferences: Equatable, Sendable, Codable {
     public var thermalAutoOff: Bool
     /// Opt-in idle-after-wait POST. Default off. Secrets stay out of this blob.
     public var notifEnabled: Bool
+    /// Telegram inbound commands on the same bot. Default off. Separate from outbound POST.
+    public var telegramInboundEnabled: Bool
     /// Last time the watch ended, with why. Nil until a watch has ended on this Mac.
     public var lastWatchEnd: LastWatchEnd?
     /// Tools whose local busy signals count. Never empty. Default all current providers.
@@ -50,6 +52,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         lidOpenRampSeconds: Int = 2,
         thermalAutoOff: Bool = true,
         notifEnabled: Bool = false,
+        telegramInboundEnabled: Bool = false,
         lastWatchEnd: LastWatchEnd? = nil,
         includedAgentKinds: Set<AgentKind> = AgentIncludeChrome.defaultIncluded
     ) {
@@ -64,6 +67,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         self.lidOpenRampSeconds = Self.clampLidOpenRamp(lidOpenRampSeconds)
         self.thermalAutoOff = thermalAutoOff
         self.notifEnabled = notifEnabled
+        self.telegramInboundEnabled = telegramInboundEnabled
         self.lastWatchEnd = lastWatchEnd
         self.includedAgentKinds = Self.clampIncludedAgentKinds(includedAgentKinds)
     }
@@ -137,6 +141,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         case lidOpenRampSeconds
         case thermalAutoOff
         case notifEnabled
+        case telegramInboundEnabled
         case lastWatchEnd
         case includedAgentKinds
     }
@@ -163,6 +168,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
             lidOpenRampSeconds: try container.decodeIfPresent(Int.self, forKey: .lidOpenRampSeconds) ?? 2,
             thermalAutoOff: try container.decodeIfPresent(Bool.self, forKey: .thermalAutoOff) ?? true,
             notifEnabled: try container.decodeIfPresent(Bool.self, forKey: .notifEnabled) ?? false,
+            telegramInboundEnabled: try container.decodeIfPresent(Bool.self, forKey: .telegramInboundEnabled) ?? false,
             lastWatchEnd: try container.decodeIfPresent(LastWatchEnd.self, forKey: .lastWatchEnd),
             includedAgentKinds: try AgentIncludeFlags.decode(from: container)
         )
@@ -182,6 +188,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         try container.encode(lidOpenRampSeconds, forKey: .lidOpenRampSeconds)
         try container.encode(thermalAutoOff, forKey: .thermalAutoOff)
         try container.encode(notifEnabled, forKey: .notifEnabled)
+        try container.encode(telegramInboundEnabled, forKey: .telegramInboundEnabled)
         try container.encodeIfPresent(lastWatchEnd, forKey: .lastWatchEnd)
         try container.encode(AgentIncludeFlags(includedAgentKinds), forKey: .includedAgentKinds)
     }

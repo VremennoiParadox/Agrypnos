@@ -71,6 +71,10 @@ public enum NotifEnableChrome: Sendable {
     public static var defaultEnabled: Bool { UserPreferences.default.notifEnabled }
 }
 
+public enum TelegramInboundChrome: Sendable {
+    public static var defaultEnabled: Bool { UserPreferences.default.telegramInboundEnabled }
+}
+
 public enum SecretRevealChrome: Sendable {
     public static let buttonWidthPoints = 22
     public static let gapPoints = 4

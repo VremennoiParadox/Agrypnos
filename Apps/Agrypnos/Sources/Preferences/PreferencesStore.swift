@@ -23,4 +23,14 @@ final class PreferencesStore {
         }
         defaults.set(preferences.batteryFloorPercent, forKey: "batteryFloorPercent")
     }
+
+    static let telegramInboundOffsetKey = "agrypnos.telegramInbound.offset"
+
+    func loadTelegramInboundOffset() -> Int64 {
+        Int64(defaults.integer(forKey: Self.telegramInboundOffsetKey))
+    }
+
+    func saveTelegramInboundOffset(_ value: Int64) {
+        defaults.set(value, forKey: Self.telegramInboundOffsetKey)
+    }
 }

@@ -82,6 +82,28 @@ public struct WatchEngine: Equatable, Sendable {
         settle.grace = preferences.agentSettleGrace
     }
 
+    public mutating func userSetTelegramInboundEnabled(_ on: Bool) {
+        preferences.telegramInboundEnabled = on
+    }
+
+    /// Telegram arm/disarm/status. Skip a no-op so a second arm does not reset this user arm.
+    public mutating func applyTelegramInbound(
+        _ intent: TelegramInboundIntent,
+        now: Date,
+        lidClosed: Bool = false
+    ) -> [WatchCommand] {
+        switch intent {
+        case .ignore, .status:
+            return []
+        case .arm:
+            guard !engaged else { return [] }
+            return userSetEngaged(true, now: now, lidClosed: lidClosed)
+        case .disarm:
+            guard engaged else { return [] }
+            return userSetEngaged(false, now: now, lidClosed: lidClosed)
+        }
+    }
+
     public mutating func tick(
         now: Date,
         safety: SafetyInputs,
