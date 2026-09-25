@@ -201,11 +201,11 @@ final class NotifPopoverChromeTests: XCTestCase {
         let lines = CopyWrap.lineCount(help, columns: PopoverCopyLayout.innerColumns)
         XCTAssertEqual(PopoverCopyLayout.helpMaxLines, 2)
         XCTAssertGreaterThan(lines, PopoverCopyLayout.helpMaxLines)
-        XCTAssertEqual(lines, 21)
-        XCTAssertEqual(PopoverCopyLayout.notifSetupHelpMaxLines, 21)
+        XCTAssertEqual(lines, 23)
+        XCTAssertEqual(PopoverCopyLayout.notifSetupHelpMaxLines, 23)
         XCTAssertEqual(
             PopoverCopyLayout.notifSetupHelpHeightPoints,
-            21 * PopoverCopyLayout.lineHeightPoints
+            23 * PopoverCopyLayout.lineHeightPoints
         )
         XCTAssertGreaterThanOrEqual(
             PopoverCopyLayout.notifSetupHelpMaxLines,
@@ -229,6 +229,8 @@ final class NotifPopoverChromeTests: XCTestCase {
         XCTAssertTrue(lower.contains("your webhook") || help.contains("your webhook"))
         XCTAssertTrue(lower.contains("telegram"))
         XCTAssertTrue(lower.contains("clear secrets"))
+        XCTAssertTrue(lower.contains("live battery"))
+        XCTAssertTrue(lower.contains("when known"))
         XCTAssertFalse(lower.contains("see readme") && !help.contains("Server Settings"))
         XCTAssertFalse(isReadmeOnly(help))
     }

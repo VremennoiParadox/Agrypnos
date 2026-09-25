@@ -87,6 +87,12 @@ final class WatchRuntime {
         delegate?.watchRuntimeDidChange(self)
     }
 
+    func setPanelPowerMode(_ mode: PanelPowerMode) {
+        engine.preferences.panelPowerMode = mode
+        store.save(engine.preferences)
+        delegate?.watchRuntimeDidChange(self)
+    }
+
     func setThermalAutoOff(_ on: Bool) {
         engine.preferences.thermalAutoOff = on
         store.save(engine.preferences)
