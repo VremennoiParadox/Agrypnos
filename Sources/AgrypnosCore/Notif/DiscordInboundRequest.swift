@@ -5,6 +5,10 @@ public enum DiscordInboundRequestFactory: Sendable {
         api(botToken: botToken, method: "GET", path: "/api/v10/applications/@me", body: Data())
     }
 
+    public static func gatewayBot(botToken: String) -> NotifOutboundRequest? {
+        api(botToken: botToken, method: "GET", path: "/api/v10/gateway/bot", body: Data())
+    }
+
     public static func bulkOverwriteCommands(
         botToken: String,
         applicationId: String
@@ -121,5 +125,19 @@ public enum DiscordApplicationParser: Sendable {
             return String(n)
         }
         return nil
+    }
+}
+
+public enum DiscordGatewayBotParser: Sendable {
+    public static func url(from data: Data) -> URL? {
+        guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return nil
+        }
+        guard let raw = NotifSecretsPayload.present(object["url"] as? String) else { return nil }
+        guard let url = URL(string: raw), url.scheme == "wss" else { return nil }
+        guard let host = url.host?.lowercased(), host.hasSuffix("gateway.discord.gg") else {
+            return nil
+        }
+        return url
     }
 }

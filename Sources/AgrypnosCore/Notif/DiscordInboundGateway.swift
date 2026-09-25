@@ -11,10 +11,12 @@ public enum DiscordInboundTransport: Sendable {
 
 public enum DiscordGatewayEvent: Equatable, Sendable {
     case hello(heartbeatIntervalMs: Int)
+    case heartbeat
     case heartbeatAck
     case reconnect
     case invalidSession(resumable: Bool)
-    case ready(sessionId: String, applicationId: String?)
+    case ready(sessionId: String, applicationId: String?, resumeGatewayURL: String?)
+    case resumed
     case inbound(DiscordInboundUpdate)
     case other
 }
@@ -26,7 +28,9 @@ public struct DiscordGatewayFrame: Equatable, Sendable {
 }
 
 public enum DiscordGatewayPayload: Sendable {
-    /// GUILDS | GUILD_MESSAGES | DIRECT_MESSAGES. Slash INTERACTION_CREATE needs no privileged intent.
+    /// GUILDS | GUILD_MESSAGES | DIRECT_MESSAGES. Slash INTERACTION_CREATE is the product path.
+    /// Do not set MESSAGE_CONTENT (1 << 15) here — privileged; Discord closes with 4014 if the Bot page toggle is off.
+    /// MESSAGE_CREATE is still parsed when content is present (DMs / mentions).
     public static let identifyIntents = 1 | (1 << 9) | (1 << 12)
 
     public static func identify(botToken: String) -> [String: Any]? {
@@ -82,6 +86,8 @@ public enum DiscordGatewayParser: Sendable {
             return .hello(heartbeatIntervalMs: interval)
         case 11:
             return .heartbeatAck
+        case 1:
+            return .heartbeat
         case 7:
             return .reconnect
         case 9:
@@ -101,7 +107,10 @@ public enum DiscordGatewayParser: Sendable {
             }
             let applicationId = NotifSecretsPayload.present(dict(data?["application"])?["id"] as? String)
                 ?? DiscordJSON.int64(dict(data?["application"])?["id"]).map(String.init)
-            return .ready(sessionId: sessionId, applicationId: applicationId)
+            let resumeURL = NotifSecretsPayload.present(data?["resume_gateway_url"] as? String)
+            return .ready(sessionId: sessionId, applicationId: applicationId, resumeGatewayURL: resumeURL)
+        case "RESUMED":
+            return .resumed
         case "MESSAGE_CREATE":
             guard let update = messageUpdate(data) else { return .other }
             return .inbound(update)
@@ -117,6 +126,7 @@ public enum DiscordGatewayParser: Sendable {
         guard let data else { return nil }
         if data["webhook_id"] != nil { return nil }
         if data["interaction"] != nil { return nil }
+        if data["interaction_metadata"] != nil { return nil }
         if DiscordJSON.bool(dict(data["author"])?["bot"]) { return nil }
         guard let channelId = snowflake(data["channel_id"]) else { return nil }
         return DiscordInboundUpdate(

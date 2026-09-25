@@ -8,6 +8,8 @@ struct NotifSecrets: Equatable {
     var discordWebhookURL: String?
     var telegramBotToken: String?
     var telegramChatId: String?
+    var discordBotToken: String?
+    var discordChannelId: String?
 }
 
 /// Application Support file, mode 0600. Not Keychain (unsigned builds prompt for
@@ -20,7 +22,9 @@ enum NotifSecretsStore {
         return NotifSecrets(
             discordWebhookURL: payload.discordWebhookURL,
             telegramBotToken: payload.telegramBotToken,
-            telegramChatId: payload.telegramChatId
+            telegramChatId: payload.telegramChatId,
+            discordBotToken: payload.discordBotToken,
+            discordChannelId: payload.discordChannelId
         )
     }
 
@@ -54,7 +58,9 @@ enum NotifSecretsStore {
         let payload = NotifSecretsPayload(
             discordWebhookURL: secrets.discordWebhookURL,
             telegramBotToken: secrets.telegramBotToken,
-            telegramChatId: secrets.telegramChatId
+            telegramChatId: secrets.telegramChatId,
+            discordBotToken: secrets.discordBotToken,
+            discordChannelId: secrets.discordChannelId
         )
         guard let data = NotifSecretsPayload.encode(payload) else { return false }
         do {

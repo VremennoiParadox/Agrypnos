@@ -62,11 +62,12 @@ final class DiscordGatewayParserTests: XCTestCase {
             "t": "READY",
             "d": [
                 "session_id": "sess",
+                "resume_gateway_url": "wss://us-east.gateway.discord.gg",
                 "application": ["id": "99"],
             ],
         ])
         XCTAssertEqual(ready.sequence, 1)
-        XCTAssertEqual(ready.event, .ready(sessionId: "sess", applicationId: "99"))
+        XCTAssertEqual(ready.event, .ready(sessionId: "sess", applicationId: "99", resumeGatewayURL: "wss://us-east.gateway.discord.gg"))
 
         let message = try frame([
             "op": 0,
@@ -164,6 +165,19 @@ final class DiscordGatewayParserTests: XCTestCase {
         ])
         XCTAssertEqual(echo.event, .other)
 
+        let metadata = try frame([
+            "op": 0,
+            "s": 9,
+            "t": "MESSAGE_CREATE",
+            "d": [
+                "channel_id": "1",
+                "content": "/arm",
+                "author": ["bot": false],
+                "interaction_metadata": ["id": "i1", "name": "arm"],
+            ],
+        ])
+        XCTAssertEqual(metadata.event, .other)
+
         let button = try frame([
             "op": 0,
             "s": 7,
@@ -184,8 +198,15 @@ final class DiscordGatewayParserTests: XCTestCase {
         XCTAssertEqual(try frame(["op": 9, "d": false]).event, .invalidSession(resumable: false))
         XCTAssertEqual(try frame(["op": 9, "d": true]).event, .invalidSession(resumable: true))
         XCTAssertEqual(try frame(["op": 11]).event, .heartbeatAck)
+        XCTAssertEqual(try frame(["op": 1, "d": 8]).event, .heartbeat)
+        XCTAssertEqual(try frame(["op": 0, "s": 9, "t": "RESUMED"]).event, .resumed)
         XCTAssertNil(DiscordGatewayParser.frame(from: Data()))
         XCTAssertNil(DiscordGatewayParser.frame(from: Data("not-json".utf8)))
+    }
+
+    func testIdentifyOmitsPrivilegedMessageContent() {
+        XCTAssertEqual(DiscordGatewayPayload.identifyIntents, 4609)
+        XCTAssertEqual(DiscordGatewayPayload.identifyIntents & (1 << 15), 0)
     }
 
     func testInvalidSessionClearsResumeWhenNotResumable() {
@@ -204,12 +225,47 @@ final class DiscordGatewayParserTests: XCTestCase {
 
     func testUnseededReadyAcknowledgesWithoutApplying() {
         XCTAssertFalse(DiscordInboundCursor.unset.shouldApplyCommands)
-        let next = DiscordInboundCursor.unset.acknowledging(sequence: 1, sessionId: "sess")
+        let next = DiscordInboundCursor.unset.acknowledging(
+            sequence: 1,
+            sessionId: "sess",
+            resumeGatewayURL: "wss://us-east.gateway.discord.gg"
+        )
         XCTAssertTrue(next.seeded)
         XCTAssertEqual(next.sessionId, "sess")
         XCTAssertEqual(next.sequence, 1)
+        XCTAssertEqual(next.resumeGatewayURL, "wss://us-east.gateway.discord.gg")
         XCTAssertTrue(next.canResume)
         XCTAssertTrue(next.shouldApplyCommands)
+    }
+
+    func testRecordingSequenceDoesNotSeedDuringResumeReplay() {
+        var cursor = DiscordInboundCursor(sessionId: "s", sequence: 40, seeded: true).startingWakeMiss()
+        XCTAssertEqual(cursor.drain, .wakeMiss)
+        cursor = cursor.recording(sequence: 41)
+        XCTAssertFalse(cursor.shouldApplyCommands)
+        XCTAssertEqual(cursor.sequence, 41)
+        XCTAssertEqual(cursor.drain, .wakeMiss)
+        XCTAssertEqual(
+            TelegramInboundDispatch.effect(drain: cursor.drain, intent: .arm),
+            .missedWhileAsleep
+        )
+        var engine = WatchEngine(preferences: .default)
+        let t0 = Date(timeIntervalSince1970: 1)
+        XCTAssertEqual(
+            TelegramInboundDispatch.effect(drain: cursor.drain, intent: .arm),
+            .missedWhileAsleep
+        )
+        XCTAssertTrue(engine.applyInbound(.ignore, now: t0).isEmpty)
+        XCTAssertFalse(engine.engaged)
+
+        cursor = cursor.recording(sequence: 42)
+        cursor = cursor.acknowledging(sequence: 42)
+        XCTAssertEqual(cursor.drain, .live)
+        XCTAssertTrue(cursor.shouldApplyCommands)
+        XCTAssertEqual(
+            TelegramInboundDispatch.effect(drain: cursor.drain, intent: .arm),
+            .apply(.arm)
+        )
     }
 
     private func frame(_ object: [String: Any]) throws -> DiscordGatewayFrame {
@@ -225,5 +281,15 @@ final class DiscordInboundNoListenPortTests: XCTestCase {
         XCTAssertNotEqual(app.url.scheme, "http")
         XCTAssertNil(DiscordInboundRequestFactory.interactionsEndpointRegistration())
         XCTAssertNil(DiscordInboundRequestFactory.channelMessages(botToken: "t", channelId: "1"))
+        let gatewayBot = try XCTUnwrap(DiscordInboundRequestFactory.gatewayBot(botToken: "t"))
+        XCTAssertEqual(gatewayBot.httpMethod, "GET")
+        XCTAssertEqual(gatewayBot.url.host, "discord.com")
+        XCTAssertEqual(gatewayBot.url.path, "/api/v10/gateway/bot")
+        XCTAssertFalse(gatewayBot.url.path.contains("webhooks"))
+        XCTAssertEqual(
+            DiscordGatewayBotParser.url(from: Data("{\"url\":\"wss://gateway.discord.gg\"}".utf8))?.host,
+            "gateway.discord.gg"
+        )
+        XCTAssertNil(DiscordGatewayBotParser.url(from: Data()))
     }
 }

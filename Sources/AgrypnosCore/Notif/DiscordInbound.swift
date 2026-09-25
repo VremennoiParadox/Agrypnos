@@ -74,6 +74,7 @@ public struct DiscordInboundCursor: Equatable, Sendable {
     public var sequence: Int64?
     public var seeded: Bool
     public var wakeMiss: Bool
+    public var resumeGatewayURL: String?
 
     public static let unset = DiscordInboundCursor(
         sessionId: nil,
@@ -82,11 +83,18 @@ public struct DiscordInboundCursor: Equatable, Sendable {
         wakeMiss: false
     )
 
-    public init(sessionId: String?, sequence: Int64?, seeded: Bool, wakeMiss: Bool = false) {
+    public init(
+        sessionId: String?,
+        sequence: Int64?,
+        seeded: Bool,
+        wakeMiss: Bool = false,
+        resumeGatewayURL: String? = nil
+    ) {
         self.sessionId = NotifSecretsPayload.present(sessionId)
         self.sequence = sequence
         self.seeded = seeded
         self.wakeMiss = seeded ? false : wakeMiss
+        self.resumeGatewayURL = NotifSecretsPayload.present(resumeGatewayURL)
     }
 
     public var shouldApplyCommands: Bool { seeded }
@@ -100,20 +108,52 @@ public struct DiscordInboundCursor: Equatable, Sendable {
 
     /// Setup / quit / inbound off: keep resume state, skip leftover commands once, silent.
     public func startingSession() -> DiscordInboundCursor {
-        DiscordInboundCursor(sessionId: sessionId, sequence: sequence, seeded: false, wakeMiss: false)
+        DiscordInboundCursor(
+            sessionId: sessionId,
+            sequence: sequence,
+            seeded: false,
+            wakeMiss: false,
+            resumeGatewayURL: resumeGatewayURL
+        )
     }
 
     /// Sleep wake: drain queued Gateway events without applying, then reply missed-while-asleep.
     public func startingWakeMiss() -> DiscordInboundCursor {
-        DiscordInboundCursor(sessionId: sessionId, sequence: sequence, seeded: false, wakeMiss: true)
+        DiscordInboundCursor(
+            sessionId: sessionId,
+            sequence: sequence,
+            seeded: false,
+            wakeMiss: true,
+            resumeGatewayURL: resumeGatewayURL
+        )
     }
 
-    public func acknowledging(sequence: Int64?, sessionId: String? = nil) -> DiscordInboundCursor {
+    /// Advance `s` during Resume replay without seeding live. Seed only after READY or RESUMED.
+    public func recording(
+        sequence: Int64?,
+        sessionId: String? = nil,
+        resumeGatewayURL: String? = nil
+    ) -> DiscordInboundCursor {
+        DiscordInboundCursor(
+            sessionId: sessionId ?? self.sessionId,
+            sequence: sequence ?? self.sequence,
+            seeded: seeded,
+            wakeMiss: wakeMiss,
+            resumeGatewayURL: resumeGatewayURL ?? self.resumeGatewayURL
+        )
+    }
+
+    public func acknowledging(
+        sequence: Int64?,
+        sessionId: String? = nil,
+        resumeGatewayURL: String? = nil
+    ) -> DiscordInboundCursor {
         DiscordInboundCursor(
             sessionId: sessionId ?? self.sessionId,
             sequence: sequence ?? self.sequence,
             seeded: true,
-            wakeMiss: false
+            wakeMiss: false,
+            resumeGatewayURL: resumeGatewayURL ?? self.resumeGatewayURL
         )
     }
 
@@ -123,10 +163,16 @@ public struct DiscordInboundCursor: Equatable, Sendable {
                 sessionId: sessionId,
                 sequence: sequence,
                 seeded: seeded,
-                wakeMiss: wakeMiss
+                wakeMiss: wakeMiss,
+                resumeGatewayURL: resumeGatewayURL
             )
         }
-        return DiscordInboundCursor(sessionId: nil, sequence: nil, seeded: false, wakeMiss: wakeMiss)
+        return DiscordInboundCursor(
+            sessionId: nil,
+            sequence: nil,
+            seeded: false,
+            wakeMiss: wakeMiss
+        )
     }
 }
 
