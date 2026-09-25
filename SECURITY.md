@@ -23,11 +23,15 @@ Agent heuristics look at process names and mtimes of known session paths under y
 
 ## Opt-in outbound (Notif)
 
-When Notif outbound is enabled, Agrypnos may POST **once** to **your** Discord incoming webhook and/or **your** Telegram bot after Agents mode has seen local busy this arm and then stayed quiet through the idle wait. Default **off**. Empty fields skip that channel. Secrets (webhook URL, bot token, chat id) live in `~/Library/Application Support/Agrypnos/notif-secrets.json` (mode 0600), not Keychain and not plaintext prefs. Values saved in an older Keychain build are not imported; paste them again. This is not telemetry. Agrypnos does not run a shared bot.
+When Notif outbound is enabled, Agrypnos may POST **once** to **your** Discord incoming webhook and/or **your** Telegram bot after Agents mode has seen local busy this arm and then stayed quiet through the idle wait. Default **off**. Empty fields skip that channel. Secrets (webhook URL, Telegram bot token, chat id, Discord bot token, Discord channel id) live in `~/Library/Application Support/Agrypnos/notif-secrets.json` (mode 0600), not Keychain and not plaintext prefs. Values saved in an older Keychain build are not imported; paste them again. This is not telemetry. Agrypnos does not run a shared bot.
 
 ## Telegram inbound (your bot)
 
 When Telegram inbound is on, Agrypnos may poll `getUpdates`, register `/arm` `/disarm` `/status` `/help` with `setMyCommands`, and send command replies on **your** BotFather bot using the same token and chat id as outbound. Default **off**. Empty token or chat id: no inbound. Commands are accepted only from the saved chat id. Agrypnos does not reply while the Mac is asleep (no relay). On wake, queued commands are drained without applying (facts-only **missed while asleep**). Confirmed lid-closed `/disarm` may call `pmset sleepnow` (same user-level path as safety auto-off; not a new sudoers grant). Lid-open or unconfirmed `/disarm` must not sleep the Mac. If that id is a group, anyone who can message that group can send those commands. Discord webhook stays outbound-only. This is not telemetry. Agrypnos does not run a shared bot.
+
+## Discord inbound (your bot)
+
+When Discord inbound is on, Agrypnos may poll or receive updates on **your** Discord bot (Core picks the smallest reliable path) and send command replies using a **bot token** and **channel id** stored with the other Notif secrets. Default **off**, separate from outbound Notif and from Telegram inbound. Empty token or empty channel id: no inbound. Commands are accepted only from the saved channel. The incoming webhook URL is never inbound — do not mix them. Same `/arm` `/disarm` `/status` `/help` WatchEngine path as Telegram (Discord-native slash may map to those commands). Agrypnos does not reply while the Mac is asleep (no relay). On wake, queued commands are drained without applying (facts-only **missed while asleep**). Confirmed lid-closed Discord `/disarm` may call `pmset sleepnow` (same user-level path as Telegram `/disarm`; not a new sudoers grant). Lid-open or unconfirmed `/disarm` must not sleep the Mac. If that channel is a server channel, anyone who can post there can send those commands. This is not telemetry. Agrypnos does not run a shared Discord bot.
 
 ## What we will not do
 
