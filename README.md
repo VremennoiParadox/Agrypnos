@@ -98,7 +98,7 @@ This URL is **outbound-only**. Agrypnos POSTs idle-after-wait here. It does **no
 
 A **different** secret from the webhook. Not a shared Agrypnos bot. You own the bot. Default inbound **off**, separate from the outbound POST opt-in and from Telegram inbound. Empty bot token or empty channel id: no inbound. Next Notif slice — **not claimed shipped**.
 
-Same command surface as Telegram, on **one shared WatchEngine path**: **`/arm`** **`/disarm`** **`/status`** **`/help`** (Discord-native slash may map to those same commands). No second arm/disarm stack. Replies are facts only. Ban “agent stopped,” “job finished,” “still thinking.” `/status` dumps the same live WatchEngine facts as Telegram (including live battery when known). Enriched-status B (task text / finish ETA) is **scrapped**. Agrypnos does **not** reply while the Mac is asleep (no relay). Wake-miss drain: commands that arrived while the Mac was asleep are drained without applying, then **Missed while asleep.** Lid-gated `/disarm` is the same as Telegram: lid open or unconfirmed → Keep the watch off, Mac stays awake; confirmed lid-close → Keep the watch off and `pmset sleepnow`. This sleep path is inbound `/disarm` only — not the popover or hotkey.
+Same command surface as Telegram, on **one shared WatchEngine path**: **`/arm`** **`/disarm`** **`/status`** **`/help`** (Discord-native slash may map to those same commands). No second arm/disarm stack. Replies are facts only. Ban “agent stopped,” “job finished,” “still thinking.” `/status` dumps the same live WatchEngine facts as Telegram (including live battery when known). Enriched-status B (task text / finish ETA) is **scrapped**. Agrypnos does **not** reply while the Mac is asleep (no relay). `/help` keeps the asleep note (if the bot isn’t replying, the Mac is likely asleep / Agrypnos isn’t receiving updates) and lid-gated `/disarm`. Wake-miss drain: commands that arrived while the Mac was asleep are drained without applying **if** anything was queued, then **Missed while asleep.** Do not scrape channel history on wake. Lid-gated `/disarm` is the same as Telegram: lid open or unconfirmed → Keep the watch off, Mac stays awake; confirmed lid-close → Keep the watch off and `pmset sleepnow`. This sleep path is inbound `/disarm` only — not the popover or hotkey. Receive on the Mac — do not set Discord’s Interactions Endpoint URL, and do not open a listen port.
 
 **In Notif (when the chrome lands):** Discord inbound on/off + short command/help list + bot token + channel id (dotted + reveal). Keep the webhook paste block as outbound-only — never paste the bot token into the webhook field.
 
@@ -106,7 +106,7 @@ Same command surface as Telegram, on **one shared WatchEngine path**: **`/arm`**
 2. **Bot** → **Reset Token** → copy the **bot token**. Treat it as a password. Do not paste it into the Discord webhook URL field.
 3. Invite the bot to **your** server: **OAuth2 → URL Generator**. Scopes: `bot` and `applications.commands`. Bot permissions: **Send Messages** (smallest that can reply). Copy the generated URL, open it, pick the server, authorize. You need permission to add a bot to that server.
 4. In Discord: **User Settings → Advanced → Developer Mode** on. Right-click the channel the bot should take commands in → **Copy Channel ID**. That id is the allowlist (same role as Telegram’s chat id). Commands only from that channel. If it is a server channel, anyone who can post there can send those commands.
-5. Popover → **Notif** → Discord inbound: paste the **bot token** and **channel id**, turn **Discord inbound** on (separate from Notif outbound). Agrypnos registers the four slash commands on *your* bot so Discord’s `/` menu matches.
+5. When Discord inbound chrome lands: Popover → **Notif** → Discord inbound: paste the **bot token** and **channel id**, turn **Discord inbound** on (separate from Notif outbound). Agrypnos registers the four slash commands on *your* bot so Discord’s `/` menu matches.
 
 Agrypnos does not ship a Discord bot for you to add. If the Developer Portal did not give you a bot token, you do not have a bot yet.
 
@@ -162,7 +162,7 @@ Core `/status` dumps live WatchEngine facts; `/help` says `/status` returns thos
 | Telegram bot token | Telegram token field |
 | Telegram chat id | Telegram chat id field |
 
-Use one channel, or both. Leave a field empty if you do not use that channel. Nothing is sent while Notif is off, or while the matching secret is missing.
+Use the webhook, Telegram, Discord inbound, or any mix. Leave a field empty if you do not use that channel. Outbound POSTs do not fire while Notif is off, or while the matching outbound secret is missing. Discord inbound is a separate on/off — empty token or channel id: no inbound.
 
 ### How to test
 
@@ -177,7 +177,7 @@ Use one channel, or both. Leave a field empty if you do not use that channel. No
 
 - Switch **Notif** off in the popover. POSTs stop. Default is off.
 - Switch Telegram inbound off in **Notif** to stop Telegram command handling. Default inbound is off.
-- Switch Discord inbound off in **Notif** to stop Discord command handling. Default Discord inbound is off.
+- Switch Discord inbound off in **Notif** to stop Discord command handling, once that chrome lands. Default Discord inbound is off.
 - Use **Clear secrets** in the Notif section to delete the saved webhook URL, bot tokens, chat id, and Discord channel id.
 - On Discord you can also delete the webhook: **Server Settings → Integrations → Webhooks**. Reset or delete the inbound bot in the Developer Portal (**Bot → Reset Token**, or delete the application).
 - On Telegram you can revoke or delete the bot in BotFather (`/revoke` or `/deletebot`).
