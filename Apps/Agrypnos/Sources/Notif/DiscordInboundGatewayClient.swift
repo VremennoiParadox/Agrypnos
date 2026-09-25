@@ -22,6 +22,7 @@ final class DiscordInboundGatewayClient {
     private var generation: UInt64 = 0
     private var urlSession: URLSession?
     private var socket: URLSessionWebSocketTask?
+    private var reconnectSoon = false
 
     func sync() {
         if shouldReceive() {
@@ -98,8 +99,9 @@ final class DiscordInboundGatewayClient {
         }
     }
 
-    /// `true` = reconnect without the retry delay (opcode 7 / missed heartbeat).
+    /// `true` = reconnect without the retry delay (opcode 7 / invalid session / missed heartbeat).
     private func runConnection(generation captured: UInt64) async -> Bool {
+        reconnectSoon = false
         let snap = await MainActor.run { self.runtime?.discordInboundSnapshot() }
         guard let snap,
               DiscordInboundPolicy.shouldReceive(
@@ -186,7 +188,7 @@ final class DiscordInboundGatewayClient {
                 self.urlSession = nil
             }
         }
-        return reconnect
+        return reconnect || reconnectSoon
     }
 
     private enum ConnectionOutcome {
@@ -242,6 +244,7 @@ final class DiscordInboundGatewayClient {
                         return false
                     }
                     if !ack.ok {
+                        self.reconnectSoon = true
                         socket.cancel(with: .goingAway, reason: nil)
                         return false
                     }

@@ -32,7 +32,10 @@ public struct DiscordGatewaySession: Equatable, Sendable {
             return [.reconnect(resume: cursor.canResume)]
         case .invalidSession(let resumable):
             cursor = cursor.invalidatingSession(resumable: resumable)
-            return [cursor.canResume ? .sendResume : .sendIdentify]
+            if resumable, cursor.canResume {
+                return [.sendResume]
+            }
+            return [.reconnect(resume: false)]
         case .ready(let sessionId, let applicationId, let resumeGatewayURL):
             cursor = cursor.acknowledging(
                 sequence: frame.sequence,

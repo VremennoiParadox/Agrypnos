@@ -183,7 +183,7 @@ final class DiscordGatewaySessionTests: XCTestCase {
         var drop = DiscordGatewaySession(cursor: live)
         XCTAssertEqual(
             drop.handle(DiscordGatewayFrame(op: 9, sequence: nil, event: .invalidSession(resumable: false))),
-            [.sendIdentify]
+            [.reconnect(resume: false)]
         )
         XCTAssertFalse(drop.cursor.canResume)
         XCTAssertNil(drop.cursor.sessionId)

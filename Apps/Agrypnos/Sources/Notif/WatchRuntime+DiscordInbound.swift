@@ -56,6 +56,9 @@ extension WatchRuntime {
     func registerDiscordBotCommands(applicationId: String?) {
         let secrets = NotifSecretsStore.load()
         guard discordInboundIsReceiving(), let token = secrets.discordBotToken else { return }
+        if let applicationId {
+            discordApplicationId = applicationId
+        }
         Task {
             var appId = applicationId
             if let request = DiscordInboundRequestFactory.currentApplication(botToken: token),
@@ -63,6 +66,9 @@ extension WatchRuntime {
                let parsed = DiscordApplicationParser.id(from: data)
             {
                 appId = parsed
+            }
+            if let appId {
+                await MainActor.run { self.discordApplicationId = appId }
             }
             guard let appId,
                   let put = DiscordInboundRequestFactory.bulkOverwriteCommands(
@@ -75,6 +81,24 @@ extension WatchRuntime {
     }
 
     func applyDiscordInbound(_ update: DiscordInboundUpdate) {
+        if update.source == .slash,
+           let interactionId = update.interactionId,
+           let interactionToken = update.interactionToken,
+           let deferRequest = DiscordInboundRequestFactory.interactionDefer(
+               interactionId: interactionId,
+               interactionToken: interactionToken
+           )
+        {
+            Task {
+                await TelegramInboundHTTP.send(deferRequest)
+                await MainActor.run { self.finishDiscordInbound(update, slashDeferred: true) }
+            }
+            return
+        }
+        finishDiscordInbound(update, slashDeferred: false)
+    }
+
+    func finishDiscordInbound(_ update: DiscordInboundUpdate, slashDeferred: Bool) {
         let drain = store.loadDiscordInboundCursor().drain
         let secrets = NotifSecretsStore.load()
         let enabled = engine.preferences.discordInboundEnabled
@@ -125,7 +149,12 @@ extension WatchRuntime {
             reply = update.source == .slash ? "\u{200b}" : nil
         }
         if let reply {
-            sendDiscordInboundReply(reply, update: update, token: secrets.discordBotToken)
+            sendDiscordInboundReply(
+                reply,
+                update: update,
+                token: secrets.discordBotToken,
+                slashDeferred: slashDeferred
+            )
         }
     }
 
@@ -153,16 +182,44 @@ extension WatchRuntime {
         return DiscordInboundCopy.disarmed
     }
 
-    func sendDiscordInboundReply(_ text: String, update: DiscordInboundUpdate, token: String?) {
+    func sendDiscordInboundReply(
+        _ text: String,
+        update: DiscordInboundUpdate,
+        token: String?,
+        slashDeferred: Bool = false
+    ) {
         if update.source == .slash,
            let interactionId = update.interactionId,
-           let interactionToken = update.interactionToken,
-           let request = DiscordInboundRequestFactory.interactionCallback(
-               interactionId: interactionId,
-               interactionToken: interactionToken,
-               content: text
-           )
+           let interactionToken = update.interactionToken
         {
+            if slashDeferred {
+                Task {
+                    var appId = await MainActor.run { self.discordApplicationId }
+                    if appId == nil, let token,
+                       let request = DiscordInboundRequestFactory.currentApplication(botToken: token),
+                       let data = await TelegramInboundHTTP.fetch(request)
+                    {
+                        appId = DiscordApplicationParser.id(from: data)
+                        if let appId {
+                            await MainActor.run { self.discordApplicationId = appId }
+                        }
+                    }
+                    guard let appId,
+                          let request = DiscordInboundRequestFactory.interactionEditOriginal(
+                              applicationId: appId,
+                              interactionToken: interactionToken,
+                              content: text
+                          )
+                    else { return }
+                    await TelegramInboundHTTP.send(request)
+                }
+                return
+            }
+            guard let request = DiscordInboundRequestFactory.interactionCallback(
+                interactionId: interactionId,
+                interactionToken: interactionToken,
+                content: text
+            ) else { return }
             Task { await TelegramInboundHTTP.send(request) }
             return
         }

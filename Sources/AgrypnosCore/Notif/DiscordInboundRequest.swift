@@ -68,6 +68,45 @@ public enum DiscordInboundRequestFactory: Sendable {
         )
     }
 
+    /// ACK a slash command within 3s. Follow with `interactionEditOriginal`.
+    public static func interactionDefer(
+        interactionId: String,
+        interactionToken: String
+    ) -> NotifOutboundRequest? {
+        guard let interactionId = snowflakePath(interactionId) else { return nil }
+        guard let token = NotifSecretsPayload.present(interactionToken) else { return nil }
+        var allowed = CharacterSet.urlPathAllowed
+        allowed.remove(charactersIn: "/")
+        let encoded = token.addingPercentEncoding(withAllowedCharacters: allowed) ?? token
+        guard let body = try? JSONSerialization.data(withJSONObject: ["type": 5]) else { return nil }
+        return api(
+            botToken: nil,
+            method: "POST",
+            path: "/api/v10/interactions/\(interactionId)/\(encoded)/callback",
+            body: body
+        )
+    }
+
+    /// PATCH the deferred slash reply. Interaction token in the path — not an incoming webhook.
+    public static func interactionEditOriginal(
+        applicationId: String,
+        interactionToken: String,
+        content: String
+    ) -> NotifOutboundRequest? {
+        guard let applicationId = snowflakePath(applicationId) else { return nil }
+        guard let token = NotifSecretsPayload.present(interactionToken) else { return nil }
+        var allowed = CharacterSet.urlPathAllowed
+        allowed.remove(charactersIn: "/")
+        let encoded = token.addingPercentEncoding(withAllowedCharacters: allowed) ?? token
+        guard let body = NotifOutboundRequestFactory.json(["content": content]) else { return nil }
+        return api(
+            botToken: nil,
+            method: "PATCH",
+            path: "/api/v10/webhooks/\(applicationId)/\(encoded)/messages/@original",
+            body: body
+        )
+    }
+
     /// Never scrape channel history on wake to invent missed commands.
     public static func channelMessages(botToken _: String, channelId _: String) -> NotifOutboundRequest? {
         nil
@@ -86,7 +125,16 @@ public enum DiscordInboundRequestFactory: Sendable {
     ) -> NotifOutboundRequest? {
         guard path.hasPrefix("/api/v10/") else { return nil }
         let parts = path.split(separator: "/", omittingEmptySubsequences: true)
-        guard !parts.contains("webhooks") else { return nil }
+        let interactionOriginal =
+            method == "PATCH"
+            && parts.count >= 6
+            && parts[0] == "api"
+            && parts[1] == "v10"
+            && parts[2] == "webhooks"
+            && snowflakePath(String(parts[3])) != nil
+            && parts[parts.count - 2] == "messages"
+            && parts[parts.count - 1] == "@original"
+        guard !parts.contains("webhooks") || interactionOriginal else { return nil }
         var components = URLComponents()
         components.scheme = "https"
         components.host = "discord.com"
@@ -97,7 +145,11 @@ public enum DiscordInboundRequestFactory: Sendable {
         var headers = NotifOutboundRequestFactory.jsonHeaders
         if let token = NotifSecretsPayload.present(botToken) {
             headers["Authorization"] = "Bot \(token)"
-        } else if method != "POST" || !path.contains("/interactions/") {
+        } else if method == "POST", path.contains("/interactions/") {
+            // slash callback / defer — interaction token is in the path
+        } else if interactionOriginal {
+            // deferred slash follow-up — interaction token is in the path
+        } else {
             return nil
         }
         return NotifOutboundRequest(url: url, httpMethod: method, headers: headers, body: body)

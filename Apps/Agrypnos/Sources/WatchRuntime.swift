@@ -36,6 +36,7 @@ final class WatchRuntime {
     private var idlePostTask: Task<Void, Never>?
     let inboundPoller = TelegramInboundPoller()
     let discordGateway = DiscordInboundGatewayClient()
+    var discordApplicationId: String?
     private var workspaceObservers: [NSObjectProtocol] = []
 
     init() {
