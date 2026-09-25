@@ -99,12 +99,20 @@ extension WatchRuntime {
                     now: now,
                     freshness: engine.preferences.sessionFreshness
                 )
+                let battery = BatteryMonitor.reading()
+                let safety = SafetyInputs(
+                    batteryPercent: battery.percent,
+                    onBatteryDischarging: battery.onBatteryDischarging,
+                    thermalSerious: ThermalMonitor.isSerious(),
+                    lowPowerMode: ProcessInfo.processInfo.isLowPowerModeEnabled
+                )
                 sendTelegramInboundReply(
                     TelegramInboundCopy.status(
                         engine.telegramWatchStatus(
                             now: now,
                             agentsBusy: agents.anyBusy(included: engine.preferences.includedAgentKinds),
-                            lowPowerMode: ProcessInfo.processInfo.isLowPowerModeEnabled
+                            lowPowerMode: safety.lowPowerMode,
+                            safety: safety
                         ),
                         now: now
                     ),

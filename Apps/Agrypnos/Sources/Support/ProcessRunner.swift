@@ -31,4 +31,15 @@ enum ProcessRunner {
         process.waitUntilExit()
         return (process.terminationStatus, out, err)
     }
+
+    /// Do not wait. Used for Power B panel wake so a later `sleepnow` is not delayed.
+    static func runDetached(_ launchPath: String, _ arguments: [String]) {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: launchPath)
+        process.arguments = arguments
+        process.standardInput = FileHandle.nullDevice
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+        try? process.run()
+    }
 }

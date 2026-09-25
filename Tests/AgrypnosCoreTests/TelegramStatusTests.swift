@@ -207,6 +207,72 @@ final class TelegramStatusCopyTests: XCTestCase {
         }
     }
 
+    func testLiveBatteryDischargingKeepsThresholdAndThermal() {
+        let text = TelegramWatchStatusCopy.reply(
+            base(liveBatteryPercent: 62, liveBatteryDischarging: true),
+            now: now
+        )
+        XCTAssertTrue(text.contains("Battery 62% · discharging"))
+        XCTAssertTrue(text.contains("Auto-off at 15% battery."))
+        XCTAssertTrue(text.contains("Thermal auto-off is on."))
+        XCTAssertFalse(text.lowercased().contains("time-to-empty"))
+        XCTAssertFalse(text.lowercased().contains("time to empty"))
+        XCTAssertFalse(text.lowercased().contains("health"))
+        XCTAssertFalse(text.contains("°C"))
+        XCTAssertFalse(text.lowercased().contains("warranty"))
+    }
+
+    func testLiveBatteryOnACKeepsThresholdAndThermal() {
+        let text = TelegramWatchStatusCopy.reply(
+            base(liveBatteryPercent: 62, liveBatteryDischarging: false),
+            now: now
+        )
+        XCTAssertTrue(text.contains("Battery 62% · on AC"))
+        XCTAssertTrue(text.contains("Auto-off at 15% battery."))
+        XCTAssertFalse(text.contains("discharging"))
+    }
+
+    func testLiveBatteryOmittedWhenPercentUnknown() {
+        let unknown = TelegramWatchStatusCopy.reply(
+            base(liveBatteryPercent: nil, liveBatteryDischarging: true),
+            now: now
+        )
+        XCTAssertFalse(unknown.contains("Battery "))
+        XCTAssertFalse(unknown.contains("% ·"))
+        XCTAssertTrue(unknown.contains("Auto-off at 15% battery."))
+        XCTAssertTrue(unknown.contains("Thermal auto-off is on."))
+
+        let percentOnly = TelegramWatchStatusCopy.reply(
+            base(liveBatteryPercent: 62, liveBatteryDischarging: nil),
+            now: now
+        )
+        XCTAssertFalse(percentOnly.contains("Battery "))
+        XCTAssertFalse(percentOnly.contains("on AC"))
+    }
+
+    func testStatusNamesPowerAFloorAndRampNotDisplaySleep() {
+        let text = TelegramWatchStatusCopy.reply(base(panelPowerMode: .floor), now: now)
+        XCTAssertTrue(text.contains("Power A: brightness floor + ramp."))
+        XCTAssertFalse(text.lowercased().contains("display asleep"))
+        XCTAssertFalse(text.lowercased().contains("screen off"))
+    }
+
+    func testStatusNamesPowerBModeNotLivePanelAsleep() {
+        let text = TelegramWatchStatusCopy.reply(
+            base(panelPowerMode: .displaySleep),
+            now: now
+        )
+        XCTAssertTrue(text.contains("Power B: display sleep on confirmed lid close."))
+        XCTAssertTrue(text.contains("Lid is open or unconfirmed."))
+        let lower = text.lowercased()
+        XCTAssertFalse(lower.contains("display asleep"))
+        XCTAssertFalse(lower.contains("mac asleep"))
+        XCTAssertFalse(lower.contains("agents stopped"))
+        XCTAssertFalse(lower.contains("job finished"))
+        XCTAssertFalse(lower.contains("still thinking"))
+        XCTAssertFalse(lower.contains("puts the computer to sleep"))
+    }
+
     private func base(
         engaged: Bool = true,
         duration: DurationOption = .indefinite,
@@ -218,7 +284,10 @@ final class TelegramStatusCopyTests: XCTestCase {
         batteryFloorPercent: Int = 15,
         thermalAutoOff: Bool = true,
         lowPowerMode: Bool? = nil,
-        userForcedThisSession: Bool = true
+        userForcedThisSession: Bool = true,
+        liveBatteryPercent: Int? = nil,
+        liveBatteryDischarging: Bool? = nil,
+        panelPowerMode: PanelPowerMode = .floor
     ) -> TelegramWatchStatus {
         TelegramWatchStatus(
             engaged: engaged,
@@ -231,7 +300,10 @@ final class TelegramStatusCopyTests: XCTestCase {
             batteryFloorPercent: batteryFloorPercent,
             thermalAutoOff: thermalAutoOff,
             lowPowerMode: lowPowerMode,
-            userForcedThisSession: userForcedThisSession
+            userForcedThisSession: userForcedThisSession,
+            liveBatteryPercent: liveBatteryPercent,
+            liveBatteryDischarging: liveBatteryDischarging,
+            panelPowerMode: panelPowerMode
         )
     }
 }
@@ -268,6 +340,52 @@ final class TelegramStatusSnapshotTests: XCTestCase {
         XCTAssertFalse(snapshot.thermalAutoOff)
         XCTAssertEqual(snapshot.lowPowerMode, true)
         XCTAssertTrue(snapshot.userForcedThisSession)
+        XCTAssertEqual(snapshot.panelPowerMode, .floor)
+        XCTAssertNil(snapshot.liveBatteryPercent)
+        XCTAssertNil(snapshot.liveBatteryDischarging)
+    }
+
+    func testEngineSnapshotWiresLiveBatteryFromSafetySensor() {
+        var engine = WatchEngine(preferences: .default)
+        _ = engine.userSetEngaged(true, now: t0)
+        let discharging = engine.telegramWatchStatus(
+            now: t0,
+            safety: SafetyInputs(
+                batteryPercent: 62,
+                onBatteryDischarging: true,
+                thermalSerious: false,
+                lowPowerMode: false
+            )
+        )
+        XCTAssertEqual(discharging.liveBatteryPercent, 62)
+        XCTAssertEqual(discharging.liveBatteryDischarging, true)
+        let text = TelegramWatchStatusCopy.reply(discharging, now: t0)
+        XCTAssertTrue(text.contains("Battery 62% · discharging"))
+        XCTAssertTrue(text.contains("Auto-off at 15% battery."))
+
+        let unknown = engine.telegramWatchStatus(
+            now: t0,
+            safety: SafetyInputs(
+                batteryPercent: nil,
+                onBatteryDischarging: true,
+                thermalSerious: false,
+                lowPowerMode: false
+            )
+        )
+        XCTAssertNil(unknown.liveBatteryPercent)
+        XCTAssertFalse(TelegramWatchStatusCopy.reply(unknown, now: t0).contains("Battery "))
+    }
+
+    func testEngineSnapshotNamesLivePowerMode() {
+        var prefs = UserPreferences.default
+        prefs.panelPowerMode = .displaySleep
+        let engine = WatchEngine(preferences: prefs)
+        let snapshot = engine.telegramWatchStatus(now: t0)
+        XCTAssertEqual(snapshot.panelPowerMode, .displaySleep)
+        let text = TelegramWatchStatusCopy.reply(snapshot, now: t0)
+        XCTAssertTrue(text.contains("Power B: display sleep on confirmed lid close."))
+        XCTAssertFalse(text.lowercased().contains("mac asleep"))
+        XCTAssertFalse(text.lowercased().contains("display asleep"))
     }
 
     func testEngineSnapshotOmitsSettleWhenBusyUnknown() {
