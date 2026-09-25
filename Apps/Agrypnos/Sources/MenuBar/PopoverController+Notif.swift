@@ -74,6 +74,64 @@ extension PopoverController {
         card.addSubview(discordStatus)
     }
 
+    func addNotifDiscordInboundCard(
+        _ card: CardView,
+        contentW: CGFloat,
+        ci: CGFloat,
+        cw: CGFloat,
+        swW: CGFloat,
+        swH: CGFloat
+    ) {
+        addPrefTitle(AgrypnosCopy.notifDiscordInbound, in: card, ci: ci, width: cw)
+        _ = PopoverForm.help(
+            AgrypnosCopy.notifDiscordInboundHelp,
+            in: card,
+            y: CGFloat(PopoverStackLayout.prefHelpY),
+            x: ci,
+            width: cw,
+            lines: PopoverCopyLayout.notifDiscordInboundHelpMaxLines
+        )
+        discordInboundTokenSecrets = PopoverForm.labeledSecretField(
+            in: card,
+            y: CGFloat(PopoverStackLayout.notifDiscordInboundTokenY),
+            x: ci,
+            width: cw,
+            caption: AgrypnosCopy.notifDiscordInboundTokenShort,
+            placeholder: AgrypnosCopy.notifDiscordInboundTokenPlaceholder,
+            label: AgrypnosCopy.notifDiscordInboundToken,
+            help: AgrypnosCopy.notifDiscordInboundHelp,
+            target: self,
+            action: #selector(discordInboundTokenCommitted(_:)),
+            delegate: self
+        )
+        discordInboundChannelSecrets = PopoverForm.labeledSecretField(
+            in: card,
+            y: CGFloat(PopoverStackLayout.notifDiscordInboundChannelY),
+            x: ci,
+            width: cw,
+            caption: AgrypnosCopy.notifDiscordInboundChannelShort,
+            placeholder: AgrypnosCopy.notifDiscordInboundChannelPlaceholder,
+            label: AgrypnosCopy.notifDiscordInboundChannelId,
+            help: AgrypnosCopy.notifDiscordInboundHelp,
+            target: self,
+            action: #selector(discordInboundChannelCommitted(_:)),
+            delegate: self
+        )
+        discordInboundSwitch = PopoverForm.switchControl(
+            in: card,
+            y: CGFloat(PopoverStackLayout.notifDiscordInboundSwitchY),
+            contentW: contentW,
+            ci: ci,
+            swW: swW,
+            swH: swH,
+            target: self,
+            action: #selector(discordInboundToggled(_:))
+        )
+        discordInboundSwitch.state = DiscordInboundChrome.defaultEnabled ? .on : .off
+        discordInboundSwitch.setAccessibilityLabel(AgrypnosCopy.notifDiscordInbound)
+        discordInboundSwitch.setAccessibilityHelp(AgrypnosCopy.notifDiscordInboundHelp)
+    }
+
     func addNotifTelegramCard(_ card: CardView, ci: CGFloat, cw: CGFloat) {
         addPrefTitle(AgrypnosCopy.notifTelegram, in: card, ci: ci, width: cw)
         _ = PopoverForm.help(
@@ -177,6 +235,7 @@ extension PopoverController {
     func refreshNotifChrome(runtime: WatchRuntime) {
         notifSwitch?.state = runtime.preferences.notifEnabled ? .on : .off
         telegramInboundSwitch?.state = runtime.preferences.telegramInboundEnabled ? .on : .off
+        discordInboundSwitch?.state = runtime.preferences.discordInboundEnabled ? .on : .off
         discordStatus?.stringValue = discordInvalid ? AgrypnosCopy.notifDiscordInvalid : ""
     }
 
@@ -184,6 +243,8 @@ extension PopoverController {
         guard let runtime else { return }
         let secrets = runtime.notifSecrets()
         discordSecrets?.stringValue = secrets.discordWebhookURL ?? ""
+        discordInboundTokenSecrets?.stringValue = secrets.discordBotToken ?? ""
+        discordInboundChannelSecrets?.stringValue = secrets.discordChannelId ?? ""
         telegramTokenSecrets?.stringValue = secrets.telegramBotToken ?? ""
         telegramChatSecrets?.stringValue = secrets.telegramChatId ?? ""
         discordInvalid = false
@@ -192,9 +253,13 @@ extension PopoverController {
 
     func commitNotifFields() {
         flushSecretFieldEditor(discordSecrets?.field)
+        flushSecretFieldEditor(discordInboundTokenSecrets?.field)
+        flushSecretFieldEditor(discordInboundChannelSecrets?.field)
         flushSecretFieldEditor(telegramTokenSecrets?.field)
         flushSecretFieldEditor(telegramChatSecrets?.field)
         if let discordSecrets { discordCommitted(discordSecrets.field) }
+        if let discordInboundTokenSecrets { discordInboundTokenCommitted(discordInboundTokenSecrets.field) }
+        if let discordInboundChannelSecrets { discordInboundChannelCommitted(discordInboundChannelSecrets.field) }
         if let telegramTokenSecrets { telegramTokenCommitted(telegramTokenSecrets.field) }
         if let telegramChatSecrets { telegramChatCommitted(telegramChatSecrets.field) }
     }
@@ -216,6 +281,12 @@ extension PopoverController {
         refresh()
     }
 
+    @objc func discordInboundToggled(_ sender: NSSwitch) {
+        stopRecordingIfNeeded()
+        runtime?.setDiscordInboundEnabled(sender.state == .on)
+        refresh()
+    }
+
     @objc func discordCommitted(_ sender: NSTextField) {
         stopRecordingIfNeeded()
         flushSecretFieldEditor(sender)
@@ -234,6 +305,40 @@ extension PopoverController {
             UserNotify.post(AgrypnosCopy.notifDiscordInvalid)
         }
         discordStatus?.stringValue = discordInvalid ? AgrypnosCopy.notifDiscordInvalid : ""
+    }
+
+    @objc func discordInboundTokenCommitted(_ sender: NSTextField) {
+        stopRecordingIfNeeded()
+        flushSecretFieldEditor(sender)
+        switch DiscordBotTokenChrome.commit(sender.stringValue) {
+        case .persist(let token):
+            let saved = runtime?.setNotifDiscordBotToken(token) ?? true
+            discordInboundTokenSecrets.stringValue = token
+            if !saved {
+                UserNotify.post(AgrypnosCopy.notifSaveFailed)
+            }
+        case .clear:
+            break
+        case .reject:
+            UserNotify.post(AgrypnosCopy.notifDiscordInboundTokenInvalid)
+        }
+    }
+
+    @objc func discordInboundChannelCommitted(_ sender: NSTextField) {
+        stopRecordingIfNeeded()
+        flushSecretFieldEditor(sender)
+        switch DiscordChannelIdChrome.commit(sender.stringValue) {
+        case .persist(let id):
+            let saved = runtime?.setNotifDiscordChannelId(id) ?? true
+            discordInboundChannelSecrets.stringValue = id
+            if !saved {
+                UserNotify.post(AgrypnosCopy.notifSaveFailed)
+            }
+        case .clear:
+            break
+        case .reject:
+            UserNotify.post(AgrypnosCopy.notifDiscordInboundChannelInvalid)
+        }
     }
 
     @objc func telegramTokenCommitted(_ sender: NSTextField) {
@@ -275,6 +380,8 @@ extension PopoverController {
         runtime?.clearNotifSecrets()
         discordInvalid = false
         discordSecrets?.stringValue = ""
+        discordInboundTokenSecrets?.stringValue = ""
+        discordInboundChannelSecrets?.stringValue = ""
         telegramTokenSecrets?.stringValue = ""
         telegramChatSecrets?.stringValue = ""
         discordStatus?.stringValue = ""

@@ -129,6 +129,21 @@ extension PopoverController {
         notifDiscordCard = PopoverForm.card(in: document, slot: notif.notifDiscord!, pad: pad, width: contentW)
         addNotifDiscordCard(notifDiscordCard, ci: ci, cw: cw)
 
+        notifDiscordInboundCard = PopoverForm.card(
+            in: document,
+            slot: notif.notifDiscordInbound!,
+            pad: pad,
+            width: contentW
+        )
+        addNotifDiscordInboundCard(
+            notifDiscordInboundCard,
+            contentW: contentW,
+            ci: ci,
+            cw: cw,
+            swW: swW,
+            swH: swH
+        )
+
         notifTelegramCard = PopoverForm.card(in: document, slot: notif.notifTelegram!, pad: pad, width: contentW)
         addNotifTelegramCard(notifTelegramCard, ci: ci, cw: cw)
 

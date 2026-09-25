@@ -25,6 +25,8 @@
 		8DA2AF8DFDB960B9DF98724A /* NotifSecretsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD41C9A6FD60A6E47BE3AFC /* NotifSecretsStore.swift */; };
 		74189A8A7BDBD266D792FCE0 /* TelegramInboundPoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 013219EDBCB9C28115D79007 /* TelegramInboundPoller.swift */; };
 		FACF7AB4E66AFD37CCE4A152 /* WatchRuntime+TelegramInbound.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C149123F4E7CCF53624D71 /* WatchRuntime+TelegramInbound.swift */; };
+		A7C3E91F204B4D8E9C1D2F30 /* DiscordInboundGatewayClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8B4F02A315C5E9F0D2E3A41 /* DiscordInboundGatewayClient.swift */; };
+		B9D5A13B426D6F0A1E3F4B52 /* WatchRuntime+DiscordInbound.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0E6B24C537E701B2F405C63 /* WatchRuntime+DiscordInbound.swift */; };
 		B54A11BE04F7B909BA1DAA45 /* BrightnessFloorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 664053E9C3461C2FA95B19F5 /* BrightnessFloorController.swift */; };
 		B90D244D2FCD3BF4C0C2FA52 /* BrightnessRampController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AEA59356C52ACE1D2FD1C57 /* BrightnessRampController.swift */; };
 		3E912B96C1EA4A6340DF6B81 /* KeyboardBacklightController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2F4F53E617135F5861F4EE6 /* KeyboardBacklightController.swift */; };
@@ -60,6 +62,8 @@
 		ECD41C9A6FD60A6E47BE3AFC /* NotifSecretsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotifSecretsStore.swift; sourceTree = "<group>"; };
 		013219EDBCB9C28115D79007 /* TelegramInboundPoller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramInboundPoller.swift; sourceTree = "<group>"; };
 		D9C149123F4E7CCF53624D71 /* WatchRuntime+TelegramInbound.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+TelegramInbound.swift"; sourceTree = "<group>"; };
+		E8B4F02A315C5E9F0D2E3A41 /* DiscordInboundGatewayClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscordInboundGatewayClient.swift; sourceTree = "<group>"; };
+		C0E6B24C537E701B2F405C63 /* WatchRuntime+DiscordInbound.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+DiscordInbound.swift"; sourceTree = "<group>"; };
 		664053E9C3461C2FA95B19F5 /* BrightnessFloorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessFloorController.swift; sourceTree = "<group>"; };
 		2AEA59356C52ACE1D2FD1C57 /* BrightnessRampController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessRampController.swift; sourceTree = "<group>"; };
 		B2F4F53E617135F5861F4EE6 /* KeyboardBacklightController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardBacklightController.swift; sourceTree = "<group>"; };
@@ -151,7 +155,9 @@
 			children = (
 				C8193A6EAE0A4E045C57C12C /* NotifIdlePoster.swift */,
 				ECD41C9A6FD60A6E47BE3AFC /* NotifSecretsStore.swift */,
+				E8B4F02A315C5E9F0D2E3A41 /* DiscordInboundGatewayClient.swift */,
 				013219EDBCB9C28115D79007 /* TelegramInboundPoller.swift */,
+				C0E6B24C537E701B2F405C63 /* WatchRuntime+DiscordInbound.swift */,
 				D9C149123F4E7CCF53624D71 /* WatchRuntime+TelegramInbound.swift */,
 			);
 			path = Notif;
@@ -302,7 +308,9 @@
 				EC7A8AAC019F71CCB4D3623D /* StatusItemController.swift in Sources */,
 				B6CAAC6325F70B0F1AB1E2DA /* NotifIdlePoster.swift in Sources */,
 				8DA2AF8DFDB960B9DF98724A /* NotifSecretsStore.swift in Sources */,
+				A7C3E91F204B4D8E9C1D2F30 /* DiscordInboundGatewayClient.swift in Sources */,
 				74189A8A7BDBD266D792FCE0 /* TelegramInboundPoller.swift in Sources */,
+				B9D5A13B426D6F0A1E3F4B52 /* WatchRuntime+DiscordInbound.swift in Sources */,
 				FACF7AB4E66AFD37CCE4A152 /* WatchRuntime+TelegramInbound.swift in Sources */,
 				B54A11BE04F7B909BA1DAA45 /* BrightnessFloorController.swift in Sources */,
 				B90D244D2FCD3BF4C0C2FA52 /* BrightnessRampController.swift in Sources */,

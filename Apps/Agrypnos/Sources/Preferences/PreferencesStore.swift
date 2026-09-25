@@ -47,4 +47,18 @@ final class PreferencesStore {
         defaults.removeObject(forKey: Self.telegramInboundSeededKey)
         defaults.removeObject(forKey: Self.telegramInboundWakeMissKey)
     }
+
+    static let discordInboundCursorKey = "agrypnos.discordInbound.cursor"
+
+    func loadDiscordInboundCursor() -> DiscordInboundCursor {
+        DiscordInboundCursorCodec.decode(defaults.data(forKey: Self.discordInboundCursorKey))
+    }
+
+    func saveDiscordInboundCursor(_ cursor: DiscordInboundCursor) {
+        defaults.set(DiscordInboundCursorCodec.encode(cursor), forKey: Self.discordInboundCursorKey)
+    }
+
+    func resetDiscordInboundCursor() {
+        defaults.removeObject(forKey: Self.discordInboundCursorKey)
+    }
 }

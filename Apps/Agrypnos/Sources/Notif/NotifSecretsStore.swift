@@ -49,6 +49,20 @@ enum NotifSecretsStore {
         return write(secrets)
     }
 
+    @discardableResult
+    static func setDiscordBotToken(_ value: String?) -> Bool {
+        var secrets = load()
+        secrets.discordBotToken = NotifSecretsPayload.present(value)
+        return write(secrets)
+    }
+
+    @discardableResult
+    static func setDiscordChannelId(_ value: String?) -> Bool {
+        var secrets = load()
+        secrets.discordChannelId = NotifSecretsPayload.present(value)
+        return write(secrets)
+    }
+
     static func clear() {
         try? FileManager.default.removeItem(at: fileURL())
     }

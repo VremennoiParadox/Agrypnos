@@ -41,8 +41,11 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var thermalSwitch: NSSwitch!
     var notifSwitch: NSSwitch!
     var telegramInboundSwitch: NSSwitch!
+    var discordInboundSwitch: NSSwitch!
     var discordSecrets: SecretRevealRow!
     var discordStatus: NSTextField!
+    var discordInboundTokenSecrets: SecretRevealRow!
+    var discordInboundChannelSecrets: SecretRevealRow!
     var telegramTokenSecrets: SecretRevealRow!
     var telegramChatSecrets: SecretRevealRow!
     var discordInvalid = false
@@ -70,6 +73,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var thermalCard: CardView!
     var notifEnableCard: CardView!
     var notifDiscordCard: CardView!
+    var notifDiscordInboundCard: CardView!
     var notifTelegramCard: CardView!
     var notifTelegramInboundCard: CardView!
     var notifSetupCard: CardView!
