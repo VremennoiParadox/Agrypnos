@@ -88,10 +88,14 @@ public struct WatchEngine: Equatable, Sendable {
         preferences.telegramInboundEnabled = on
     }
 
-    /// Telegram arm/disarm/status/help. Skip a no-op so a second arm does not reset this user arm.
+    public mutating func userSetDiscordInboundEnabled(_ on: Bool) {
+        preferences.discordInboundEnabled = on
+    }
+
+    /// Shared Telegram + Discord arm/disarm/status/help. One stack — no second disarm path.
     /// Arm always `lidClosed: false` — one raw clamshell sample is not hygiene.
     /// Disarm sleeps only when lid-close is already confirmed.
-    public mutating func applyTelegramInbound(
+    public mutating func applyInbound(
         _ intent: TelegramInboundIntent,
         now: Date,
         lidCloseConfirmed: Bool = false
@@ -116,6 +120,14 @@ public struct WatchEngine: Equatable, Sendable {
         case .status, .help, .ignore:
             return []
         }
+    }
+
+    public mutating func applyTelegramInbound(
+        _ intent: TelegramInboundIntent,
+        now: Date,
+        lidCloseConfirmed: Bool = false
+    ) -> [WatchCommand] {
+        applyInbound(intent, now: now, lidCloseConfirmed: lidCloseConfirmed)
     }
 
     public mutating func tick(

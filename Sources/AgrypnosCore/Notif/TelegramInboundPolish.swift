@@ -10,11 +10,18 @@ public enum TelegramInboundDrain: Equatable, Sendable {
 
     /// A still-seeded in-flight poll after sleep must not auto-apply.
     public static func effective(
+        storedDrain: TelegramInboundDrain,
+        fetchedDrain: TelegramInboundDrain
+    ) -> TelegramInboundDrain {
+        if storedDrain == .wakeMiss { return .wakeMiss }
+        return fetchedDrain
+    }
+
+    public static func effective(
         stored: TelegramInboundCursor,
         fetched: TelegramInboundCursor
     ) -> TelegramInboundDrain {
-        if stored.drain == .wakeMiss { return .wakeMiss }
-        return fetched.drain
+        effective(storedDrain: stored.drain, fetchedDrain: fetched.drain)
     }
 }
 
