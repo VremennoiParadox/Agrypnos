@@ -141,3 +141,41 @@ public enum DiscordGatewayBotParser: Sendable {
         return url
     }
 }
+
+public enum DiscordGatewayURLFactory: Sendable {
+    public static func socketURL(
+        gatewayBotData: Data?,
+        resumeGatewayURL: String?,
+        canResume: Bool
+    ) -> URL {
+        if canResume, let resume = resumeURL(from: resumeGatewayURL) {
+            return resume
+        }
+        if let data = gatewayBotData, let url = DiscordGatewayBotParser.url(from: data) {
+            return withGatewayQuery(url)
+        }
+        return DiscordInboundTransport.gatewayURL
+    }
+
+    public static func resumeURL(from raw: String?) -> URL? {
+        guard let raw = NotifSecretsPayload.present(raw) else { return nil }
+        guard let url = URL(string: raw), url.scheme == "wss" else { return nil }
+        guard let host = url.host?.lowercased(), host.hasSuffix("gateway.discord.gg") else {
+            return nil
+        }
+        return withGatewayQuery(url)
+    }
+
+    public static func withGatewayQuery(_ url: URL) -> URL {
+        var components = URLComponents(url: url, resolvingAgainstBaseURL: false) ?? URLComponents()
+        var items = components.queryItems ?? []
+        if !items.contains(where: { $0.name == "v" }) {
+            items.append(URLQueryItem(name: "v", value: "10"))
+        }
+        if !items.contains(where: { $0.name == "encoding" }) {
+            items.append(URLQueryItem(name: "encoding", value: "json"))
+        }
+        components.queryItems = items
+        return components.url ?? url
+    }
+}

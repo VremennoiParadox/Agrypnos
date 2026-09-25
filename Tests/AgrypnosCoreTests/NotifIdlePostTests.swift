@@ -464,6 +464,8 @@ final class NotifCopyTests: XCTestCase {
             AgrypnosCopy.notifTelegramHelp,
             AgrypnosCopy.notifTelegramInbound,
             AgrypnosCopy.notifTelegramInboundHelp,
+            AgrypnosCopy.notifDiscordInbound,
+            AgrypnosCopy.notifDiscordInboundHelp,
             AgrypnosCopy.notifSetup,
             AgrypnosCopy.notifSetupHelp,
             AgrypnosCopy.notifClear,
