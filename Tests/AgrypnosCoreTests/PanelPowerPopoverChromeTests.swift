@@ -162,6 +162,35 @@ final class PanelPowerPopoverChromeTests: XCTestCase {
         XCTAssertEqual(motion.timing, .easeInEaseOut)
         XCTAssertEqual(motion.toHeight, sleep.popoverHeight)
         XCTAssertEqual(motion.documentHeightDuringMotion, sleep.contentHeight)
+        let back = PopoverSectionResize.make(
+            from: .power,
+            to: .power,
+            animated: true,
+            currentHeight: sleep.popoverHeight,
+            panelPowerMode: .floor
+        )
+        XCTAssertTrue(back.animatesHeight)
+        XCTAssertEqual(back.toHeight, dim.popoverHeight)
+        XCTAssertEqual(back.documentHeightDuringMotion, dim.contentHeight)
+    }
+
+    func testBrightnessFloorHelpNamesDimPanelNotSleepPanel() {
+        XCTAssertEqual(
+            AgrypnosCopy.brightnessFloorHelp,
+            "Dim panel: when the lid closes, brightness drops to this percent."
+        )
+        let lower = AgrypnosCopy.brightnessFloorHelp.lowercased()
+        XCTAssertTrue(lower.contains("dim panel"))
+        XCTAssertTrue(lower.contains("percent"))
+        XCTAssertFalse(lower.contains("display asleep"))
+        XCTAssertFalse(lower.contains("sleep panel"))
+        XCTAssertLessThanOrEqual(
+            CopyWrap.lineCount(
+                AgrypnosCopy.brightnessFloorHelp,
+                columns: PopoverCopyLayout.innerColumns
+            ),
+            PopoverCopyLayout.helpMaxLines
+        )
     }
 
     private func compactYs(_ slots: PopoverSlot?...) -> [Int] {

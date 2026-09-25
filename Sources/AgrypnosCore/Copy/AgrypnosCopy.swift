@@ -12,7 +12,7 @@ public enum AgrypnosCopy: Sendable {
     public static let keyboardDark = "Keyboard backlight off"
     public static let brightnessFloor = "Brightness floor"
     public static let brightnessFloorHelp =
-        "When the lid closes, brightness drops to this percent."
+        "Dim panel: when the lid closes, brightness drops to this percent."
     public static let settleGrace = "Wait after agents go idle"
     public static let settleGraceHelp =
         "How long to wait after local busy signals stop, before the idle-after-wait POST. Then Keep the watch turns off. Buffer so a quiet gap mid-run (no file write / low CPU) doesn’t look finished. Not still thinking — we only see local process and session activity."
