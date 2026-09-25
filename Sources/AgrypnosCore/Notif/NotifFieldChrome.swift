@@ -75,6 +75,32 @@ public enum TelegramInboundChrome: Sendable {
     public static var defaultEnabled: Bool { UserPreferences.default.telegramInboundEnabled }
 }
 
+public enum DiscordBotTokenChrome: Sendable {
+    public static let secretMinimumCount = 20
+
+    public static func commit(_ raw: String) -> NotifFieldCommit {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty { return .clear }
+        if DiscordWebhookURL.parse(trimmed) != nil { return .reject }
+        guard trimmed.count >= secretMinimumCount else { return .reject }
+        return .persist(trimmed)
+    }
+}
+
+public enum DiscordChannelIdChrome: Sendable {
+    public static func commit(_ raw: String) -> NotifFieldCommit {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty { return .clear }
+        let digits = trimmed.unicodeScalars
+        guard !digits.isEmpty,
+              digits.allSatisfy({ $0.isASCII && CharacterSet.decimalDigits.contains($0) })
+        else {
+            return .reject
+        }
+        return .persist(trimmed)
+    }
+}
+
 public enum DiscordInboundChrome: Sendable {
     public static var defaultEnabled: Bool { UserPreferences.default.discordInboundEnabled }
 }

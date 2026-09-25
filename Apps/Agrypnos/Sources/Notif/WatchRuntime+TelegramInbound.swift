@@ -24,12 +24,17 @@ extension WatchRuntime {
     }
 
     func noteMacWillSleep() {
-        guard telegramInboundIsPolling() else { return }
-        store.saveTelegramInboundCursor(store.loadTelegramInboundCursor().startingWakeMiss())
+        if telegramInboundIsPolling() {
+            store.saveTelegramInboundCursor(store.loadTelegramInboundCursor().startingWakeMiss())
+        }
+        if discordInboundIsReceiving() {
+            store.saveDiscordInboundCursor(store.loadDiscordInboundCursor().startingWakeMiss())
+        }
     }
 
     func noteMacDidWake() {
         inboundPoller.restartForWakeMiss()
+        discordGateway.restartForWakeMiss()
     }
 
     func telegramInboundPollSnapshot() -> TelegramInboundPollSnapshot {

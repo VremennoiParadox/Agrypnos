@@ -8,13 +8,14 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
             [
                 .notifEnable,
                 .notifDiscord,
+                .notifDiscordInbound,
                 .notifTelegram,
                 .notifTelegramInbound,
                 .notifSetup,
                 .notifClear,
             ]
         )
-        XCTAssertEqual(PopoverSection.notif.cards.count, 6)
+        XCTAssertEqual(PopoverSection.notif.cards.count, 7)
         XCTAssertFalse(PopoverSection.watch.cards.contains(.notifTelegramInbound))
         XCTAssertFalse(PopoverSection.power.cards.contains(.notifTelegramInbound))
         XCTAssertFalse(PopoverSection.agents.cards.contains(.notifTelegramInbound))
@@ -127,13 +128,14 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
             compactYs(
                 layout.notifEnable,
                 layout.notifDiscord,
+                layout.notifDiscordInbound,
                 layout.notifTelegram,
                 layout.notifTelegramInbound,
                 layout.notifSetup,
                 layout.notifClear
             )
         )
-        XCTAssertEqual(layout.stackedCards.count, 6)
+        XCTAssertEqual(layout.stackedCards.count, 7)
         XCTAssertNil(layout.watch)
         XCTAssertEqual(layout.contentHeight, layout.notifClear!.maxY + PopoverStackLayout.pad)
         XCTAssertEqual(
@@ -179,7 +181,6 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
             "remote-control",
             "remote control",
             "shared agrypnos bot",
-            "discord inbound",
             "disarm always sleeps",
             "the mac is asleep.",
         ] {
@@ -216,10 +217,10 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
             CopyWrap.lineCount(help, columns: PopoverCopyLayout.innerColumns),
             PopoverCopyLayout.notifSetupHelpMaxLines
         )
-        XCTAssertEqual(PopoverCopyLayout.notifSetupHelpMaxLines, 23)
+        XCTAssertEqual(PopoverCopyLayout.notifSetupHelpMaxLines, 24)
         XCTAssertEqual(
             PopoverCopyLayout.notifSetupHelpHeightPoints,
-            23 * PopoverCopyLayout.lineHeightPoints
+            24 * PopoverCopyLayout.lineHeightPoints
         )
     }
 

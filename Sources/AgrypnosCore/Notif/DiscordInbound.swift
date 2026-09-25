@@ -222,3 +222,31 @@ public enum DiscordInboundCopy: Sendable {
 public enum DiscordBotCommandMenu: Sendable {
     public static let commands: [TelegramBotCommand] = TelegramBotCommandMenu.commands
 }
+
+public enum DiscordInboundCursorCodec: Sendable {
+    public static func encode(_ cursor: DiscordInboundCursor) -> Data {
+        var object: [String: Any] = [
+            "seeded": cursor.seeded,
+            "wakeMiss": cursor.wakeMiss,
+        ]
+        if let sessionId = cursor.sessionId { object["sessionId"] = sessionId }
+        if let sequence = cursor.sequence { object["sequence"] = NSNumber(value: sequence) }
+        if let url = cursor.resumeGatewayURL { object["resumeGatewayURL"] = url }
+        return (try? JSONSerialization.data(withJSONObject: object)) ?? Data("{}".utf8)
+    }
+
+    public static func decode(_ data: Data?) -> DiscordInboundCursor {
+        guard let data,
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else {
+            return .unset
+        }
+        return DiscordInboundCursor(
+            sessionId: object["sessionId"] as? String,
+            sequence: DiscordJSON.int64(object["sequence"]),
+            seeded: DiscordJSON.bool(object["seeded"]),
+            wakeMiss: DiscordJSON.bool(object["wakeMiss"]),
+            resumeGatewayURL: object["resumeGatewayURL"] as? String
+        )
+    }
+}

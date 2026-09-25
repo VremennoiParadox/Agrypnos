@@ -74,6 +74,15 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static var notifTelegramInboundSwitchY: Int {
         prefHelpY + PopoverCopyLayout.notifTelegramInboundHelpHeightPoints
     }
+    public static var notifDiscordInboundTokenY: Int {
+        prefHelpY + PopoverCopyLayout.notifDiscordInboundHelpHeightPoints
+    }
+    public static var notifDiscordInboundChannelY: Int {
+        notifDiscordInboundTokenY + secretFieldRowHeight
+    }
+    public static var notifDiscordInboundSwitchY: Int {
+        notifDiscordInboundChannelY + secretFieldRowHeight
+    }
     public static var notifSetupHelpY: Int { prefTitleY + titleRowHeight }
 
     public let section: PopoverSection
@@ -91,6 +100,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public let login: PopoverSlot?
     public let notifEnable: PopoverSlot?
     public let notifDiscord: PopoverSlot?
+    public let notifDiscordInbound: PopoverSlot?
     public let notifTelegram: PopoverSlot?
     public let notifTelegramInbound: PopoverSlot?
     public let notifSetup: PopoverSlot?
@@ -122,6 +132,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
         case .login: return login
         case .notifEnable: return notifEnable
         case .notifDiscord: return notifDiscord
+        case .notifDiscordInbound: return notifDiscordInbound
         case .notifTelegram: return notifTelegram
         case .notifTelegramInbound: return notifTelegramInbound
         case .notifSetup: return notifSetup
@@ -183,6 +194,13 @@ public struct PopoverStackLayout: Equatable, Sendable {
             + PopoverCopyLayout.notifTelegramHelpHeightPoints
             + 2 * secretFieldRowHeight
             + inset
+        let notifDiscordInboundHeight =
+            inset
+            + titleRowHeight
+            + PopoverCopyLayout.notifDiscordInboundHelpHeightPoints
+            + 2 * secretFieldRowHeight
+            + switchRowHeight
+            + inset
         let notifTelegramInboundHeight =
             inset
             + titleRowHeight
@@ -219,6 +237,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
             case .login: return loginCardHeight
             case .notifEnable: return notifEnableHeight
             case .notifDiscord: return notifDiscordHeight
+            case .notifDiscordInbound: return notifDiscordInboundHeight
             case .notifTelegram: return notifTelegramHeight
             case .notifTelegramInbound: return notifTelegramInboundHeight
             case .notifSetup: return notifSetupHeight
@@ -277,6 +296,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
             login: placed[.login],
             notifEnable: placed[.notifEnable],
             notifDiscord: placed[.notifDiscord],
+            notifDiscordInbound: placed[.notifDiscordInbound],
             notifTelegram: placed[.notifTelegram],
             notifTelegramInbound: placed[.notifTelegramInbound],
             notifSetup: placed[.notifSetup],

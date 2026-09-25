@@ -335,5 +335,45 @@ final class DiscordApplicationCommandFactoryTests: XCTestCase {
         XCTAssertNil(
             DiscordInboundRequestFactory.channelMessage(botToken: "", channelId: "1", content: "x")
         )
+
+        let deferral = try XCTUnwrap(
+            DiscordInboundRequestFactory.interactionDefer(
+                interactionId: "11",
+                interactionToken: "tok"
+            )
+        )
+        XCTAssertEqual(deferral.httpMethod, "POST")
+        XCTAssertEqual(deferral.url.path, "/api/v10/interactions/11/tok/callback")
+        XCTAssertFalse(deferral.url.path.contains("webhooks"))
+        let deferBody = try XCTUnwrap(JSONSerialization.jsonObject(with: deferral.body) as? [String: Any])
+        XCTAssertEqual(deferBody["type"] as? Int, 5)
+
+        let edit = try XCTUnwrap(
+            DiscordInboundRequestFactory.interactionEditOriginal(
+                applicationId: "99",
+                interactionToken: "tok",
+                content: DiscordInboundCopy.armed
+            )
+        )
+        XCTAssertEqual(edit.httpMethod, "PATCH")
+        XCTAssertEqual(edit.url.host, "discord.com")
+        XCTAssertEqual(edit.url.path, "/api/v10/webhooks/99/tok/messages/@original")
+        XCTAssertNil(edit.headers["Authorization"])
+        XCTAssertTrue(edit.url.path.hasSuffix("/messages/@original"))
+        XCTAssertNil(
+            DiscordInboundRequestFactory.interactionEditOriginal(
+                applicationId: "not-snowflake",
+                interactionToken: "tok",
+                content: "x"
+            )
+        )
+        XCTAssertNil(
+            DiscordInboundRequestFactory.api(
+                botToken: nil,
+                method: "POST",
+                path: "/api/v10/webhooks/1/abc",
+                body: Data()
+            )
+        )
     }
 }

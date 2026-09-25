@@ -35,6 +35,8 @@ final class WatchRuntime {
     private var idleOutbound = NotifIdleOutboundCoordinator()
     private var idlePostTask: Task<Void, Never>?
     let inboundPoller = TelegramInboundPoller()
+    let discordGateway = DiscordInboundGatewayClient()
+    var discordApplicationId: String?
     private var workspaceObservers: [NSObjectProtocol] = []
 
     init() {
@@ -43,6 +45,7 @@ final class WatchRuntime {
 
     func start() {
         inboundPoller.runtime = self
+        discordGateway.runtime = self
         observeMacSleepWake()
         reconcileKernel(preferClearLeftover: true)
         pollTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
@@ -50,6 +53,7 @@ final class WatchRuntime {
         }
         poll()
         inboundPoller.sync()
+        discordGateway.sync()
     }
 
     func setDuration(_ option: DurationOption) {
@@ -119,6 +123,14 @@ final class WatchRuntime {
         delegate?.watchRuntimeDidChange(self)
     }
 
+    func setDiscordInboundEnabled(_ on: Bool) {
+        engine.userSetDiscordInboundEnabled(on)
+        store.save(engine.preferences)
+        discordGateway.sync()
+        pollLid()
+        delegate?.watchRuntimeDidChange(self)
+    }
+
     func notifSecrets() -> NotifSecrets {
         NotifSecretsStore.load()
     }
@@ -144,11 +156,30 @@ final class WatchRuntime {
         return saved
     }
 
+    @discardableResult
+    func setNotifDiscordBotToken(_ value: String?) -> Bool {
+        store.resetDiscordInboundCursor()
+        discordGateway.invalidate()
+        let saved = NotifSecretsStore.setDiscordBotToken(value)
+        discordGateway.sync()
+        return saved
+    }
+
+    @discardableResult
+    func setNotifDiscordChannelId(_ value: String?) -> Bool {
+        let saved = NotifSecretsStore.setDiscordChannelId(value)
+        discordGateway.sync()
+        return saved
+    }
+
     func clearNotifSecrets() {
         store.resetTelegramInboundCursor()
+        store.resetDiscordInboundCursor()
         inboundPoller.invalidate()
+        discordGateway.invalidate()
         NotifSecretsStore.clear()
         inboundPoller.sync()
+        discordGateway.sync()
     }
 
     func setHotkey(_ chord: HotkeyChord) {
@@ -225,13 +256,13 @@ final class WatchRuntime {
                 delegate?.watchRuntimeDidChange(self)
                 return
             }
-            if !telegramInboundIsPolling() {
+            if !inboundNeedsLid() {
                 stopLidPulse()
             }
             apply(engine.userSetEngaged(false, now: Date(), lidClosed: engine.lidClosed))
             restoreHygiene()
             store.save(engine.preferences)
-            if telegramInboundIsPolling() {
+            if inboundNeedsLid() {
                 startLidPulse()
                 pollLid()
             }
@@ -335,7 +366,7 @@ final class WatchRuntime {
 
     func pollLid() {
         let rawClosed = LidStateReader.isClosed()
-        let trackLid = engine.engaged || telegramInboundIsPolling()
+        let trackLid = engine.engaged || inboundNeedsLid()
         var lidChanged = false
         if trackLid {
             let commands = engine.observeLid(closed: rawClosed, now: Date())
@@ -370,7 +401,7 @@ final class WatchRuntime {
 
     func startLidPulse() {
         guard lidTimer == nil else { return }
-        guard engine.engaged || telegramInboundIsPolling() else { return }
+        guard engine.engaged || inboundNeedsLid() else { return }
         lidTimer = Timer.scheduledTimer(withTimeInterval: LidCloseConfirm.pulseInterval, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.pollLid() }
         }
@@ -412,6 +443,7 @@ final class WatchRuntime {
     func prepareForTermination() {
         stopObservingMacSleepWake()
         inboundPoller.stop()
+        discordGateway.stop()
         let kernelHeld = SleepDisabledController.read()
         let plan = idleOutbound.terminatePlan(
             engineEngaged: engine.engaged,

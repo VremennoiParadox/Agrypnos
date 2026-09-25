@@ -231,7 +231,7 @@ final class PopoverStackLayoutTests: XCTestCase {
         assertStacked(agents.stackedCards, firstY: PopoverStackLayout.firstCardY)
         assertStacked(notif.stackedCards, firstY: PopoverStackLayout.firstCardY)
         assertStacked(general.stackedCards, firstY: PopoverStackLayout.firstCardY)
-        XCTAssertEqual(notif.stackedCards.count, 6)
+        XCTAssertEqual(notif.stackedCards.count, 7)
         XCTAssertEqual(watch.watch?.y, PopoverStackLayout.firstCardY)
         XCTAssertGreaterThanOrEqual(general.shortcutY!, general.login!.maxY)
         XCTAssertGreaterThanOrEqual(general.hotkeyHint!.y, general.shortcutY!)
