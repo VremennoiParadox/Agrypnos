@@ -47,7 +47,7 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
         XCTAssertEqual(AgrypnosCopy.notifTelegramInbound, "Telegram inbound")
         XCTAssertEqual(
             AgrypnosCopy.notifTelegramInboundHelp,
-            "Commands on your Telegram bot: /arm, /disarm, /status, /help. If the bot isn’t replying, the Mac is likely asleep / Agrypnos isn’t polling. /disarm with the lid open turns Keep the watch off and does not sleep the Mac. With the lid confirmed closed it turns Keep the watch off and sends the Mac to sleep. /status returns Keep the watch, How long, lid, Agents facts when relevant, last watch end, and safety prefs."
+            "Commands on your Telegram bot: /arm, /disarm, /status, /help. If the bot isn’t replying, the Mac is likely asleep / Agrypnos isn’t polling. /disarm with the lid open turns Keep the watch off and does not sleep the Mac. With the lid confirmed closed it turns Keep the watch off and sends the Mac to sleep. /status returns Keep the watch, How long, lid, Agents facts when relevant, last watch end, and safety prefs. /status includes live battery when known: Battery N% · discharging or on AC; omit if unknown."
         )
         let help = AgrypnosCopy.notifTelegramInboundHelp
         let lower = help.lowercased()
@@ -58,6 +58,15 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
         XCTAssertTrue(help.contains(
             "/status returns Keep the watch, How long, lid, Agents facts when relevant, last watch end, and safety prefs."
         ))
+        XCTAssertTrue(lower.contains("live battery"))
+        XCTAssertTrue(lower.contains("when known"))
+        XCTAssertTrue(help.contains("Battery N%"))
+        XCTAssertTrue(help.contains("discharging"))
+        XCTAssertTrue(help.contains("on AC"))
+        XCTAssertTrue(lower.contains("omit if unknown"))
+        XCTAssertFalse(lower.contains("time-to-empty"))
+        XCTAssertFalse(lower.contains("health-gauge"))
+        XCTAssertFalse(lower.contains("warranty"))
         XCTAssertTrue(lower.contains("your telegram bot"))
         XCTAssertTrue(lower.contains("likely asleep"))
         XCTAssertTrue(lower.contains("isn’t polling") || lower.contains("isn't polling"))
@@ -76,7 +85,7 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
             CopyWrap.lineCount(help, columns: PopoverCopyLayout.innerColumns),
             PopoverCopyLayout.notifTelegramInboundHelpMaxLines
         )
-        XCTAssertEqual(PopoverCopyLayout.notifTelegramInboundHelpMaxLines, 12)
+        XCTAssertEqual(PopoverCopyLayout.notifTelegramInboundHelpMaxLines, 15)
         XCTAssertGreaterThan(
             CopyWrap.lineCount(help, columns: PopoverCopyLayout.innerColumns),
             PopoverCopyLayout.helpMaxLines
@@ -197,6 +206,8 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
         XCTAssertTrue(lower.contains("telegram inbound"))
         XCTAssertTrue(help.contains("/arm") && help.contains("/disarm") && help.contains("/status") && help.contains("/help"))
         XCTAssertTrue(lower.contains("/status dumps live watch facts"))
+        XCTAssertTrue(lower.contains("live battery"))
+        XCTAssertTrue(lower.contains("when known"))
         XCTAssertTrue(lower.contains("separate from") && lower.contains("post"))
         XCTAssertFalse(lower.contains("mac-proven"))
         XCTAssertFalse(lower.contains("mac proven"))
@@ -205,10 +216,10 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
             CopyWrap.lineCount(help, columns: PopoverCopyLayout.innerColumns),
             PopoverCopyLayout.notifSetupHelpMaxLines
         )
-        XCTAssertEqual(PopoverCopyLayout.notifSetupHelpMaxLines, 21)
+        XCTAssertEqual(PopoverCopyLayout.notifSetupHelpMaxLines, 23)
         XCTAssertEqual(
             PopoverCopyLayout.notifSetupHelpHeightPoints,
-            21 * PopoverCopyLayout.lineHeightPoints
+            23 * PopoverCopyLayout.lineHeightPoints
         )
     }
 

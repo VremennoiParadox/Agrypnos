@@ -12,7 +12,7 @@ public enum AgrypnosCopy: Sendable {
     public static let keyboardDark = "Keyboard backlight off"
     public static let brightnessFloor = "Brightness floor"
     public static let brightnessFloorHelp =
-        "When the lid closes, brightness drops to this percent."
+        "Dim panel: when the lid closes, brightness drops to this percent."
     public static let settleGrace = "Wait after agents go idle"
     public static let settleGraceHelp =
         "How long to wait after local busy signals stop, before the idle-after-wait POST. Then Keep the watch turns off. Buffer so a quiet gap mid-run (no file write / low CPU) doesn’t look finished. Not still thinking — we only see local process and session activity."
@@ -158,7 +158,7 @@ public enum AgrypnosCopy: Sendable {
         "Message your Telegram bot. Needs token; chat id from getUpdates. Agrypnos does not run a shared bot."
     public static let notifTelegramInbound = "Telegram inbound"
     public static let notifTelegramInboundHelp =
-        "Commands on your Telegram bot: /arm, /disarm, /status, /help. If the bot isn’t replying, the Mac is likely asleep / Agrypnos isn’t polling. /disarm with the lid open turns Keep the watch off and does not sleep the Mac. With the lid confirmed closed it turns Keep the watch off and sends the Mac to sleep. /status returns Keep the watch, How long, lid, Agents facts when relevant, last watch end, and safety prefs."
+        "Commands on your Telegram bot: /arm, /disarm, /status, /help. If the bot isn’t replying, the Mac is likely asleep / Agrypnos isn’t polling. /disarm with the lid open turns Keep the watch off and does not sleep the Mac. With the lid confirmed closed it turns Keep the watch off and sends the Mac to sleep. /status returns Keep the watch, How long, lid, Agents facts when relevant, last watch end, and safety prefs. /status includes live battery when known: Battery N% · discharging or on AC; omit if unknown."
     public static let notifClear = "Clear secrets"
     public static func revealAccess(label: String, revealed: Bool) -> String {
         "\(revealed ? "Hide" : "Show") \(label)"
@@ -174,7 +174,7 @@ public enum AgrypnosCopy: Sendable {
         "That is not a Discord webhook URL. Nothing was saved."
     public static let notifSetup = "Setup"
     public static let notifSetupHelp =
-        "Discord: Server Settings → Integrations → Webhooks → New Webhook → copy URL → paste above. Empty skips Discord. Telegram: @BotFather /newbot → token. Message the bot. Chat id from https://api.telegram.org/botYOUR_TOKEN/getUpdates — find \"chat\":{\"id\":. Empty result: message the bot, then reload. Paste token + chat id. Test: turn Notif on, save secrets, arm Agents, produce a local busy signal, wait the idle wait, expect one POST to your webhook and/or your Telegram bot. The event is idle after wait. Off: switch Notif off. Clear secrets deletes those saved values. Inbound: turn Telegram inbound on (separate from POST). Commands on your bot: /arm, /disarm, /status, /help. /status dumps live watch facts."
+        "Discord: Server Settings → Integrations → Webhooks → New Webhook → copy URL → paste above. Empty skips Discord. Telegram: @BotFather /newbot → token. Message the bot. Chat id from https://api.telegram.org/botYOUR_TOKEN/getUpdates — find \"chat\":{\"id\":. Empty result: message the bot, then reload. Paste token + chat id. Test: turn Notif on, save secrets, arm Agents, produce a local busy signal, wait the idle wait, expect one POST to your webhook and/or your Telegram bot. The event is idle after wait. Off: switch Notif off. Clear secrets deletes those saved values. Inbound: turn Telegram inbound on (separate from POST). Commands on your bot: /arm, /disarm, /status, /help. /status dumps live watch facts. /status includes live battery when known."
     public static let notifIdleBody =
         "Agrypnos: local busy signals went idle after the wait."
     public static let statusItemArmed = "Armed."

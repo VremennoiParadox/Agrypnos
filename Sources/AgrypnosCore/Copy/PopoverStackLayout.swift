@@ -53,6 +53,9 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static var prefMinMaxY: Int { prefControlY + 24 }
     public static var settleControlY: Int { prefHelpY + PopoverCopyLayout.settleHelpHeightPoints }
     public static var settleMinMaxY: Int { settleControlY + 24 }
+    public static let panelPowerControlY = prefTitleY
+    public static var panelPowerCaptionY: Int { panelPowerControlY + segmentRowHeight }
+    public static var panelPowerHelpY: Int { panelPowerCaptionY + PopoverCopyLayout.panelPowerCaptionHeightPoints }
 
     public static func includeSwitchY(index: Int) -> Int {
         prefControlY + index * switchRowHeight
@@ -78,6 +81,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public let watch: PopoverSlot?
     public let duration: PopoverSlot?
     public let lastWatchEnd: PopoverSlot?
+    public let panelPower: PopoverSlot?
     public let hygiene: PopoverSlot?
     public let battery: PopoverSlot?
     public let agentInclude: PopoverSlot?
@@ -108,6 +112,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
         case .watch: return watch
         case .duration: return duration
         case .lastWatchEnd: return lastWatchEnd
+        case .panelPower: return panelPower
         case .hygiene: return hygiene
         case .battery: return battery
         case .agentInclude: return agentInclude
@@ -124,7 +129,10 @@ public struct PopoverStackLayout: Equatable, Sendable {
         }
     }
 
-    public static func make(section: PopoverSection = .default) -> PopoverStackLayout {
+    public static func make(
+        section: PopoverSection = .default,
+        panelPowerMode: PanelPowerMode = .default
+    ) -> PopoverStackLayout {
         let watchHeight = inset + 28 + PopoverCopyLayout.captionHeightPoints + inset
         let hygieneHeight =
             hygieneKeyboardY
@@ -192,6 +200,16 @@ public struct PopoverStackLayout: Equatable, Sendable {
             case .watch: return watchHeight
             case .duration: return durationCardHeight
             case .lastWatchEnd: return inset + PopoverCopyLayout.lastWatchEndHeightPoints + inset
+            case .panelPower:
+                var height =
+                    inset
+                    + segmentRowHeight
+                    + PopoverCopyLayout.panelPowerCaptionHeightPoints
+                    + inset
+                if !PanelPowerChrome.showsLidOpenRamp(panelPowerMode) {
+                    height += PopoverCopyLayout.panelPowerHelpHeightPoints
+                }
+                return height
             case .hygiene: return hygieneHeight
             case .battery: return batteryCardHeight
             case .agentInclude: return includeHeight
@@ -217,6 +235,9 @@ public struct PopoverStackLayout: Equatable, Sendable {
 
         var placed: [PopoverCard: PopoverSlot] = [:]
         for card in section.cards {
+            if card == .ramp, !PanelPowerChrome.showsLidOpenRamp(panelPowerMode) {
+                continue
+            }
             placed[card] = place(height(for: card))
         }
 
@@ -246,6 +267,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
             watch: placed[.watch],
             duration: placed[.duration],
             lastWatchEnd: placed[.lastWatchEnd],
+            panelPower: placed[.panelPower],
             hygiene: placed[.hygiene],
             battery: placed[.battery],
             agentInclude: placed[.agentInclude],

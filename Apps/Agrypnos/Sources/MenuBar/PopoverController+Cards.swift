@@ -187,6 +187,59 @@ extension PopoverController {
         card.addSubview(rampControl)
     }
 
+    func addPanelPowerCard(_ card: CardView, ci: CGFloat, cw: CGFloat) {
+        panelPowerControl = NSSegmentedControl(
+            labels: PanelPowerChrome.titles,
+            trackingMode: .selectOne,
+            target: self,
+            action: #selector(panelPowerChanged(_:))
+        )
+        panelPowerControl.segmentDistribution = .fillEqually
+        panelPowerControl.selectedSegment = PanelPowerChrome.selectedSegment(
+            mode: UserPreferences.default.panelPowerMode
+        )
+        panelPowerControl.frame = NSRect(
+            x: ci,
+            y: CGFloat(PopoverStackLayout.panelPowerControlY),
+            width: cw,
+            height: 24
+        )
+        panelPowerControl.setAccessibilityLabel(PanelPowerChrome.titles.joined(separator: ", "))
+        panelPowerControl.setAccessibilityHelp(PanelPowerChrome.caption(.floor))
+        card.addSubview(panelPowerControl)
+
+        panelPowerCaption = LabelFactory.wrapping(
+            PanelPowerChrome.caption(.floor),
+            font: .systemFont(ofSize: 12),
+            color: .secondaryLabelColor,
+            lines: PopoverCopyLayout.panelPowerCaptionMaxLines
+        )
+        panelPowerCaption.frame = NSRect(
+            x: ci,
+            y: CGFloat(PopoverStackLayout.panelPowerCaptionY),
+            width: cw,
+            height: CGFloat(PopoverCopyLayout.panelPowerCaptionHeightPoints)
+        )
+        panelPowerCaption.preferredMaxLayoutWidth = cw
+        card.addSubview(panelPowerCaption)
+
+        panelPowerHelp = LabelFactory.wrapping(
+            PanelPowerChrome.help(.floor),
+            font: .systemFont(ofSize: 12),
+            color: .secondaryLabelColor,
+            lines: PopoverCopyLayout.panelPowerHelpMaxLines
+        )
+        panelPowerHelp.frame = NSRect(
+            x: ci,
+            y: CGFloat(PopoverStackLayout.panelPowerHelpY),
+            width: cw,
+            height: CGFloat(PopoverCopyLayout.panelPowerHelpHeightPoints)
+        )
+        panelPowerHelp.preferredMaxLayoutWidth = cw
+        panelPowerHelp.isHidden = PanelPowerChrome.showsLidOpenRamp(.floor)
+        card.addSubview(panelPowerHelp)
+    }
+
     func addDurationCard(_ card: CardView, contentW: CGFloat, ci: CGFloat, cw: CGFloat) {
         let durationLabel = LabelFactory.make(AgrypnosCopy.durationLabel, font: .systemFont(ofSize: 13), color: .labelColor)
         durationLabel.frame = NSRect(x: ci, y: 8, width: 86, height: 22)

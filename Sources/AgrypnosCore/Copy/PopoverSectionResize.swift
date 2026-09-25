@@ -29,17 +29,18 @@ public struct PopoverSectionResize: Equatable, Sendable {
         from: PopoverSection,
         to: PopoverSection,
         animated: Bool,
-        currentHeight: Int? = nil
+        currentHeight: Int? = nil,
+        panelPowerMode: PanelPowerMode = .default
     ) -> PopoverSectionResize {
-        let fromLayout = PopoverStackLayout.make(section: from)
-        let toLayout = PopoverStackLayout.make(section: to)
+        let fromLayout = PopoverStackLayout.make(section: from, panelPowerMode: panelPowerMode)
+        let toLayout = PopoverStackLayout.make(section: to, panelPowerMode: panelPowerMode)
         let fromHeight = fromLayout.popoverHeight
         let toHeight = toLayout.popoverHeight
         let fromContentHeight = fromLayout.contentHeight
         let toContentHeight = toLayout.contentHeight
         // Mid-ease the window can still be the previous section's size.
         let liveHeight = currentHeight ?? fromHeight
-        let animatesHeight = animated && from != to && toHeight != liveHeight
+        let animatesHeight = animated && toHeight != liveHeight
         return PopoverSectionResize(
             from: from,
             to: to,

@@ -15,11 +15,11 @@ public enum PopoverCopyLayout: Sendable {
     public static let captionHeightPoints = captionMaxLines * lineHeightPoints
     public static let helpHeightPoints = helpMaxLines * lineHeightPoints
     public static let settleHelpHeightPoints = settleHelpMaxLines * lineHeightPoints
-    /// `AgrypnosCopy.notifSetupHelp` wraps to 21 lines at `innerColumns`. Enable 4, Telegram 3, inbound 12.
+    /// `AgrypnosCopy.notifSetupHelp` wraps at `innerColumns`. Enable 4, Telegram 3, inbound 15.
     public static let notifEnableHelpMaxLines = 4
     public static let notifTelegramHelpMaxLines = 3
-    public static let notifTelegramInboundHelpMaxLines = 12
-    public static let notifSetupHelpMaxLines = 21
+    public static let notifTelegramInboundHelpMaxLines = 15
+    public static let notifSetupHelpMaxLines = 23
     public static let notifDiscordStatusMaxLines = 2
     public static let notifEnableHelpHeightPoints = notifEnableHelpMaxLines * lineHeightPoints
     public static let notifTelegramHelpHeightPoints = notifTelegramHelpMaxLines * lineHeightPoints
@@ -27,6 +27,11 @@ public enum PopoverCopyLayout: Sendable {
     public static let notifSetupHelpHeightPoints = notifSetupHelpMaxLines * lineHeightPoints
     public static let notifDiscordStatusHeightPoints = notifDiscordStatusMaxLines * lineHeightPoints
     public static let hotkeyHintHeightPoints = hotkeyHintMaxLines * lineHeightPoints
+    /// Dim panel caption. Sleep panel help is taller; layout adds it only for B.
+    public static let panelPowerCaptionMaxLines = 3
+    public static let panelPowerHelpMaxLines = 5
+    public static var panelPowerCaptionHeightPoints: Int { panelPowerCaptionMaxLines * lineHeightPoints }
+    public static var panelPowerHelpHeightPoints: Int { panelPowerHelpMaxLines * lineHeightPoints }
     /// Custom-minutes field. The "Minutes" label is wider so it does not share this slot.
     public static let minutesFieldWidthPoints = 56
     /// Right-aligned on the How long row, extending left into the gap past the 56pt field.

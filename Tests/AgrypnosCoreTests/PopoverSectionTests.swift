@@ -45,8 +45,9 @@ final class PopoverSectionTests: XCTestCase {
 
     func testCardMapKeepsExistingControlsAndFillsNotif() {
         XCTAssertEqual(PopoverSection.watch.cards, [.watch, .duration, .lastWatchEnd])
-        XCTAssertEqual(PopoverSection.power.cards, [.hygiene, .battery, .ramp, .thermal])
+        XCTAssertEqual(PopoverSection.power.cards, [.panelPower, .hygiene, .battery, .ramp, .thermal])
         XCTAssertTrue(PopoverSection.power.cards.contains(.thermal))
+        XCTAssertEqual(PopoverSection.power.cards.first, .panelPower)
         XCTAssertEqual(PopoverSection.power.cards.last, .thermal)
         XCTAssertEqual(PopoverSection.agents.cards, [.agentInclude, .settle])
         XCTAssertEqual(PopoverSection.agents.cards.first, .agentInclude)
@@ -107,9 +108,10 @@ final class PopoverSectionLayoutTests: XCTestCase {
         XCTAssertEqual(layout.section, .power)
         XCTAssertEqual(
             layout.stackedCards.map(\.y),
-            compactYs(layout.hygiene, layout.battery, layout.ramp, layout.thermal)
+            compactYs(layout.panelPower, layout.hygiene, layout.battery, layout.ramp, layout.thermal)
         )
-        XCTAssertEqual(layout.hygiene?.y, PopoverStackLayout.firstCardY)
+        XCTAssertEqual(layout.panelPower?.y, PopoverStackLayout.firstCardY)
+        XCTAssertEqual(layout.hygiene?.y, layout.panelPower!.maxY + PopoverStackLayout.cardGap)
         XCTAssertEqual(layout.battery?.y, layout.hygiene!.maxY + PopoverStackLayout.cardGap)
         XCTAssertEqual(layout.ramp?.y, layout.battery!.maxY + PopoverStackLayout.cardGap)
         XCTAssertEqual(layout.thermal?.y, layout.ramp!.maxY + PopoverStackLayout.cardGap)

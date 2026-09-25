@@ -13,10 +13,14 @@ extension PopoverController {
             from: currentSection,
             to: section,
             animated: popover.isShown && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
-            currentHeight: Int(popover.contentSize.height.rounded())
+            currentHeight: Int(popover.contentSize.height.rounded()),
+            panelPowerMode: runtime?.preferences.panelPowerMode ?? .default
         )
         currentSection = section
-        let layout = PopoverStackLayout.make(section: section)
+        let layout = PopoverStackLayout.make(
+            section: section,
+            panelPowerMode: runtime?.preferences.panelPowerMode ?? .default
+        )
         let pad = CGFloat(PopoverStackLayout.pad)
         let width = CGFloat(PopoverStackLayout.width)
         let contentW = width - pad * 2
@@ -85,6 +89,7 @@ extension PopoverController {
         PopoverForm.apply(watchCard, slot: layout.watch, pad: pad, width: width)
         PopoverForm.apply(durationCard, slot: layout.duration, pad: pad, width: width)
         PopoverForm.apply(lastWatchEndCard, slot: layout.lastWatchEnd, pad: pad, width: width)
+        PopoverForm.apply(panelPowerCard, slot: layout.panelPower, pad: pad, width: width)
         PopoverForm.apply(hygieneCard, slot: layout.hygiene, pad: pad, width: width)
         PopoverForm.apply(batteryCard, slot: layout.battery, pad: pad, width: width)
         PopoverForm.apply(agentIncludeCard, slot: layout.agentInclude, pad: pad, width: width)

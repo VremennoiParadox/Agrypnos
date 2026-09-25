@@ -101,6 +101,9 @@ extension PopoverController {
         lastWatchEndCard = PopoverForm.card(in: document, slot: layout.lastWatchEnd!, pad: pad, width: contentW)
         addLastWatchEndCard(lastWatchEndCard, ci: ci, cw: cw)
 
+        panelPowerCard = PopoverForm.card(in: document, slot: power.panelPower!, pad: pad, width: contentW)
+        addPanelPowerCard(panelPowerCard, ci: ci, cw: cw)
+
         hygieneCard = PopoverForm.card(in: document, slot: power.hygiene!, pad: pad, width: contentW)
         addHygieneCard(hygieneCard, contentW: contentW, ci: ci, cw: cw, swW: swW, swH: swH)
 

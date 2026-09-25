@@ -58,6 +58,10 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var durationCard: CardView!
     var lastWatchEndCard: CardView!
     var lastWatchEndLabel: NSTextField!
+    var panelPowerCard: CardView!
+    var panelPowerControl: NSSegmentedControl!
+    var panelPowerCaption: NSTextField!
+    var panelPowerHelp: NSTextField!
     var hygieneCard: CardView!
     var batteryCard: CardView!
     var agentIncludeCard: CardView!
@@ -157,6 +161,16 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         }
         rampControl?.selectedSegment = LidOpenRampChrome.selectedSegment(
             seconds: runtime.preferences.lidOpenRampSeconds
+        )
+        let panelMode = runtime.preferences.panelPowerMode
+        panelPowerControl?.selectedSegment = PanelPowerChrome.selectedSegment(mode: panelMode)
+        panelPowerCaption?.stringValue = PanelPowerChrome.caption(panelMode)
+        panelPowerHelp?.stringValue = PanelPowerChrome.help(panelMode)
+        panelPowerHelp?.isHidden = PanelPowerChrome.showsLidOpenRamp(panelMode)
+        panelPowerControl?.setAccessibilityHelp(
+            PanelPowerChrome.showsLidOpenRamp(panelMode)
+                ? PanelPowerChrome.caption(panelMode)
+                : PanelPowerChrome.help(panelMode)
         )
         thermalSwitch?.state = runtime.preferences.thermalAutoOff ? .on : .off
         refreshNotifChrome(runtime: runtime)
@@ -406,6 +420,19 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
             return
         }
         runtime?.setLidOpenRampSeconds(seconds)
+        refresh()
+    }
+
+    @objc func panelPowerChanged(_ sender: NSSegmentedControl) {
+        stopRecordingIfNeeded()
+        guard let mode = PanelPowerChrome.mode(selectingSegment: sender.selectedSegment) else {
+            refresh()
+            return
+        }
+        runtime?.setPanelPowerMode(mode)
+        if currentSection == .power {
+            applySection(.power)
+        }
         refresh()
     }
 
