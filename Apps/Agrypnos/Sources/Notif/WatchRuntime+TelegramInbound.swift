@@ -29,7 +29,7 @@ extension WatchRuntime {
         }
         if discordInboundIsReceiving() {
             store.saveDiscordInboundCursor(store.loadDiscordInboundCursor().startingWakeMiss())
-            discordGateway.bumpGeneration()
+            discordGateway.bumpSlashEpoch()
         }
     }
 

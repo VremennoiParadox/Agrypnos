@@ -20,6 +20,7 @@ final class DiscordInboundGatewayClient {
     private var task: Task<Void, Never>?
     private var heartbeatTask: Task<Void, Never>?
     private var generation: UInt64 = 0
+    private var slashEpoch: UInt64 = 0
     private var urlSession: URLSession?
     private var socket: URLSessionWebSocketTask?
     private var reconnectSoon = false
@@ -45,6 +46,7 @@ final class DiscordInboundGatewayClient {
 
     func invalidate() {
         generation &+= 1
+        slashEpoch &+= 1
         heartbeatTask?.cancel()
         heartbeatTask = nil
         task?.cancel()
@@ -59,11 +61,11 @@ final class DiscordInboundGatewayClient {
         TelegramInboundGeneration.allowsApply(current: generation, captured: captured)
     }
 
-    var currentGeneration: UInt64 { generation }
+    var currentSlashEpoch: UInt64 { slashEpoch }
 
-    /// Sleep/wake: in-flight deferred slash must not apply on the old generation.
-    func bumpGeneration() {
-        generation &+= 1
+    /// Sleep: in-flight deferred slash must not apply. Do not drop the Gateway loop.
+    func bumpSlashEpoch() {
+        slashEpoch &+= 1
     }
 
     private func shouldReceive() -> Bool {
@@ -217,7 +219,7 @@ final class DiscordInboundGatewayClient {
             case .sendIdentify, .sendResume, .sendHeartbeat:
                 send(effect, token: token, cursor: cursor, socket: socket)
             case .inbound(let update):
-                runtime.applyDiscordInbound(update, generation: captured)
+                runtime.applyDiscordInbound(update, generation: slashEpoch)
             case .registerCommands(let applicationId):
                 runtime.registerDiscordBotCommands(applicationId: applicationId)
             case .reconnect:

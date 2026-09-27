@@ -93,12 +93,12 @@ extension WatchRuntime {
                 await TelegramInboundHTTP.send(deferRequest)
                 await MainActor.run {
                     if DiscordDeferredSlash.shouldApply(
-                        current: self.discordGateway.currentGeneration,
+                        current: self.discordGateway.currentSlashEpoch,
                         captured: generation
                     ) {
                         self.finishDiscordInbound(update, slashDeferred: true)
                     } else if DiscordDeferredSlash.shouldReplyMissedWhileAsleep(
-                        current: self.discordGateway.currentGeneration,
+                        current: self.discordGateway.currentSlashEpoch,
                         captured: generation
                     ) {
                         self.sendDiscordInboundReply(
