@@ -8,3 +8,14 @@ public enum KernelQuitPolicy: Sendable {
         kernelCleared ? nil : "Couldn't drop SleepDisabled. The kernel flag is still on."
     }
 }
+
+/// Helper shell that outlives a crashed app. The app holds its stdin pipe open; when the
+/// app dies for any reason the pipe closes and the helper clears SleepDisabled with the
+/// existing grant. Uses only the `disablesleep 0` line of the sudoers rule.
+public enum KernelCrashGuard: Sendable {
+    public static let script = """
+    trap '' HUP INT TERM
+    read _
+    exec /usr/bin/sudo -n /usr/bin/pmset -a disablesleep 0
+    """
+}

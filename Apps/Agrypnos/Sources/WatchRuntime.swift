@@ -52,6 +52,7 @@ final class WatchRuntime {
         inboundPoller.runtime = self
         discordGateway.runtime = self
         observeMacSleepWake()
+        SleepDisabledCrashGuard.start()
         reconcileKernel(preferClearLeftover: true)
         pollTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.poll() }

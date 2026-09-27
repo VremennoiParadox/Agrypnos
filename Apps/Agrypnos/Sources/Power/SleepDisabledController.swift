@@ -33,3 +33,23 @@ enum SleepDisabledController {
         return .failed(err.isEmpty ? "exit \(result.exit)" : err)
     }
 }
+
+/// A crash or force quit skips `prepareForTermination`, which would leave SleepDisabled on
+/// until reboot. The helper clears it as soon as this process is gone.
+@MainActor
+enum SleepDisabledCrashGuard {
+    private static var lifeline: Pipe?
+
+    static func start() {
+        guard lifeline == nil else { return }
+        let pipe = Pipe()
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/sh")
+        process.arguments = ["-c", KernelCrashGuard.script]
+        process.standardInput = pipe
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+        guard (try? process.run()) != nil else { return }
+        lifeline = pipe
+    }
+}
