@@ -36,6 +36,30 @@ final class AgentSnapshotCacheTests: XCTestCase {
         )
     }
 
+    func testDoesNotReuseWhenTerminalsPreferenceChanged() {
+        var cache = AgentSnapshotCache()
+        cache.store(
+            AgentSnapshot(reports: []),
+            included: [.cursor],
+            countTerminalSessionsAsBusy: false,
+            at: t0
+        )
+        XCTAssertNil(
+            cache.reusable(
+                at: t0.addingTimeInterval(1),
+                included: [.cursor],
+                countTerminalSessionsAsBusy: true
+            )
+        )
+        XCTAssertNotNil(
+            cache.reusable(
+                at: t0.addingTimeInterval(1),
+                included: [.cursor],
+                countTerminalSessionsAsBusy: false
+            )
+        )
+    }
+
     func testInvalidateDropsSnapshot() {
         var cache = AgentSnapshotCache()
         cache.store(AgentSnapshot(reports: []), included: Set(AgentKind.allCases), at: t0)

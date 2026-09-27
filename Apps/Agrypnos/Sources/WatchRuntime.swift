@@ -337,7 +337,11 @@ final class WatchRuntime {
     /// `/status` reuses a fresh probe. Do not walk session trees on the main actor.
     func cachedAgentsBusy(now: Date) -> Bool? {
         let included = engine.preferences.includedAgentKinds
-        if let snap = agentSnapshotCache.reusable(at: now, included: included) {
+        if let snap = agentSnapshotCache.reusable(
+            at: now,
+            included: included,
+            countTerminalSessionsAsBusy: engine.preferences.countTerminalSessionsAsBusy
+        ) {
             return snap.anyBusy(included: included)
         }
         return nil

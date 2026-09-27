@@ -39,6 +39,7 @@ extension WatchRuntime {
         lastSafety = safety
         let kernel = SleepDisabledController.read()
         let included = engine.preferences.includedAgentKinds
+        let terminals = engine.preferences.countTerminalSessionsAsBusy
         let now = Date()
 
         guard probe.probesAgents else {
@@ -52,7 +53,11 @@ extension WatchRuntime {
             return
         }
 
-        if let cached = agentSnapshotCache.reusable(at: now, included: included) {
+        if let cached = agentSnapshotCache.reusable(
+            at: now,
+            included: included,
+            countTerminalSessionsAsBusy: terminals
+        ) {
             finishPollTick(
                 now: now,
                 safety: safety,
@@ -77,7 +82,6 @@ extension WatchRuntime {
         probeInFlight = true
         let generation = probeGeneration
         let freshness = engine.preferences.sessionFreshness
-        let terminals = engine.preferences.countTerminalSessionsAsBusy
         Task.detached { [weak self] in
             let snap = AgentProbeService.snapshot(
                 now: Date(),
@@ -89,7 +93,8 @@ extension WatchRuntime {
                 self?.finishAgentProbe(
                     snap,
                     generation: generation,
-                    included: included
+                    included: included,
+                    countTerminalSessionsAsBusy: terminals
                 )
             }
         }
@@ -105,12 +110,18 @@ extension WatchRuntime {
     func finishAgentProbe(
         _ snap: AgentSnapshot,
         generation: UInt64,
-        included: Set<AgentKind>
+        included: Set<AgentKind>,
+        countTerminalSessionsAsBusy: Bool
     ) {
         guard generation == probeGeneration else { return }
         probeInFlight = false
         let now = Date()
-        agentSnapshotCache.store(snap, included: included, at: now)
+        agentSnapshotCache.store(
+            snap,
+            included: included,
+            countTerminalSessionsAsBusy: countTerminalSessionsAsBusy,
+            at: now
+        )
         guard engine.engaged else {
             delegate?.watchRuntimeDidChange(self)
             return

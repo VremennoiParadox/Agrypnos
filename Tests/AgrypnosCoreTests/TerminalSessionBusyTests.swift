@@ -32,6 +32,20 @@ final class TerminalSessionBusyTests: XCTestCase {
         XCTAssertTrue(loaded.countTerminalSessionsAsBusy)
     }
 
+    func testBusyMathUsesTheSamePersistedKeyAsTheUIToggle() throws {
+        var on = UserPreferences.default
+        on.countTerminalSessionsAsBusy = true
+        let object = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: try JSONEncoder().encode(on)) as? [String: Any]
+        )
+        XCTAssertEqual(
+            Set(object.keys.filter { $0.lowercased().contains("terminal") }),
+            ["countTerminalSessionsAsBusy"]
+        )
+        XCTAssertNil(object["countTerminalsAsBusy"])
+        XCTAssertNil(object["includeTerminals"])
+    }
+
     func testCursorTerminalWriteIsBusyOnlyWhenPreferenceIsOn() {
         let terminal = SessionFileSignal(
             url: URL(fileURLWithPath: "/Users/a/.cursor/projects/x/terminals/1.txt"),
