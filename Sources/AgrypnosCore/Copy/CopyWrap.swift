@@ -7,6 +7,8 @@ public enum PopoverCopyLayout: Sendable {
     public static let helpMaxLines = 2
     /// `AgrypnosCopy.settleGraceHelp` wraps to 8 lines at `innerColumns`. Power/Watch help stays at 2.
     public static let settleHelpMaxLines = 8
+    /// I3 terminal-busy help. Four lines at `innerColumns`.
+    public static let countTerminalSessionsHelpMaxLines = 4
     public static let hotkeyHintMaxLines = 2
     public static let lastWatchEndMaxLines = 3
     public static var lastWatchEndHeightPoints: Int { lastWatchEndMaxLines * lineHeightPoints }
@@ -15,6 +17,8 @@ public enum PopoverCopyLayout: Sendable {
     public static let captionHeightPoints = captionMaxLines * lineHeightPoints
     public static let helpHeightPoints = helpMaxLines * lineHeightPoints
     public static let settleHelpHeightPoints = settleHelpMaxLines * lineHeightPoints
+    public static let countTerminalSessionsHelpHeightPoints =
+        countTerminalSessionsHelpMaxLines * lineHeightPoints
     /// `AgrypnosCopy.notifSetupHelp` wraps at `innerColumns`. Enable 4, Telegram 3, inbound 15, Discord inbound 16.
     public static let notifEnableHelpMaxLines = 4
     public static let notifTelegramHelpMaxLines = 3

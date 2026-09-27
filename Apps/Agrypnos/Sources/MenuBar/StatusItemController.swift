@@ -58,7 +58,8 @@ final class StatusItemController: NSObject {
                 engaged: true,
                 leftover: runtime.adoptedLeftover,
                 onBattery: battery.onBatteryDischarging,
-                lidClosed: runtime.engine.lidClosed
+                lidClosed: runtime.engine.lidClosed,
+                panelPowerMode: runtime.preferences.panelPowerMode
             )
             if runtime.preferences.duration == .untilAgentsSettle,
                runtime.engine.settle.sawBusy,
