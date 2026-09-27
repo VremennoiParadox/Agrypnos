@@ -69,11 +69,11 @@ final class WatchCaptionPanelModeTests: XCTestCase {
         )
         XCTAssertEqual(
             open,
-            "Leftover SleepDisabled. Lid close — then the panel sleeps + keyboard backlight off. Auto-off at 15% battery."
+            "Leftover SleepDisabled. Lid close — then the panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake."
         )
         XCTAssertEqual(
             closed,
-            "Leftover SleepDisabled. Lid closed. Panel sleeps + keyboard backlight off. Auto-off at 15% battery."
+            "Leftover SleepDisabled. Lid closed. Panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake. Auto-off at 15% battery."
         )
         XCTAssertEqual(
             AgrypnosCopy.leftoverNotify(for: .displaySleep),
@@ -105,13 +105,13 @@ final class WatchCaptionPanelModeTests: XCTestCase {
             AgrypnosCopy.menuTooltip(
                 engaged: true, leftover: true, onBattery: false, lidClosed: false, panelPowerMode: .displaySleep
             ),
-            "Agrypnos: adopted leftover SleepDisabled. Waiting for lid close — then the panel sleeps + keyboard backlight off."
+            "Agrypnos: adopted leftover SleepDisabled. Waiting for lid close — then the panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake."
         )
         XCTAssertEqual(
             AgrypnosCopy.menuTooltip(
                 engaged: true, leftover: true, onBattery: false, lidClosed: true, panelPowerMode: .displaySleep
             ),
-            "Agrypnos: adopted leftover SleepDisabled. Lid closed. Panel sleeps + keyboard backlight off."
+            "Agrypnos: adopted leftover SleepDisabled. Lid closed. Panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake."
         )
         XCTAssertEqual(
             AgrypnosCopy.menuTooltip(
@@ -137,8 +137,9 @@ final class WatchCaptionPanelModeTests: XCTestCase {
     private func assertSleepPanelHonesty(_ text: String, file: StaticString = #filePath, line: UInt = #line) {
         let lower = text.lowercased()
         XCTAssertTrue(
-            lower.contains("panel sleep") || lower.contains("sleeps the panel"),
-            "Sleep panel copy must name the panel: \(text)",
+            lower.contains("keep the watch still holds")
+                || lower.contains("still holds the mac awake"),
+            "Sleep panel copy must say Keep the watch still holds: \(text)",
             file: file,
             line: line
         )

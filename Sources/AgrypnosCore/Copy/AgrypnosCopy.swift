@@ -233,9 +233,9 @@ public enum AgrypnosCopy: Sendable {
     public static let menuTooltipLidClosedSleepPanel =
         "Agrypnos: lid closed. Panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake."
     public static let menuTooltipLeftoverSleepPanel =
-        "Agrypnos: adopted leftover SleepDisabled. Waiting for lid close — then the panel sleeps + keyboard backlight off."
+        "Agrypnos: adopted leftover SleepDisabled. Waiting for lid close — then the panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake."
     public static let menuTooltipLeftoverLidClosedSleepPanel =
-        "Agrypnos: adopted leftover SleepDisabled. Lid closed. Panel sleeps + keyboard backlight off."
+        "Agrypnos: adopted leftover SleepDisabled. Lid closed. Panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake."
 
     public static func statusItemTitle(_ state: StatusItemState) -> String {
         switch state {
@@ -258,9 +258,9 @@ public enum AgrypnosCopy: Sendable {
             return "Leftover SleepDisabled. Lid close — then brightness floor, keyboard backlight off. Auto-off at \(floor)% battery."
         case .displaySleep:
             if lidClosed {
-                return "Leftover SleepDisabled. Lid closed. Panel sleeps + keyboard backlight off. Auto-off at \(floor)% battery."
+                return "Leftover SleepDisabled. Lid closed. Panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake. Auto-off at \(floor)% battery."
             }
-            return "Leftover SleepDisabled. Lid close — then the panel sleeps + keyboard backlight off. Auto-off at \(floor)% battery."
+            return "Leftover SleepDisabled. Lid close — then the panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake."
         }
     }
 
