@@ -1,203 +1,324 @@
-# Agrypnos
+<div align="center">
+  <img src="Apps/Agrypnos/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png" width="128" alt="Agrypnos icon">
+  <h1>Agrypnos</h1>
+  <p><b>Close the lid. Your coding agents keep working.</b></p>
+  <p>A small macOS menu-bar app that keeps your Mac awake with the lid shut while your agents run, and lets it sleep again when they go idle or when you say so.</p>
+  <p>
+    <a href="https://github.com/VremennoiParadox/Agrypnos/actions/workflows/core.yml"><img src="https://github.com/VremennoiParadox/Agrypnos/actions/workflows/core.yml/badge.svg" alt="Core tests"></a>
+    <img src="https://img.shields.io/badge/macOS-14%2B-black?logo=apple" alt="macOS 14+">
+    <img src="https://img.shields.io/badge/Swift-5.9%2B-F05138?logo=swift&logoColor=white" alt="Swift 5.9+">
+    <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-yellow" alt="MIT license"></a>
+    <img src="https://img.shields.io/badge/telemetry-none-2ea44f" alt="No telemetry">
+  </p>
+</div>
 
-Native Swift menu-bar extra for macOS. Keep the Mac awake with the lid closed while coding agents work, then let it sleep when you turn the watch off, when Agents stay idle through the wait, or on safety auto-off. Greek *agrypnos*: sleepless.
+<table align="center">
+  <tr>
+    <td align="center"><b>Watches</b></td>
+    <td align="center" width="96"><img src="docs/readme/logos/cursor.png" width="40" alt=""><br>Cursor</td>
+    <td align="center" width="96"><img src="docs/readme/logos/claude-code.png" width="40" alt=""><br>Claude Code</td>
+    <td align="center" width="96"><img src="docs/readme/logos/codex.svg" width="40" alt=""><br>Codex</td>
+    <td align="center" width="96"><img src="docs/readme/logos/opencode.png" width="40" alt=""><br>OpenCode</td>
+  </tr>
+</table>
 
-MIT. No telemetry. No stealth network.
+<p align="center"><i>Greek</i> agrypnos: <i>sleepless.</i></p>
 
-## What it does
+---
 
-- **Keep the watch** — ON = armed while the lid is open. The machine may already be held awake (`pmset disablesleep`). The display stays usable; Agrypnos does **not** blank the panel, call `displaysleepnow`, or turn the keyboard backlight off on that toggle.
-- **Lid close** — with the watch armed, sleep is blocked via `pmset disablesleep`. Keyboard backlight off. **Power A (default, Dim panel, Mac-proven):** brightness drops to the **floor %** you set (default 15%, range 1–40; never 0%). Brightness write only — not `displaysleepnow`, not display sleep, not “screen off”. Panel stays on (dimmed). **Power B (Sleep panel, Mac-proven):** confirmed lid-close uses real **panel/display** sleep (`displaysleepnow` or equivalent). Panel only — B does **not** turn Keep the watch off and does **not** put the Mac to sleep by itself. Keep the watch still holds closed-lid wake. Agents keep running. Mutually exclusive with A. Same stable lid-close confirm as hygiene — not one raw clamshell flicker.
-- **Lid open mid-watch** — **Power A:** brightness ramps back over **1 / 2 / 3 seconds** (default 2s). Keyboard backlight on. **Power B:** ramp chrome is hidden (ramp only applies when restoring from the floor path).
-- **Hold until you turn it off** — How long stays as you set it. Timer does not flip Keep the watch. Duration **Agents** turns Keep the watch off after local busy this arm, then idle through the wait. Battery / thermal (and leftover Low Power Mode) still can. **I2 (landed on main — Core #80; not Mac-proven):** turning Keep the watch off from the popover or hotkey with the lid **confirmed closed** also `pmset sleepnow` — same lid gate as inbound `/disarm`. Lid open or unconfirmed: watch off, Mac stays awake. Still not “disarm always sleeps.”
-- **Safety** — low battery (slider 5–100%, default 15%), thermal auto-off on `.serious` / `.critical` (Power toggle, default on), reboot clears SleepDisabled, launch-at-login never re-arms.
+## Why this exists
 
-V1 agents: Cursor, Claude Code, Codex, and OpenCode. Local heuristics only (process list + session-file mtimes; Claude Code and Codex may also use CPU). OpenCode looks at `~/.local/share/opencode` (or `$XDG_DATA_HOME/opencode`) — local process + session files only, not CPU (Mac-proven). Which tools count as busy is a multi-select of those four in the **Agents** popover (at least one stays on; default all on). Busy signals come only from the tools left on. Correctness over coverage. Not every provider.
+You start a long agent run, close the laptop, and walk away. macOS goes to sleep and the run dies with it.
 
-## Not this product
+The usual keep-awake tricks don't help here. Power assertions (what `caffeinate` uses) stop working the moment the lid closes. The one switch that does hold is `pmset disablesleep`, and it's easy to forget to turn off again. Agrypnos flips it for you, turns the screen down while the lid is shut, and flips it back once your agents have been idle for a while or you turn it off.
 
-- Not an App Store sandbox build (V1).
-- Not a watt-marketing page. We do not publish numbers we did not measure.
-- Not a promise to detect every agent provider.
-- Does **not** kill Wi-Fi or Bluetooth (out of scope unless a later spec says otherwise).
-- Does **not** force the display asleep when you arm Keep the watch.
-- Does **not** run a shared Discord or Telegram bot, companion app, or stealth network.
-- Does **not** “notify your phone,” claim “agent stopped,” or invent task text / finish ETA. Task text / finish ETA is **scrapped** — will not implement. Discord webhook is outbound-only — it does not receive commands. Notif outbound stays one-way POST to *your* webhook or *your* Telegram bot, idle after wait.
-- Telegram two-way (`/arm` `/disarm` `/status` `/help` on *your* bot) is in Notif. Same token + chat id as outbound. Notif lists the slash commands, asleep honesty, and lid-gated `/disarm`. Wake-miss drain stays Core + Mac wiring. User optical on two-way + polish **passed** (2026-09-24). `/status` dumps live WatchEngine facts (Keep the watch, How long, lid, Agents, last end, safety prefs). User optical on that dump + `/help` **passed** (2026-09-24). Live laptop battery on `/status` is **Mac-proven** (user optical 2026-09-25): `Battery N% · discharging` / `on AC`; omit if unknown; `/help` names it; not a Notif gauge card. Discord inbound (same four commands on *your* Discord bot, not the webhook) is in **Notif** as a separate card (toggle + bot token + channel id). Gateway and Notif chrome are **landed** on main (Core + UI). **Not Mac-proven** until soft Mac optical. **Power A** (Dim panel, floor+ramp, default) and **Power B** (Sleep panel — panel/display sleep only via `displaysleepnow`; Keep the watch still holds the Mac awake; agents keep running) plus the A↔B switch are **Mac-proven** (user optical 2026-09-25). Enriched-status B (task text / finish ETA) is **scrapped** — will not implement. Full steps: [Notif](#notif).
+## What you get
 
-## Privileged work
+- Turn on **Keep the watch** from the menu bar or with `⌥⌘A`. Nothing changes on screen until you close the lid.
+- On lid close, the keyboard backlight goes off and the panel dims to a floor you choose. If you prefer, the panel sleeps instead.
+- Set How long to **Agents** and the watch ends by itself once your agents have been idle for a few minutes.
+- Low battery and thermal pressure end the watch too, and a reboot always clears it.
+- If you want, *your* Telegram or Discord bot gets a message when the agents go idle, and takes `/arm`, `/disarm`, and `/status` from your phone.
+- No analytics, no accounts, no shared bot. The only privileged piece is a two-command sudoers rule, spelled out in [SECURITY.md](SECURITY.md).
 
-One-time scoped sudoers grant for **exactly two** `pmset disablesleep` commands. `visudo -c` before install. See [SECURITY.md](SECURITY.md).
+## Install
 
-## Repo layout
-
-| Path | Role |
-|---|---|
-| `Sources/AgrypnosCore/` | Portable logic. Linux-testable. No AppKit. |
-| `Tests/AgrypnosCoreTests/` | Heuristics, timers, state machine. |
-| `Apps/Agrypnos/` | macOS menu-bar extra. AppKit + IOKit. Needs a Mac. |
-| `Scripts/` | `verify-linux.sh`, `check-file-sizes.sh`, Mac `build.sh` |
-| `prd/` | Product scope. |
-
-`AgrypnosCore` decides. Mac adapters execute (`pmset`, IOKit, `NSStatusItem`, Carbon hotkey, lid events).
-
-## Build
-
-**Linux (Core tests):**
-
-```bash
-swift test
-./Scripts/verify-linux.sh
-```
-
-**macOS (app):**
+There's no signed download yet, so you build it yourself. You need macOS 14 or later and Xcode (or the Xcode command-line tools).
 
 ```bash
-./Scripts/build.sh
+git clone https://github.com/VremennoiParadox/Agrypnos.git
+cd Agrypnos
+./Scripts/build-macos.sh
+open dist/Agrypnos.app
 ```
 
-Needs a Mac to run the menu-bar extra. User optical on open-lid brightness **passed** (2026-09-24): arm with the lid open (screen stays usable); confirmed lid close (brightness floor + keyboard dark); reopen mid-watch (ramp + keyboard on, Keep the watch still on); after the watch ends, lid-open use with no surprise dim to floor. User optical on Power A/B and Telegram `/status` live battery **passed** (2026-09-25): Dim panel / Sleep panel picker + caption; A = floor+ramp, panel stays on; B = panel sleeps on confirmed lid close, ramp hides, Keep the watch still holds; A↔B exclusive; `/status` live % matches the Mac menu bar (or omit if unknown); `/help` names live battery. Discord inbound is **not** Mac-proven.
+An eye appears in the menu bar. That's Agrypnos. It has no Dock icon and no settings window. Everything lives in the menu-bar popover.
 
-Until someone proves **Low Power Mode** while the watch is armed (lid open and lid closed) and confirms the Mac stays awake, do not claim LPM cannot force a leftover watch. Until someone proves **lid-closed safety auto-off** (battery, thermal) **requests sleep** with the lid still closed, do not claim that path.
+The first time you turn the watch on, Agrypnos asks to install a small sudoers rule so it can run exactly these two commands without a password:
 
-Until someone proves a **wedge** (clamshell + power + external display, or a sleep assertion Agrypnos did not take) and confirms `pmset disablesleep` is not enough under a closed lid, do not claim Agents detection plus drop-keep-awake is the whole closed-lid story.
+```
+/usr/bin/pmset -a disablesleep 1
+/usr/bin/pmset -a disablesleep 0
+```
 
-## Settings (popover only)
+macOS asks for your password once. To remove the rule later, run `./Scripts/ungrant.sh`.
 
-Controls live in the menu-bar popover. There is no separate settings window. A slim text switcher at the top shows one section at a time. **Watch** · **Power** · **Agents** · **Notif** · **General**. The popover opens on Watch.
+## Quick start
 
-- **Watch:** Keep the watch, duration presets plus custom minutes, arming caption, last-end caption (last real watch end)
-- **Power:** mutually exclusive panel mode **A** (Dim panel — brightness floor + lid-open ramp, default, Mac-proven) vs **B** (Sleep panel — panel/display sleep on confirmed lid-close via `displaysleepnow`, Mac-proven). B does not turn Keep the watch off and does not put the Mac to sleep by itself. Keep the watch still holds. Agents keep running. Power explains A vs B **in the popover** (Dim panel / Sleep panel picker + a caption under the picker + help; when B is selected, ramp chrome hides and help says why). Brightness floor % (default **15%**; range 1–40; never 0%; Power A). Keyboard backlight off. Low-battery auto-off **5–100%** (default 15%). Brightness return when the lid opens **1 / 2 / 3 s** (default **2s**; Power A; hide while B). Thermal auto-off (default on)
-- **Agents:** idle wait after local busy signals stop (**2 minutes – 15 minutes**, default **2 minutes** / 120s; stored prefs below 2m clamp up to 2m) before the idle-after-wait POST and turning Keep the watch off. Settle buffer on local process and session activity — not “still thinking,” not “agent finished.” Which tools count as busy: multi-select Cursor, Claude Code, Codex, and OpenCode. At least one stays selected (default all on). Busy signals come only from the tools left on. Selecting all of them is how every listed tool counts. **Count terminal sessions as busy** (default **off**, landed on main — Core #80 / UI #79; not Mac-proven): when on, terminal session files Agrypnos already walks for selected tools count toward busy. Nested `/subagents/*.jsonl` is not this toggle.
-- **Notif:** opt-in idle-after-wait POST (default **off**). Opt-in switch, Discord URL (webhook — outbound-only), Telegram token + chat id, Telegram inbound on/off (default **off**, separate from the POST opt-in) with `/arm` `/disarm` `/status` `/help` on *your* bot, Discord inbound on/off (default **off**, separate from outbound and from Telegram inbound) with bot token + channel id on *your* Discord bot (landed on main — Core + UI; not Mac-proven until soft Mac optical), and Clear secrets. Wake-miss drain does not apply commands that arrived while the Mac was asleep. Lid-open `/disarm` (and lid-open popover/hotkey off) does not sleep; confirmed lid-closed `/disarm` and confirmed lid-closed popover/hotkey off may `pmset sleepnow` (I2 — landed on main — Core #80; not Mac-proven). `/status` dumps live WatchEngine facts (reply copy, not a new Notif control). User optical **passed** (2026-09-24) for Telegram inbound. Live laptop battery on `/status` is **Mac-proven** (user optical 2026-09-25; same reply copy, not a Notif card). Self-serve setup lives in the Notif section; same steps: [Notif](#notif).
-- **General:** remappable global hotkey (default `⌥⌘A`), launch at login, quit
+1. Click the eye in the menu bar. The popover opens on **Watch**.
+2. Under **How long**, pick **Agents**.
+3. Turn on **Keep the watch**. The menu bar now says **Agents.**
+4. Start your agent and close the lid.
 
-The menu-bar extra shows **Armed.** while Keep the watch is on for ∞ / 1h / 3h / custom minutes, and **Agents.** while it is on and How long is Agents. Off is the glyph only. Not a remaining-time countdown — How long timers do not auto-off. Donate stays gated until there is a live URL.
+Agrypnos waits until the lid has really closed (a single flicker of the lid sensor doesn't count), then turns the keyboard backlight off and dims the panel. When your agents have been idle for the idle wait (2 minutes by default), the watch turns off and the Mac is free to sleep.
 
-## Notif
+Want it on until you say stop? Pick `∞` instead and turn it off yourself.
 
-Opt-in. Default **off**. Outbound is one-way: a **one-shot POST** when Agents mode is armed, Agrypnos has seen a **local busy signal this arm**, and those signals then stay quiet through the idle wait. The event is **idle after wait** — not “agent stopped,” not “job finished,” not “still thinking.” Timer, battery, thermal, Low Power Mode, and manual off do not send this POST. If nothing was busy this arm, nothing is sent. Discord webhook stays outbound-only.
+> [!NOTE]
+> `1h`, `3h`, and custom minutes are remembered with the watch, but they don't turn it off on their own. Only **Agents** ends the watch by itself. Battery and thermal limits still apply to every option.
 
-Core decides; the Mac adapter POSTs to **your** Discord incoming webhook and/or **your** Telegram bot when Notif is on and the matching secrets are set. Paste those secrets in the popover **Notif** section and turn the opt-in on. Discord POSTs only if a URL is set. Telegram POSTs only if both token and chat id are set. Fields show dots; the eye button reveals a paste so you can check it. **Notif → Setup instructions…** opens a read-only **Bot setup** window with the same steps as below (Telegram and Discord tabs, numbered steps, links).
+## How it works
 
-You own the destination. Agrypnos does not run a shared bot, a companion app, or telemetry. Secrets live in `~/Library/Application Support/Agrypnos/notif-secrets.json` (mode 0600) — never Keychain (that login-password prompt), never plaintext prefs, logs, or example URLs in this file. Values saved in an older Keychain build are not imported; paste them again.
+### When the lid closes
 
-### Discord — your incoming webhook
+The **Power** section has two panel modes. You pick one.
 
-1. Open Discord on desktop or the website and go to **your** server (you need permission to manage webhooks).
-2. **Server Settings → Integrations → Webhooks → New Webhook**.
-3. Name it, pick the channel, **Copy Webhook URL**.
-4. Popover → **Notif** → paste that URL into the Discord field and turn Notif on.
-5. Do not paste the URL into chat, screenshots, or issue reports. It is a secret.
+| Mode | On a confirmed lid close | When you open the lid again |
+|---|---|---|
+| **Dim panel** (default) | Brightness drops to your floor (15% by default, 1–40%). The panel stays on. | Brightness fades back over 1, 2, or 3 seconds (2 by default). |
+| **Sleep panel** | The display itself sleeps (`displaysleepnow`). | The display wakes. No fade, so that setting is hidden. |
 
-The URL looks like `https://discord.com/api/webhooks/…` — this README will not include a real one.
+Both modes turn the keyboard backlight off. Neither one puts the Mac to sleep or turns the watch off, so your agents keep running either way. Turning the watch on with the lid open never touches the screen.
 
-This URL is **outbound-only**. Agrypnos POSTs idle-after-wait here. It does **not** receive `/arm` or other commands. Commands need a separate Discord bot — [Discord inbound](#discord-inbound-your-bot).
+If Agrypnos never saw your brightness before the lid closed, it won't guess one when the lid opens. It leaves the screen alone.
 
-### Discord inbound (your bot)
+### How it knows your agents are busy
 
-A **different** secret from the webhook. Not a shared Agrypnos bot. You own the bot. Default inbound **off**, separate from the outbound POST opt-in and from Telegram inbound. Empty bot token or empty channel id: no inbound. Gateway and Notif chrome are **landed** on main (Core + UI). **Not Mac-proven** until soft Mac optical.
+It only looks at your own Mac. For each tool you leave checked under **Agents**, it watches two things: whether the tool's process is running, and whether its session files changed in the last 45 seconds. Claude Code and Codex also count CPU use.
 
-Same command surface as Telegram, on **one shared WatchEngine path**: **`/arm`** **`/disarm`** **`/status`** **`/help`** (Discord-native slash may map to those same commands). No second arm/disarm stack. Replies are facts only. Ban “agent stopped,” “job finished,” “still thinking.” `/status` dumps the same live WatchEngine facts as Telegram (including live battery when known). Enriched-status B (task text / finish ETA) is **scrapped**. Agrypnos does **not** reply while the Mac is asleep (no relay). `/help` keeps the asleep note (if the bot isn’t replying, the Mac is likely asleep / Agrypnos isn’t receiving updates) and lid-gated `/disarm`. Wake-miss drain: commands that arrived while the Mac was asleep are drained without applying **if** anything was queued, then **Missed while asleep.** Do not scrape channel history on wake. Lid-gated `/disarm` is the same as Telegram: lid open or unconfirmed → Keep the watch off, Mac stays awake; confirmed lid-close → Keep the watch off and `pmset sleepnow`. That lid-gated `pmset sleepnow` is one story with popover/hotkey user-off (I2 — landed on main — Core #80; not Mac-proven). Still not “disarm always sleeps.” Receive on the Mac — do not set Discord’s Interactions Endpoint URL, and do not open a listen port.
-
-**In Notif:** Discord inbound on/off + short command/help list + bot token + channel id (dotted + reveal). Keep the webhook paste block as outbound-only — never paste the bot token into the webhook field.
-
-1. Open the [Discord Developer Portal](https://discord.com/developers/applications) → **New Application** → name it → **Create**. This is *your* app, not an Agrypnos bot.
-2. **Bot** → **Reset Token** → copy the **bot token**. Treat it as a password. Do not paste it into the Discord webhook URL field.
-3. Invite the bot to **your** server: **OAuth2 → URL Generator**. Scopes: `bot` and `applications.commands`. Bot permissions: **Send Messages** (smallest that can reply). Copy the generated URL, open it, pick the server, authorize. You need permission to add a bot to that server.
-4. In Discord: **User Settings → Advanced → Developer Mode** on. Right-click the channel the bot should take commands in → **Copy Channel ID**. That id is the allowlist (same role as Telegram’s chat id). Commands only from that channel. If it is a server channel, anyone who can post there can send those commands.
-5. Popover → **Notif** → Discord inbound: paste the **bot token** and **channel id**, turn **Discord inbound** on (separate from Notif outbound). Agrypnos registers the four slash commands on *your* bot so Discord’s `/` menu matches. Gateway/UI landed on main. Not Mac-proven until soft Mac optical.
-
-Agrypnos does not ship a Discord bot for you to add. If the Developer Portal did not give you a bot token, you do not have a bot yet.
-
-### Telegram — your own bot
-
-1. In Telegram, search **@BotFather** and send `/newbot`. Follow the prompts (display name, then a username ending in `bot`).
-2. BotFather replies with a **bot token**. Copy it. Treat it as a password.
-3. Open the bot you just created and send it a message (tap **Start** or type anything). The bot must have seen you once before `getUpdates` can show a chat id. For a **group**, add the bot to the group and send a message there.
-4. Get the **chat id**. In a browser, open (replace `YOUR_TOKEN` with the token; do not commit or screenshot it). The token will sit in that tab’s history — close the tab when you are done:
-
-   `https://api.telegram.org/botYOUR_TOKEN/getUpdates`
-
-   In the JSON, find `"chat":{"id":` — that number is the chat id. Fake shape only:
-
-   `{"ok":true,"result":[{"message":{"chat":{"id":123456789,"type":"private"}}}]}`
-
-   For a private chat the id is a positive integer; for a group it is often negative. A clear equivalent is any client that calls the same `getUpdates` method with your token and reads `result[].message.chat.id`.
-5. If `"result":[]` is empty: you opened the URL before messaging the bot, or another client already consumed the update. Message the bot (or the group) again, then reload.
-6. Popover → **Notif** → paste the **token** and **chat id** and turn Notif on.
-
-Agrypnos does not ship a bot for you to add. If BotFather did not give you the token, you do not have a bot yet.
-
-### Telegram inbound — /arm /disarm /status /help (your bot)
-
-Same BotFather bot and token as outbound. Not a shared Agrypnos bot. Discord webhook stays outbound-only — Discord inbound is a separate bot (token + channel id), not the webhook. See [Discord inbound](#discord-inbound-your-bot).
-
-**In Notif:** inbound on/off (default **off**, separate from the outbound POST opt-in). When inbound is on and token + chat id are set, Core polls `getUpdates` and **`/arm`** **`/disarm`** **`/status`** **`/help`** (slash; bare arm/disarm/status still work) hit Keep the watch. `/help` is facts only. Agrypnos registers **`setMyCommands`** on *your* bot so Telegram’s `/` menu matches. Only the saved chat id counts; other chats are ignored. Empty token or chat id: no inbound. Replies are facts (armed / disarmed / current status / help). `/status` dumps live WatchEngine facts: Keep the watch on/off; How long mode (∞ / 1h / 3h / custom minutes / Agents — name the mode, no fake countdown; Agents settle is not an end clock); lid open or unconfirmed vs confirmed closed (same `LidCloseConfirm` as hygiene — never report closed on an unconfirmed close); Agents when relevant (selected tools, busy-seen-this-arm, in settle wait); last-end honesty if any (real `DisengageReason` + time); safety prefs (low-battery threshold, thermal auto-off on/off); live laptop battery when known (`Battery 62% · discharging` / `Battery 62% · on AC` — omit if unknown; same sensor as low-battery auto-off). LPM copy honesty as already specified (no ended-copy while forced watch still holds) — omit an LPM line if unknown. Ban invent ETA, “still thinking,” “job finished.” Enriched-status B (task text / finish ETA) is **scrapped** — will not implement. Not “agent stopped,” not “job finished,” not “still thinking.” Agrypnos does **not** reply while the Mac is asleep (no relay). User optical on the facts dump + `/help` **passed** (2026-09-24). Live battery on `/status` **passed** (user optical, 2026-09-25 — live % matches the Mac menu bar, or omit if unknown).
-
-**Leftover drain:** on setup / quit / inbound off, the first `getUpdates` acks leftover messages without running them. That leftover drain is silent and is **not** wake-from-sleep.
-
-**Wake-miss drain:** commands that arrived while the Mac was asleep are drained without applying. The bot then replies **Missed while asleep.** They do not arm or disarm after the fact. A poller restart on wake is this path, not leftover drain.
-
-**Lid-gated `/disarm`:** always clears Keep the watch / the wake hold. Lid **open** or lid-close **not** confirmed: Mac stays awake. Lid-close **confirmed** (same stable closed signal as brightness, not one raw clamshell flicker): also `pmset sleepnow`. Same lid gate as popover/hotkey user-off (I2 — landed on main — Core #80; not Mac-proven). Still not “disarm always sleeps.”
-
-When inbound is on:
-
-1. Paste token + chat id as above.
-2. Turn **inbound** on in **Notif** (separate from the outbound POST opt-in). Default inbound is off.
-3. Chat with *your* bot (the same chat id you saved).
-4. Send **`/arm`** **`/disarm`** **`/status`** **`/help`**. Turn inbound off in Notif to stop command handling. Clear secrets still deletes the saved token and chat id.
-
-User optical on Telegram two-way + polish **passed** (2026-09-24): bot menu shows the four slashes; `/help` has the asleep note and lid-gated `/disarm`; commands queued while the Mac is asleep are drained without applying, then **Missed while asleep.** (no reply during sleep); lid-open `/disarm` turns Keep the watch off and does not sleep; confirmed lid-closed `/disarm` turns Keep the watch off and the Mac sleeps.
-
-Core `/status` dumps live WatchEngine facts; `/help` says `/status` returns those facts and includes live battery when known. User optical on the facts dump **passed** (2026-09-24). Live battery % matching the Mac menu bar **passed** (user optical, 2026-09-25).
-
-### What to paste where
-
-| You created | Paste in Agrypnos **Notif** |
+| Tool | Session files it watches |
 |---|---|
-| Discord webhook URL | Discord URL field (outbound only — does not receive commands) |
-| Discord bot token | Discord inbound bot token field (not the webhook URL) |
-| Discord channel id | Discord inbound channel id field |
-| Telegram bot token | Telegram token field |
-| Telegram chat id | Telegram chat id field |
+| Cursor | `~/.cursor/projects`, `~/.cursor/chats`, `~/.cursor/acp-sessions` |
+| Claude Code | `~/.claude/projects` (or `$CLAUDE_CONFIG_DIR`) |
+| Codex | `~/.codex/sessions` (or `$CODEX_HOME`) |
+| OpenCode | `~/.local/share/opencode` (or `$XDG_DATA_HOME/opencode`) |
 
-Use the webhook, Telegram, Discord inbound, or any mix. Leave a field empty if you do not use that channel. Outbound POSTs do not fire while Notif is off, or while the matching outbound secret is missing. Discord inbound is a separate on/off — empty token or channel id: no inbound.
+It reads file modification times, not what's inside the files.
 
-### How to test
+Once it has seen work during this watch, it starts counting when the signals stop. If they stay quiet through the idle wait (2–15 minutes), the watch ends. If it never saw any work since you turned it on, it keeps the watch on. The idle wait exists because an agent can pause for a while between file writes, and that shouldn't look like the end of the run.
 
-1. Turn **Notif** on and save at least one channel’s secrets.
-2. In **Watch**, arm Keep the watch with duration **Agents** (`∞` / `1h` / `3h` / custom do not send this POST).
-3. Run an agent Agrypnos can see so a **local busy signal** is recorded this arm. Cursor, Claude Code, Codex, and OpenCode all count by default. In **Agents**, leave on only the tools that should count (at least one stays on). OpenCode local process + session files are Mac-proven.
-4. Let that go idle, then wait the idle wait (**Agents** section; default 2 minutes, range 2–15).
-5. Expect **one** Discord webhook POST and/or **one** message from *your* Telegram bot. Copy should say idle after wait — not that the agent stopped or the job finished. Keep the watch turns off. How long stays **Agents**.
-6. If nothing arrives: Notif off, missing/wrong secret, duration was not Agents, this arm never saw busy, or busy signals are still counting as activity. Agrypnos will not POST to a destination you did not configure.
+Agrypnos can't tell whether a model is "thinking". It only sees processes and files, so pick an idle wait that fits how your agents work.
 
-### Turn off / clear secrets
+> [!TIP]
+> Terminal session files don't count as busy by default, so a chatty terminal can't hold the Mac awake forever. Turn on **Count terminal sessions as busy** in **Agents** if you want them to.
 
-- Switch **Notif** off in the popover. POSTs stop. Default is off.
-- Switch Telegram inbound off in **Notif** to stop Telegram command handling. Default inbound is off.
-- Switch Discord inbound off in **Notif** to stop Discord command handling. Default Discord inbound is off.
-- Use **Clear secrets** in the Notif section to delete the saved webhook URL, bot tokens, chat id, and Discord channel id.
-- On Discord you can also delete the webhook: **Server Settings → Integrations → Webhooks**. Reset or delete the inbound bot in the Developer Portal (**Bot → Reset Token**, or delete the application).
-- On Telegram you can revoke or delete the bot in BotFather (`/revoke` or `/deletebot`).
+### When the watch turns itself off
 
-Enriched-status B (task text / finish ETA) is not this product. **Scrapped** — will not implement. Discord inbound uses *your* bot token + channel id (webhook stays outbound-only). Gateway/UI landed on main; not Mac-proven until soft Mac optical. Do not expect a shared Agrypnos Discord bot.
+- **Agents went idle.** Only when How long is **Agents**.
+- **Low battery.** On battery, at the level you set (15% by default, 5–100%).
+- **Thermal pressure.** When macOS reports serious or critical thermal state. You can turn this off in **Power**.
+- **Low Power Mode.** On battery, a watch Agrypnos inherited from an earlier session ends. A watch you turned on yourself keeps going.
+- **Reboot.** macOS clears the setting. Launch at login never turns the watch back on.
 
-## Honesty
+The **Watch** section shows when the last watch ended and why.
 
-- Armed ≠ black screen. Power A (Dim panel, default) floors brightness on confirmed lid close — that is not display sleep. Power B (Sleep panel) sleeps the **panel/display only** (`displaysleepnow`). It does **not** turn Keep the watch off and does **not** put the Mac to sleep by itself. Keep the watch still holds the Mac awake. Agents keep running. The Keep the watch toggle never sleeps the panel. Power explains A vs B **in the popover** (Dim panel / Sleep panel picker + caption; Sleep panel hides brightness return). User optical on Power A/B **passed** (2026-09-25).
-- IOKit assertions do not survive lid close; `pmset disablesleep` is the lid story.
-- Reboot clears SleepDisabled. That is a feature.
-- Launch-at-login never re-arms the watch.
-- Notif POSTs only to *your* webhook or *your* bot, and only when enabled with secrets set.
-- Telegram inbound (`/arm` `/disarm` `/status` `/help`) uses *your* bot when inbound is on and token + chat id are set. No live reply while the Mac is asleep; wake-miss drain does not apply queued commands; lid-open `/disarm` does not sleep the Mac; confirmed lid-closed `/disarm` does. User optical on two-way + polish and on the `/status` dump **passed** (2026-09-24). Notif `/help` names live battery on `/status` when known. Live battery % matching the Mac menu bar **passed** (user optical, 2026-09-25).
-- Discord inbound (`/arm` `/disarm` `/status` `/help` on *your* Discord bot) uses a bot token + channel id, not the webhook. Same WatchEngine path and the same wake-miss / lid-gated `/disarm` honesty as Telegram. Default off. Gateway/UI landed on main. Not Mac-proven until soft Mac optical.
-- **I2 (landed on main — Core #80; not Mac-proven):** turning Keep the watch off from the popover or hotkey uses the same lid-gated `pmset sleepnow` as inbound `/disarm`. Lid open or unconfirmed: watch off, Mac stays awake. Confirmed closed: watch off and the Mac sleeps. Still not “disarm always sleeps.” Do not claim Mac-proven until user optical.
-- Open-lid brightness: after the watch ends, lid-open use does not surprise-dim to floor. User optical **passed** (2026-09-24).
-- Agents picker + OpenCode local process/session: user optical **passed** (2026-09-24). Still not every provider. Still not think-detection.
-- **I3 (landed on main — Core #80 / UI #79; not Mac-proven):** **Count terminal sessions as busy** in **Agents**, default **off**. When off, terminal session files do not hold wake. When on, terminal session files Agrypnos already walks for selected tools count as busy. Nested `/subagents/*.jsonl` is not this toggle. Do not claim Mac-proven until user optical.
+### Turning it off yourself
 
-## License
+Click the toggle or press `⌥⌘A`. If the lid is open, the watch turns off and the Mac stays awake. If the lid is confirmed closed (say you're doing it from a bot or the hotkey on an external keyboard), the watch turns off and the Mac goes to sleep.
 
-MIT. See [LICENSE](LICENSE).
+## Messages and remote commands
+
+This part is optional and off by default. It lives in the **Notif** section. You bring your own bot. Agrypnos doesn't run one for you.
+
+There are two separate pieces:
+
+- **Idle message.** When **Agents** mode has seen work and then stayed idle through the wait, Agrypnos sends one message to your Discord webhook, your Telegram bot, or both. It doesn't send one when you turn the watch off, when a timer or battery limit ends it, or when it never saw any work.
+- **Commands.** Send `/arm`, `/disarm`, `/status`, or `/help` to your own Telegram or Discord bot, and Agrypnos acts on them while the Mac is awake.
+
+The app has the same steps as below, with screenshots. Click **Setup instructions…** at the bottom of **Notif**.
+
+### Commands
+
+| Command | What happens |
+|---|---|
+| `/arm` | Turns on Keep the watch. |
+| `/disarm` | Turns off Keep the watch. Lid open: the Mac stays awake. Lid confirmed closed: the Mac also goes to sleep. |
+| `/status` | Replies with what Agrypnos knows right now: watch on or off, How long, lid state, agent activity, the last watch end, your safety settings, and battery (for example `Battery 62% · on AC`) when it can read it. |
+| `/help` | Lists these commands. |
+
+Agrypnos registers these four with your bot, so they show up in the `/` menu.
+
+If the bot doesn't answer, the Mac is probably asleep. Nothing relays commands while it sleeps. Anything you sent in the meantime doesn't run when the Mac wakes up. The bot replies "Missed while asleep." instead, so a stale `/arm` can't surprise you hours later.
+
+<details>
+<summary><b>Telegram: create your bot</b></summary>
+
+<br>
+
+1. In Telegram, open [@BotFather](https://t.me/BotFather) and send `/newbot`. Pick a display name and a username that ends in `bot`.
+2. BotFather replies with a token. Paste it into **Notif → Telegram → Token**. Treat it like a password.
+
+   <img src="Apps/Agrypnos/Resources/Assets.xcassets/guide-telegram-botfather.imageset/guide-telegram-botfather.png" width="520" alt="BotFather reply with the bot token">
+
+3. Open your new bot and tap **Start** (or send it anything). Telegram only knows your chat id after you've messaged the bot.
+4. In a browser, open `https://api.telegram.org/bot<token>/getUpdates` with your token in place of `<token>`. Find `"chat":{"id":` and copy the number after it. Close the tab when you're done, since the token stays in its history.
+
+   <img src="Apps/Agrypnos/Resources/Assets.xcassets/guide-telegram-getupdates.imageset/guide-telegram-getupdates.png" width="520" alt="getUpdates response with the chat id highlighted">
+
+   If you see `"result":[]`, the bot hasn't seen a message yet. Message it again and reload. A private chat id is a positive number. A group id is usually negative.
+5. Paste the number into **Notif → Telegram → Chat id**.
+6. Turn on **Idle-after-wait POST** for the idle message, **Telegram inbound** for commands, or both.
+
+Commands only count from the chat id you saved. If that's a group, anyone in the group can send them.
+
+</details>
+
+<details>
+<summary><b>Discord: idle messages through a webhook</b></summary>
+
+<br>
+
+A webhook can only post into your channel. It can't receive commands. For those, set up the bot below.
+
+1. In your server, go to **Server Settings → Integrations → Webhooks → New Webhook**. You need permission to manage webhooks.
+2. Name it, pick a channel, and click **Copy Webhook URL**.
+
+   <img src="Apps/Agrypnos/Resources/Assets.xcassets/guide-discord-webhook-copy.imageset/guide-discord-webhook-copy.png" width="520" alt="Discord webhook with the Copy Webhook URL button">
+
+3. Paste it into **Notif → Discord webhook URL** and turn on **Idle-after-wait POST**.
+
+The URL looks like `https://discord.com/api/webhooks/…`. Anyone who has it can post to your channel, so keep it out of screenshots and issues.
+
+</details>
+
+<details>
+<summary><b>Discord: commands through your own bot</b></summary>
+
+<br>
+
+This needs a bot token and a channel id. It's a separate thing from the webhook. Discord commands haven't been checked on a real Mac yet (Telegram commands have).
+
+1. Open the [Discord Developer Portal](https://discord.com/developers/applications), click **New Application**, name it, and click **Create**.
+2. Go to **Bot → Reset Token** and copy the token. Paste it into **Notif → Discord inbound → Token**. Never paste it into the webhook field.
+3. Go to **OAuth2** and scroll to **OAuth2 URL Generator**. Tick the scopes `bot` and `applications.commands`, then tick **Send Messages** under Bot Permissions. Open the generated URL, pick your server, and authorize.
+
+   <img src="Apps/Agrypnos/Resources/Assets.xcassets/guide-discord-oauth-url.imageset/guide-discord-oauth-url.png" width="520" alt="OAuth2 URL Generator with bot, applications.commands, and Send Messages ticked">
+
+4. In Discord, turn on **User Settings → Advanced → Developer Mode**.
+5. Right-click the channel the bot should listen in and choose **Copy Channel ID**. Paste it into **Notif → Discord inbound → Channel**.
+6. Turn on **Discord inbound**, then type `/help` in that channel.
+
+Commands only count from that channel, so anyone who can post there can use them. Agrypnos talks to Discord from your Mac over the normal bot connection. It doesn't open a port or use an Interactions Endpoint URL.
+
+</details>
+
+<details>
+<summary><b>What goes where</b></summary>
+
+<br>
+
+| You created | Paste it into |
+|---|---|
+| Discord webhook URL | **Discord webhook URL** (idle messages only) |
+| Discord bot token | **Discord inbound → Token** |
+| Discord channel id | **Discord inbound → Channel** |
+| Telegram bot token | **Telegram → Token** |
+| Telegram chat id | **Telegram → Chat id** |
+
+Use any mix. Leave a field empty to skip that channel.
+
+</details>
+
+<details>
+<summary><b>Test the idle message</b></summary>
+
+<br>
+
+1. Turn on **Idle-after-wait POST** and save at least one channel.
+2. In **Watch**, set How long to **Agents** and turn on Keep the watch.
+3. Start an agent from one of the checked tools, so Agrypnos sees it working.
+4. Let it finish, then wait out the idle wait (2 minutes by default).
+5. You should get exactly one message, and Keep the watch turns off.
+
+Nothing arrived? Check that the switch is on, the secrets are right, How long is **Agents**, and the agent was one of the tools checked under **Agents**.
+
+</details>
+
+<details>
+<summary><b>Turn it off or remove your secrets</b></summary>
+
+<br>
+
+- Switch off **Idle-after-wait POST**, **Telegram inbound**, or **Discord inbound** to stop that piece.
+- **Clear secrets** in **Notif** deletes every saved token, URL, and id from this Mac.
+- To kill a bot for good: `/revoke` or `/deletebot` in BotFather, **Bot → Reset Token** in the Discord Developer Portal, or delete the webhook under **Server Settings → Integrations → Webhooks**.
+
+Secrets live in `~/Library/Application Support/Agrypnos/notif-secrets.json` with mode `0600`. They're not in the Keychain on purpose: an unsigned app asking for your login password looks like exactly the thing you shouldn't trust.
+
+When you first turn inbound on, or quit and relaunch, Agrypnos quietly skips any old messages still waiting for the bot. It doesn't run them.
+
+</details>
+
+## Settings
+
+Everything is in the popover, one section at a time.
+
+| Section | What's in it |
+|---|---|
+| **Watch** | Keep the watch, How long (`∞`, `1h`, `3h`, custom minutes, **Agents**), and the last watch end |
+| **Power** | Dim panel or Sleep panel, brightness floor, keyboard backlight off, low-battery auto-off, brightness return time, thermal auto-off |
+| **Agents** | Idle wait (2–15 min), which tools count as busy (at least one), count terminal sessions as busy |
+| **Notif** | Idle message switch, Discord webhook, Telegram token and chat id, Telegram inbound, Discord inbound (token and channel), clear secrets, setup instructions |
+| **General** | Global shortcut (default `⌥⌘A`, remappable), launch at login, quit |
+
+## What's been tested on a real Mac
+
+Core logic runs under `swift test` on Linux in CI. The table below covers what someone has checked by hand on real hardware.
+
+| Behavior | Checked on a Mac |
+|---|---|
+| Lid closed stays awake, Dim panel floor and fade back | ✅ |
+| Sleep panel mode, and switching between the two | ✅ |
+| No surprise dimming after the watch ends | ✅ |
+| Agents picker and OpenCode detection | ✅ |
+| Telegram commands, missed-while-asleep, lid-aware `/disarm` | ✅ |
+| Telegram `/status`, including battery | ✅ |
+| Discord commands | Not yet |
+| Idle message to a webhook or Telegram bot | Not yet |
+| Turning the watch off with the lid closed puts the Mac to sleep | Not yet |
+| Count terminal sessions as busy | Not yet |
+| Agents idle wait turning the watch off | Not yet |
+| Battery or thermal auto-off letting a closed Mac sleep | Not yet |
+| Low Power Mode with the watch on | Not yet |
+
+## What it won't do
+
+- Detect every AI tool. It knows the four above.
+- Turn off Wi-Fi or Bluetooth.
+- Blank the screen when you turn the watch on.
+- Claim power savings nobody measured.
+- Read your transcripts, upload anything, or run a shared bot.
+- Report what your agent is doing or when it will finish. `/status` only reports what Agrypnos can see.
+
+## Development
+
+```
+Sources/AgrypnosCore/    Decisions: the watch state machine, lid and safety rules, agent heuristics, all copy. No AppKit.
+Tests/AgrypnosCoreTests/ Tests for all of the above. Runs on Linux.
+Apps/Agrypnos/           The menu-bar app: AppKit, IOKit, pmset, hotkey, bots.
+Scripts/                 Build, test, sudoers grant, Xcode project generator.
+prd/                     Product scope.
+```
+
+`AgrypnosCore` decides what should happen. The app only carries it out.
+
+```bash
+swift test                          # Core tests (macOS or Linux)
+./Scripts/verify-linux.sh           # tests plus the 600-line file cap, same as CI
+./Scripts/build-macos.sh            # build dist/Agrypnos.app
+python3 Scripts/generate-xcodeproj.py   # after adding or removing app Swift files
+```
+
+No file may pass 600 lines. `check-file-sizes.sh` enforces it in CI.
+
+Security details, including exactly what the sudoers rule allows, are in [SECURITY.md](SECURITY.md).
