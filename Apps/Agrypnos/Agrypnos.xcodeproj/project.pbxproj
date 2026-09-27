@@ -12,6 +12,7 @@
 		E7745E8B7473D56F15599102 /* AppMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD5204D1B4D62DE6D2D8B414 /* AppMain.swift */; };
 		98EC0A7215FC0C16A38106EC /* GlobalHotkeyCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D41CC191CF99AEA8CAC87F99 /* GlobalHotkeyCenter.swift */; };
 		F87EF19E80616F394A8108B0 /* LaunchAtLoginController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1531989688A32A6FF3BE1EF7 /* LaunchAtLoginController.swift */; };
+		6A127293227361B149E1B62A /* BotGuideWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCDCFD91BC90B6276207D28E /* BotGuideWindow.swift */; };
 		31713455EC90405270582CED /* HotkeyRecorderControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71AB415778ADE64BF7D1B20 /* HotkeyRecorderControl.swift */; };
 		EE4DE2012E8891D5E35D9C27 /* PopoverChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = F94178055CD17CB0C1E4EBE4 /* PopoverChrome.swift */; };
 		87299C24812BC138E73D77BC /* PopoverController+Canvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50D9BE7A9730D85A15B6E96E /* PopoverController+Canvas.swift */; };
@@ -21,12 +22,12 @@
 		40DF44DBC43DE8B05319E1F5 /* PopoverController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 329EC7D50E7C6B456084BE11 /* PopoverController.swift */; };
 		6ED04DCF9683E5F466136641 /* PopoverForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E6799E8B24D782B3151D901 /* PopoverForm.swift */; };
 		EC7A8AAC019F71CCB4D3623D /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8607BE8FEC94DD9191D5842B /* StatusItemController.swift */; };
+		1505C7E3DE99C6293048F4B8 /* DiscordInboundGatewayClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB99BA11734AC07202D0B092 /* DiscordInboundGatewayClient.swift */; };
 		B6CAAC6325F70B0F1AB1E2DA /* NotifIdlePoster.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8193A6EAE0A4E045C57C12C /* NotifIdlePoster.swift */; };
 		8DA2AF8DFDB960B9DF98724A /* NotifSecretsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD41C9A6FD60A6E47BE3AFC /* NotifSecretsStore.swift */; };
 		74189A8A7BDBD266D792FCE0 /* TelegramInboundPoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 013219EDBCB9C28115D79007 /* TelegramInboundPoller.swift */; };
+		D3AFC913CE5D2778E0FD4327 /* WatchRuntime+DiscordInbound.swift in Sources */ = {isa = PBXBuildFile; fileRef = D985ED4DEFB9BD742BCA8ADE /* WatchRuntime+DiscordInbound.swift */; };
 		FACF7AB4E66AFD37CCE4A152 /* WatchRuntime+TelegramInbound.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C149123F4E7CCF53624D71 /* WatchRuntime+TelegramInbound.swift */; };
-		A7C3E91F204B4D8E9C1D2F30 /* DiscordInboundGatewayClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8B4F02A315C5E9F0D2E3A41 /* DiscordInboundGatewayClient.swift */; };
-		B9D5A13B426D6F0A1E3F4B52 /* WatchRuntime+DiscordInbound.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0E6B24C537E701B2F405C63 /* WatchRuntime+DiscordInbound.swift */; };
 		B54A11BE04F7B909BA1DAA45 /* BrightnessFloorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 664053E9C3461C2FA95B19F5 /* BrightnessFloorController.swift */; };
 		B90D244D2FCD3BF4C0C2FA52 /* BrightnessRampController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AEA59356C52ACE1D2FD1C57 /* BrightnessRampController.swift */; };
 		3E912B96C1EA4A6340DF6B81 /* KeyboardBacklightController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2F4F53E617135F5861F4EE6 /* KeyboardBacklightController.swift */; };
@@ -36,10 +37,10 @@
 		31DBD3069D96D292DC184EDD /* PreferencesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 986AF8E920E5E71D993DED12 /* PreferencesStore.swift */; };
 		436DA0943AEB42FDD30C5580 /* GrantAndNotify.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD7C3F5A1565378FE3CC9B8A /* GrantAndNotify.swift */; };
 		E62F9714A04AB0D4F946A4FE /* ProcessRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D433AFEE00C6137709B3A3C /* ProcessRunner.swift */; };
+		EEE09B48690E2B1F79A7547C /* WatchRuntime+Kernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED750E218B81FEF5B2711348 /* WatchRuntime+Kernel.swift */; };
+		B61701CD7A9C7B8B971BBE35 /* WatchRuntime+Lid.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE46E54106185894B8859E55 /* WatchRuntime+Lid.swift */; };
+		E3E9E97E96936C3A956AAC68 /* WatchRuntime+Poll.swift in Sources */ = {isa = PBXBuildFile; fileRef = 779C1801A09C9D65CD3D4E70 /* WatchRuntime+Poll.swift */; };
 		1A07C28A481816CBE4F20A60 /* WatchRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41663A701EAD0DB8779BE8A5 /* WatchRuntime.swift */; };
-		2F8B14D0C9E37A65B1D48290 /* WatchRuntime+Poll.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E4A91C2B8D03F15A6C24780 /* WatchRuntime+Poll.swift */; };
-		4A6D82E1B0C75934F8A21367 /* WatchRuntime+Lid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C3E50A1D7B24618F0E39572 /* WatchRuntime+Lid.swift */; };
-		8E1C47A9F3B5602D7C4A91E8 /* WatchRuntime+Kernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5B8174E2C903A6F1E4D8B20 /* WatchRuntime+Kernel.swift */; };
 		095E19E7CB28F7EE95D82908 /* AgrypnosCore in Frameworks */ = {isa = PBXBuildFile; productRef = C81CD5F22406E4B780AC870D /* AgrypnosCore */; };
 		6B8001DABC00C7B45D3BFA0C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8B40A3F1CAC9ADB66B78DD5C /* Assets.xcassets */; };
 		BBE0CDF003CDB2E92B81738B /* grant.sh in Resources */ = {isa = PBXBuildFile; fileRef = 9A657A8A538B844742E8496C /* grant.sh */; };
@@ -52,6 +53,7 @@
 		AD5204D1B4D62DE6D2D8B414 /* AppMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMain.swift; sourceTree = "<group>"; };
 		D41CC191CF99AEA8CAC87F99 /* GlobalHotkeyCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotkeyCenter.swift; sourceTree = "<group>"; };
 		1531989688A32A6FF3BE1EF7 /* LaunchAtLoginController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginController.swift; sourceTree = "<group>"; };
+		FCDCFD91BC90B6276207D28E /* BotGuideWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BotGuideWindow.swift; sourceTree = "<group>"; };
 		A71AB415778ADE64BF7D1B20 /* HotkeyRecorderControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyRecorderControl.swift; sourceTree = "<group>"; };
 		F94178055CD17CB0C1E4EBE4 /* PopoverChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverChrome.swift; sourceTree = "<group>"; };
 		50D9BE7A9730D85A15B6E96E /* PopoverController+Canvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Canvas.swift"; sourceTree = "<group>"; };
@@ -61,12 +63,12 @@
 		329EC7D50E7C6B456084BE11 /* PopoverController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverController.swift; sourceTree = "<group>"; };
 		6E6799E8B24D782B3151D901 /* PopoverForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverForm.swift; sourceTree = "<group>"; };
 		8607BE8FEC94DD9191D5842B /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
+		CB99BA11734AC07202D0B092 /* DiscordInboundGatewayClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscordInboundGatewayClient.swift; sourceTree = "<group>"; };
 		C8193A6EAE0A4E045C57C12C /* NotifIdlePoster.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotifIdlePoster.swift; sourceTree = "<group>"; };
 		ECD41C9A6FD60A6E47BE3AFC /* NotifSecretsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotifSecretsStore.swift; sourceTree = "<group>"; };
 		013219EDBCB9C28115D79007 /* TelegramInboundPoller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramInboundPoller.swift; sourceTree = "<group>"; };
+		D985ED4DEFB9BD742BCA8ADE /* WatchRuntime+DiscordInbound.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+DiscordInbound.swift"; sourceTree = "<group>"; };
 		D9C149123F4E7CCF53624D71 /* WatchRuntime+TelegramInbound.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+TelegramInbound.swift"; sourceTree = "<group>"; };
-		E8B4F02A315C5E9F0D2E3A41 /* DiscordInboundGatewayClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscordInboundGatewayClient.swift; sourceTree = "<group>"; };
-		C0E6B24C537E701B2F405C63 /* WatchRuntime+DiscordInbound.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+DiscordInbound.swift"; sourceTree = "<group>"; };
 		664053E9C3461C2FA95B19F5 /* BrightnessFloorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessFloorController.swift; sourceTree = "<group>"; };
 		2AEA59356C52ACE1D2FD1C57 /* BrightnessRampController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessRampController.swift; sourceTree = "<group>"; };
 		B2F4F53E617135F5861F4EE6 /* KeyboardBacklightController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardBacklightController.swift; sourceTree = "<group>"; };
@@ -76,10 +78,10 @@
 		986AF8E920E5E71D993DED12 /* PreferencesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesStore.swift; sourceTree = "<group>"; };
 		BD7C3F5A1565378FE3CC9B8A /* GrantAndNotify.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrantAndNotify.swift; sourceTree = "<group>"; };
 		1D433AFEE00C6137709B3A3C /* ProcessRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessRunner.swift; sourceTree = "<group>"; };
+		ED750E218B81FEF5B2711348 /* WatchRuntime+Kernel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+Kernel.swift"; sourceTree = "<group>"; };
+		BE46E54106185894B8859E55 /* WatchRuntime+Lid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+Lid.swift"; sourceTree = "<group>"; };
+		779C1801A09C9D65CD3D4E70 /* WatchRuntime+Poll.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+Poll.swift"; sourceTree = "<group>"; };
 		41663A701EAD0DB8779BE8A5 /* WatchRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRuntime.swift; sourceTree = "<group>"; };
-		7E4A91C2B8D03F15A6C24780 /* WatchRuntime+Poll.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+Poll.swift"; sourceTree = "<group>"; };
-		9C3E50A1D7B24618F0E39572 /* WatchRuntime+Lid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+Lid.swift"; sourceTree = "<group>"; };
-		D5B8174E2C903A6F1E4D8B20 /* WatchRuntime+Kernel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+Kernel.swift"; sourceTree = "<group>"; };
 		38ED30322495D02C679CFD76 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0111024D5CF6358695630612 /* Agrypnos.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Agrypnos.entitlements; sourceTree = "<group>"; };
 		8B40A3F1CAC9ADB66B78DD5C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -103,10 +105,10 @@
 			children = (
 				83A43E56C10CD6D41E834FFE /* AppDelegate.swift */,
 				AD5204D1B4D62DE6D2D8B414 /* AppMain.swift */,
+				ED750E218B81FEF5B2711348 /* WatchRuntime+Kernel.swift */,
+				BE46E54106185894B8859E55 /* WatchRuntime+Lid.swift */,
+				779C1801A09C9D65CD3D4E70 /* WatchRuntime+Poll.swift */,
 				41663A701EAD0DB8779BE8A5 /* WatchRuntime.swift */,
-				7E4A91C2B8D03F15A6C24780 /* WatchRuntime+Poll.swift */,
-				9C3E50A1D7B24618F0E39572 /* WatchRuntime+Lid.swift */,
-				D5B8174E2C903A6F1E4D8B20 /* WatchRuntime+Kernel.swift */,
 				7BC2CAB9094C6A3F6E6AF09E /* Agent */,
 				3E81BE9F451039AECD508BDD /* Hotkey */,
 				88B94530079532860173BE0F /* Launch */,
@@ -146,6 +148,7 @@
 		E7C22297E41D96897BEBC32C /* MenuBar */ = {
 			isa = PBXGroup;
 			children = (
+				FCDCFD91BC90B6276207D28E /* BotGuideWindow.swift */,
 				A71AB415778ADE64BF7D1B20 /* HotkeyRecorderControl.swift */,
 				F94178055CD17CB0C1E4EBE4 /* PopoverChrome.swift */,
 				50D9BE7A9730D85A15B6E96E /* PopoverController+Canvas.swift */,
@@ -162,11 +165,11 @@
 		5913BA042BB61CF261FD559C /* Notif */ = {
 			isa = PBXGroup;
 			children = (
+				CB99BA11734AC07202D0B092 /* DiscordInboundGatewayClient.swift */,
 				C8193A6EAE0A4E045C57C12C /* NotifIdlePoster.swift */,
 				ECD41C9A6FD60A6E47BE3AFC /* NotifSecretsStore.swift */,
-				E8B4F02A315C5E9F0D2E3A41 /* DiscordInboundGatewayClient.swift */,
 				013219EDBCB9C28115D79007 /* TelegramInboundPoller.swift */,
-				C0E6B24C537E701B2F405C63 /* WatchRuntime+DiscordInbound.swift */,
+				D985ED4DEFB9BD742BCA8ADE /* WatchRuntime+DiscordInbound.swift */,
 				D9C149123F4E7CCF53624D71 /* WatchRuntime+TelegramInbound.swift */,
 			);
 			path = Notif;
@@ -306,6 +309,7 @@
 				E7745E8B7473D56F15599102 /* AppMain.swift in Sources */,
 				98EC0A7215FC0C16A38106EC /* GlobalHotkeyCenter.swift in Sources */,
 				F87EF19E80616F394A8108B0 /* LaunchAtLoginController.swift in Sources */,
+				6A127293227361B149E1B62A /* BotGuideWindow.swift in Sources */,
 				31713455EC90405270582CED /* HotkeyRecorderControl.swift in Sources */,
 				EE4DE2012E8891D5E35D9C27 /* PopoverChrome.swift in Sources */,
 				87299C24812BC138E73D77BC /* PopoverController+Canvas.swift in Sources */,
@@ -315,11 +319,11 @@
 				40DF44DBC43DE8B05319E1F5 /* PopoverController.swift in Sources */,
 				6ED04DCF9683E5F466136641 /* PopoverForm.swift in Sources */,
 				EC7A8AAC019F71CCB4D3623D /* StatusItemController.swift in Sources */,
+				1505C7E3DE99C6293048F4B8 /* DiscordInboundGatewayClient.swift in Sources */,
 				B6CAAC6325F70B0F1AB1E2DA /* NotifIdlePoster.swift in Sources */,
 				8DA2AF8DFDB960B9DF98724A /* NotifSecretsStore.swift in Sources */,
-				A7C3E91F204B4D8E9C1D2F30 /* DiscordInboundGatewayClient.swift in Sources */,
 				74189A8A7BDBD266D792FCE0 /* TelegramInboundPoller.swift in Sources */,
-				B9D5A13B426D6F0A1E3F4B52 /* WatchRuntime+DiscordInbound.swift in Sources */,
+				D3AFC913CE5D2778E0FD4327 /* WatchRuntime+DiscordInbound.swift in Sources */,
 				FACF7AB4E66AFD37CCE4A152 /* WatchRuntime+TelegramInbound.swift in Sources */,
 				B54A11BE04F7B909BA1DAA45 /* BrightnessFloorController.swift in Sources */,
 				B90D244D2FCD3BF4C0C2FA52 /* BrightnessRampController.swift in Sources */,
@@ -330,10 +334,10 @@
 				31DBD3069D96D292DC184EDD /* PreferencesStore.swift in Sources */,
 				436DA0943AEB42FDD30C5580 /* GrantAndNotify.swift in Sources */,
 				E62F9714A04AB0D4F946A4FE /* ProcessRunner.swift in Sources */,
+				EEE09B48690E2B1F79A7547C /* WatchRuntime+Kernel.swift in Sources */,
+				B61701CD7A9C7B8B971BBE35 /* WatchRuntime+Lid.swift in Sources */,
+				E3E9E97E96936C3A956AAC68 /* WatchRuntime+Poll.swift in Sources */,
 				1A07C28A481816CBE4F20A60 /* WatchRuntime.swift in Sources */,
-				2F8B14D0C9E37A65B1D48290 /* WatchRuntime+Poll.swift in Sources */,
-				4A6D82E1B0C75934F8A21367 /* WatchRuntime+Lid.swift in Sources */,
-				8E1C47A9F3B5602D7C4A91E8 /* WatchRuntime+Kernel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
