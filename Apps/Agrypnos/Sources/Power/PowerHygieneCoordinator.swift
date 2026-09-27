@@ -5,34 +5,34 @@ import AgrypnosCore
 enum PowerHygieneCoordinator {
     static var canSetBuiltInBrightness: Bool { BrightnessFloorController.canSetBuiltIn() }
 
+    @discardableResult
     static func apply(
         _ commands: [WatchCommand],
         preferences: UserPreferences,
         savedBrightness: inout Double?,
         savedKeyboard: inout Double?,
         ramp: BrightnessRampController
-    ) {
+    ) -> HygieneApplyResult {
+        var result = HygieneApplyResult()
         for command in commands {
             switch command {
             case .engage, .disengage, .assertSleepDisabled, .postIdleAfterWaitNotif:
                 break
             case .requestSleep:
-                _ = ProcessRunner.run("/usr/bin/pmset", ["sleepnow"])
+                let exit = ProcessRunner.run("/usr/bin/pmset", ["sleepnow"]).exit
+                result.sleepnow = PmsetCommandOutcome.from(exit: exit)
             case .requestDisplaySleep:
                 // Panel only. Never `sleepnow`. Never with a floor write.
                 guard preferences.panelPowerMode.sleepsDisplay else { break }
-                _ = ProcessRunner.run("/usr/bin/pmset", ["displaysleepnow"])
+                let exit = ProcessRunner.run("/usr/bin/pmset", ["displaysleepnow"]).exit
+                result.displaysleepnow = PmsetCommandOutcome.from(exit: exit)
             case .wakeDisplay:
                 // Fire-and-forget user-activity pulse. Do not wait — `caffeinate -u -t 1`
                 // would stall the menu extra and fight a following `sleepnow`.
-                // Assumption: this is enough after `displaysleepnow`. Needs a Mac.
                 ProcessRunner.runDetached("/usr/bin/caffeinate", ["-u", "-t", "1"])
             case .applyBrightnessFloor:
                 guard preferences.panelPowerMode.writesBrightnessFloor else { break }
                 ramp.cancel()
-                if let saved = savedBrightness {
-                    savedBrightness = max(saved, preferences.brightnessFloor)
-                }
                 if canSetBuiltInBrightness {
                     BrightnessFloorController.set(preferences.brightnessFloor)
                 }
@@ -57,6 +57,7 @@ enum PowerHygieneCoordinator {
                 }
             }
         }
+        return result
     }
 
     static func restoreAfterDisengage(

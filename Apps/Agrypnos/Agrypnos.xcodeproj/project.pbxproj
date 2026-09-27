@@ -37,6 +37,9 @@
 		436DA0943AEB42FDD30C5580 /* GrantAndNotify.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD7C3F5A1565378FE3CC9B8A /* GrantAndNotify.swift */; };
 		E62F9714A04AB0D4F946A4FE /* ProcessRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D433AFEE00C6137709B3A3C /* ProcessRunner.swift */; };
 		1A07C28A481816CBE4F20A60 /* WatchRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41663A701EAD0DB8779BE8A5 /* WatchRuntime.swift */; };
+		2F8B14D0C9E37A65B1D48290 /* WatchRuntime+Poll.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E4A91C2B8D03F15A6C24780 /* WatchRuntime+Poll.swift */; };
+		4A6D82E1B0C75934F8A21367 /* WatchRuntime+Lid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C3E50A1D7B24618F0E39572 /* WatchRuntime+Lid.swift */; };
+		8E1C47A9F3B5602D7C4A91E8 /* WatchRuntime+Kernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5B8174E2C903A6F1E4D8B20 /* WatchRuntime+Kernel.swift */; };
 		095E19E7CB28F7EE95D82908 /* AgrypnosCore in Frameworks */ = {isa = PBXBuildFile; productRef = C81CD5F22406E4B780AC870D /* AgrypnosCore */; };
 		6B8001DABC00C7B45D3BFA0C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8B40A3F1CAC9ADB66B78DD5C /* Assets.xcassets */; };
 		BBE0CDF003CDB2E92B81738B /* grant.sh in Resources */ = {isa = PBXBuildFile; fileRef = 9A657A8A538B844742E8496C /* grant.sh */; };
@@ -74,6 +77,9 @@
 		BD7C3F5A1565378FE3CC9B8A /* GrantAndNotify.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrantAndNotify.swift; sourceTree = "<group>"; };
 		1D433AFEE00C6137709B3A3C /* ProcessRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessRunner.swift; sourceTree = "<group>"; };
 		41663A701EAD0DB8779BE8A5 /* WatchRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRuntime.swift; sourceTree = "<group>"; };
+		7E4A91C2B8D03F15A6C24780 /* WatchRuntime+Poll.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+Poll.swift"; sourceTree = "<group>"; };
+		9C3E50A1D7B24618F0E39572 /* WatchRuntime+Lid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+Lid.swift"; sourceTree = "<group>"; };
+		D5B8174E2C903A6F1E4D8B20 /* WatchRuntime+Kernel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+Kernel.swift"; sourceTree = "<group>"; };
 		38ED30322495D02C679CFD76 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0111024D5CF6358695630612 /* Agrypnos.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Agrypnos.entitlements; sourceTree = "<group>"; };
 		8B40A3F1CAC9ADB66B78DD5C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -98,6 +104,9 @@
 				83A43E56C10CD6D41E834FFE /* AppDelegate.swift */,
 				AD5204D1B4D62DE6D2D8B414 /* AppMain.swift */,
 				41663A701EAD0DB8779BE8A5 /* WatchRuntime.swift */,
+				7E4A91C2B8D03F15A6C24780 /* WatchRuntime+Poll.swift */,
+				9C3E50A1D7B24618F0E39572 /* WatchRuntime+Lid.swift */,
+				D5B8174E2C903A6F1E4D8B20 /* WatchRuntime+Kernel.swift */,
 				7BC2CAB9094C6A3F6E6AF09E /* Agent */,
 				3E81BE9F451039AECD508BDD /* Hotkey */,
 				88B94530079532860173BE0F /* Launch */,
@@ -322,6 +331,9 @@
 				436DA0943AEB42FDD30C5580 /* GrantAndNotify.swift in Sources */,
 				E62F9714A04AB0D4F946A4FE /* ProcessRunner.swift in Sources */,
 				1A07C28A481816CBE4F20A60 /* WatchRuntime.swift in Sources */,
+				2F8B14D0C9E37A65B1D48290 /* WatchRuntime+Poll.swift in Sources */,
+				4A6D82E1B0C75934F8A21367 /* WatchRuntime+Lid.swift in Sources */,
+				8E1C47A9F3B5602D7C4A91E8 /* WatchRuntime+Kernel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

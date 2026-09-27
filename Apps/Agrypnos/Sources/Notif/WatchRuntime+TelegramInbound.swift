@@ -101,23 +101,22 @@ extension WatchRuntime {
             case .apply(.status):
                 pollLid()
                 let now = Date()
-                let agents = AgentProbeService.snapshot(
-                    now: now,
-                    freshness: engine.preferences.sessionFreshness,
-                    countTerminalSessions: engine.preferences.countTerminalSessionsAsBusy
-                )
-                let battery = BatteryMonitor.reading()
-                let safety = SafetyInputs(
-                    batteryPercent: battery.percent,
-                    onBatteryDischarging: battery.onBatteryDischarging,
-                    thermalSerious: ThermalMonitor.isSerious(),
-                    lowPowerMode: ProcessInfo.processInfo.isLowPowerModeEnabled
-                )
+                let agentsBusy = cachedAgentsBusy(now: now)
+                let safety = lastSafety ?? {
+                    let battery = BatteryMonitor.reading()
+                    lastBatteryReading = battery
+                    return SafetyInputs(
+                        batteryPercent: battery.percent,
+                        onBatteryDischarging: battery.onBatteryDischarging,
+                        thermalSerious: ThermalMonitor.isSerious(),
+                        lowPowerMode: ProcessInfo.processInfo.isLowPowerModeEnabled
+                    )
+                }()
                 sendTelegramInboundReply(
                     TelegramInboundCopy.status(
                         engine.telegramWatchStatus(
                             now: now,
-                            agentsBusy: agents.anyBusy(included: engine.preferences.includedAgentKinds),
+                            agentsBusy: agentsBusy,
                             lowPowerMode: safety.lowPowerMode,
                             safety: safety
                         ),
@@ -166,7 +165,7 @@ extension WatchRuntime {
                 apply([.requestSleep])
             }
         }
-        sendTelegramInboundReply(TelegramInboundCopy.disarmed, token: token, chatId: chatId)
+        sendTelegramInboundReply(inboundDisarmReply(TelegramInboundCopy.disarmed), token: token, chatId: chatId)
     }
 
     func sendTelegramInboundReply(_ text: String, token: String?, chatId: String?) {

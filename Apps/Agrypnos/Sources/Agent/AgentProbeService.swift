@@ -15,11 +15,16 @@ enum SessionFileWalker {
     static func signals(
         home: URL,
         env: [String: String],
-        countTerminalSessions: Bool
+        countTerminalSessions: Bool,
+        included: Set<AgentKind>,
+        now: Date,
+        freshness: TimeInterval
     ) -> [SessionFileSignal] {
         var collected: [SessionFileSignal] = []
-        let roots = SessionFileLayout.roots(home: home, env: env)
+        let roots = SessionFileLayout.roots(home: home, env: env, included: included)
         for (kind, urls) in roots {
+            guard SessionWalkBudget.walksKind(kind, included: included) else { continue }
+            var kindSignals: [SessionFileSignal] = []
             for root in urls {
                 if kind == .cursor, root.lastPathComponent == "projects" {
                     let names = projectDirectoryNames(in: root)
@@ -28,17 +33,36 @@ enum SessionFileWalker {
                         projectNames: names,
                         includeTerminals: countTerminalSessions
                     ) {
-                        collected.append(contentsOf: walk(root: sub, kind: kind))
+                        kindSignals.append(contentsOf: walk(
+                            root: sub,
+                            kind: kind,
+                            now: now,
+                            freshness: freshness
+                        ))
                     }
                 } else if kind == .openCode {
-                    collected.append(contentsOf: openCodeSignals(dataHome: root))
+                    kindSignals.append(contentsOf: openCodeSignals(
+                        dataHome: root,
+                        now: now,
+                        freshness: freshness
+                    ))
                 } else {
-                    collected.append(contentsOf: walk(root: root, kind: kind))
+                    kindSignals.append(contentsOf: walk(
+                        root: root,
+                        kind: kind,
+                        now: now,
+                        freshness: freshness
+                    ))
                 }
             }
-        }
-        if !countTerminalSessions {
-            collected.removeAll { SessionFileLayout.isTerminalSessionPath($0.url) }
+            if !countTerminalSessions {
+                kindSignals.removeAll { SessionFileLayout.isTerminalSessionPath($0.url) }
+            }
+            collected.append(contentsOf: SessionWalkBudget.selectNewest(
+                kindSignals,
+                now: now,
+                freshness: freshness
+            ))
         }
         return collected
     }
@@ -59,14 +83,14 @@ enum SessionFileWalker {
         }.sorted()
     }
 
-    static func openCodeSignals(dataHome: URL) -> [SessionFileSignal] {
+    static func openCodeSignals(dataHome: URL, now: Date, freshness: TimeInterval) -> [SessionFileSignal] {
         var collected: [SessionFileSignal] = []
         for file in SessionFileLayout.openCodeDataRootFiles(dataHome: dataHome) {
             collected.append(contentsOf: fileSignal(url: file, kind: .openCode))
         }
         let names = projectDirectoryNames(in: dataHome.appendingPathComponent("project"))
         for sub in SessionFileLayout.openCodeWalkRoots(dataHome: dataHome, projectNames: names) {
-            collected.append(contentsOf: walk(root: sub, kind: .openCode))
+            collected.append(contentsOf: walk(root: sub, kind: .openCode, now: now, freshness: freshness))
         }
         return collected
     }
@@ -82,34 +106,53 @@ enum SessionFileWalker {
         return [SessionFileSignal(url: url, modified: modified, kind: kind)]
     }
 
-    static func walk(root: URL, kind: AgentKind) -> [SessionFileSignal] {
-        let fm = FileManager.default
-        var isDir: ObjCBool = false
-        guard fm.fileExists(atPath: root.path, isDirectory: &isDir), isDir.boolValue else { return [] }
-        guard let enumerator = fm.enumerator(
-            at: root,
-            includingPropertiesForKeys: [.contentModificationDateKey, .isRegularFileKey],
-            options: [.skipsHiddenFiles, .skipsPackageDescendants]
-        ) else { return [] }
-
-        var signals: [SessionFileSignal] = []
+    /// Newest-mtime first. Stop this root once a fresh busy file is found. Cap 4000 visits.
+    static func walk(
+        root: URL,
+        kind: AgentKind,
+        now: Date,
+        freshness: TimeInterval
+    ) -> [SessionFileSignal] {
+        var collected: [SessionFileSignal] = []
         var visited = 0
-        for case let url as URL in enumerator {
-            visited += 1
-            if visited > 4000 { break }
-            if enumerator.level > 6 { enumerator.skipDescendants(); continue }
-            if SessionFileLayout.shouldSkipDirectory(url.lastPathComponent) {
-                enumerator.skipDescendants()
-                continue
+        func visit(_ dir: URL, depth: Int) -> Bool {
+            if depth > 6 { return false }
+            let fm = FileManager.default
+            var isDir: ObjCBool = false
+            guard fm.fileExists(atPath: dir.path, isDirectory: &isDir), isDir.boolValue else { return false }
+            guard let items = try? fm.contentsOfDirectory(
+                at: dir,
+                includingPropertiesForKeys: [
+                    .contentModificationDateKey,
+                    .isDirectoryKey,
+                    .isRegularFileKey,
+                ],
+                options: [.skipsHiddenFiles, .skipsPackageDescendants]
+            ) else { return false }
+            let ranked = items.compactMap { url -> (URL, Date, Bool)? in
+                guard let values = try? url.resourceValues(
+                    forKeys: [.contentModificationDateKey, .isDirectoryKey, .isRegularFileKey]
+                ) else { return nil }
+                let modified = values.contentModificationDate ?? Date.distantPast
+                return (url, modified, values.isDirectory == true)
             }
-            guard SessionFileLayout.isRelevantFile(url, kind: kind) else { continue }
-            guard let values = try? url.resourceValues(forKeys: [.contentModificationDateKey, .isRegularFileKey]),
-                  values.isRegularFile == true,
-                  let modified = values.contentModificationDate
-            else { continue }
-            signals.append(SessionFileSignal(url: url, modified: modified, kind: kind))
+            .sorted { $0.1 > $1.1 }
+            for (url, modified, isDirectory) in ranked {
+                visited += 1
+                if visited > SessionWalkBudget.maxVisited { return true }
+                if SessionFileLayout.shouldSkipDirectory(url.lastPathComponent) { continue }
+                if isDirectory {
+                    if visit(url, depth: depth + 1) { return true }
+                    continue
+                }
+                guard SessionFileLayout.isRelevantFile(url, kind: kind) else { continue }
+                collected.append(SessionFileSignal(url: url, modified: modified, kind: kind))
+                if now.timeIntervalSince(modified) <= freshness { return true }
+            }
+            return false
         }
-        return signals
+        _ = visit(root, depth: 0)
+        return collected
     }
 }
 
@@ -117,7 +160,8 @@ enum AgentProbeService {
     static func snapshot(
         now: Date,
         freshness: TimeInterval,
-        countTerminalSessions: Bool = false
+        countTerminalSessions: Bool = false,
+        included: Set<AgentKind> = Set(AgentKind.allCases)
     ) -> AgentSnapshot {
         let engine = AgentHeuristicEngine(
             config: AgentHeuristicConfig(
@@ -131,7 +175,10 @@ enum AgentProbeService {
             sessionWrites: SessionFileWalker.signals(
                 home: FileManager.default.homeDirectoryForCurrentUser,
                 env: ProcessInfo.processInfo.environment,
-                countTerminalSessions: countTerminalSessions
+                countTerminalSessions: countTerminalSessions,
+                included: included,
+                now: now,
+                freshness: freshness
             ),
             now: now
         )

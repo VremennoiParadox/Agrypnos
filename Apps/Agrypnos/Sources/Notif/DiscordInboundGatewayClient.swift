@@ -138,7 +138,7 @@ final class DiscordInboundGatewayClient {
         }
         ws.resume()
 
-        let ack = HeartbeatAck()
+        let ack = IsolatedFlag(true)
         var reconnect = false
         receive: while !Task.isCancelled {
             let message: URLSessionWebSocketTask.Message
@@ -159,17 +159,21 @@ final class DiscordInboundGatewayClient {
             }
             guard let frame = DiscordGatewayParser.frame(from: data) else { continue }
             if case .heartbeatAck = frame.event {
-                ack.ok = true
+                ack.value = true
             }
             if case .hello(let interval) = frame.event {
-                ack.ok = true
+                ack.value = true
                 startHeartbeat(intervalMs: interval, ack: ack, generation: captured)
             }
             let outcome = await MainActor.run { () -> ConnectionOutcome in
                 guard let runtime = self.runtime, self.accepts(generation: captured) else {
                     return .stop
                 }
-                let effects = runtime.handleDiscordGatewayFrame(frame, generation: captured)
+                let effects = runtime.handleDiscordGatewayFrame(
+                    frame,
+                    generation: captured,
+                    socketToken: token
+                )
                 return self.apply(
                     effects,
                     token: token,
@@ -219,7 +223,7 @@ final class DiscordInboundGatewayClient {
             case .sendIdentify, .sendResume, .sendHeartbeat:
                 send(effect, token: token, cursor: cursor, socket: socket)
             case .inbound(let update):
-                runtime.applyDiscordInbound(update, generation: slashEpoch)
+                runtime.applyDiscordInbound(update, generation: slashEpoch, socketToken: token)
             case .registerCommands(let applicationId):
                 runtime.registerDiscordBotCommands(applicationId: applicationId)
             case .reconnect:
@@ -242,7 +246,7 @@ final class DiscordInboundGatewayClient {
         socket.send(.string(text)) { _ in }
     }
 
-    private func startHeartbeat(intervalMs: Int, ack: HeartbeatAck, generation captured: UInt64) {
+    private func startHeartbeat(intervalMs: Int, ack: IsolatedFlag, generation captured: UInt64) {
         heartbeatTask?.cancel()
         let nanos = UInt64(max(intervalMs, 1)) * 1_000_000
         heartbeatTask = Task.detached { [weak self] in
@@ -252,12 +256,12 @@ final class DiscordInboundGatewayClient {
                     guard let self, self.accepts(generation: captured), let socket = self.socket else {
                         return false
                     }
-                    if !ack.ok {
+                    if !ack.value {
                         self.reconnectSoon = true
                         socket.cancel(with: .goingAway, reason: nil)
                         return false
                     }
-                    ack.ok = false
+                    ack.value = false
                     let cursor = self.runtime?.store.loadDiscordInboundCursor() ?? .unset
                     let token = self.runtime?.discordInboundSnapshot().token
                     if let token {
@@ -275,9 +279,4 @@ final class DiscordInboundGatewayClient {
         guard let request = DiscordInboundRequestFactory.gatewayBot(botToken: token) else { return nil }
         return await TelegramInboundHTTP.fetch(request)
     }
-}
-
-/// Shared between the receive loop and the heartbeat timer.
-final class HeartbeatAck: @unchecked Sendable {
-    var ok = true
 }

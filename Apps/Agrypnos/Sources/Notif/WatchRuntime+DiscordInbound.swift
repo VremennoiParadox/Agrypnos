@@ -39,12 +39,13 @@ extension WatchRuntime {
 
     func handleDiscordGatewayFrame(
         _ frame: DiscordGatewayFrame,
-        generation: UInt64
+        generation: UInt64,
+        socketToken: String?
     ) -> [DiscordGatewayEffect] {
         guard discordGateway.accepts(generation: generation) else { return [] }
         let secrets = NotifSecretsStore.load()
         guard DiscordInboundPolicy.sameBot(
-            fetchedToken: secrets.discordBotToken,
+            fetchedToken: socketToken,
             currentToken: secrets.discordBotToken
         ) else { return [] }
         var session = DiscordGatewaySession(cursor: store.loadDiscordInboundCursor())
@@ -80,7 +81,11 @@ extension WatchRuntime {
         }
     }
 
-    func applyDiscordInbound(_ update: DiscordInboundUpdate, generation: UInt64) {
+    func applyDiscordInbound(
+        _ update: DiscordInboundUpdate,
+        generation: UInt64,
+        socketToken: String?
+    ) {
         if update.source == .slash,
            let interactionId = update.interactionId,
            let interactionToken = update.interactionToken,
@@ -96,7 +101,11 @@ extension WatchRuntime {
                         current: self.discordGateway.currentSlashEpoch,
                         captured: generation
                     ) {
-                        self.finishDiscordInbound(update, slashDeferred: true)
+                        self.finishDiscordInbound(
+                            update,
+                            slashDeferred: true,
+                            socketToken: socketToken
+                        )
                     } else if DiscordDeferredSlash.shouldReplyMissedWhileAsleep(
                         current: self.discordGateway.currentSlashEpoch,
                         captured: generation
@@ -112,12 +121,20 @@ extension WatchRuntime {
             }
             return
         }
-        finishDiscordInbound(update, slashDeferred: false)
+        finishDiscordInbound(update, slashDeferred: false, socketToken: socketToken)
     }
 
-    func finishDiscordInbound(_ update: DiscordInboundUpdate, slashDeferred: Bool) {
+    func finishDiscordInbound(
+        _ update: DiscordInboundUpdate,
+        slashDeferred: Bool,
+        socketToken: String?
+    ) {
         let drain = store.loadDiscordInboundCursor().drain
         let secrets = NotifSecretsStore.load()
+        guard DiscordInboundPolicy.sameBot(
+            fetchedToken: socketToken,
+            currentToken: secrets.discordBotToken
+        ) else { return }
         let enabled = engine.preferences.discordInboundEnabled
         let intent = DiscordInboundPolicy.intent(
             enabled: enabled,
@@ -134,26 +151,25 @@ extension WatchRuntime {
             reply = DiscordInboundCopy.missedWhileAsleep
         case .apply(.help):
             reply = DiscordInboundCopy.help
-        case .apply(.status):
+            case .apply(.status):
             pollLid()
             let now = Date()
-            let agents = AgentProbeService.snapshot(
-                now: now,
-                freshness: engine.preferences.sessionFreshness,
-                countTerminalSessions: engine.preferences.countTerminalSessionsAsBusy
-            )
-            let battery = BatteryMonitor.reading()
-            let safety = SafetyInputs(
-                batteryPercent: battery.percent,
-                onBatteryDischarging: battery.onBatteryDischarging,
-                thermalSerious: ThermalMonitor.isSerious(),
-                lowPowerMode: ProcessInfo.processInfo.isLowPowerModeEnabled
-            )
+            let agentsBusy = cachedAgentsBusy(now: now)
+            let safety = lastSafety ?? {
+                let battery = BatteryMonitor.reading()
+                lastBatteryReading = battery
+                return SafetyInputs(
+                    batteryPercent: battery.percent,
+                    onBatteryDischarging: battery.onBatteryDischarging,
+                    thermalSerious: ThermalMonitor.isSerious(),
+                    lowPowerMode: ProcessInfo.processInfo.isLowPowerModeEnabled
+                )
+            }()
             reply = DiscordInboundCopy.reply(
                 intent: .status,
                 status: engine.telegramWatchStatus(
                     now: now,
-                    agentsBusy: agents.anyBusy(included: engine.preferences.includedAgentKinds),
+                    agentsBusy: agentsBusy,
                     lowPowerMode: safety.lowPowerMode,
                     safety: safety
                 ),
@@ -198,7 +214,7 @@ extension WatchRuntime {
                 apply([.requestSleep])
             }
         }
-        return DiscordInboundCopy.disarmed
+        return inboundDisarmReply(DiscordInboundCopy.disarmed)
     }
 
     func sendDiscordInboundReply(

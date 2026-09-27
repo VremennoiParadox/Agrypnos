@@ -27,18 +27,6 @@ enum BrightnessFloorController {
         _ = displayServicesSet(id, clamped)
     }
 
-    static func applyFloor(_ floor: Double) {
-        let currentValue = current() ?? 0
-        if currentValue < floor {
-            set(floor)
-        }
-    }
-
-    static func restoreAtLeastFloor(saved: Double?, floor: Double) {
-        guard let target = HygieneRestore.displayBrightnessToRestore(captured: saved, floor: floor) else { return }
-        set(target)
-    }
-
     static func builtInID() -> CGDirectDisplayID? {
         ids().first { isBuiltIn($0) }
     }
@@ -54,26 +42,34 @@ enum BrightnessFloorController {
         CGDisplayIsBuiltin(id) != 0
     }
 
-    // MARK: DisplayServices (private)
+    // MARK: DisplayServices (private) — resolve once.
+
+    typealias GetFn = @convention(c) (UInt32, UnsafeMutablePointer<Float>) -> Int32
+    typealias SetFn = @convention(c) (UInt32, Float) -> Int32
+
+    static let symbols: (get: GetFn, set: SetFn)? = loadOnce()
 
     static func displayServicesGet(_ id: CGDirectDisplayID) -> Float? {
-        typealias Fn = @convention(c) (UInt32, UnsafeMutablePointer<Float>) -> Int32
-        guard let fn: Fn = load("DisplayServicesGetBrightness") else { return nil }
+        guard let get = symbols?.get else { return nil }
         var value: Float = 0
-        guard fn(id, &value) == 0 else { return nil }
+        guard get(id, &value) == 0 else { return nil }
         return value
     }
 
     static func displayServicesSet(_ id: CGDirectDisplayID, _ value: Float) -> Bool {
-        typealias Fn = @convention(c) (UInt32, Float) -> Int32
-        guard let fn: Fn = load("DisplayServicesSetBrightness") else { return false }
-        return fn(id, value) == 0
+        guard let set = symbols?.set else { return false }
+        return set(id, value) == 0
     }
 
-    static func load<T>(_ symbol: String) -> T? {
+    static func loadOnce() -> (get: GetFn, set: SetFn)? {
         let path = "/System/Library/PrivateFrameworks/DisplayServices.framework/DisplayServices"
         guard let handle = dlopen(path, RTLD_LAZY) else { return nil }
-        guard let raw = dlsym(handle, symbol) else { return nil }
-        return unsafeBitCast(raw, to: T.self)
+        guard let getRaw = dlsym(handle, "DisplayServicesGetBrightness"),
+              let setRaw = dlsym(handle, "DisplayServicesSetBrightness")
+        else { return nil }
+        return (
+            unsafeBitCast(getRaw, to: GetFn.self),
+            unsafeBitCast(setRaw, to: SetFn.self)
+        )
     }
 }
