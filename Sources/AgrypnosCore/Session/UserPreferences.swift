@@ -38,6 +38,8 @@ public struct UserPreferences: Equatable, Sendable, Codable {
     public var lastWatchEnd: LastWatchEnd?
     /// Tools whose local busy signals count. Never empty. Default all current providers.
     public var includedAgentKinds: Set<AgentKind>
+    /// Terminal session files count as busy only when on. Default off.
+    public var countTerminalSessionsAsBusy: Bool
 
     /// 0...1 unit the Mac brightness adapter writes. Derived from floor %.
     public var brightnessFloor: Double {
@@ -60,7 +62,8 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         telegramInboundEnabled: Bool = false,
         discordInboundEnabled: Bool = false,
         lastWatchEnd: LastWatchEnd? = nil,
-        includedAgentKinds: Set<AgentKind> = AgentIncludeChrome.defaultIncluded
+        includedAgentKinds: Set<AgentKind> = AgentIncludeChrome.defaultIncluded,
+        countTerminalSessionsAsBusy: Bool = false
     ) {
         self.batteryFloorPercent = Self.clampBatteryFloor(batteryFloorPercent)
         self.duration = duration
@@ -78,6 +81,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         self.discordInboundEnabled = discordInboundEnabled
         self.lastWatchEnd = lastWatchEnd
         self.includedAgentKinds = Self.clampIncludedAgentKinds(includedAgentKinds)
+        self.countTerminalSessionsAsBusy = countTerminalSessionsAsBusy
     }
 
     public static let `default` = UserPreferences()
@@ -161,6 +165,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         case discordInboundEnabled
         case lastWatchEnd
         case includedAgentKinds
+        case countTerminalSessionsAsBusy
     }
 
     public init(from decoder: Decoder) throws {
@@ -189,7 +194,8 @@ public struct UserPreferences: Equatable, Sendable, Codable {
             telegramInboundEnabled: try container.decodeIfPresent(Bool.self, forKey: .telegramInboundEnabled) ?? false,
             discordInboundEnabled: try container.decodeIfPresent(Bool.self, forKey: .discordInboundEnabled) ?? false,
             lastWatchEnd: try container.decodeIfPresent(LastWatchEnd.self, forKey: .lastWatchEnd),
-            includedAgentKinds: try AgentIncludeFlags.decode(from: container)
+            includedAgentKinds: try AgentIncludeFlags.decode(from: container),
+            countTerminalSessionsAsBusy: try container.decodeIfPresent(Bool.self, forKey: .countTerminalSessionsAsBusy) ?? false
         )
     }
 
@@ -212,6 +218,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         try container.encode(discordInboundEnabled, forKey: .discordInboundEnabled)
         try container.encodeIfPresent(lastWatchEnd, forKey: .lastWatchEnd)
         try container.encode(AgentIncludeFlags(includedAgentKinds), forKey: .includedAgentKinds)
+        try container.encode(countTerminalSessionsAsBusy, forKey: .countTerminalSessionsAsBusy)
     }
 }
 

@@ -53,6 +53,9 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static var prefMinMaxY: Int { prefControlY + 24 }
     public static var settleControlY: Int { prefHelpY + PopoverCopyLayout.settleHelpHeightPoints }
     public static var settleMinMaxY: Int { settleControlY + 24 }
+    public static var terminalBusyControlY: Int {
+        prefHelpY + PopoverCopyLayout.countTerminalSessionsHelpHeightPoints
+    }
     public static let panelPowerControlY = prefTitleY
     public static var panelPowerCaptionY: Int { panelPowerControlY + segmentRowHeight }
     public static var panelPowerHelpY: Int { panelPowerCaptionY + PopoverCopyLayout.panelPowerCaptionHeightPoints }
@@ -95,6 +98,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public let battery: PopoverSlot?
     public let agentInclude: PopoverSlot?
     public let settle: PopoverSlot?
+    public let terminalBusy: PopoverSlot?
     public let ramp: PopoverSlot?
     public let thermal: PopoverSlot?
     public let login: PopoverSlot?
@@ -127,6 +131,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
         case .battery: return battery
         case .agentInclude: return agentInclude
         case .settle: return settle
+        case .terminalBusy: return terminalBusy
         case .ramp: return ramp
         case .thermal: return thermal
         case .login: return login
@@ -162,6 +167,12 @@ public struct PopoverStackLayout: Equatable, Sendable {
             + titleRowHeight
             + PopoverCopyLayout.settleHelpHeightPoints
             + sliderBlockHeight
+            + inset
+        let terminalBusyHeight =
+            inset
+            + titleRowHeight
+            + PopoverCopyLayout.countTerminalSessionsHelpHeightPoints
+            + switchRowHeight
             + inset
         let rampHeight =
             inset
@@ -232,6 +243,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
             case .battery: return batteryCardHeight
             case .agentInclude: return includeHeight
             case .settle: return settleHeight
+            case .terminalBusy: return terminalBusyHeight
             case .ramp: return rampHeight
             case .thermal: return thermalHeight
             case .login: return loginCardHeight
@@ -291,6 +303,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
             battery: placed[.battery],
             agentInclude: placed[.agentInclude],
             settle: placed[.settle],
+            terminalBusy: placed[.terminalBusy],
             ramp: placed[.ramp],
             thermal: placed[.thermal],
             login: placed[.login],

@@ -49,9 +49,9 @@ final class PopoverSectionTests: XCTestCase {
         XCTAssertTrue(PopoverSection.power.cards.contains(.thermal))
         XCTAssertEqual(PopoverSection.power.cards.first, .panelPower)
         XCTAssertEqual(PopoverSection.power.cards.last, .thermal)
-        XCTAssertEqual(PopoverSection.agents.cards, [.agentInclude, .settle])
+        XCTAssertEqual(PopoverSection.agents.cards, [.agentInclude, .settle, .terminalBusy])
         XCTAssertEqual(PopoverSection.agents.cards.first, .agentInclude)
-        XCTAssertEqual(PopoverSection.agents.cards.last, .settle)
+        XCTAssertEqual(PopoverSection.agents.cards.last, .terminalBusy)
         XCTAssertEqual(
             PopoverSection.notif.cards,
             [
@@ -125,12 +125,13 @@ final class PopoverSectionLayoutTests: XCTestCase {
         XCTAssertEqual(layout.contentHeight, layout.thermal!.maxY + PopoverStackLayout.pad)
     }
 
-    func testAgentsSectionShowsIncludeThenIdleWait() {
+    func testAgentsSectionShowsIncludeThenIdleWaitThenTerminalBusy() {
         let layout = PopoverStackLayout.make(section: .agents)
         XCTAssertEqual(layout.section, .agents)
-        XCTAssertEqual(layout.stackedCards, [layout.agentInclude!, layout.settle!])
+        XCTAssertEqual(layout.stackedCards, [layout.agentInclude!, layout.settle!, layout.terminalBusy!])
         XCTAssertEqual(layout.agentInclude?.y, PopoverStackLayout.firstCardY)
         XCTAssertEqual(layout.settle?.y, layout.agentInclude!.maxY + PopoverStackLayout.cardGap)
+        XCTAssertEqual(layout.terminalBusy?.y, layout.settle!.maxY + PopoverStackLayout.cardGap)
         XCTAssertNil(layout.watch)
         XCTAssertNil(layout.duration)
         XCTAssertNil(layout.hygiene)
@@ -138,7 +139,7 @@ final class PopoverSectionLayoutTests: XCTestCase {
         XCTAssertNil(layout.ramp)
         XCTAssertNil(layout.thermal)
         XCTAssertNil(layout.login)
-        XCTAssertEqual(layout.contentHeight, layout.settle!.maxY + PopoverStackLayout.pad)
+        XCTAssertEqual(layout.contentHeight, layout.terminalBusy!.maxY + PopoverStackLayout.pad)
         XCTAssertFalse(layout.needsScroll)
         XCTAssertLessThan(layout.contentHeight, PopoverStackLayout.maxVisibleHeight)
     }
