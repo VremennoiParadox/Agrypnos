@@ -12,6 +12,8 @@ public struct WatchEngine: Equatable, Sendable {
     public private(set) var lidHygieneApplied: Bool
     /// Live confirm from `LidCloseConfirm`. Do not use leftover `lidClosed` after disengage.
     public var lidCloseConfirmed: Bool { lidConfirm.confirmedClosed }
+    /// Raw closed, not yet stable. 4 Hz pulse only while this is true.
+    public var lidClosePending: Bool { lidConfirm.isPendingClose }
     /// One idle-after-wait POST per genuine user arm. Survives disarm-failure rollback.
     public private(set) var postedThisUserArm: Bool
     var lastWatchEndRollback: LastWatchEnd?

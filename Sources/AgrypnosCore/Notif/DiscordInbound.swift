@@ -74,6 +74,11 @@ public enum DiscordDeferredSlash: Sendable {
         TelegramInboundGeneration.allowsApply(current: current, captured: captured)
     }
 
+    /// Stale after wake: reply missed, do not arm/disarm.
+    public static func shouldReplyMissedWhileAsleep(current: UInt64, captured: UInt64) -> Bool {
+        !shouldApply(current: current, captured: captured)
+    }
+
     public static func shouldApply(
         intent _: TelegramInboundIntent,
         current: UInt64,

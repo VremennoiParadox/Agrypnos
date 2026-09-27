@@ -61,6 +61,11 @@ final class DiscordInboundGatewayClient {
 
     var currentGeneration: UInt64 { generation }
 
+    /// Sleep/wake: in-flight deferred slash must not apply on the old generation.
+    func bumpGeneration() {
+        generation &+= 1
+    }
+
     private func shouldReceive() -> Bool {
         guard let runtime else { return false }
         let snap = runtime.discordInboundSnapshot()

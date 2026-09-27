@@ -263,8 +263,7 @@ final class WatchRuntime {
                 delegate?.watchRuntimeDidChange(self)
                 return
             }
-            apply(engine.userSetEngaged(false, now: Date(), lidClosed: engine.lidCloseConfirmed))
-            restoreHygiene()
+            applyUserOff()
             store.save(engine.preferences)
             syncLidPulse()
         }
@@ -274,11 +273,7 @@ final class WatchRuntime {
     func poll() {
         if idleOutbound.shouldSkipPoll(engineEngaged: engine.engaged) { return }
         let probe = WatchTickProbe.needed(engaged: engine.engaged, mode: engine.mode)
-        if LidSamplePolicy.samplesOnTick(
-            engaged: engine.engaged,
-            lidCloseConfirmed: engine.lidCloseConfirmed,
-            inboundNeedsLid: inboundNeedsLid()
-        ) {
+        if lidCadence() != .none {
             pollLid()
         } else {
             stopLidPulse()
@@ -360,6 +355,25 @@ final class WatchRuntime {
         return false
     }
 
+    /// Popover/hotkey off: sample lid, restore hygiene, then sleepnow if still confirmed.
+    func applyUserOff() {
+        pollLid()
+        let commands = engine.userSetEngaged(false, now: Date(), lidClosed: engine.lidCloseConfirmed)
+        let sleep = commands.filter { $0 == .requestSleep }
+        apply(commands.filter { $0 != .requestSleep })
+        restoreHygiene()
+        apply(sleep)
+    }
+
+    func lidCadence() -> LidSampleCadence {
+        LidSamplePolicy.cadence(
+            engaged: engine.engaged,
+            lidCloseConfirmed: engine.lidCloseConfirmed,
+            inboundNeedsLid: inboundNeedsLid(),
+            pendingClose: engine.lidClosePending
+        )
+    }
+
     func apply(_ commands: [WatchCommand]) {
         for command in commands {
             if case .assertSleepDisabled = command {
@@ -417,22 +431,14 @@ final class WatchRuntime {
 
     func startLidPulse() {
         guard lidTimer == nil else { return }
-        guard LidSamplePolicy.runsConfirmPulse(
-            engaged: engine.engaged,
-            lidCloseConfirmed: engine.lidCloseConfirmed,
-            inboundNeedsLid: inboundNeedsLid()
-        ) else { return }
+        guard lidCadence() == .confirmPulse else { return }
         lidTimer = Timer.scheduledTimer(withTimeInterval: LidCloseConfirm.pulseInterval, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.pollLid() }
         }
     }
 
     func syncLidPulse() {
-        if LidSamplePolicy.runsConfirmPulse(
-            engaged: engine.engaged,
-            lidCloseConfirmed: engine.lidCloseConfirmed,
-            inboundNeedsLid: inboundNeedsLid()
-        ) {
+        if lidCadence() == .confirmPulse {
             startLidPulse()
         } else {
             stopLidPulse()

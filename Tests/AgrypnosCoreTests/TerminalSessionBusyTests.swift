@@ -156,6 +156,16 @@ final class TerminalSessionBusyTests: XCTestCase {
             SessionFileLayout.countsTowardBusy(terminal, countTerminalSessions: true)
         )
     }
+
+    func testProjectNamedTerminalsIsNotATerminalSessionFile() {
+        let transcript = URL(
+            fileURLWithPath: "/Users/a/.cursor/projects/terminals/agent-transcripts/t.jsonl"
+        )
+        XCTAssertFalse(SessionFileLayout.isTerminalSessionPath(transcript))
+        XCTAssertTrue(
+            SessionFileLayout.countsTowardBusy(transcript, countTerminalSessions: false)
+        )
+    }
 }
 
 private extension AgentSnapshot {

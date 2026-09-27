@@ -129,7 +129,8 @@ final class SessionFileLayoutTests: XCTestCase {
         let projects = URL(fileURLWithPath: "/Users/ada/.cursor/projects")
         let urls = SessionFileLayout.cursorWalkRoots(
             projectsRoot: projects,
-            projectNames: ["Agrypnos", "Other"]
+            projectNames: ["Agrypnos", "Other"],
+            includeTerminals: true
         )
         XCTAssertEqual(
             urls,

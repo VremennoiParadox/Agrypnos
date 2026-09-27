@@ -9,6 +9,9 @@ public struct LidCloseConfirm: Equatable, Sendable {
     public private(set) var confirmedClosed = false
     private var closedSince: Date?
 
+    /// Raw closed samples have started; not yet a stable confirm.
+    public var isPendingClose: Bool { closedSince != nil && !confirmedClosed }
+
     public enum Edge: Equatable, Sendable {
         case closed
         case opened
@@ -52,7 +55,7 @@ public struct LidCloseConfirm: Equatable, Sendable {
     }
 }
 
-/// 4 Hz confirm pulse only while close is still unconfirmed. Confirmed closed uses the 5s tick.
+/// 4 Hz only while a close is pending confirm. Open or already confirmed uses the 5s tick.
 public enum LidSampleCadence: Equatable, Sendable {
     case none
     case confirmPulse
@@ -65,34 +68,40 @@ public enum LidSamplePolicy: Sendable {
     public static func cadence(
         engaged: Bool,
         lidCloseConfirmed: Bool,
-        inboundNeedsLid: Bool = false
+        inboundNeedsLid: Bool = false,
+        pendingClose: Bool = false
     ) -> LidSampleCadence {
         guard engaged || inboundNeedsLid else { return .none }
         if lidCloseConfirmed { return .coarse }
-        return .confirmPulse
+        if pendingClose { return .confirmPulse }
+        return .coarse
     }
 
     public static func runsConfirmPulse(
         engaged: Bool,
         lidCloseConfirmed: Bool,
-        inboundNeedsLid: Bool = false
+        inboundNeedsLid: Bool = false,
+        pendingClose: Bool = false
     ) -> Bool {
         cadence(
             engaged: engaged,
             lidCloseConfirmed: lidCloseConfirmed,
-            inboundNeedsLid: inboundNeedsLid
+            inboundNeedsLid: inboundNeedsLid,
+            pendingClose: pendingClose
         ) == .confirmPulse
     }
 
     public static func samplesOnTick(
         engaged: Bool,
         lidCloseConfirmed: Bool,
-        inboundNeedsLid: Bool = false
+        inboundNeedsLid: Bool = false,
+        pendingClose: Bool = false
     ) -> Bool {
         cadence(
             engaged: engaged,
             lidCloseConfirmed: lidCloseConfirmed,
-            inboundNeedsLid: inboundNeedsLid
+            inboundNeedsLid: inboundNeedsLid,
+            pendingClose: pendingClose
         ) != .none
     }
 }

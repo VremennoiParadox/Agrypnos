@@ -10,6 +10,8 @@ final class DiscordDeferredSlashTests: XCTestCase {
             DiscordDeferredSlash.shouldApply(current: 4, captured: 4)
                 == TelegramInboundGeneration.allowsApply(current: 4, captured: 4)
         )
+        XCTAssertTrue(DiscordDeferredSlash.shouldReplyMissedWhileAsleep(current: 4, captured: 3))
+        XCTAssertFalse(DiscordDeferredSlash.shouldReplyMissedWhileAsleep(current: 3, captured: 3))
     }
 
     func testArmAndDisarmUseTheSameGenerationGate() {

@@ -92,11 +92,22 @@ extension WatchRuntime {
             Task {
                 await TelegramInboundHTTP.send(deferRequest)
                 await MainActor.run {
-                    guard DiscordDeferredSlash.shouldApply(
+                    if DiscordDeferredSlash.shouldApply(
                         current: self.discordGateway.currentGeneration,
                         captured: generation
-                    ) else { return }
-                    self.finishDiscordInbound(update, slashDeferred: true)
+                    ) {
+                        self.finishDiscordInbound(update, slashDeferred: true)
+                    } else if DiscordDeferredSlash.shouldReplyMissedWhileAsleep(
+                        current: self.discordGateway.currentGeneration,
+                        captured: generation
+                    ) {
+                        self.sendDiscordInboundReply(
+                            DiscordInboundCopy.missedWhileAsleep,
+                            update: update,
+                            token: NotifSecretsStore.load().discordBotToken,
+                            slashDeferred: true
+                        )
+                    }
                 }
             }
             return
