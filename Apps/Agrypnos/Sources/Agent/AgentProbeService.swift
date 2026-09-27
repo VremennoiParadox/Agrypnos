@@ -25,7 +25,7 @@ enum SessionFileWalker {
         for (kind, urls) in roots {
             guard SessionWalkBudget.walksKind(kind, included: included) else { continue }
             var kindSignals: [SessionFileSignal] = []
-            for root in urls {
+            rootLoop: for root in urls {
                 if kind == .cursor, root.lastPathComponent == "projects" {
                     let names = projectDirectoryNames(in: root)
                     for sub in SessionFileLayout.cursorWalkRoots(
@@ -37,22 +37,49 @@ enum SessionFileWalker {
                             root: sub,
                             kind: kind,
                             now: now,
-                            freshness: freshness
+                            freshness: freshness,
+                            countTerminalSessions: countTerminalSessions
                         ))
+                        if SessionWalkBudget.hasFreshBusy(
+                            kindSignals,
+                            now: now,
+                            freshness: freshness,
+                            countTerminalSessions: countTerminalSessions
+                        ) {
+                            break rootLoop
+                        }
                     }
                 } else if kind == .openCode {
                     kindSignals.append(contentsOf: openCodeSignals(
                         dataHome: root,
                         now: now,
-                        freshness: freshness
+                        freshness: freshness,
+                        countTerminalSessions: countTerminalSessions
                     ))
+                    if SessionWalkBudget.hasFreshBusy(
+                        kindSignals,
+                        now: now,
+                        freshness: freshness,
+                        countTerminalSessions: countTerminalSessions
+                    ) {
+                        break
+                    }
                 } else {
                     kindSignals.append(contentsOf: walk(
                         root: root,
                         kind: kind,
                         now: now,
-                        freshness: freshness
+                        freshness: freshness,
+                        countTerminalSessions: countTerminalSessions
                     ))
+                    if SessionWalkBudget.hasFreshBusy(
+                        kindSignals,
+                        now: now,
+                        freshness: freshness,
+                        countTerminalSessions: countTerminalSessions
+                    ) {
+                        break
+                    }
                 }
             }
             if !countTerminalSessions {
@@ -61,7 +88,8 @@ enum SessionFileWalker {
             collected.append(contentsOf: SessionWalkBudget.selectNewest(
                 kindSignals,
                 now: now,
-                freshness: freshness
+                freshness: freshness,
+                countTerminalSessions: countTerminalSessions
             ))
         }
         return collected
@@ -83,14 +111,41 @@ enum SessionFileWalker {
         }.sorted()
     }
 
-    static func openCodeSignals(dataHome: URL, now: Date, freshness: TimeInterval) -> [SessionFileSignal] {
+    static func openCodeSignals(
+        dataHome: URL,
+        now: Date,
+        freshness: TimeInterval,
+        countTerminalSessions: Bool
+    ) -> [SessionFileSignal] {
         var collected: [SessionFileSignal] = []
         for file in SessionFileLayout.openCodeDataRootFiles(dataHome: dataHome) {
             collected.append(contentsOf: fileSignal(url: file, kind: .openCode))
+            if SessionWalkBudget.hasFreshBusy(
+                collected,
+                now: now,
+                freshness: freshness,
+                countTerminalSessions: countTerminalSessions
+            ) {
+                return collected
+            }
         }
         let names = projectDirectoryNames(in: dataHome.appendingPathComponent("project"))
         for sub in SessionFileLayout.openCodeWalkRoots(dataHome: dataHome, projectNames: names) {
-            collected.append(contentsOf: walk(root: sub, kind: .openCode, now: now, freshness: freshness))
+            collected.append(contentsOf: walk(
+                root: sub,
+                kind: .openCode,
+                now: now,
+                freshness: freshness,
+                countTerminalSessions: countTerminalSessions
+            ))
+            if SessionWalkBudget.hasFreshBusy(
+                collected,
+                now: now,
+                freshness: freshness,
+                countTerminalSessions: countTerminalSessions
+            ) {
+                break
+            }
         }
         return collected
     }
@@ -106,12 +161,13 @@ enum SessionFileWalker {
         return [SessionFileSignal(url: url, modified: modified, kind: kind)]
     }
 
-    /// Newest-mtime first. Stop this root once a fresh busy file is found. Cap 4000 visits.
+    /// Newest-mtime first. Stop this root once a fresh file that still counts as busy is found. Cap 4000 visits.
     static func walk(
         root: URL,
         kind: AgentKind,
         now: Date,
-        freshness: TimeInterval
+        freshness: TimeInterval,
+        countTerminalSessions: Bool
     ) -> [SessionFileSignal] {
         var collected: [SessionFileSignal] = []
         var visited = 0
@@ -140,14 +196,24 @@ enum SessionFileWalker {
             for (url, modified, isDirectory) in ranked {
                 visited += 1
                 if visited > SessionWalkBudget.maxVisited { return true }
-                if SessionFileLayout.shouldSkipDirectory(url.lastPathComponent) { continue }
+                if SessionFileLayout.shouldSkipDirectory(
+                    url.lastPathComponent,
+                    countTerminalSessions: countTerminalSessions
+                ) { continue }
                 if isDirectory {
                     if visit(url, depth: depth + 1) { return true }
                     continue
                 }
                 guard SessionFileLayout.isRelevantFile(url, kind: kind) else { continue }
                 collected.append(SessionFileSignal(url: url, modified: modified, kind: kind))
-                if now.timeIntervalSince(modified) <= freshness { return true }
+                if now.timeIntervalSince(modified) <= freshness,
+                   SessionFileLayout.countsTowardBusy(
+                       url,
+                       countTerminalSessions: countTerminalSessions
+                   )
+                {
+                    return true
+                }
             }
             return false
         }
@@ -170,13 +236,15 @@ enum AgentProbeService {
                 countTerminalSessionsAsBusy: countTerminalSessions
             )
         )
+        let processes = ProcessListReader.records()
+        let walkIncluded = SessionWalkBudget.kindsToWalk(included: included, processes: processes)
         return engine.evaluate(
-            processes: ProcessListReader.records(),
+            processes: processes,
             sessionWrites: SessionFileWalker.signals(
                 home: FileManager.default.homeDirectoryForCurrentUser,
                 env: ProcessInfo.processInfo.environment,
                 countTerminalSessions: countTerminalSessions,
-                included: included,
+                included: walkIncluded,
                 now: now,
                 freshness: freshness
             ),

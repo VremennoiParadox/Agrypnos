@@ -20,6 +20,8 @@ extension PopoverController {
         root.material = .popover
         root.blendingMode = .behindWindow
         root.state = .followsWindowActiveState
+        root.autoresizingMask = [.width, .height]
+        root.clipsToBounds = true
         popoverRoot = root
 
         let document = FlippedView(frame: NSRect(x: 0, y: 0, width: W, height: CGFloat(layout.contentHeight)))
@@ -27,8 +29,10 @@ extension PopoverController {
         popoverDocument = document
         let scroll = NSScrollView(frame: root.bounds)
         scroll.autoresizingMask = [.width, .height]
+        scroll.clipsToBounds = true
         let clip = FlippedClipView(frame: scroll.contentView.frame)
         clip.drawsBackground = false
+        clip.clipsToBounds = true
         scroll.contentView = clip
         scroll.drawsBackground = false
         scroll.hasVerticalScroller = true

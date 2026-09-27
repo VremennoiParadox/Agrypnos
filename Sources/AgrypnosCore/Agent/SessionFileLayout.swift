@@ -88,9 +88,17 @@ public enum SessionFileLayout: Sendable {
     }
 
     /// Any walked agent tree, not Cursor-only. Nested `/subagents` is not this.
-    /// Parent directory is `terminals` — a project named `terminals` is not this.
+    /// A `terminals` folder this layout walks — including files nested under it.
+    /// A project named `terminals` that holds `agent-transcripts` is not this.
     public static func isTerminalSessionPath(_ url: URL) -> Bool {
-        url.deletingLastPathComponent().lastPathComponent == "terminals"
+        let parts = url.pathComponents
+        guard parts.count >= 2 else { return false }
+        for i in 0..<(parts.count - 1) {
+            guard parts[i] == "terminals" else { continue }
+            if parts[i + 1] == "agent-transcripts" { continue }
+            return true
+        }
+        return false
     }
 
     public static func countsTowardBusy(_ url: URL, countTerminalSessions: Bool) -> Bool {
@@ -100,10 +108,11 @@ public enum SessionFileLayout: Sendable {
 
     public static let cursorSubtreeNames = ["agent-transcripts", "terminals"]
 
-    public static func shouldSkipDirectory(_ name: String) -> Bool {
+    public static func shouldSkipDirectory(_ name: String, countTerminalSessions: Bool = true) -> Bool {
         let n = name.lowercased()
         if n == "node_modules" || n == ".git" || n == "log" { return true }
         if n.hasPrefix(".") && n != ".cursor" { return true }
+        if n == "terminals" && !countTerminalSessions { return true }
         return false
     }
 

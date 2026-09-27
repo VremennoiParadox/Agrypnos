@@ -15,3 +15,5 @@ xcuserdata/
 .env.*
 Apps/Agrypnos/build/
 .worktrees/
+.video-frames/
+.superpowers/

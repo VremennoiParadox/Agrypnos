@@ -69,6 +69,35 @@ final class AgentSnapshotCacheTests: XCTestCase {
         )
     }
 
+    func testInvalidateDropsBusySnapshotInsideReuseWindow() {
+        var cache = AgentSnapshotCache()
+        let busy = AgentSnapshot(reports: [
+            AgentReport(
+                kind: .cursor,
+                processRunning: true,
+                cpuBusy: false,
+                recentSessionWrite: true,
+                isBusy: true
+            )
+        ])
+        cache.store(busy, included: Set(AgentKind.allCases), at: t0)
+        XCTAssertEqual(
+            cache.reusable(
+                at: t0.addingTimeInterval(1),
+                included: Set(AgentKind.allCases)
+            )?.anyBusy,
+            true
+        )
+        cache.invalidate()
+        XCTAssertNil(
+            cache.reusable(
+                at: t0.addingTimeInterval(1),
+                included: Set(AgentKind.allCases)
+            )
+        )
+        XCTAssertEqual(AgentSnapshotCache.reuseWindow, 5)
+    }
+
     func testReuseWindowMatchesFiveSecondPoll() {
         XCTAssertEqual(AgentSnapshotCache.reuseWindow, 5)
     }

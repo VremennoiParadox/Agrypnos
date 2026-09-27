@@ -251,6 +251,7 @@ final class WatchRuntime {
     func setEngaged(_ on: Bool) -> HygieneApplyResult {
         if on {
             guard armKernel() else { return HygieneApplyResult() }
+            invalidateAgentProbe()
             idlePostTask?.cancel()
             idlePostTask = nil
             idleOutbound.noteUserArm()

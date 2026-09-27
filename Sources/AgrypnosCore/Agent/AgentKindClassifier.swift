@@ -52,8 +52,7 @@ public enum AgentKindClassifier: Sendable {
 
     static func isCodexNodeWrapper(basename n: String, loweredCommand: String) -> Bool {
         guard n == "node" || n == "nodejs" else { return false }
-        if loweredCommand.contains("codex") { return true }
-        return false
+        return invokesCLI(loweredCommand, name: "codex")
     }
 
     static func isOpenCodeDesktop(basename n: String, loweredCommand: String) -> Bool {
@@ -66,8 +65,20 @@ public enum AgentKindClassifier: Sendable {
     static func isOpenCodeCLI(basename n: String, loweredCommand: String) -> Bool {
         if n == "opencode" || n.hasPrefix("opencode") { return true }
         if n == "node" || n == "nodejs" || n == "bun" {
-            return loweredCommand.contains("/opencode")
-                || loweredCommand.contains("opencode/bin")
+            return invokesCLI(loweredCommand, name: "opencode")
+        }
+        return false
+    }
+
+    /// CLI install path or a token whose basename is exactly `name`. Not a longer segment.
+    static func invokesCLI(_ loweredCommand: String, name: String) -> Bool {
+        let tokens = loweredCommand.split(whereSeparator: \.isWhitespace)
+        for token in tokens {
+            let parts = token.split(separator: "/").map(String.init)
+            if parts.last == name { return true }
+            if let i = parts.firstIndex(of: name), i + 1 < parts.count, parts[i + 1] == "bin" {
+                return true
+            }
         }
         return false
     }
