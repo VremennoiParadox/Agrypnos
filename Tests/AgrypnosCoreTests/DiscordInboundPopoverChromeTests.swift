@@ -52,7 +52,7 @@ final class DiscordInboundPopoverChromeTests: XCTestCase {
         XCTAssertEqual(AgrypnosCopy.notifDiscordInbound, "Discord inbound")
         XCTAssertEqual(
             AgrypnosCopy.notifDiscordInboundHelp,
-            "Commands on your Discord bot: /arm, /disarm, /status, /help. If the bot isn’t replying, the Mac is likely asleep / Agrypnos isn’t receiving updates. /disarm with the lid open turns Keep the watch off and does not sleep the Mac. With the lid confirmed closed it turns Keep the watch off and sends the Mac to sleep. /status returns Keep the watch, How long, lid, Agents facts when relevant, last watch end, and safety prefs. /status includes live battery when known: Battery N% · discharging or on AC; omit if unknown."
+            "Commands on your Discord bot: /arm, /disarm, /status, /help. Needs your bot token + channel id. Details in Setup instructions."
         )
         let help = AgrypnosCopy.notifDiscordInboundHelp
         let lower = help.lowercased()
@@ -60,23 +60,9 @@ final class DiscordInboundPopoverChromeTests: XCTestCase {
         XCTAssertTrue(help.contains("/disarm"))
         XCTAssertTrue(help.contains("/status"))
         XCTAssertTrue(help.contains("/help"))
-        XCTAssertTrue(help.contains(
-            "/status returns Keep the watch, How long, lid, Agents facts when relevant, last watch end, and safety prefs."
-        ))
-        XCTAssertTrue(lower.contains("live battery"))
-        XCTAssertTrue(lower.contains("when known"))
-        XCTAssertTrue(help.contains("Battery N%"))
-        XCTAssertTrue(help.contains("discharging"))
-        XCTAssertTrue(help.contains("on AC"))
-        XCTAssertTrue(lower.contains("omit if unknown"))
         XCTAssertTrue(lower.contains("your discord bot"))
-        XCTAssertTrue(lower.contains("likely asleep"))
-        XCTAssertTrue(lower.contains("receiving updates"))
+        XCTAssertTrue(lower.contains("bot token + channel id"))
         XCTAssertFalse(lower.contains("polling"))
-        XCTAssertTrue(lower.contains("lid open"))
-        XCTAssertTrue(lower.contains("does not sleep the mac") || lower.contains("doesn’t sleep the mac"))
-        XCTAssertTrue(lower.contains("confirmed closed"))
-        XCTAssertTrue(lower.contains("sends the mac to sleep"))
         XCTAssertFalse(lower.contains("listen port"))
         XCTAssertFalse(lower.contains("interactions endpoint"))
         XCTAssertFalse(lower.contains("remaining"))
@@ -89,11 +75,7 @@ final class DiscordInboundPopoverChromeTests: XCTestCase {
             CopyWrap.lineCount(help, columns: PopoverCopyLayout.innerColumns),
             PopoverCopyLayout.notifDiscordInboundHelpMaxLines
         )
-        XCTAssertEqual(PopoverCopyLayout.notifDiscordInboundHelpMaxLines, 16)
-        XCTAssertGreaterThan(
-            CopyWrap.lineCount(help, columns: PopoverCopyLayout.innerColumns),
-            PopoverCopyLayout.helpMaxLines
-        )
+        XCTAssertLessThanOrEqual(PopoverCopyLayout.notifDiscordInboundHelpMaxLines, 4)
         XCTAssertEqual(
             CopyWrap.lineCount(
                 AgrypnosCopy.notifDiscordInbound,
@@ -246,8 +228,8 @@ final class DiscordInboundPopoverChromeTests: XCTestCase {
         )
     }
 
-    func testSetupHelpNamesDiscordInboundWithoutClaimingMacProve() {
-        let help = AgrypnosCopy.notifSetupHelp
+    func testSetupGuideNamesDiscordInboundWithoutClaimingMacProve() {
+        let help = BotGuide.text(for: .discord)
         let lower = help.lowercased()
         XCTAssertTrue(lower.contains("discord inbound"))
         XCTAssertTrue(lower.contains("webhook"))
@@ -256,15 +238,6 @@ final class DiscordInboundPopoverChromeTests: XCTestCase {
         XCTAssertFalse(lower.contains("mac proven"))
         XCTAssertFalse(lower.contains("listen port"))
         XCTAssertFalse(lower.contains("interactions endpoint"))
-        XCTAssertEqual(
-            CopyWrap.lineCount(help, columns: PopoverCopyLayout.innerColumns),
-            PopoverCopyLayout.notifSetupHelpMaxLines
-        )
-        XCTAssertEqual(PopoverCopyLayout.notifSetupHelpMaxLines, 24)
-        XCTAssertEqual(
-            PopoverCopyLayout.notifSetupHelpHeightPoints,
-            24 * PopoverCopyLayout.lineHeightPoints
-        )
     }
 
     func testTransportStaysGatewayWithNoListenPort() {
@@ -284,6 +257,7 @@ final class DiscordInboundPopoverChromeTests: XCTestCase {
             AgrypnosCopy.notifDiscordInboundChannelPlaceholder,
             DiscordInboundCopy.commandsHelp,
             DiscordInboundCopy.help,
+            BotGuide.text(for: .discord),
         ].joined(separator: "\n").lowercased()
     }
 

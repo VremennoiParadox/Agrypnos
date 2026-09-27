@@ -51,6 +51,7 @@ enum AppEditMenu {
         let main = NSMenu()
         let appItem = NSMenuItem()
         appItem.submenu = NSMenu(title: "Agrypnos")
+        appItem.submenu?.addItem(withTitle: "Close Window", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
         main.addItem(appItem)
         let editItem = NSMenuItem()
         let edit = NSMenu(title: "Edit")

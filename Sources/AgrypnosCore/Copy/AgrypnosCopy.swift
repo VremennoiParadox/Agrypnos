@@ -181,10 +181,10 @@ public enum AgrypnosCopy: Sendable {
         "Message your Telegram bot. Needs token; chat id from getUpdates. Agrypnos does not run a shared bot."
     public static let notifTelegramInbound = "Telegram inbound"
     public static let notifTelegramInboundHelp =
-        "Commands on your Telegram bot: /arm, /disarm, /status, /help. If the bot isn’t replying, the Mac is likely asleep / Agrypnos isn’t polling. /disarm with the lid open turns Keep the watch off and does not sleep the Mac. With the lid confirmed closed it turns Keep the watch off and sends the Mac to sleep. /status returns Keep the watch, How long, lid, Agents facts when relevant, last watch end, and safety prefs. /status includes live battery when known: Battery N% · discharging or on AC; omit if unknown."
+        "Commands on your Telegram bot: /arm, /disarm, /status, /help. Details in Setup instructions."
     public static let notifDiscordInbound = "Discord inbound"
     public static let notifDiscordInboundHelp =
-        "Commands on your Discord bot: /arm, /disarm, /status, /help. If the bot isn’t replying, the Mac is likely asleep / Agrypnos isn’t receiving updates. /disarm with the lid open turns Keep the watch off and does not sleep the Mac. With the lid confirmed closed it turns Keep the watch off and sends the Mac to sleep. /status returns Keep the watch, How long, lid, Agents facts when relevant, last watch end, and safety prefs. /status includes live battery when known: Battery N% · discharging or on AC; omit if unknown."
+        "Commands on your Discord bot: /arm, /disarm, /status, /help. Needs your bot token + channel id. Details in Setup instructions."
     public static let notifDiscordInboundTokenShort = "Token"
     public static let notifDiscordInboundChannelShort = "Channel"
     public static let notifDiscordInboundToken = "Discord bot token"
@@ -208,9 +208,7 @@ public enum AgrypnosCopy: Sendable {
         "That is not a Telegram bot token. Nothing was saved."
     public static let notifDiscordInvalid =
         "That is not a Discord webhook URL. Nothing was saved."
-    public static let notifSetup = "Setup"
-    public static let notifSetupHelp =
-        "Discord: Server Settings → Integrations → Webhooks → New Webhook → copy URL → paste above. Empty skips Discord. Telegram: @BotFather /newbot → token. Message the bot. Chat id from https://api.telegram.org/botYOUR_TOKEN/getUpdates — find \"chat\":{\"id\":. Empty result: message the bot, then reload. Paste token + chat id. Test: turn Notif on, save secrets, arm Agents, produce a local busy signal, wait the idle wait, expect one POST to your webhook and/or your Telegram bot. The event is idle after wait. Off: switch Notif off. Clear secrets deletes those saved values. Inbound: turn Telegram inbound on (separate from POST). Commands on your bot: /arm, /disarm, /status, /help. /status dumps live watch facts. /status includes live battery when known. Discord inbound on that card is separate from the webhook."
+    public static let notifSetup = "Setup instructions…"
     public static let notifIdleBody =
         "Agrypnos: local busy signals went idle after the wait."
     public static let statusItemArmed = "Armed."

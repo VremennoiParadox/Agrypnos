@@ -86,8 +86,6 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static var notifDiscordInboundSwitchY: Int {
         notifDiscordInboundChannelY + secretFieldRowHeight
     }
-    public static var notifSetupHelpY: Int { prefTitleY + titleRowHeight }
-
     public let section: PopoverSection
     public let sectionSwitcher: PopoverSlot
     public let watch: PopoverSlot?
@@ -218,12 +216,6 @@ public struct PopoverStackLayout: Equatable, Sendable {
             + PopoverCopyLayout.notifTelegramInboundHelpHeightPoints
             + switchRowHeight
             + inset
-        let notifSetupHeight =
-            inset
-            + titleRowHeight
-            + PopoverCopyLayout.notifSetupHelpHeightPoints
-            + inset
-
         func height(for card: PopoverCard) -> Int {
             switch card {
             case .watch: return watchHeight
@@ -252,7 +244,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
             case .notifDiscordInbound: return notifDiscordInboundHeight
             case .notifTelegram: return notifTelegramHeight
             case .notifTelegramInbound: return notifTelegramInboundHeight
-            case .notifSetup: return notifSetupHeight
+            case .notifSetup: return loginCardHeight
             case .notifClear: return loginCardHeight
             }
         }

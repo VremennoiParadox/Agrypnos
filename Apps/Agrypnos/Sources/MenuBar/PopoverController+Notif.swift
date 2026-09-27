@@ -203,33 +203,32 @@ extension PopoverController {
     }
 
     func addNotifSetupCard(_ card: CardView, ci: CGFloat, cw: CGFloat) {
-        addPrefTitle(AgrypnosCopy.notifSetup, in: card, ci: ci, width: cw)
-        _ = PopoverForm.help(
-            AgrypnosCopy.notifSetupHelp,
-            in: card,
-            y: CGFloat(PopoverStackLayout.notifSetupHelpY),
-            x: ci,
-            width: cw,
-            lines: PopoverCopyLayout.notifSetupHelpMaxLines
-        )
+        _ = addCardButton(AgrypnosCopy.notifSetup, in: card, ci: ci, cw: cw, action: #selector(setupInstructionsTapped))
     }
 
     func addNotifClearCard(_ card: CardView, ci: CGFloat, cw: CGFloat) {
-        let button = NSButton(
-            title: AgrypnosCopy.notifClear,
-            target: self,
-            action: #selector(clearNotifSecretsTapped)
+        notifClearButton = addCardButton(
+            AgrypnosCopy.notifClear, in: card, ci: ci, cw: cw, action: #selector(clearNotifSecretsTapped)
         )
+    }
+
+    private func addCardButton(_ title: String, in card: CardView, ci: CGFloat, cw: CGFloat, action: Selector) -> NSButton {
+        let button = NSButton(title: title, target: self, action: action)
         button.bezelStyle = .rounded
         button.controlSize = .regular
-        button.setAccessibilityLabel(AgrypnosCopy.notifClear)
+        button.setAccessibilityLabel(title)
         button.sizeToFit()
         let width = min(max(button.frame.width + 8, 120), cw)
         let height = max(button.frame.height, 24)
         let y = (CGFloat(PopoverStackLayout.loginCardHeight) - height) / 2
         button.frame = NSRect(x: ci, y: y, width: width, height: height)
         card.addSubview(button)
-        notifClearButton = button
+        return button
+    }
+
+    @objc func setupInstructionsTapped() {
+        close()
+        botGuide.show()
     }
 
     func refreshNotifChrome(runtime: WatchRuntime) {
