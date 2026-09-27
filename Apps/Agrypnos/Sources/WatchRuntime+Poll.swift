@@ -15,9 +15,18 @@ extension WatchRuntime {
         }
 
         guard probe != .none else {
+            idleProbeTicks += 1
+            if WatchTickProbe.leftoverReconcileDue(
+                idleTicks: idleProbeTicks,
+                holdingForIdlePost: engine.holdingForIdlePost
+            ) {
+                idleProbeTicks = 0
+                reconcileKernel(preferClearLeftover: true)
+            }
             delegate?.watchRuntimeDidChange(self)
             return
         }
+        idleProbeTicks = 0
 
         let battery = BatteryMonitor.reading()
         lastBatteryReading = battery
@@ -189,9 +198,13 @@ extension WatchRuntime {
     }
 
     /// Popover/hotkey off: sample lid, restore hygiene only if we are not about to sleepnow.
-    func applyUserOff() {
+    @discardableResult
+    func applyUserOff() -> HygieneApplyResult {
         pollLid()
-        let confirmed = engine.lidCloseConfirmed
+        let confirmed = engine.userOffLidCloseConfirmed
+        if engine.holdingForIdlePost {
+            engine.completeIdlePostHold()
+        }
         let commands = engine.userSetEngaged(false, now: Date(), lidClosed: confirmed)
         let sleep = commands.filter { $0 == .requestSleep }
         apply(commands.filter { $0 != .requestSleep })
@@ -203,6 +216,6 @@ extension WatchRuntime {
         } else {
             dropSavedHygieneWithoutWrite()
         }
-        apply(sleep)
+        return apply(sleep)
     }
 }

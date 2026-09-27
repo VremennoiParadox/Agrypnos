@@ -28,4 +28,27 @@ final class WatchTickProbeTests: XCTestCase {
         XCTAssertTrue(probe.probesAgents)
         XCTAssertTrue(probe.probesSafety)
     }
+
+    func testLeftoverKernelReadIsSlowerThanTheFiveSecondTick() {
+        XCTAssertEqual(WatchTickProbe.leftoverKernelIdleTicks, 12)
+        XCTAssertGreaterThan(
+            WatchTickProbe.leftoverKernelInterval,
+            5
+        )
+    }
+
+    func testLeftoverKernelReconcileSkipsWhileHoldingForIdlePost() {
+        XCTAssertFalse(
+            WatchTickProbe.leftoverReconcileDue(idleTicks: 11, holdingForIdlePost: false)
+        )
+        XCTAssertTrue(
+            WatchTickProbe.leftoverReconcileDue(idleTicks: 12, holdingForIdlePost: false)
+        )
+        XCTAssertFalse(
+            WatchTickProbe.leftoverReconcileDue(idleTicks: 12, holdingForIdlePost: true)
+        )
+        XCTAssertFalse(
+            WatchTickProbe.leftoverReconcileDue(idleTicks: 99, holdingForIdlePost: true)
+        )
+    }
 }

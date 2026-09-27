@@ -10,6 +10,17 @@ public enum WatchTickProbe: Equatable, Sendable {
     /// Agents mode. Safety plus local busy signals.
     case safetyAndAgents
 
+    /// Off-watch leftover `SleepDisabled` check. 5s tick × this many idle polls.
+    public static let leftoverKernelIdleTicks = 12
+    public static var leftoverKernelInterval: TimeInterval {
+        TimeInterval(leftoverKernelIdleTicks) * 5
+    }
+
+    /// Leftover clear must not run while idle-after-wait still holds SleepDisabled.
+    public static func leftoverReconcileDue(idleTicks: Int, holdingForIdlePost: Bool) -> Bool {
+        !holdingForIdlePost && idleTicks >= leftoverKernelIdleTicks
+    }
+
     public var probesSafety: Bool { self != .none }
     public var probesKernelHold: Bool { self != .none }
     public var probesAgents: Bool { self == .safetyAndAgents }

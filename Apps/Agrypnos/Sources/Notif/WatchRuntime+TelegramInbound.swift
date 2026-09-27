@@ -142,30 +142,36 @@ extension WatchRuntime {
     }
 
     func applyTelegramArm(token: String?, chatId: String?) {
-        if TelegramInboundIntent.arm.shouldSetEngaged(currentlyEngaged: engine.engaged) == true {
+        if TelegramInboundIntent.arm.shouldSetEngaged(currentlyEngaged: engaged) == true {
             setEngaged(true)
         }
-        let text = engine.engaged ? TelegramInboundCopy.armed : TelegramInboundCopy.armFailed
+        let text = engaged ? TelegramInboundCopy.armed : TelegramInboundCopy.armFailed
         sendTelegramInboundReply(text, token: token, chatId: chatId)
     }
 
     func applyTelegramDisarm(token: String?, chatId: String?) {
         pollLid()
-        let confirmed = engine.lidCloseConfirmed
-        if engine.engaged {
-            setEngaged(false)
-            if engine.engaged {
+        let confirmed = engine.userOffLidCloseConfirmed
+        let sleepResult: HygieneApplyResult
+        if engaged {
+            sleepResult = setEngaged(false)
+            if engaged {
                 sendTelegramInboundReply(TelegramInboundCopy.disarmFailed, token: token, chatId: chatId)
                 return
             }
         } else {
             _ = disarmKernel()
-            // Already off: same lid gate as WatchEngine.applyInbound — no second sleep stack.
             if TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: confirmed) {
-                apply([.requestSleep])
+                sleepResult = apply([.requestSleep])
+            } else {
+                sleepResult = HygieneApplyResult()
             }
         }
-        sendTelegramInboundReply(inboundDisarmReply(TelegramInboundCopy.disarmed), token: token, chatId: chatId)
+        sendTelegramInboundReply(
+            inboundDisarmReply(TelegramInboundCopy.disarmed, sleepResult: sleepResult),
+            token: token,
+            chatId: chatId
+        )
     }
 
     func sendTelegramInboundReply(_ text: String, token: String?, chatId: String?) {

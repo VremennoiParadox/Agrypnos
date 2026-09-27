@@ -28,4 +28,35 @@ final class DiscordDeferredSlashTests: XCTestCase {
             DiscordDeferredSlash.shouldApply(intent: .status, current: 2, captured: 2)
         )
     }
+
+    func testCapturedWakeMissDrainDoesNotApplyEvenIfEpochStillMatches() {
+        XCTAssertFalse(
+            DiscordDeferredSlash.shouldApply(
+                capturedDrain: .wakeMiss,
+                current: 3,
+                captured: 3
+            )
+        )
+        XCTAssertFalse(
+            DiscordDeferredSlash.shouldApply(
+                capturedDrain: .leftover,
+                current: 3,
+                captured: 3
+            )
+        )
+        XCTAssertTrue(
+            DiscordDeferredSlash.shouldApply(
+                capturedDrain: .live,
+                current: 3,
+                captured: 3
+            )
+        )
+        XCTAssertTrue(
+            DiscordDeferredSlash.shouldReplyMissedWhileAsleep(
+                capturedDrain: .wakeMiss,
+                current: 3,
+                captured: 3
+            )
+        )
+    }
 }

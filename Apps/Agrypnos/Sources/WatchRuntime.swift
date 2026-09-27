@@ -22,7 +22,7 @@ final class WatchRuntime {
     weak var delegate: WatchRuntimeDelegate?
 
     var preferences: UserPreferences { engine.preferences }
-    var engaged: Bool { engine.engaged }
+    var engaged: Bool { engine.engaged || engine.holdingForIdlePost }
     var statusItemState: StatusItemState { engine.statusItemState }
     var statusItemTitle: String { AgrypnosCopy.statusItemTitle(engine.statusItemState) }
     var hotkeyRegistered = false
@@ -42,7 +42,7 @@ final class WatchRuntime {
     var agentSnapshotCache = AgentSnapshotCache()
     var probeGeneration: UInt64 = 0
     var probeInFlight = false
-    var lastPmsetFailure: String?
+    var idleProbeTicks: Int = 0
 
     init() {
         engine = WatchEngine(preferences: store.load())
@@ -246,12 +246,13 @@ final class WatchRuntime {
     }
 
     func toggle() {
-        setEngaged(!engine.engaged)
+        setEngaged(!engaged)
     }
 
-    func setEngaged(_ on: Bool) {
+    @discardableResult
+    func setEngaged(_ on: Bool) -> HygieneApplyResult {
         if on {
-            guard armKernel() else { return }
+            guard armKernel() else { return HygieneApplyResult() }
             idlePostTask?.cancel()
             idlePostTask = nil
             idleOutbound.noteUserArm()
@@ -268,20 +269,23 @@ final class WatchRuntime {
                 recaptureOpenLidHygiene()
             }
             startLidPulse()
-        } else {
-            guard disarmKernel() else {
-                UserNotify.post("Couldn't drop SleepDisabled. The kernel flag is still on.")
-                delegate?.watchRuntimeDidChange(self)
-                return
-            }
-            applyUserOff()
-            store.save(engine.preferences)
-            syncLidPulse()
+            delegate?.watchRuntimeDidChange(self)
+            return HygieneApplyResult()
         }
+        guard disarmKernel() else {
+            UserNotify.post("Couldn't drop SleepDisabled. The kernel flag is still on.")
+            delegate?.watchRuntimeDidChange(self)
+            return HygieneApplyResult()
+        }
+        let sleepResult = applyUserOff()
+        store.save(engine.preferences)
+        syncLidPulse()
         delegate?.watchRuntimeDidChange(self)
+        return sleepResult
     }
 
-    func apply(_ commands: [WatchCommand]) {
+    @discardableResult
+    func apply(_ commands: [WatchCommand]) -> HygieneApplyResult {
         for command in commands {
             if case .assertSleepDisabled = command {
                 _ = armKernel()
@@ -295,9 +299,9 @@ final class WatchRuntime {
             ramp: brightnessRamp
         )
         for line in result.notifications {
-            lastPmsetFailure = line
             UserNotify.post(line)
         }
+        return result
     }
 
     func restoreHygiene() {
@@ -326,10 +330,10 @@ final class WatchRuntime {
         }
     }
 
-    func inboundDisarmReply(_ base: String) -> String {
-        guard let fail = lastPmsetFailure else { return base }
-        lastPmsetFailure = nil
-        return base + "\n" + fail
+    func inboundDisarmReply(_ base: String, sleepResult: HygieneApplyResult? = nil) -> String {
+        let extra = (sleepResult?.notifications ?? []).joined(separator: "\n")
+        if extra.isEmpty { return base }
+        return base + "\n" + extra
     }
 
     /// `/status` reuses a fresh probe. Do not walk session trees on the main actor.

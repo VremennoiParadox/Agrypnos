@@ -106,6 +106,43 @@ final class WatchIdlePostHoldTests: XCTestCase {
             [.disengage(.agentsSettled)]
         )
     }
+
+    func testUserOffDuringIdlePostHoldUsesLastDisengageLidForSleepnow() {
+        var prefs = UserPreferences.default
+        prefs.duration = .untilAgentsSettle
+        prefs.notifEnabled = true
+        var engine = WatchEngine(preferences: prefs)
+        _ = engine.userSetEngaged(true, now: t0, lidClosed: true)
+        XCTAssertTrue(engine.tick(now: t0.addingTimeInterval(20), safety: .acPower, agents: .busy).isEmpty)
+        _ = engine.tick(now: t0.addingTimeInterval(140), safety: .acPower, agents: .idle)
+
+        XCTAssertTrue(engine.holdingForIdlePost)
+        XCTAssertFalse(engine.lidCloseConfirmed)
+        XCTAssertTrue(engine.lastDisengageLidClosed)
+        XCTAssertTrue(engine.userOffLidCloseConfirmed)
+
+        let fromLiveConfirm = engine.userSetEngaged(
+            false,
+            now: t0.addingTimeInterval(141),
+            lidClosed: engine.lidCloseConfirmed
+        )
+        XCTAssertFalse(fromLiveConfirm.contains(.requestSleep))
+
+        engine = WatchEngine(preferences: prefs)
+        _ = engine.userSetEngaged(true, now: t0, lidClosed: true)
+        XCTAssertTrue(engine.tick(now: t0.addingTimeInterval(20), safety: .acPower, agents: .busy).isEmpty)
+        _ = engine.tick(now: t0.addingTimeInterval(140), safety: .acPower, agents: .idle)
+        let fromHoldLid = engine.userSetEngaged(
+            false,
+            now: t0.addingTimeInterval(141),
+            lidClosed: engine.userOffLidCloseConfirmed
+        )
+        XCTAssertTrue(fromHoldLid.contains(.requestSleep))
+        XCTAssertEqual(
+            fromHoldLid.contains(.requestSleep),
+            TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: true)
+        )
+    }
 }
 
 private extension SafetyInputs {

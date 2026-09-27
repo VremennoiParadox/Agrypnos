@@ -86,6 +86,7 @@ extension WatchRuntime {
         generation: UInt64,
         socketToken: String?
     ) {
+        let capturedDrain = store.loadDiscordInboundCursor().drain
         if update.source == .slash,
            let interactionId = update.interactionId,
            let interactionToken = update.interactionToken,
@@ -98,15 +99,18 @@ extension WatchRuntime {
                 await TelegramInboundHTTP.send(deferRequest)
                 await MainActor.run {
                     if DiscordDeferredSlash.shouldApply(
+                        capturedDrain: capturedDrain,
                         current: self.discordGateway.currentSlashEpoch,
                         captured: generation
                     ) {
                         self.finishDiscordInbound(
                             update,
                             slashDeferred: true,
-                            socketToken: socketToken
+                            socketToken: socketToken,
+                            capturedDrain: capturedDrain
                         )
                     } else if DiscordDeferredSlash.shouldReplyMissedWhileAsleep(
+                        capturedDrain: capturedDrain,
                         current: self.discordGateway.currentSlashEpoch,
                         captured: generation
                     ) {
@@ -121,15 +125,20 @@ extension WatchRuntime {
             }
             return
         }
-        finishDiscordInbound(update, slashDeferred: false, socketToken: socketToken)
+        finishDiscordInbound(
+            update,
+            slashDeferred: false,
+            socketToken: socketToken,
+            capturedDrain: capturedDrain
+        )
     }
 
     func finishDiscordInbound(
         _ update: DiscordInboundUpdate,
         slashDeferred: Bool,
-        socketToken: String?
+        socketToken: String?,
+        capturedDrain: TelegramInboundDrain
     ) {
-        let drain = store.loadDiscordInboundCursor().drain
         let secrets = NotifSecretsStore.load()
         guard DiscordInboundPolicy.sameBot(
             fetchedToken: socketToken,
@@ -142,7 +151,7 @@ extension WatchRuntime {
             savedChannelId: secrets.discordChannelId,
             update: update
         )
-        let effect = TelegramInboundDispatch.effect(drain: drain, intent: intent)
+        let effect = TelegramInboundDispatch.effect(drain: capturedDrain, intent: intent)
         let reply: String?
         switch effect {
         case .ignore:
@@ -193,28 +202,30 @@ extension WatchRuntime {
     }
 
     func applyDiscordArm() -> String {
-        if TelegramInboundIntent.arm.shouldSetEngaged(currentlyEngaged: engine.engaged) == true {
+        if TelegramInboundIntent.arm.shouldSetEngaged(currentlyEngaged: engaged) == true {
             setEngaged(true)
         }
-        return engine.engaged ? DiscordInboundCopy.armed : TelegramInboundCopy.armFailed
+        return engaged ? DiscordInboundCopy.armed : TelegramInboundCopy.armFailed
     }
 
     func applyDiscordDisarm() -> String {
         pollLid()
-        let confirmed = engine.lidCloseConfirmed
-        if engine.engaged {
-            setEngaged(false)
-            if engine.engaged {
+        let confirmed = engine.userOffLidCloseConfirmed
+        let sleepResult: HygieneApplyResult
+        if engaged {
+            sleepResult = setEngaged(false)
+            if engaged {
                 return TelegramInboundCopy.disarmFailed
             }
         } else {
             _ = disarmKernel()
-            // Already off: same lid gate as WatchEngine.applyInbound — no second sleep stack.
             if TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: confirmed) {
-                apply([.requestSleep])
+                sleepResult = apply([.requestSleep])
+            } else {
+                sleepResult = HygieneApplyResult()
             }
         }
-        return inboundDisarmReply(DiscordInboundCopy.disarmed)
+        return inboundDisarmReply(DiscordInboundCopy.disarmed, sleepResult: sleepResult)
     }
 
     func sendDiscordInboundReply(

@@ -74,9 +74,26 @@ public enum DiscordDeferredSlash: Sendable {
         TelegramInboundGeneration.allowsApply(current: current, captured: captured)
     }
 
+    /// Drain captured when the frame was accepted. A later `.live` seed must not apply.
+    public static func shouldApply(
+        capturedDrain: TelegramInboundDrain,
+        current: UInt64,
+        captured: UInt64
+    ) -> Bool {
+        capturedDrain == .live && shouldApply(current: current, captured: captured)
+    }
+
     /// Stale after wake: reply missed, do not arm/disarm.
     public static func shouldReplyMissedWhileAsleep(current: UInt64, captured: UInt64) -> Bool {
         !shouldApply(current: current, captured: captured)
+    }
+
+    public static func shouldReplyMissedWhileAsleep(
+        capturedDrain: TelegramInboundDrain,
+        current: UInt64,
+        captured: UInt64
+    ) -> Bool {
+        !shouldApply(capturedDrain: capturedDrain, current: current, captured: captured)
     }
 
     public static func shouldApply(
