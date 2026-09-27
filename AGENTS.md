@@ -192,7 +192,7 @@ App Store sandbox, notarization pipeline, providers beyond Cursor, Claude Code, 
 Sources/AgrypnosCore/     Portable logic. Linux-testable. No AppKit.
 Tests/AgrypnosCoreTests/  TDD for heuristics, timers, state machine.
 Apps/Agrypnos/            macOS menu-bar app. AppKit + IOKit. Needs a Mac to run.
-Scripts/                  verify-linux.sh, check-file-sizes.sh, Mac build.sh
+Scripts/                  verify-linux.sh, check-file-sizes.sh, Mac build-macos.sh
 prd/                      Product scope. Implement against it.
 ```
 

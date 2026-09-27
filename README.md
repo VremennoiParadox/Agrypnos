@@ -36,7 +36,7 @@ One-time scoped sudoers grant for **exactly two** `pmset disablesleep` commands.
 | `Sources/AgrypnosCore/` | Portable logic. Linux-testable. No AppKit. |
 | `Tests/AgrypnosCoreTests/` | Heuristics, timers, state machine. |
 | `Apps/Agrypnos/` | macOS menu-bar extra. AppKit + IOKit. Needs a Mac. |
-| `Scripts/` | `verify-linux.sh`, `check-file-sizes.sh`, Mac `build.sh` |
+| `Scripts/` | `verify-linux.sh`, `check-file-sizes.sh`, Mac `build-macos.sh` |
 | `prd/` | Product scope. |
 
 `AgrypnosCore` decides. Mac adapters execute (`pmset`, IOKit, `NSStatusItem`, Carbon hotkey, lid events).
@@ -53,7 +53,7 @@ swift test
 **macOS (app):**
 
 ```bash
-./Scripts/build.sh
+./Scripts/build-macos.sh
 ```
 
 Needs a Mac to run the menu-bar extra. User optical on open-lid brightness **passed** (2026-09-24): arm with the lid open (screen stays usable); confirmed lid close (brightness floor + keyboard dark); reopen mid-watch (ramp + keyboard on, Keep the watch still on); after the watch ends, lid-open use with no surprise dim to floor. User optical on Power A/B and Telegram `/status` live battery **passed** (2026-09-25): Dim panel / Sleep panel picker + caption; A = floor+ramp, panel stays on; B = panel sleeps on confirmed lid close, ramp hides, Keep the watch still holds; A↔B exclusive; `/status` live % matches the Mac menu bar (or omit if unknown); `/help` names live battery. Discord inbound is **not** Mac-proven.
