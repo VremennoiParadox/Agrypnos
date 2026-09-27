@@ -94,6 +94,7 @@ extension PopoverController {
         PopoverForm.apply(batteryCard, slot: layout.battery, pad: pad, width: width)
         PopoverForm.apply(agentIncludeCard, slot: layout.agentInclude, pad: pad, width: width)
         PopoverForm.apply(settleCard, slot: layout.settle, pad: pad, width: width)
+        PopoverForm.apply(terminalBusyCard, slot: layout.terminalBusy, pad: pad, width: width)
         PopoverForm.apply(rampCard, slot: layout.ramp, pad: pad, width: width)
         PopoverForm.apply(thermalCard, slot: layout.thermal, pad: pad, width: width)
         PopoverForm.apply(notifEnableCard, slot: layout.notifEnable, pad: pad, width: width)

@@ -116,6 +116,9 @@ extension PopoverController {
         settleCard = PopoverForm.card(in: document, slot: agents.settle!, pad: pad, width: contentW)
         addSettleCard(settleCard, contentW: contentW, ci: ci, cw: cw)
 
+        terminalBusyCard = PopoverForm.card(in: document, slot: agents.terminalBusy!, pad: pad, width: contentW)
+        addTerminalBusyCard(terminalBusyCard, contentW: contentW, ci: ci, cw: cw, swW: swW, swH: swH)
+
         rampCard = PopoverForm.card(in: document, slot: power.ramp!, pad: pad, width: contentW)
         addRampCard(rampCard, ci: ci, cw: cw)
 

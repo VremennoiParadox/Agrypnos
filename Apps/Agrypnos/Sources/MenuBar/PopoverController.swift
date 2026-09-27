@@ -17,7 +17,6 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     let popover = NSPopover()
     weak var runtime: WatchRuntime?
     private var clickMonitor: Any?
-    private var countdown: Timer?
 
     var watchSwitch: NSSwitch!
     var caption: NSTextField!
@@ -37,6 +36,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var settleSlider: NSSlider!
     var settleValue: NSTextField!
     var includeSwitches: [NSSwitch] = []
+    var terminalBusySwitch: NSSwitch!
     var rampControl: NSSegmentedControl!
     var thermalSwitch: NSSwitch!
     var notifSwitch: NSSwitch!
@@ -69,6 +69,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var batteryCard: CardView!
     var agentIncludeCard: CardView!
     var settleCard: CardView!
+    var terminalBusyCard: CardView!
     var rampCard: CardView!
     var thermalCard: CardView!
     var notifEnableCard: CardView!
@@ -130,7 +131,8 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
             engaged: on,
             leftover: runtime.adoptedLeftover,
             floor: runtime.preferences.batteryFloorPercent,
-            lidClosed: runtime.engine.lidClosed
+            lidClosed: runtime.engine.lidClosed,
+            panelPowerMode: runtime.preferences.panelPowerMode
         )
         lastWatchEndLabel?.stringValue = AgrypnosCopy.lastWatchEndCaption(
             event: runtime.preferences.lastWatchEnd, now: Date()
@@ -163,6 +165,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         for (toggle, kind) in zip(includeSwitches, AgentKind.allCases) {
             toggle.state = runtime.preferences.includedAgentKinds.contains(kind) ? .on : .off
         }
+        terminalBusySwitch?.state = runtime.preferences.countTerminalSessionsAsBusy ? .on : .off
         rampControl?.selectedSegment = LidOpenRampChrome.selectedSegment(
             seconds: runtime.preferences.lidOpenRampSeconds
         )
@@ -209,7 +212,6 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         window?.makeFirstResponder(nil)
         refresh()
         popoverScroll?.documentView?.scroll(.zero)
-        startCountdown()
         clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             self?.close()
         }
@@ -223,8 +225,6 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         recorder.stop()
         runtime?.restoreSuspendedHotkey()
         popover.performClose(nil)
-        countdown?.invalidate()
-        countdown = nil
         if let clickMonitor {
             NSEvent.removeMonitor(clickMonitor)
             self.clickMonitor = nil
@@ -266,23 +266,12 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     }
 
     private func hintCopy(for runtime: WatchRuntime) -> String {
-        var remaining: Int?
-        if let end = runtime.engine.timerEnd, runtime.engaged {
-            remaining = max(0, Int(end.timeIntervalSinceNow.rounded()))
-        }
-        return AgrypnosCopy.durationHint(
+        AgrypnosCopy.durationHint(
             option: runtime.preferences.duration,
             engaged: runtime.engaged,
-            remainingSeconds: remaining,
+            remainingSeconds: nil,
             thermalAutoOff: runtime.preferences.thermalAutoOff
         )
-    }
-
-    private func startCountdown() {
-        countdown?.invalidate()
-        countdown = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.refresh() }
-        }
     }
 
     func stopRecordingIfNeeded() {
@@ -462,6 +451,12 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
             return
         }
         runtime.setIncludedAgentKinds(next)
+        refresh()
+    }
+
+    @objc func terminalBusyToggled(_ sender: NSSwitch) {
+        stopRecordingIfNeeded()
+        runtime?.setCountTerminalSessionsAsBusy(sender.state == .on)
         refresh()
     }
 

@@ -109,6 +109,12 @@ final class WatchRuntime {
         delegate?.watchRuntimeDidChange(self)
     }
 
+    func setCountTerminalSessionsAsBusy(_ on: Bool) {
+        engine.preferences.countTerminalSessionsAsBusy = on
+        store.save(engine.preferences)
+        delegate?.watchRuntimeDidChange(self)
+    }
+
     func setNotifEnabled(_ on: Bool) {
         engine.preferences.notifEnabled = on
         store.save(engine.preferences)
@@ -480,7 +486,7 @@ final class WatchRuntime {
                     recaptureOpenLidHygiene()
                 }
                 startLidPulse()
-                UserNotify.post(AgrypnosCopy.leftoverNotify)
+                UserNotify.post(AgrypnosCopy.leftoverNotify(for: engine.preferences.panelPowerMode))
             }
         }
     }
