@@ -120,6 +120,13 @@ extension WatchRuntime {
                             token: NotifSecretsStore.load().discordBotToken,
                             slashDeferred: true
                         )
+                    } else {
+                        self.finishDiscordInbound(
+                            update,
+                            slashDeferred: true,
+                            socketToken: socketToken,
+                            capturedDrain: capturedDrain
+                        )
                     }
                 }
             }
@@ -164,16 +171,7 @@ extension WatchRuntime {
             pollLid()
             let now = Date()
             let agentsBusy = cachedAgentsBusy(now: now)
-            let safety = lastSafety ?? {
-                let battery = BatteryMonitor.reading()
-                lastBatteryReading = battery
-                return SafetyInputs(
-                    batteryPercent: battery.percent,
-                    onBatteryDischarging: battery.onBatteryDischarging,
-                    thermalSerious: ThermalMonitor.isSerious(),
-                    lowPowerMode: ProcessInfo.processInfo.isLowPowerModeEnabled
-                )
-            }()
+            let safety = liveStatusSafety()
             reply = DiscordInboundCopy.reply(
                 intent: .status,
                 status: engine.telegramWatchStatus(
@@ -210,7 +208,7 @@ extension WatchRuntime {
 
     func applyDiscordDisarm() -> String {
         pollLid()
-        let confirmed = engine.userOffLidCloseConfirmed
+        let confirmed = engine.userOffLidCloseConfirmed(rawClosed: LidStateReader.isClosed())
         let sleepResult: HygieneApplyResult
         if engaged {
             sleepResult = setEngaged(false)

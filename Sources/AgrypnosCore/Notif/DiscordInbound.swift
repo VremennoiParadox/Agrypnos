@@ -93,7 +93,14 @@ public enum DiscordDeferredSlash: Sendable {
         current: UInt64,
         captured: UInt64
     ) -> Bool {
-        !shouldApply(capturedDrain: capturedDrain, current: current, captured: captured)
+        switch capturedDrain {
+        case .leftover:
+            return false
+        case .wakeMiss:
+            return true
+        case .live:
+            return !shouldApply(current: current, captured: captured)
+        }
     }
 
     public static func shouldApply(

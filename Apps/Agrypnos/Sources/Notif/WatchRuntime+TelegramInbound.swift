@@ -102,16 +102,7 @@ extension WatchRuntime {
                 pollLid()
                 let now = Date()
                 let agentsBusy = cachedAgentsBusy(now: now)
-                let safety = lastSafety ?? {
-                    let battery = BatteryMonitor.reading()
-                    lastBatteryReading = battery
-                    return SafetyInputs(
-                        batteryPercent: battery.percent,
-                        onBatteryDischarging: battery.onBatteryDischarging,
-                        thermalSerious: ThermalMonitor.isSerious(),
-                        lowPowerMode: ProcessInfo.processInfo.isLowPowerModeEnabled
-                    )
-                }()
+                let safety = liveStatusSafety()
                 sendTelegramInboundReply(
                     TelegramInboundCopy.status(
                         engine.telegramWatchStatus(
@@ -151,7 +142,7 @@ extension WatchRuntime {
 
     func applyTelegramDisarm(token: String?, chatId: String?) {
         pollLid()
-        let confirmed = engine.userOffLidCloseConfirmed
+        let confirmed = engine.userOffLidCloseConfirmed(rawClosed: LidStateReader.isClosed())
         let sleepResult: HygieneApplyResult
         if engaged {
             sleepResult = setEngaged(false)

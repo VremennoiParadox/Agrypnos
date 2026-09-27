@@ -12,9 +12,13 @@ public struct WatchEngine: Equatable, Sendable {
     public private(set) var lidHygieneApplied: Bool
     /// Live confirm from `LidCloseConfirm`. Do not use leftover `lidClosed` after disengage.
     public var lidCloseConfirmed: Bool { lidConfirm.confirmedClosed }
-    /// User-off / inbound sleepnow lid. Hold still uses the lid captured at disengage.
-    public var userOffLidCloseConfirmed: Bool {
-        holdingForIdlePost ? lastDisengageLidClosed : lidCloseConfirmed
+    /// User-off / inbound sleepnow lid. Hold still uses the lid captured at disengage,
+    /// but only if the clamshell is still raw-closed — lid-open must not sleepnow.
+    public func userOffLidCloseConfirmed(rawClosed: Bool) -> Bool {
+        if holdingForIdlePost {
+            return lastDisengageLidClosed && rawClosed
+        }
+        return lidCloseConfirmed
     }
     /// Raw closed, not yet stable. 4 Hz pulse only while this is true.
     public var lidClosePending: Bool { lidConfirm.isPendingClose }

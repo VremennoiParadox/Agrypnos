@@ -58,5 +58,19 @@ final class DiscordDeferredSlashTests: XCTestCase {
                 captured: 3
             )
         )
+        XCTAssertFalse(
+            DiscordDeferredSlash.shouldReplyMissedWhileAsleep(
+                capturedDrain: .leftover,
+                current: 3,
+                captured: 3
+            )
+        )
+        XCTAssertTrue(
+            DiscordDeferredSlash.shouldReplyMissedWhileAsleep(
+                capturedDrain: .live,
+                current: 4,
+                captured: 3
+            )
+        )
     }
 }

@@ -119,27 +119,28 @@ final class WatchIdlePostHoldTests: XCTestCase {
         XCTAssertTrue(engine.holdingForIdlePost)
         XCTAssertFalse(engine.lidCloseConfirmed)
         XCTAssertTrue(engine.lastDisengageLidClosed)
-        XCTAssertTrue(engine.userOffLidCloseConfirmed)
+        XCTAssertTrue(engine.userOffLidCloseConfirmed(rawClosed: true))
+        XCTAssertFalse(engine.userOffLidCloseConfirmed(rawClosed: false))
 
-        let fromLiveConfirm = engine.userSetEngaged(
+        let lidOpenedDuringHold = engine.userSetEngaged(
             false,
             now: t0.addingTimeInterval(141),
-            lidClosed: engine.lidCloseConfirmed
+            lidClosed: engine.userOffLidCloseConfirmed(rawClosed: false)
         )
-        XCTAssertFalse(fromLiveConfirm.contains(.requestSleep))
+        XCTAssertFalse(lidOpenedDuringHold.contains(.requestSleep))
 
         engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: true)
         XCTAssertTrue(engine.tick(now: t0.addingTimeInterval(20), safety: .acPower, agents: .busy).isEmpty)
         _ = engine.tick(now: t0.addingTimeInterval(140), safety: .acPower, agents: .idle)
-        let fromHoldLid = engine.userSetEngaged(
+        let stillClosed = engine.userSetEngaged(
             false,
             now: t0.addingTimeInterval(141),
-            lidClosed: engine.userOffLidCloseConfirmed
+            lidClosed: engine.userOffLidCloseConfirmed(rawClosed: true)
         )
-        XCTAssertTrue(fromHoldLid.contains(.requestSleep))
+        XCTAssertTrue(stillClosed.contains(.requestSleep))
         XCTAssertEqual(
-            fromHoldLid.contains(.requestSleep),
+            stillClosed.contains(.requestSleep),
             TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: true)
         )
     }

@@ -106,7 +106,7 @@ final class WatchRuntime {
     func setCountTerminalSessionsAsBusy(_ on: Bool) {
         engine.userSetCountTerminalSessionsAsBusy(on)
         store.save(engine.preferences)
-        agentSnapshotCache.invalidate()
+        invalidateAgentProbe()
         delegate?.watchRuntimeDidChange(self)
     }
 
@@ -119,9 +119,7 @@ final class WatchRuntime {
     func setIncludedAgentKinds(_ kinds: Set<AgentKind>) {
         guard engine.preferences.applyIncludedAgentKinds(kinds) else { return }
         store.save(engine.preferences)
-        agentSnapshotCache.invalidate()
-        probeGeneration &+= 1
-        probeInFlight = false
+        invalidateAgentProbe()
         delegate?.watchRuntimeDidChange(self)
     }
 
@@ -343,5 +341,25 @@ final class WatchRuntime {
             return snap.anyBusy(included: included)
         }
         return nil
+    }
+
+    /// Live battery for `/status`. Do not reprint a poll snapshot after the watch is off.
+    func liveStatusSafety() -> SafetyInputs {
+        let battery = BatteryMonitor.reading()
+        lastBatteryReading = battery
+        let safety = SafetyInputs(
+            batteryPercent: battery.percent,
+            onBatteryDischarging: battery.onBatteryDischarging,
+            thermalSerious: ThermalMonitor.isSerious(),
+            lowPowerMode: ProcessInfo.processInfo.isLowPowerModeEnabled
+        )
+        lastSafety = safety
+        return safety
+    }
+
+    func invalidateAgentProbe() {
+        agentSnapshotCache.invalidate()
+        probeGeneration &+= 1
+        probeInFlight = false
     }
 }

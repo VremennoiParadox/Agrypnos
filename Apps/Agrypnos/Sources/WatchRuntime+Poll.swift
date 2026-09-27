@@ -201,7 +201,7 @@ extension WatchRuntime {
     @discardableResult
     func applyUserOff() -> HygieneApplyResult {
         pollLid()
-        let confirmed = engine.userOffLidCloseConfirmed
+        let confirmed = engine.userOffLidCloseConfirmed(rawClosed: LidStateReader.isClosed())
         if engine.holdingForIdlePost {
             engine.completeIdlePostHold()
         }
