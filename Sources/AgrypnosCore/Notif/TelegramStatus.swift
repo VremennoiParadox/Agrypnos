@@ -150,13 +150,13 @@ extension WatchEngine {
         let livePercent = safety?.batteryPercent
         let liveDischarging: Bool? = livePercent == nil ? nil : safety?.onBatteryDischarging
         return TelegramWatchStatus(
-            engaged: engaged,
+            engaged: engaged || holdingForIdlePost,
             duration: preferences.duration,
             lidCloseConfirmed: lidCloseConfirmed,
             includedAgentKinds: preferences.includedAgentKinds,
             sawBusyThisArm: sawBusyThisArm,
             settlingAfterBusy: settlingAfterBusy,
-            lastWatchEnd: preferences.lastWatchEnd,
+            lastWatchEnd: holdingForIdlePost ? nil : preferences.lastWatchEnd,
             batteryFloorPercent: preferences.batteryFloorPercent,
             thermalAutoOff: preferences.thermalAutoOff,
             lowPowerMode: lowPowerMode ?? safety?.lowPowerMode,

@@ -76,7 +76,7 @@ final class AgentKindClassifierTests: XCTestCase {
         XCTAssertFalse(AgentKindClassifier.cpuCountsTowardBusy(processName: "Cursor Helper (GPU)"))
         XCTAssertTrue(AgentKindClassifier.cpuCountsTowardBusy(processName: "claude"))
         XCTAssertTrue(AgentKindClassifier.cpuCountsTowardBusy(processName: "codex"))
-        XCTAssertTrue(AgentKindClassifier.cpuCountsTowardBusy(processName: "opencode"))
+        XCTAssertFalse(AgentKindClassifier.cpuCountsTowardBusy(processName: "opencode"))
         XCTAssertFalse(AgentKindClassifier.cpuCountsTowardBusy(processName: "OpenCode Helper"))
     }
 

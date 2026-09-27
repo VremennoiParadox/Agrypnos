@@ -52,7 +52,7 @@ public enum StatusItemState: Equatable, Sendable {
 
 extension WatchEngine {
     public var statusItemState: StatusItemState {
-        .from(engaged: engaged, duration: preferences.duration)
+        .from(engaged: engaged || holdingForIdlePost, duration: preferences.duration)
     }
 
     public func statusItemRemainingSeconds(now: Date) -> Int? {

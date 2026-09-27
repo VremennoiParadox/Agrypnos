@@ -16,7 +16,11 @@ public struct WatchEngine: Equatable, Sendable {
     public var lidClosePending: Bool { lidConfirm.isPendingClose }
     /// One idle-after-wait POST per genuine user arm. Survives disarm-failure rollback.
     public private(set) var postedThisUserArm: Bool
+    /// Kernel still held after idle-after-wait disengage. Do not paint ended.
+    public private(set) var holdingForIdlePost: Bool
+    public private(set) var lastDisengageLidClosed: Bool
     var lastWatchEndRollback: LastWatchEnd?
+    var pendingLastWatchEnd: LastWatchEnd?
     private var lidConfirm: LidCloseConfirm
 
     public init(preferences: UserPreferences = .default) {
@@ -30,7 +34,10 @@ public struct WatchEngine: Equatable, Sendable {
         self.lidClosed = false
         self.lidHygieneApplied = false
         self.postedThisUserArm = false
+        self.holdingForIdlePost = false
         self.lastWatchEndRollback = nil
+        self.lastDisengageLidClosed = false
+        self.pendingLastWatchEnd = nil
         self.lidConfirm = LidCloseConfirm()
     }
 
@@ -44,14 +51,28 @@ public struct WatchEngine: Equatable, Sendable {
     }
 
     /// Kernel disarm failed after logical disengage. Same user arm — keep the POST latch.
+    /// Do not sample `engine.lidClosed` after disengage zeroed it — use the stored lid.
     public mutating func rollbackDisarmFailure(now: Date, lidClosed: Bool = false) -> [WatchCommand] {
+        _ = lidClosed
+        holdingForIdlePost = false
+        pendingLastWatchEnd = nil
         let restored = lastWatchEndRollback
         lastWatchEndRollback = nil
         leftoverAdopted = false
-        self.lidClosed = lidClosed
+        self.lidClosed = lastDisengageLidClosed
         let commands = engage(now: now, forcedByUser: true, resetPostedThisUserArm: false)
         preferences.lastWatchEnd = restored
         return commands
+    }
+
+    /// Kernel clear succeeded after idle-after-wait POST. Last-end honesty may show now.
+    public mutating func completeIdlePostHold() {
+        guard holdingForIdlePost else { return }
+        holdingForIdlePost = false
+        if let pending = pendingLastWatchEnd {
+            preferences.lastWatchEnd = pending
+        }
+        pendingLastWatchEnd = nil
     }
 
     /// Kernel `SleepDisabled` was already on and could not be cleared. Adopt visibly.
@@ -154,7 +175,8 @@ public struct WatchEngine: Equatable, Sendable {
         now: Date,
         safety: SafetyInputs,
         agents: AgentSnapshot,
-        kernelSleepDisabled: Bool = true
+        kernelSleepDisabled: Bool = true,
+        observeAgents: Bool = true
     ) -> [WatchCommand] {
         guard engaged else { return [] }
         if let reason = AutoOffEvaluator.reason(
@@ -168,7 +190,7 @@ public struct WatchEngine: Equatable, Sendable {
         ), reason.turnsWatchOff {
             return disengage(reason, at: now)
         }
-        if mode == .untilAgentsSettle {
+        if observeAgents, mode == .untilAgentsSettle {
             let activity = settle.observe(
                 busy: agents.anyBusy(included: preferences.includedAgentKinds),
                 now: now
@@ -225,6 +247,8 @@ public struct WatchEngine: Equatable, Sendable {
     ) -> [WatchCommand] {
         engaged = true
         userForcedThisSession = forcedByUser
+        holdingForIdlePost = false
+        pendingLastWatchEnd = nil
         if resetPostedThisUserArm {
             postedThisUserArm = false
         }
@@ -266,17 +290,23 @@ public struct WatchEngine: Equatable, Sendable {
             reason: reason,
             sawBusy: settle.sawBusy
         )
+        let wasHygieneApplied = lidHygieneApplied
+        let wasLidClosed = lidClosed
+        lastDisengageLidClosed = wasLidClosed
         if wasEngaged {
             lastWatchEndRollback = preferences.lastWatchEnd
-            preferences.lastWatchEnd = LastWatchEnd(endedAt: now, reason: reason)
+            let end = LastWatchEnd(endedAt: now, reason: reason)
+            if postIdleAfterWait {
+                pendingLastWatchEnd = end
+            } else {
+                preferences.lastWatchEnd = end
+            }
         }
         engaged = false
         mode = .idle
         timerEnd = nil
         userForcedThisSession = false
         leftoverAdopted = false
-        let wasHygieneApplied = lidHygieneApplied
-        let wasLidClosed = lidClosed
         lidHygieneApplied = false
         lidConfirm.reset()
         lidClosed = false
@@ -284,7 +314,11 @@ public struct WatchEngine: Equatable, Sendable {
         var commands: [WatchCommand] = [.disengage(reason)]
         if postIdleAfterWait {
             postedThisUserArm = true
+            holdingForIdlePost = true
             commands.append(.postIdleAfterWaitNotif)
+        } else {
+            holdingForIdlePost = false
+            pendingLastWatchEnd = nil
         }
         if wasHygieneApplied,
            let wake = PanelPowerMode.disengageDisplayCommand(

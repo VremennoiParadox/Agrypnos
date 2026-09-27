@@ -1,7 +1,11 @@
 import Foundation
 
 public enum SessionFileLayout: Sendable {
-    public static func roots(home: URL, env: [String: String] = [:]) -> [AgentKind: [URL]] {
+    public static func roots(
+        home: URL,
+        env: [String: String] = [:],
+        included: Set<AgentKind> = Set(AgentKind.allCases)
+    ) -> [AgentKind: [URL]] {
         let claudeHome = path(env["CLAUDE_CONFIG_DIR"]) ?? home.appendingPathComponent(".claude")
         let codexHome = path(env["CODEX_HOME"]) ?? home.appendingPathComponent(".codex")
         let dataHome = path(env["XDG_DATA_HOME"]) ?? home.appendingPathComponent(".local/share")
@@ -21,7 +25,7 @@ public enum SessionFileLayout: Sendable {
             ])
         }
 
-        return [
+        let all: [AgentKind: [URL]] = [
             .claudeCode: [claudeHome.appendingPathComponent("projects")],
             .codex: [codexHome.appendingPathComponent("sessions")],
             .cursor: cursorRoots,
@@ -31,6 +35,7 @@ public enum SessionFileLayout: Sendable {
                 openCodeHome,
             ],
         ]
+        return all.filter { included.contains($0.key) }
     }
 
     public static func classify(_ url: URL) -> AgentKind? {

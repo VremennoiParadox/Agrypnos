@@ -22,8 +22,42 @@ final class HygieneRestoreTests: XCTestCase {
         XCTAssertEqual(HygieneRestore.displayBrightnessToRestore(captured: 0.6, floor: 0.15), 0.6)
     }
 
-    func testDisplayRestoreRaisesSavedBelowFloor() {
-        XCTAssertEqual(HygieneRestore.displayBrightnessToRestore(captured: 0.05, floor: 0.15), 0.15)
+    func testDisplayRestoreKeepsCapturedBelowFloor() {
+        XCTAssertEqual(HygieneRestore.displayBrightnessToRestore(captured: 0.05, floor: 0.15), 0.05)
+    }
+
+    func testDisplayRestoreDoesNotLiftCaptureToFloor() {
+        XCTAssertNotEqual(
+            HygieneRestore.displayBrightnessToRestore(captured: 0.08, floor: 0.15),
+            0.15
+        )
+    }
+
+    func testSkipRestoreWhenLidConfirmedClosedAndNextIsSleep() {
+        XCTAssertFalse(
+            HygieneRestore.shouldRestoreAfterDisengage(
+                lidCloseConfirmed: true,
+                nextCommandIsSleep: true
+            )
+        )
+    }
+
+    func testRestoreWhenLidOpenEvenIfSleepFollows() {
+        XCTAssertTrue(
+            HygieneRestore.shouldRestoreAfterDisengage(
+                lidCloseConfirmed: false,
+                nextCommandIsSleep: true
+            )
+        )
+    }
+
+    func testRestoreWhenLidClosedAndNoSleep() {
+        XCTAssertTrue(
+            HygieneRestore.shouldRestoreAfterDisengage(
+                lidCloseConfirmed: true,
+                nextCommandIsSleep: false
+            )
+        )
     }
 
     func testDisplayRestoreSkipsWhenCaptureFailed() {

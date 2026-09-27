@@ -374,7 +374,7 @@ final class AgentHeuristicEngineTests: XCTestCase {
         XCTAssertTrue(snap.report(.openCode)?.isBusy ?? false)
     }
 
-    func testOpenCodeHighCPUWithoutFreshFilesIsBusy() {
+    func testOpenCodeHighCPUWithoutFreshFilesIsNotBusy() {
         let snap = engine.evaluate(
             processes: [ProcessRecord(pid: 11, cpuPercent: 22, name: "opencode")],
             sessionWrites: [
@@ -386,8 +386,9 @@ final class AgentHeuristicEngineTests: XCTestCase {
             ],
             now: now
         )
-        XCTAssertTrue(snap.report(.openCode)?.isBusy ?? false)
-        XCTAssertTrue(snap.report(.openCode)?.cpuBusy ?? false)
+        XCTAssertFalse(snap.report(.openCode)?.isBusy ?? true)
+        XCTAssertFalse(snap.report(.openCode)?.cpuBusy ?? true)
+        XCTAssertEqual(snap.report(.openCode)?.processRunning, true)
     }
 
     func testOpenCodeIdlePromptIsNotBusy() {

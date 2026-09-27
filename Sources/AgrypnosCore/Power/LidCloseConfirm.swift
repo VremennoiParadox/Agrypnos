@@ -25,6 +25,12 @@ public struct LidCloseConfirm: Equatable, Sendable {
         !rawClosed && !confirmedClosed
     }
 
+    /// Arm with the lid already raw-closed: capture once before floor / displaysleep.
+    /// Nil `current()` still skips the later restore write.
+    public static func shouldCaptureBeforeClosedHygiene(rawClosed: Bool) -> Bool {
+        rawClosed
+    }
+
     public mutating func reset() {
         confirmedClosed = false
         closedSince = nil

@@ -108,9 +108,9 @@ public struct AgentHeuristicEngine: Equatable, Sendable {
         }
         let isBusy: Bool
         switch kind {
-        case .cursor:
+        case .cursor, .openCode:
             isBusy = processRunning && recentSessionWrite
-        case .claudeCode, .codex, .openCode:
+        case .claudeCode, .codex:
             isBusy = processRunning && (cpuBusy || recentSessionWrite)
         }
         return AgentReport(
