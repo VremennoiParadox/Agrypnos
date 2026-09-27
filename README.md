@@ -119,6 +119,7 @@ Agrypnos can't tell whether a model is "thinking". It only sees processes and fi
 - **Thermal pressure.** When macOS reports serious or critical thermal state. You can turn this off in **Power**.
 - **Low Power Mode.** On battery, a watch Agrypnos inherited from an earlier session ends. A watch you turned on yourself keeps going.
 - **Reboot.** macOS clears the setting. Launch at login never turns the watch back on.
+- **Quit or crash.** Quitting Agrypnos turns the setting off. If the app crashes or gets force-quit, a small helper it started at launch turns it off right after.
 
 The **Watch** section shows when the last watch ended and why.
 

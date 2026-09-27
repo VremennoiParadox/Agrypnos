@@ -14,6 +14,7 @@ Agrypnos asks for one privileged trick: lid-close keep-awake via `pmset disables
 - File mode `0440`, owner `root:wheel`.
 - `visudo -c` on the snippet before install.
 - Reboot clears `SleepDisabled`. The app does not re-arm at login.
+- A crash or force quit clears it too. At launch the app starts a small `/bin/sh` helper that waits on a pipe from the app. When the app process ends for any reason, the pipe closes and the helper runs `sudo -n /usr/bin/pmset -a disablesleep 0` (the existing grant, nothing new), then exits.
 - Confirmed lid-closed inbound `/disarm` and popover/hotkey user-off (I2 — unlocked for Core, not Mac-proven) may call `pmset sleepnow`. Same user-level path as safety auto-off. Not a new sudoers grant. Lid-open or unconfirmed must not sleep the Mac.
 
 Remove with `Scripts/ungrant.sh` or `sudo rm /etc/sudoers.d/agrypnos-disablesleep`.
