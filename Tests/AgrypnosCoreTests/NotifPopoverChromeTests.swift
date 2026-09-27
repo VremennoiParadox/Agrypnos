@@ -165,8 +165,8 @@ final class NotifPopoverChromeTests: XCTestCase {
 
     func testClearSecretsCopyDeletesSavedFileNotKeychain() {
         XCTAssertEqual(AgrypnosCopy.notifClear, "Clear secrets")
-        XCTAssertTrue(AgrypnosCopy.notifSetupHelp.lowercased().contains("clear secrets"))
-        XCTAssertFalse(AgrypnosCopy.notifSetupHelp.lowercased().contains("keychain"))
+        XCTAssertTrue(BotGuide.allText.lowercased().contains("clear secrets"))
+        XCTAssertFalse(BotGuide.allText.lowercased().contains("keychain"))
         XCTAssertEqual(NotifSecretsFileChrome.folderName, "Agrypnos")
         XCTAssertEqual(NotifSecretsFileChrome.fileName, "notif-secrets.json")
         XCTAssertFalse(NotifSecretsFileChrome.fileName.contains("preferences"))
@@ -197,42 +197,30 @@ final class NotifPopoverChromeTests: XCTestCase {
         XCTAssertNil(emptyDecoded.telegramChatId)
     }
 
-    func testSetupHelpFitsItsSlotAndIsSelfServe() {
-        let help = AgrypnosCopy.notifSetupHelp
-        let lines = CopyWrap.lineCount(help, columns: PopoverCopyLayout.innerColumns)
-        XCTAssertEqual(PopoverCopyLayout.helpMaxLines, 2)
-        XCTAssertGreaterThan(lines, PopoverCopyLayout.helpMaxLines)
-        XCTAssertEqual(lines, 24)
-        XCTAssertEqual(PopoverCopyLayout.notifSetupHelpMaxLines, 24)
+    func testSetupIsAButtonToASelfServeGuide() {
+        XCTAssertEqual(AgrypnosCopy.notifSetup, "Setup instructions…")
         XCTAssertEqual(
-            PopoverCopyLayout.notifSetupHelpHeightPoints,
-            24 * PopoverCopyLayout.lineHeightPoints
+            CopyWrap.lineCount(AgrypnosCopy.notifSetup, columns: PopoverCopyLayout.innerColumns),
+            1
         )
-        XCTAssertGreaterThanOrEqual(
-            PopoverCopyLayout.notifSetupHelpMaxLines,
-            lines
-        )
-
+        let help = BotGuide.allText
         let lower = help.lowercased()
         XCTAssertTrue(help.contains("Server Settings"))
         XCTAssertTrue(help.contains("Integrations"))
         XCTAssertTrue(help.contains("Webhooks"))
         XCTAssertTrue(help.contains("New Webhook"))
-        XCTAssertTrue(help.contains("@BotFather"))
+        XCTAssertTrue(help.contains("BotFather"))
         XCTAssertTrue(help.contains("/newbot"))
         XCTAssertTrue(help.contains("getUpdates"))
-        XCTAssertTrue(help.contains("YOUR_TOKEN"))
         XCTAssertTrue(lower.contains("empty result"))
         XCTAssertTrue(lower.contains("arm") && help.contains("Agents"))
         XCTAssertTrue(lower.contains("local busy"))
-        XCTAssertTrue(lower.contains("idle wait") || lower.contains("idle after wait"))
-        XCTAssertTrue(lower.contains("one post") || lower.contains("one POST"))
-        XCTAssertTrue(lower.contains("your webhook") || help.contains("your webhook"))
-        XCTAssertTrue(lower.contains("telegram"))
+        XCTAssertTrue(lower.contains("idle wait"))
+        XCTAssertTrue(lower.contains("one message"))
+        XCTAssertTrue(lower.contains("your webhook"))
         XCTAssertTrue(lower.contains("clear secrets"))
         XCTAssertTrue(lower.contains("live battery"))
         XCTAssertTrue(lower.contains("when known"))
-        XCTAssertFalse(lower.contains("see readme") && !help.contains("Server Settings"))
         XCTAssertFalse(isReadmeOnly(help))
     }
 
@@ -275,7 +263,6 @@ final class NotifPopoverChromeTests: XCTestCase {
             AgrypnosCopy.notifDiscordInvalid,
             "That is not a Discord webhook URL. Nothing was saved."
         )
-        XCTAssertEqual(AgrypnosCopy.notifSetup, "Setup")
         let blob = [
             AgrypnosCopy.notifEnabled,
             AgrypnosCopy.notifEnabledHelp,
@@ -296,7 +283,7 @@ final class NotifPopoverChromeTests: XCTestCase {
             AgrypnosCopy.notifDiscordInbound,
             AgrypnosCopy.notifDiscordInboundHelp,
             AgrypnosCopy.notifSetup,
-            AgrypnosCopy.notifSetupHelp,
+            BotGuide.allText,
             AgrypnosCopy.notifClear,
             AgrypnosCopy.revealAccess(label: AgrypnosCopy.notifDiscord, revealed: false),
             AgrypnosCopy.revealAccess(label: AgrypnosCopy.notifTelegramToken, revealed: true),
@@ -369,17 +356,7 @@ final class NotifPopoverChromeTests: XCTestCase {
         )
         XCTAssertEqual(layout.needsScroll, layout.contentHeight > layout.popoverHeight)
         XCTAssertLessThanOrEqual(layout.popoverHeight, PopoverStackLayout.maxVisibleHeight)
-        XCTAssertGreaterThan(
-            layout.notifSetup!.height,
-            PopoverStackLayout.titleRowHeight + PopoverCopyLayout.helpHeightPoints
-        )
-        XCTAssertEqual(
-            layout.notifSetup!.height,
-            PopoverStackLayout.inset
-                + PopoverStackLayout.titleRowHeight
-                + PopoverCopyLayout.notifSetupHelpHeightPoints
-                + PopoverStackLayout.inset
-        )
+        XCTAssertEqual(layout.notifSetup!.height, PopoverStackLayout.loginCardHeight)
         XCTAssertEqual(
             layout.notifEnable!.height,
             PopoverStackLayout.inset

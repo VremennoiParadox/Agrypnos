@@ -467,7 +467,7 @@ final class NotifCopyTests: XCTestCase {
             AgrypnosCopy.notifDiscordInbound,
             AgrypnosCopy.notifDiscordInboundHelp,
             AgrypnosCopy.notifSetup,
-            AgrypnosCopy.notifSetupHelp,
+            BotGuide.allText,
             AgrypnosCopy.notifClear,
             AgrypnosCopy.notifSaveFailed,
             AgrypnosCopy.notifDiscordPostFailed,

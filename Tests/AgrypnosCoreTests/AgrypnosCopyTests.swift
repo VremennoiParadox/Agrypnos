@@ -451,7 +451,7 @@ final class AgrypnosCopyTests: XCTestCase {
             AgrypnosCopy.notifDiscordInboundChannelInvalid,
             AgrypnosCopy.notifDiscordInvalid,
             AgrypnosCopy.notifSetup,
-            AgrypnosCopy.notifSetupHelp,
+            BotGuide.allText,
             AgrypnosCopy.notifClear,
             AgrypnosCopy.notifSaveFailed,
             AgrypnosCopy.notifDiscordPostFailed,

@@ -19,18 +19,16 @@ public enum PopoverCopyLayout: Sendable {
     public static let settleHelpHeightPoints = settleHelpMaxLines * lineHeightPoints
     public static let countTerminalSessionsHelpHeightPoints =
         countTerminalSessionsHelpMaxLines * lineHeightPoints
-    /// `AgrypnosCopy.notifSetupHelp` wraps at `innerColumns`. Enable 4, Telegram 3, inbound 15, Discord inbound 16.
+    /// Notif help wraps at `innerColumns`. Enable 4, Telegram 3, inbound 3, Discord inbound 4.
     public static let notifEnableHelpMaxLines = 4
     public static let notifTelegramHelpMaxLines = 3
-    public static let notifTelegramInboundHelpMaxLines = 15
-    public static let notifDiscordInboundHelpMaxLines = 16
-    public static let notifSetupHelpMaxLines = 24
+    public static let notifTelegramInboundHelpMaxLines = 3
+    public static let notifDiscordInboundHelpMaxLines = 4
     public static let notifDiscordStatusMaxLines = 2
     public static let notifEnableHelpHeightPoints = notifEnableHelpMaxLines * lineHeightPoints
     public static let notifTelegramHelpHeightPoints = notifTelegramHelpMaxLines * lineHeightPoints
     public static let notifTelegramInboundHelpHeightPoints = notifTelegramInboundHelpMaxLines * lineHeightPoints
     public static let notifDiscordInboundHelpHeightPoints = notifDiscordInboundHelpMaxLines * lineHeightPoints
-    public static let notifSetupHelpHeightPoints = notifSetupHelpMaxLines * lineHeightPoints
     public static let notifDiscordStatusHeightPoints = notifDiscordStatusMaxLines * lineHeightPoints
     public static let hotkeyHintHeightPoints = hotkeyHintMaxLines * lineHeightPoints
     /// Dim panel caption. Sleep panel help is taller; layout adds it only for B.
