@@ -85,7 +85,7 @@ extension WatchRuntime {
                     recaptureOpenLidHygiene()
                 }
                 startLidPulse()
-                UserNotify.post(AgrypnosCopy.leftoverNotify)
+                UserNotify.post(AgrypnosCopy.leftoverNotify(for: engine.preferences.panelPowerMode))
             }
         }
     }

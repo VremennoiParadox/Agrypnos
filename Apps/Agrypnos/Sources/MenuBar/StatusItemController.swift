@@ -48,7 +48,7 @@ final class StatusItemController: NSObject {
     }
 
     func refresh() {
-        let on = runtime.statusItemState != .off
+        let on = runtime.engaged
         let battery = runtime.lastBatteryReading
         var glyph = offGlyph
         var tooltip = AgrypnosCopy.menuTooltipOff
@@ -58,7 +58,8 @@ final class StatusItemController: NSObject {
                 engaged: true,
                 leftover: runtime.adoptedLeftover,
                 onBattery: battery?.onBatteryDischarging ?? false,
-                lidClosed: runtime.engine.lidClosed
+                lidClosed: runtime.engine.lidClosed,
+                panelPowerMode: runtime.preferences.panelPowerMode
             )
             if runtime.preferences.duration == .untilAgentsSettle,
                runtime.engine.settle.sawBusy,

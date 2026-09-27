@@ -34,12 +34,12 @@ public struct UserPreferences: Equatable, Sendable, Codable {
     public var telegramInboundEnabled: Bool
     /// Discord inbound commands on the user's bot. Default off. Separate from outbound POST and Telegram inbound.
     public var discordInboundEnabled: Bool
-    /// Count walked `/terminals/` session files as Agents-busy. Default off. Not `/subagents`.
-    public var countTerminalSessionsAsBusy: Bool
     /// Last time the watch ended, with why. Nil until a watch has ended on this Mac.
     public var lastWatchEnd: LastWatchEnd?
     /// Tools whose local busy signals count. Never empty. Default all current providers.
     public var includedAgentKinds: Set<AgentKind>
+    /// Terminal session files count as busy only when on. Default off.
+    public var countTerminalSessionsAsBusy: Bool
 
     /// 0...1 unit the Mac brightness adapter writes. Derived from floor %.
     public var brightnessFloor: Double {
@@ -61,9 +61,9 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         notifEnabled: Bool = false,
         telegramInboundEnabled: Bool = false,
         discordInboundEnabled: Bool = false,
-        countTerminalSessionsAsBusy: Bool = false,
         lastWatchEnd: LastWatchEnd? = nil,
-        includedAgentKinds: Set<AgentKind> = AgentIncludeChrome.defaultIncluded
+        includedAgentKinds: Set<AgentKind> = AgentIncludeChrome.defaultIncluded,
+        countTerminalSessionsAsBusy: Bool = false
     ) {
         self.batteryFloorPercent = Self.clampBatteryFloor(batteryFloorPercent)
         self.duration = duration
@@ -79,9 +79,9 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         self.notifEnabled = notifEnabled
         self.telegramInboundEnabled = telegramInboundEnabled
         self.discordInboundEnabled = discordInboundEnabled
-        self.countTerminalSessionsAsBusy = countTerminalSessionsAsBusy
         self.lastWatchEnd = lastWatchEnd
         self.includedAgentKinds = Self.clampIncludedAgentKinds(includedAgentKinds)
+        self.countTerminalSessionsAsBusy = countTerminalSessionsAsBusy
     }
 
     public static let `default` = UserPreferences()
@@ -163,9 +163,9 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         case notifEnabled
         case telegramInboundEnabled
         case discordInboundEnabled
-        case countTerminalSessionsAsBusy
         case lastWatchEnd
         case includedAgentKinds
+        case countTerminalSessionsAsBusy
     }
 
     public init(from decoder: Decoder) throws {
@@ -193,9 +193,9 @@ public struct UserPreferences: Equatable, Sendable, Codable {
             notifEnabled: try container.decodeIfPresent(Bool.self, forKey: .notifEnabled) ?? false,
             telegramInboundEnabled: try container.decodeIfPresent(Bool.self, forKey: .telegramInboundEnabled) ?? false,
             discordInboundEnabled: try container.decodeIfPresent(Bool.self, forKey: .discordInboundEnabled) ?? false,
-            countTerminalSessionsAsBusy: try container.decodeIfPresent(Bool.self, forKey: .countTerminalSessionsAsBusy) ?? false,
             lastWatchEnd: try container.decodeIfPresent(LastWatchEnd.self, forKey: .lastWatchEnd),
-            includedAgentKinds: try AgentIncludeFlags.decode(from: container)
+            includedAgentKinds: try AgentIncludeFlags.decode(from: container),
+            countTerminalSessionsAsBusy: try container.decodeIfPresent(Bool.self, forKey: .countTerminalSessionsAsBusy) ?? false
         )
     }
 
@@ -216,9 +216,9 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         try container.encode(notifEnabled, forKey: .notifEnabled)
         try container.encode(telegramInboundEnabled, forKey: .telegramInboundEnabled)
         try container.encode(discordInboundEnabled, forKey: .discordInboundEnabled)
-        try container.encode(countTerminalSessionsAsBusy, forKey: .countTerminalSessionsAsBusy)
         try container.encodeIfPresent(lastWatchEnd, forKey: .lastWatchEnd)
         try container.encode(AgentIncludeFlags(includedAgentKinds), forKey: .includedAgentKinds)
+        try container.encode(countTerminalSessionsAsBusy, forKey: .countTerminalSessionsAsBusy)
     }
 }
 

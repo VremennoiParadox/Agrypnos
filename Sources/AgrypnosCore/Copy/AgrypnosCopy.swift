@@ -19,6 +19,9 @@ public enum AgrypnosCopy: Sendable {
     public static let agentInclude = "Which tools count as busy."
     public static let agentIncludeHelp =
         "Only selected tools count as busy. Keep at least one on."
+    public static let countTerminalSessions = "Count terminal sessions as busy"
+    public static let countTerminalSessionsHelp =
+        "Terminal session files can keep the watch on if this is on. Default off so a noisy terminal doesn’t hold wake."
     public static let lidOpenRamp = "Brightness return when lid opens"
     public static let lidOpenRampHelp =
         "How long brightness takes to come back when the lid opens."
@@ -57,12 +60,22 @@ public enum AgrypnosCopy: Sendable {
     public static let agentsEnded = "Agents idle. Watch turned off."
     public static let lpmEnded = "Low Power Mode. Watch turned off."
 
-    public static func captionPrepared(floor: Int) -> String {
-        "Armed. Waiting for lid close — then brightness floor, keyboard backlight off. Auto-off at \(floor)% battery."
+    public static func captionPrepared(floor: Int, panelPowerMode: PanelPowerMode = .default) -> String {
+        switch panelPowerMode {
+        case .floor:
+            return "Armed. Waiting for lid close — then brightness floor, keyboard backlight off. Auto-off at \(floor)% battery."
+        case .displaySleep:
+            return "Armed. Waiting for lid close — then the panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake."
+        }
     }
 
-    public static func captionLidClosed(floor: Int) -> String {
-        "Lid closed. Brightness floor + keyboard backlight off. Auto-off at \(floor)% battery."
+    public static func captionLidClosed(floor: Int, panelPowerMode: PanelPowerMode = .default) -> String {
+        switch panelPowerMode {
+        case .floor:
+            return "Lid closed. Brightness floor + keyboard backlight off. Auto-off at \(floor)% battery."
+        case .displaySleep:
+            return "Lid closed. Panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake. Auto-off at \(floor)% battery."
+        }
     }
 
     public static func hotkeyHint(_ chord: HotkeyChord, registered: Bool = true) -> String {
@@ -141,6 +154,16 @@ public enum AgrypnosCopy: Sendable {
 
     public static let leftoverNotify =
         "SleepDisabled was already on. Agrypnos adopted it. Lid close still uses brightness floor + keyboard backlight off."
+    public static let leftoverNotifySleepPanel =
+        "SleepDisabled was already on. Agrypnos adopted it. Lid close still sleeps the panel + keyboard backlight off. Keep the watch still holds the Mac awake."
+
+    public static func leftoverNotify(for panelPowerMode: PanelPowerMode) -> String {
+        switch panelPowerMode {
+        case .floor: return leftoverNotify
+        case .displaySleep: return leftoverNotifySleepPanel
+        }
+    }
+
     public static let notifEnabled = "Idle-after-wait POST"
     public static let notifEnabledHelp =
         "POST to your Discord webhook and/or message your Telegram bot after Agents stay idle through the wait. Off by default."
@@ -203,6 +226,16 @@ public enum AgrypnosCopy: Sendable {
         "Agrypnos: adopted leftover SleepDisabled. Waiting for lid close — then brightness floor + keyboard backlight off."
     public static let menuTooltipLeftoverLidClosed =
         "Agrypnos: adopted leftover SleepDisabled. Lid closed. Brightness floor + keyboard backlight off."
+    public static let menuTooltipOnSleepPanel =
+        "Agrypnos: armed. Waiting for lid close — then the panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake."
+    public static let menuTooltipArmedSleepPanel =
+        "Agrypnos: armed. Waiting for lid close — then the panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake. On battery."
+    public static let menuTooltipLidClosedSleepPanel =
+        "Agrypnos: lid closed. Panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake."
+    public static let menuTooltipLeftoverSleepPanel =
+        "Agrypnos: adopted leftover SleepDisabled. Waiting for lid close — then the panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake."
+    public static let menuTooltipLeftoverLidClosedSleepPanel =
+        "Agrypnos: adopted leftover SleepDisabled. Lid closed. Panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake."
 
     public static func statusItemTitle(_ state: StatusItemState) -> String {
         switch state {
@@ -212,36 +245,59 @@ public enum AgrypnosCopy: Sendable {
         }
     }
 
-    public static func leftoverCaption(floor: Int, lidClosed: Bool = false) -> String {
-        if lidClosed {
-            return "Leftover SleepDisabled. Lid closed. Brightness floor, keyboard backlight off. Auto-off at \(floor)% battery."
+    public static func leftoverCaption(
+        floor: Int,
+        lidClosed: Bool = false,
+        panelPowerMode: PanelPowerMode = .default
+    ) -> String {
+        switch panelPowerMode {
+        case .floor:
+            if lidClosed {
+                return "Leftover SleepDisabled. Lid closed. Brightness floor, keyboard backlight off. Auto-off at \(floor)% battery."
+            }
+            return "Leftover SleepDisabled. Lid close — then brightness floor, keyboard backlight off. Auto-off at \(floor)% battery."
+        case .displaySleep:
+            if lidClosed {
+                return "Leftover SleepDisabled. Lid closed. Panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake. Auto-off at \(floor)% battery."
+            }
+            return "Leftover SleepDisabled. Lid close — then the panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake."
         }
-        return "Leftover SleepDisabled. Lid close — then brightness floor, keyboard backlight off. Auto-off at \(floor)% battery."
     }
 
     public static func watchCaption(
         engaged: Bool,
         leftover: Bool,
         floor: Int,
-        lidClosed: Bool
+        lidClosed: Bool,
+        panelPowerMode: PanelPowerMode = .default
     ) -> String {
         if !engaged { return captionOff }
-        if leftover { return leftoverCaption(floor: floor, lidClosed: lidClosed) }
-        if lidClosed { return captionLidClosed(floor: floor) }
-        return captionPrepared(floor: floor)
+        if leftover { return leftoverCaption(floor: floor, lidClosed: lidClosed, panelPowerMode: panelPowerMode) }
+        if lidClosed { return captionLidClosed(floor: floor, panelPowerMode: panelPowerMode) }
+        return captionPrepared(floor: floor, panelPowerMode: panelPowerMode)
     }
 
     public static func menuTooltip(
         engaged: Bool,
         leftover: Bool,
         onBattery: Bool,
-        lidClosed: Bool
+        lidClosed: Bool,
+        panelPowerMode: PanelPowerMode = .default
     ) -> String {
         if !engaged { return menuTooltipOff }
-        if leftover {
-            return lidClosed ? menuTooltipLeftoverLidClosed : menuTooltipLeftover
+        switch panelPowerMode {
+        case .floor:
+            if leftover {
+                return lidClosed ? menuTooltipLeftoverLidClosed : menuTooltipLeftover
+            }
+            if lidClosed { return menuTooltipLidClosed }
+            return onBattery ? menuTooltipArmed : menuTooltipOn
+        case .displaySleep:
+            if leftover {
+                return lidClosed ? menuTooltipLeftoverLidClosedSleepPanel : menuTooltipLeftoverSleepPanel
+            }
+            if lidClosed { return menuTooltipLidClosedSleepPanel }
+            return onBattery ? menuTooltipArmedSleepPanel : menuTooltipOnSleepPanel
         }
-        if lidClosed { return menuTooltipLidClosed }
-        return onBattery ? menuTooltipArmed : menuTooltipOn
     }
 }

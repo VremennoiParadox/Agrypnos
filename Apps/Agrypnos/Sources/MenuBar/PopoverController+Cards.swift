@@ -361,4 +361,35 @@ extension PopoverController {
         thermalSwitch.setAccessibilityLabel(AgrypnosCopy.thermalAutoOff)
         thermalSwitch.setAccessibilityHelp(AgrypnosCopy.thermalAutoOffHelp)
     }
+
+    func addTerminalBusyCard(
+        _ card: CardView,
+        contentW: CGFloat,
+        ci: CGFloat,
+        cw: CGFloat,
+        swW: CGFloat,
+        swH: CGFloat
+    ) {
+        addPrefTitle(AgrypnosCopy.countTerminalSessions, in: card, ci: ci, width: cw)
+        _ = PopoverForm.help(
+            AgrypnosCopy.countTerminalSessionsHelp,
+            in: card,
+            y: CGFloat(PopoverStackLayout.prefHelpY),
+            x: ci,
+            width: cw,
+            lines: PopoverCopyLayout.countTerminalSessionsHelpMaxLines
+        )
+        terminalBusySwitch = PopoverForm.switchControl(
+            in: card,
+            y: CGFloat(PopoverStackLayout.terminalBusyControlY),
+            contentW: contentW,
+            ci: ci,
+            swW: swW,
+            swH: swH,
+            target: self,
+            action: #selector(terminalBusyToggled(_:))
+        )
+        terminalBusySwitch.setAccessibilityLabel(AgrypnosCopy.countTerminalSessions)
+        terminalBusySwitch.setAccessibilityHelp(AgrypnosCopy.countTerminalSessionsHelp)
+    }
 }
