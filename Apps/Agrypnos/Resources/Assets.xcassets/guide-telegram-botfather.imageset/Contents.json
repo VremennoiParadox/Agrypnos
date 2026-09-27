@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "guide-telegram-botfather.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

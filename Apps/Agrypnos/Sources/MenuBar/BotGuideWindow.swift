@@ -142,11 +142,12 @@ final class BotGuideWindow: NSObject {
         view.wantsLayer = true
         view.layer?.cornerRadius = 8
         view.layer?.masksToBounds = true
+        let width = min(Self.textWidth, image.size.width)
         let aspect = image.size.width > 0 ? image.size.height / image.size.width : 0
         view.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            view.widthAnchor.constraint(equalToConstant: Self.textWidth),
-            view.heightAnchor.constraint(equalToConstant: Self.textWidth * aspect),
+            view.widthAnchor.constraint(equalToConstant: width),
+            view.heightAnchor.constraint(equalToConstant: width * aspect),
         ])
         return view
     }
