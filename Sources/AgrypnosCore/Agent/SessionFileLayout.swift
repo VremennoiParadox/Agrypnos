@@ -1,7 +1,11 @@
 import Foundation
 
 public enum SessionFileLayout: Sendable {
-    public static func roots(home: URL, env: [String: String] = [:]) -> [AgentKind: [URL]] {
+    public static func roots(
+        home: URL,
+        env: [String: String] = [:],
+        included: Set<AgentKind> = Set(AgentKind.allCases)
+    ) -> [AgentKind: [URL]] {
         let claudeHome = path(env["CLAUDE_CONFIG_DIR"]) ?? home.appendingPathComponent(".claude")
         let codexHome = path(env["CODEX_HOME"]) ?? home.appendingPathComponent(".codex")
         let dataHome = path(env["XDG_DATA_HOME"]) ?? home.appendingPathComponent(".local/share")
@@ -21,7 +25,7 @@ public enum SessionFileLayout: Sendable {
             ])
         }
 
-        return [
+        let all: [AgentKind: [URL]] = [
             .claudeCode: [claudeHome.appendingPathComponent("projects")],
             .codex: [codexHome.appendingPathComponent("sessions")],
             .cursor: cursorRoots,
@@ -31,6 +35,7 @@ public enum SessionFileLayout: Sendable {
                 openCodeHome,
             ],
         ]
+        return all.filter { included.contains($0.key) }
     }
 
     public static func classify(_ url: URL) -> AgentKind? {
@@ -82,6 +87,17 @@ public enum SessionFileLayout: Sendable {
         url.path.contains("/subagents/")
     }
 
+    /// Any walked agent tree, not Cursor-only. Nested `/subagents` is not this.
+    /// Parent directory is `terminals` — a project named `terminals` is not this.
+    public static func isTerminalSessionPath(_ url: URL) -> Bool {
+        url.deletingLastPathComponent().lastPathComponent == "terminals"
+    }
+
+    public static func countsTowardBusy(_ url: URL, countTerminalSessions: Bool) -> Bool {
+        if isTerminalSessionPath(url) { return countTerminalSessions }
+        return true
+    }
+
     public static let cursorSubtreeNames = ["agent-transcripts", "terminals"]
 
     public static func shouldSkipDirectory(_ name: String) -> Bool {
@@ -91,9 +107,14 @@ public enum SessionFileLayout: Sendable {
         return false
     }
 
-    public static func cursorWalkRoots(projectsRoot: URL, projectNames: [String]) -> [URL] {
-        projectNames.flatMap { name in
-            cursorSubtreeNames.map { projectsRoot.appendingPathComponent(name).appendingPathComponent($0) }
+    public static func cursorWalkRoots(
+        projectsRoot: URL,
+        projectNames: [String],
+        includeTerminals: Bool = false
+    ) -> [URL] {
+        let subtrees = includeTerminals ? cursorSubtreeNames : ["agent-transcripts"]
+        return projectNames.flatMap { name in
+            subtrees.map { projectsRoot.appendingPathComponent(name).appendingPathComponent($0) }
         }
     }
 

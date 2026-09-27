@@ -12,9 +12,23 @@ public struct WatchEngine: Equatable, Sendable {
     public private(set) var lidHygieneApplied: Bool
     /// Live confirm from `LidCloseConfirm`. Do not use leftover `lidClosed` after disengage.
     public var lidCloseConfirmed: Bool { lidConfirm.confirmedClosed }
+    /// User-off / inbound sleepnow lid. Hold still uses the lid captured at disengage,
+    /// but only if the clamshell is still raw-closed — lid-open must not sleepnow.
+    public func userOffLidCloseConfirmed(rawClosed: Bool) -> Bool {
+        if holdingForIdlePost {
+            return lastDisengageLidClosed && rawClosed
+        }
+        return lidCloseConfirmed
+    }
+    /// Raw closed, not yet stable. 4 Hz pulse only while this is true.
+    public var lidClosePending: Bool { lidConfirm.isPendingClose }
     /// One idle-after-wait POST per genuine user arm. Survives disarm-failure rollback.
     public private(set) var postedThisUserArm: Bool
+    /// Kernel still held after idle-after-wait disengage. Do not paint ended.
+    public private(set) var holdingForIdlePost: Bool
+    public private(set) var lastDisengageLidClosed: Bool
     var lastWatchEndRollback: LastWatchEnd?
+    var pendingLastWatchEnd: LastWatchEnd?
     private var lidConfirm: LidCloseConfirm
 
     public init(preferences: UserPreferences = .default) {
@@ -28,7 +42,10 @@ public struct WatchEngine: Equatable, Sendable {
         self.lidClosed = false
         self.lidHygieneApplied = false
         self.postedThisUserArm = false
+        self.holdingForIdlePost = false
         self.lastWatchEndRollback = nil
+        self.lastDisengageLidClosed = false
+        self.pendingLastWatchEnd = nil
         self.lidConfirm = LidCloseConfirm()
     }
 
@@ -42,14 +59,28 @@ public struct WatchEngine: Equatable, Sendable {
     }
 
     /// Kernel disarm failed after logical disengage. Same user arm — keep the POST latch.
+    /// Do not sample `engine.lidClosed` after disengage zeroed it — use the stored lid.
     public mutating func rollbackDisarmFailure(now: Date, lidClosed: Bool = false) -> [WatchCommand] {
+        _ = lidClosed
+        holdingForIdlePost = false
+        pendingLastWatchEnd = nil
         let restored = lastWatchEndRollback
         lastWatchEndRollback = nil
         leftoverAdopted = false
-        self.lidClosed = lidClosed
+        self.lidClosed = lastDisengageLidClosed
         let commands = engage(now: now, forcedByUser: true, resetPostedThisUserArm: false)
         preferences.lastWatchEnd = restored
         return commands
+    }
+
+    /// Kernel clear succeeded after idle-after-wait POST. Last-end honesty may show now.
+    public mutating func completeIdlePostHold() {
+        guard holdingForIdlePost else { return }
+        holdingForIdlePost = false
+        if let pending = pendingLastWatchEnd {
+            preferences.lastWatchEnd = pending
+        }
+        pendingLastWatchEnd = nil
     }
 
     /// Kernel `SleepDisabled` was already on and could not be cleared. Adopt visibly.
@@ -92,6 +123,23 @@ public struct WatchEngine: Equatable, Sendable {
         preferences.discordInboundEnabled = on
     }
 
+    public mutating func userSetCountTerminalSessionsAsBusy(_ on: Bool) {
+        preferences.countTerminalSessionsAsBusy = on
+    }
+
+    public mutating func userSetPanelPowerMode(_ mode: PanelPowerMode) -> [WatchCommand] {
+        let from = preferences.panelPowerMode
+        preferences.panelPowerMode = mode
+        guard from != mode else { return [] }
+        guard engaged, lidCloseConfirmed else { return [] }
+        var commands: [WatchCommand] = []
+        if from == .displaySleep, mode == .floor {
+            commands.append(.wakeDisplay)
+        }
+        commands.append(contentsOf: lidCloseHygieneCommands())
+        return commands
+    }
+
     /// Shared Telegram + Discord arm/disarm/status/help. One stack — no second disarm path.
     /// Arm always `lidClosed: false` — one raw clamshell sample is not hygiene.
     /// Disarm sleeps only when lid-close is already confirmed.
@@ -109,14 +157,15 @@ public struct WatchEngine: Equatable, Sendable {
                 return []
             }
         case .disarm:
-            var commands: [WatchCommand] = []
             if intent.shouldSetEngaged(currentlyEngaged: engaged) == false {
-                commands.append(contentsOf: userSetEngaged(false, now: now, lidClosed: lidCloseConfirmed))
+                // userSetEngaged(.user) uses the same lid-gated sleepnow as inbound.
+                return userSetEngaged(false, now: now, lidClosed: lidCloseConfirmed)
             }
+            // Already off: still clear hold + sleepnow when lid-close is confirmed.
             if TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: lidCloseConfirmed) {
-                commands.append(.requestSleep)
+                return [.requestSleep]
             }
-            return commands
+            return []
         case .status, .help, .ignore:
             return []
         }
@@ -134,7 +183,8 @@ public struct WatchEngine: Equatable, Sendable {
         now: Date,
         safety: SafetyInputs,
         agents: AgentSnapshot,
-        kernelSleepDisabled: Bool = true
+        kernelSleepDisabled: Bool = true,
+        observeAgents: Bool = true
     ) -> [WatchCommand] {
         guard engaged else { return [] }
         if let reason = AutoOffEvaluator.reason(
@@ -148,7 +198,7 @@ public struct WatchEngine: Equatable, Sendable {
         ), reason.turnsWatchOff {
             return disengage(reason, at: now)
         }
-        if mode == .untilAgentsSettle {
+        if observeAgents, mode == .untilAgentsSettle {
             let activity = settle.observe(
                 busy: agents.anyBusy(included: preferences.includedAgentKinds),
                 now: now
@@ -205,6 +255,8 @@ public struct WatchEngine: Equatable, Sendable {
     ) -> [WatchCommand] {
         engaged = true
         userForcedThisSession = forcedByUser
+        holdingForIdlePost = false
+        pendingLastWatchEnd = nil
         if resetPostedThisUserArm {
             postedThisUserArm = false
         }
@@ -246,17 +298,23 @@ public struct WatchEngine: Equatable, Sendable {
             reason: reason,
             sawBusy: settle.sawBusy
         )
+        let wasHygieneApplied = lidHygieneApplied
+        let wasLidClosed = lidClosed
+        lastDisengageLidClosed = wasLidClosed
         if wasEngaged {
             lastWatchEndRollback = preferences.lastWatchEnd
-            preferences.lastWatchEnd = LastWatchEnd(endedAt: now, reason: reason)
+            let end = LastWatchEnd(endedAt: now, reason: reason)
+            if postIdleAfterWait {
+                pendingLastWatchEnd = end
+            } else {
+                preferences.lastWatchEnd = end
+            }
         }
         engaged = false
         mode = .idle
         timerEnd = nil
         userForcedThisSession = false
         leftoverAdopted = false
-        let wasHygieneApplied = lidHygieneApplied
-        let wasLidClosed = lidClosed
         lidHygieneApplied = false
         lidConfirm.reset()
         lidClosed = false
@@ -264,7 +322,11 @@ public struct WatchEngine: Equatable, Sendable {
         var commands: [WatchCommand] = [.disengage(reason)]
         if postIdleAfterWait {
             postedThisUserArm = true
+            holdingForIdlePost = true
             commands.append(.postIdleAfterWaitNotif)
+        } else {
+            holdingForIdlePost = false
+            pendingLastWatchEnd = nil
         }
         if wasHygieneApplied,
            let wake = PanelPowerMode.disengageDisplayCommand(
@@ -274,8 +336,8 @@ public struct WatchEngine: Equatable, Sendable {
         {
             commands.append(wake)
         }
-        // Clearing SleepDisabled does not retrigger clamshell sleep.
-        if wasLidClosed, reason != .user {
+        // One sleep story: inbound `/disarm` and popover/hotkey user-off share this gate.
+        if TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: wasLidClosed) {
             commands.append(.requestSleep)
         }
         return commands

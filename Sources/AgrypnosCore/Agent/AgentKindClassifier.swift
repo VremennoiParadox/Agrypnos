@@ -26,9 +26,9 @@ public enum AgentKindClassifier: Sendable {
 
     public static func cpuCountsTowardBusy(processName: String) -> Bool {
         switch classify(processName: processName) {
-        case .claudeCode, .codex, .openCode:
+        case .claudeCode, .codex:
             return true
-        case .cursor, .none:
+        case .cursor, .openCode, .none:
             return false
         }
     }

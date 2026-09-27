@@ -251,13 +251,14 @@ final class TelegramInboundDisarmLidTests: XCTestCase {
         XCTAssertFalse(commands.contains(.disengage(.user)))
     }
 
-    func testPopoverStyleUserDisarmStillDoesNotSleep() {
+    func testPopoverStyleUserDisarmSleepsWhenLidConfirmed() {
         var engine = WatchEngine(preferences: .default)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: true)
         XCTAssertEqual(
             engine.userSetEngaged(false, now: t0.addingTimeInterval(1), lidClosed: true),
-            [.disengage(.user)]
+            [.disengage(.user), .requestSleep]
         )
+        XCTAssertTrue(TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: true))
     }
 
     func testAfterDisengageLidOpenDoesNotLeaveSleepGateTrue() {

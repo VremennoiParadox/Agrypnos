@@ -9,6 +9,9 @@ public struct LidCloseConfirm: Equatable, Sendable {
     public private(set) var confirmedClosed = false
     private var closedSince: Date?
 
+    /// Raw closed samples have started; not yet a stable confirm.
+    public var isPendingClose: Bool { closedSince != nil && !confirmedClosed }
+
     public enum Edge: Equatable, Sendable {
         case closed
         case opened
@@ -20,6 +23,12 @@ public struct LidCloseConfirm: Equatable, Sendable {
     /// Pending close (raw closed, not yet confirmed) must not overwrite the last open level.
     public static func shouldRecaptureOpenBrightness(rawClosed: Bool, confirmedClosed: Bool) -> Bool {
         !rawClosed && !confirmedClosed
+    }
+
+    /// Arm with the lid already raw-closed: capture once before floor / displaysleep.
+    /// Nil `current()` still skips the later restore write.
+    public static func shouldCaptureBeforeClosedHygiene(rawClosed: Bool) -> Bool {
+        rawClosed
     }
 
     public mutating func reset() {
@@ -49,5 +58,56 @@ public struct LidCloseConfirm: Equatable, Sendable {
             return .opened
         }
         return nil
+    }
+}
+
+/// 4 Hz only while a close is pending confirm. Open or already confirmed uses the 5s tick.
+public enum LidSampleCadence: Equatable, Sendable {
+    case none
+    case confirmPulse
+    case coarse
+}
+
+public enum LidSamplePolicy: Sendable {
+    public static var confirmPulseInterval: TimeInterval { LidCloseConfirm.pulseInterval }
+
+    public static func cadence(
+        engaged: Bool,
+        lidCloseConfirmed: Bool,
+        inboundNeedsLid: Bool = false,
+        pendingClose: Bool = false
+    ) -> LidSampleCadence {
+        guard engaged || inboundNeedsLid else { return .none }
+        if lidCloseConfirmed { return .coarse }
+        if pendingClose { return .confirmPulse }
+        return .coarse
+    }
+
+    public static func runsConfirmPulse(
+        engaged: Bool,
+        lidCloseConfirmed: Bool,
+        inboundNeedsLid: Bool = false,
+        pendingClose: Bool = false
+    ) -> Bool {
+        cadence(
+            engaged: engaged,
+            lidCloseConfirmed: lidCloseConfirmed,
+            inboundNeedsLid: inboundNeedsLid,
+            pendingClose: pendingClose
+        ) == .confirmPulse
+    }
+
+    public static func samplesOnTick(
+        engaged: Bool,
+        lidCloseConfirmed: Bool,
+        inboundNeedsLid: Bool = false,
+        pendingClose: Bool = false
+    ) -> Bool {
+        cadence(
+            engaged: engaged,
+            lidCloseConfirmed: lidCloseConfirmed,
+            inboundNeedsLid: inboundNeedsLid,
+            pendingClose: pendingClose
+        ) != .none
     }
 }

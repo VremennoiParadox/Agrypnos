@@ -39,12 +39,13 @@ extension WatchRuntime {
 
     func handleDiscordGatewayFrame(
         _ frame: DiscordGatewayFrame,
-        generation: UInt64
+        generation: UInt64,
+        socketToken: String?
     ) -> [DiscordGatewayEffect] {
         guard discordGateway.accepts(generation: generation) else { return [] }
         let secrets = NotifSecretsStore.load()
         guard DiscordInboundPolicy.sameBot(
-            fetchedToken: secrets.discordBotToken,
+            fetchedToken: socketToken,
             currentToken: secrets.discordBotToken
         ) else { return [] }
         var session = DiscordGatewaySession(cursor: store.loadDiscordInboundCursor())
@@ -80,7 +81,12 @@ extension WatchRuntime {
         }
     }
 
-    func applyDiscordInbound(_ update: DiscordInboundUpdate) {
+    func applyDiscordInbound(
+        _ update: DiscordInboundUpdate,
+        generation: UInt64,
+        socketToken: String?
+    ) {
+        let capturedDrain = store.loadDiscordInboundCursor().drain
         if update.source == .slash,
            let interactionId = update.interactionId,
            let interactionToken = update.interactionToken,
@@ -91,16 +97,60 @@ extension WatchRuntime {
         {
             Task {
                 await TelegramInboundHTTP.send(deferRequest)
-                await MainActor.run { self.finishDiscordInbound(update, slashDeferred: true) }
+                await MainActor.run {
+                    if DiscordDeferredSlash.shouldApply(
+                        capturedDrain: capturedDrain,
+                        current: self.discordGateway.currentSlashEpoch,
+                        captured: generation
+                    ) {
+                        self.finishDiscordInbound(
+                            update,
+                            slashDeferred: true,
+                            socketToken: socketToken,
+                            capturedDrain: capturedDrain
+                        )
+                    } else if DiscordDeferredSlash.shouldReplyMissedWhileAsleep(
+                        capturedDrain: capturedDrain,
+                        current: self.discordGateway.currentSlashEpoch,
+                        captured: generation
+                    ) {
+                        self.sendDiscordInboundReply(
+                            DiscordInboundCopy.missedWhileAsleep,
+                            update: update,
+                            token: NotifSecretsStore.load().discordBotToken,
+                            slashDeferred: true
+                        )
+                    } else {
+                        self.finishDiscordInbound(
+                            update,
+                            slashDeferred: true,
+                            socketToken: socketToken,
+                            capturedDrain: capturedDrain
+                        )
+                    }
+                }
             }
             return
         }
-        finishDiscordInbound(update, slashDeferred: false)
+        finishDiscordInbound(
+            update,
+            slashDeferred: false,
+            socketToken: socketToken,
+            capturedDrain: capturedDrain
+        )
     }
 
-    func finishDiscordInbound(_ update: DiscordInboundUpdate, slashDeferred: Bool) {
-        let drain = store.loadDiscordInboundCursor().drain
+    func finishDiscordInbound(
+        _ update: DiscordInboundUpdate,
+        slashDeferred: Bool,
+        socketToken: String?,
+        capturedDrain: TelegramInboundDrain
+    ) {
         let secrets = NotifSecretsStore.load()
+        guard DiscordInboundPolicy.sameBot(
+            fetchedToken: socketToken,
+            currentToken: secrets.discordBotToken
+        ) else { return }
         let enabled = engine.preferences.discordInboundEnabled
         let intent = DiscordInboundPolicy.intent(
             enabled: enabled,
@@ -108,7 +158,7 @@ extension WatchRuntime {
             savedChannelId: secrets.discordChannelId,
             update: update
         )
-        let effect = TelegramInboundDispatch.effect(drain: drain, intent: intent)
+        let effect = TelegramInboundDispatch.effect(drain: capturedDrain, intent: intent)
         let reply: String?
         switch effect {
         case .ignore:
@@ -117,25 +167,16 @@ extension WatchRuntime {
             reply = DiscordInboundCopy.missedWhileAsleep
         case .apply(.help):
             reply = DiscordInboundCopy.help
-        case .apply(.status):
+            case .apply(.status):
             pollLid()
             let now = Date()
-            let agents = AgentProbeService.snapshot(
-                now: now,
-                freshness: engine.preferences.sessionFreshness
-            )
-            let battery = BatteryMonitor.reading()
-            let safety = SafetyInputs(
-                batteryPercent: battery.percent,
-                onBatteryDischarging: battery.onBatteryDischarging,
-                thermalSerious: ThermalMonitor.isSerious(),
-                lowPowerMode: ProcessInfo.processInfo.isLowPowerModeEnabled
-            )
+            let agentsBusy = cachedAgentsBusy(now: now)
+            let safety = liveStatusSafety()
             reply = DiscordInboundCopy.reply(
                 intent: .status,
                 status: engine.telegramWatchStatus(
                     now: now,
-                    agentsBusy: agents.anyBusy(included: engine.preferences.includedAgentKinds),
+                    agentsBusy: agentsBusy,
                     lowPowerMode: safety.lowPowerMode,
                     safety: safety
                 ),
@@ -159,27 +200,30 @@ extension WatchRuntime {
     }
 
     func applyDiscordArm() -> String {
-        if TelegramInboundIntent.arm.shouldSetEngaged(currentlyEngaged: engine.engaged) == true {
+        if TelegramInboundIntent.arm.shouldSetEngaged(currentlyEngaged: engaged) == true {
             setEngaged(true)
         }
-        return engine.engaged ? DiscordInboundCopy.armed : TelegramInboundCopy.armFailed
+        return engaged ? DiscordInboundCopy.armed : TelegramInboundCopy.armFailed
     }
 
     func applyDiscordDisarm() -> String {
         pollLid()
-        let confirmed = engine.lidCloseConfirmed
-        if engine.engaged {
-            setEngaged(false)
-            if engine.engaged {
+        let confirmed = engine.userOffLidCloseConfirmed(rawClosed: LidStateReader.isClosed())
+        let sleepResult: HygieneApplyResult
+        if engaged {
+            sleepResult = setEngaged(false)
+            if engaged {
                 return TelegramInboundCopy.disarmFailed
             }
         } else {
             _ = disarmKernel()
+            if TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: confirmed) {
+                sleepResult = apply([.requestSleep])
+            } else {
+                sleepResult = HygieneApplyResult()
+            }
         }
-        if TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: confirmed) {
-            apply([.requestSleep])
-        }
-        return DiscordInboundCopy.disarmed
+        return inboundDisarmReply(DiscordInboundCopy.disarmed, sleepResult: sleepResult)
     }
 
     func sendDiscordInboundReply(

@@ -14,8 +14,18 @@ public enum HygieneRestore: Sendable {
     }
 
     /// Restore only a captured display brightness. Nil means capture failed — never write the floor as a guess.
+    /// Exact capture — do not lift a dimmer captured level up to the floor.
     public static func displayBrightnessToRestore(captured: Double?, floor: Double) -> Double? {
-        guard let captured else { return nil }
-        return max(captured, floor)
+        _ = floor
+        return captured
+    }
+
+    /// Closed-lid sleepnow: do not turn the panel or keyboard back on first.
+    public static func shouldRestoreAfterDisengage(
+        lidCloseConfirmed: Bool,
+        nextCommandIsSleep: Bool
+    ) -> Bool {
+        if lidCloseConfirmed, nextCommandIsSleep { return false }
+        return true
     }
 }

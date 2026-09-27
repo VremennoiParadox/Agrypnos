@@ -286,10 +286,10 @@ final class PanelPowerWatchEngineTests: XCTestCase {
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: true)
         let commands = engine.userSetEngaged(false, now: t0.addingTimeInterval(1), lidClosed: true)
-        XCTAssertEqual(commands, [.disengage(.user)])
+        XCTAssertEqual(commands, [.disengage(.user), .requestSleep])
         XCTAssertFalse(commands.contains(.wakeDisplay))
         XCTAssertFalse(commands.contains(.applyBrightnessFloor))
-        XCTAssertFalse(commands.contains(.requestSleep))
+        XCTAssertTrue(TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: true))
     }
 
     func testPowerBOpenLidDisengageAfterHygieneWakesDisplayWithoutFloor() {

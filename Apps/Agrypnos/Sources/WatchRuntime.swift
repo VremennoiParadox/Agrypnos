@@ -13,16 +13,16 @@ protocol WatchRuntimeDelegate: AnyObject {
 @MainActor
 final class WatchRuntime {
     let store = PreferencesStore()
-    private(set) var engine: WatchEngine
-    private var pollTimer: Timer?
-    private var savedBrightness: Double?
-    private var savedKeyboard: Double?
-    private let brightnessRamp = BrightnessRampController()
-    private var lidTimer: Timer?
+    var engine: WatchEngine
+    var pollTimer: Timer?
+    var savedBrightness: Double?
+    var savedKeyboard: Double?
+    let brightnessRamp = BrightnessRampController()
+    var lidTimer: Timer?
     weak var delegate: WatchRuntimeDelegate?
 
     var preferences: UserPreferences { engine.preferences }
-    var engaged: Bool { engine.engaged }
+    var engaged: Bool { engine.engaged || engine.holdingForIdlePost }
     var statusItemState: StatusItemState { engine.statusItemState }
     var statusItemTitle: String { AgrypnosCopy.statusItemTitle(engine.statusItemState) }
     var hotkeyRegistered = false
@@ -30,14 +30,19 @@ final class WatchRuntime {
     var bindHotkey: ((HotkeyChord) -> Bool)?
     var unbindHotkey: (() -> Void)?
     private(set) var lastFailedHotkey: HotkeyChord?
-    private var hotkeySuspendedForRecord = false
-    /// Skip poll only when an idle-after-wait POST is in flight after a safety disarm.
-    private var idleOutbound = NotifIdleOutboundCoordinator()
-    private var idlePostTask: Task<Void, Never>?
+    var hotkeySuspendedForRecord = false
+    var idleOutbound = NotifIdleOutboundCoordinator()
+    var idlePostTask: Task<Void, Never>?
     let inboundPoller = TelegramInboundPoller()
     let discordGateway = DiscordInboundGatewayClient()
     var discordApplicationId: String?
-    private var workspaceObservers: [NSObjectProtocol] = []
+    var workspaceObservers: [NSObjectProtocol] = []
+    var lastBatteryReading: BatteryReading?
+    var lastSafety: SafetyInputs?
+    var agentSnapshotCache = AgentSnapshotCache()
+    var probeGeneration: UInt64 = 0
+    var probeInFlight = false
+    var idleProbeTicks: Int = 0
 
     init() {
         engine = WatchEngine(preferences: store.load())
@@ -92,8 +97,16 @@ final class WatchRuntime {
     }
 
     func setPanelPowerMode(_ mode: PanelPowerMode) {
-        engine.preferences.panelPowerMode = mode
+        let commands = engine.userSetPanelPowerMode(mode)
         store.save(engine.preferences)
+        apply(commands)
+        delegate?.watchRuntimeDidChange(self)
+    }
+
+    func setCountTerminalSessionsAsBusy(_ on: Bool) {
+        engine.userSetCountTerminalSessionsAsBusy(on)
+        store.save(engine.preferences)
+        invalidateAgentProbe()
         delegate?.watchRuntimeDidChange(self)
     }
 
@@ -106,12 +119,7 @@ final class WatchRuntime {
     func setIncludedAgentKinds(_ kinds: Set<AgentKind>) {
         guard engine.preferences.applyIncludedAgentKinds(kinds) else { return }
         store.save(engine.preferences)
-        delegate?.watchRuntimeDidChange(self)
-    }
-
-    func setCountTerminalSessionsAsBusy(_ on: Bool) {
-        engine.preferences.countTerminalSessionsAsBusy = on
-        store.save(engine.preferences)
+        invalidateAgentProbe()
         delegate?.watchRuntimeDidChange(self)
     }
 
@@ -236,17 +244,20 @@ final class WatchRuntime {
     }
 
     func toggle() {
-        setEngaged(!engine.engaged)
+        setEngaged(!engaged)
     }
 
-    func setEngaged(_ on: Bool) {
+    @discardableResult
+    func setEngaged(_ on: Bool) -> HygieneApplyResult {
         if on {
-            guard armKernel() else { return }
+            guard armKernel() else { return HygieneApplyResult() }
             idlePostTask?.cancel()
             idlePostTask = nil
             idleOutbound.noteUserArm()
-            // One raw clamshell read is not close — confirm on the lid pulse.
             let rawClosed = LidStateReader.isClosed()
+            if LidCloseConfirm.shouldCaptureBeforeClosedHygiene(rawClosed: rawClosed) {
+                recaptureOpenLidHygiene()
+            }
             apply(engine.userSetEngaged(true, now: Date(), lidClosed: false))
             apply(engine.observeLid(closed: rawClosed, now: Date()))
             if LidCloseConfirm.shouldRecaptureOpenBrightness(
@@ -256,108 +267,39 @@ final class WatchRuntime {
                 recaptureOpenLidHygiene()
             }
             startLidPulse()
-        } else {
-            guard disarmKernel() else {
-                UserNotify.post("Couldn't drop SleepDisabled. The kernel flag is still on.")
-                delegate?.watchRuntimeDidChange(self)
-                return
-            }
-            if !inboundNeedsLid() {
-                stopLidPulse()
-            }
-            apply(engine.userSetEngaged(false, now: Date(), lidClosed: engine.lidClosed))
-            restoreHygiene()
-            store.save(engine.preferences)
-            if inboundNeedsLid() {
-                startLidPulse()
-                pollLid()
-            }
-        }
-        delegate?.watchRuntimeDidChange(self)
-    }
-
-    func poll() {
-        if idleOutbound.shouldSkipPoll(engineEngaged: engine.engaged) { return }
-        reconcileKernel(preferClearLeftover: false)
-        pollLid()
-
-        let battery = BatteryMonitor.reading()
-        let safety = SafetyInputs(
-            batteryPercent: battery.percent,
-            onBatteryDischarging: battery.onBatteryDischarging,
-            thermalSerious: ThermalMonitor.isSerious(),
-            lowPowerMode: ProcessInfo.processInfo.isLowPowerModeEnabled
-        )
-        let kernel = SleepDisabledController.read()
-        let agents = AgentProbeService.snapshot(now: Date(), freshness: engine.preferences.sessionFreshness)
-        let commands = engine.tick(
-            now: Date(),
-            safety: safety,
-            agents: agents,
-            kernelSleepDisabled: kernel
-        )
-        if commands.contains(where: Self.isPostIdleAfterWait) {
-            apply(commands.filter { if case .assertSleepDisabled = $0 { return true }; return false })
-            let token = idleOutbound.beginPost()
-            let enabled = engine.preferences.notifEnabled
-            idlePostTask?.cancel()
-            idlePostTask = Task { @MainActor in
-                await NotifIdlePoster.postIfNeeded(enabled: enabled)
-                guard self.idleOutbound.completePost(token: token) else { return }
-                self.idlePostTask = nil
-                self.finishTickCommands(commands)
-                self.delegate?.watchRuntimeDidChange(self)
-            }
             delegate?.watchRuntimeDidChange(self)
-            return
+            return HygieneApplyResult()
         }
-        finishTickCommands(commands)
+        guard disarmKernel() else {
+            UserNotify.post("Couldn't drop SleepDisabled. The kernel flag is still on.")
+            delegate?.watchRuntimeDidChange(self)
+            return HygieneApplyResult()
+        }
+        let sleepResult = applyUserOff()
+        store.save(engine.preferences)
+        syncLidPulse()
         delegate?.watchRuntimeDidChange(self)
+        return sleepResult
     }
 
-    func finishTickCommands(_ commands: [WatchCommand]) {
-        var applyCommands = commands.filter { !Self.isPostIdleAfterWait($0) }
-        for command in commands {
-            if case .disengage(let reason) = command {
-                if !disarmKernel() {
-                    _ = engine.rollbackDisarmFailure(
-                        now: Date(),
-                        lidClosed: engine.lidClosed
-                    )
-                    UserNotify.post("Couldn't drop SleepDisabled. The watch stays up.")
-                    applyCommands = []
-                    break
-                }
-                restoreHygiene()
-                if reason != .user {
-                    UserNotify.post(reason: reason)
-                }
-            }
-        }
-        apply(applyCommands)
-        if commands.contains(where: { if case .disengage = $0 { return true }; return false }) {
-            store.save(engine.preferences)
-        }
-    }
-
-    static func isPostIdleAfterWait(_ command: WatchCommand) -> Bool {
-        if case .postIdleAfterWaitNotif = command { return true }
-        return false
-    }
-
-    func apply(_ commands: [WatchCommand]) {
+    @discardableResult
+    func apply(_ commands: [WatchCommand]) -> HygieneApplyResult {
         for command in commands {
             if case .assertSleepDisabled = command {
                 _ = armKernel()
             }
         }
-        PowerHygieneCoordinator.apply(
+        let result = PowerHygieneCoordinator.apply(
             commands,
             preferences: engine.preferences,
             savedBrightness: &savedBrightness,
             savedKeyboard: &savedKeyboard,
             ramp: brightnessRamp
         )
+        for line in result.notifications {
+            UserNotify.post(line)
+        }
+        return result
     }
 
     func restoreHygiene() {
@@ -370,30 +312,11 @@ final class WatchRuntime {
         )
     }
 
-    func pollLid() {
-        let rawClosed = LidStateReader.isClosed()
-        let trackLid = engine.engaged || inboundNeedsLid()
-        var lidChanged = false
-        if trackLid {
-            let commands = engine.observeLid(closed: rawClosed, now: Date())
-            if engine.engaged {
-                if !commands.isEmpty {
-                    apply(commands)
-                    lidChanged = true
-                } else if LidCloseConfirm.shouldRecaptureOpenBrightness(
-                    rawClosed: rawClosed,
-                    confirmedClosed: engine.lidClosed
-                ), !engine.lidHygieneApplied, !brightnessRamp.isRunning {
-                    recaptureOpenLidHygiene()
-                }
-            }
-            startLidPulse()
-        } else {
-            stopLidPulse()
-        }
-        if lidChanged {
-            delegate?.watchRuntimeDidChange(self)
-        }
+    func dropSavedHygieneWithoutWrite() {
+        stopLidPulse()
+        brightnessRamp.cancel()
+        savedBrightness = nil
+        savedKeyboard = nil
     }
 
     func recaptureOpenLidHygiene() {
@@ -405,119 +328,42 @@ final class WatchRuntime {
         }
     }
 
-    func startLidPulse() {
-        guard lidTimer == nil else { return }
-        guard engine.engaged || inboundNeedsLid() else { return }
-        lidTimer = Timer.scheduledTimer(withTimeInterval: LidCloseConfirm.pulseInterval, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.pollLid() }
+    func inboundDisarmReply(_ base: String, sleepResult: HygieneApplyResult? = nil) -> String {
+        let extra = (sleepResult?.notifications ?? []).joined(separator: "\n")
+        if extra.isEmpty { return base }
+        return base + "\n" + extra
+    }
+
+    /// `/status` reuses a fresh probe. Do not walk session trees on the main actor.
+    func cachedAgentsBusy(now: Date) -> Bool? {
+        let included = engine.preferences.includedAgentKinds
+        if let snap = agentSnapshotCache.reusable(
+            at: now,
+            included: included,
+            countTerminalSessionsAsBusy: engine.preferences.countTerminalSessionsAsBusy
+        ) {
+            return snap.anyBusy(included: included)
         }
+        return nil
     }
 
-    func stopLidPulse() {
-        lidTimer?.invalidate()
-        lidTimer = nil
-    }
-
-    @discardableResult
-    func armKernel() -> Bool {
-        var result = SleepDisabledController.set(true)
-        if result == .grantMissing {
-            if GrantInstaller.installViaNativeAuth() {
-                result = SleepDisabledController.set(true)
-            }
-        }
-        guard result == .ok, SleepDisabledController.read() else {
-            if case .failed(let message) = result {
-                UserNotify.post("Couldn't keep the watch. \(message)")
-            } else if result == .grantMissing {
-                UserNotify.post(AgrypnosCopy.grantNeeded)
-            } else {
-                UserNotify.post("pmset ran but SleepDisabled did not read back as on.")
-            }
-            return false
-        }
-        return true
-    }
-
-    @discardableResult
-    func disarmKernel() -> Bool {
-        _ = SleepDisabledController.set(false)
-        return !SleepDisabledController.read()
-    }
-
-    /// Quit must clear actual kernel-held SleepDisabled even if the engine already disengaged for POST.
-    func prepareForTermination() {
-        stopObservingMacSleepWake()
-        inboundPoller.stop()
-        discordGateway.stop()
-        let kernelHeld = SleepDisabledController.read()
-        let plan = idleOutbound.terminatePlan(
-            engineEngaged: engine.engaged,
-            kernelSleepDisabled: kernelHeld
+    /// Live battery for `/status`. Do not reprint a poll snapshot after the watch is off.
+    func liveStatusSafety() -> SafetyInputs {
+        let battery = BatteryMonitor.reading()
+        lastBatteryReading = battery
+        let safety = SafetyInputs(
+            batteryPercent: battery.percent,
+            onBatteryDischarging: battery.onBatteryDischarging,
+            thermalSerious: ThermalMonitor.isSerious(),
+            lowPowerMode: ProcessInfo.processInfo.isLowPowerModeEnabled
         )
-        idlePostTask?.cancel()
-        idlePostTask = nil
-        idleOutbound.cancelInFlight()
-        guard plan.cleanupRequired else { return }
-        if plan.clearKernel {
-            _ = disarmKernel()
-        }
-        if engine.engaged {
-            apply(engine.userSetEngaged(false, now: Date(), lidClosed: engine.lidClosed))
-            store.save(engine.preferences)
-        }
-        restoreHygiene()
+        lastSafety = safety
+        return safety
     }
 
-    func reconcileKernel(preferClearLeftover: Bool) {
-        let kernel = SleepDisabledController.read()
-        if kernel, !engine.engaged {
-            if preferClearLeftover {
-                _ = SleepDisabledController.set(false)
-            }
-            if SleepDisabledController.read() {
-                let rawClosed = LidStateReader.isClosed()
-                apply(engine.adoptLeftoverKernel(now: Date(), lidClosed: false))
-                apply(engine.observeLid(closed: rawClosed, now: Date()))
-                if LidCloseConfirm.shouldRecaptureOpenBrightness(
-                    rawClosed: rawClosed,
-                    confirmedClosed: engine.lidClosed
-                ) {
-                    recaptureOpenLidHygiene()
-                }
-                startLidPulse()
-                UserNotify.post(AgrypnosCopy.leftoverNotify(for: engine.preferences.panelPowerMode))
-            }
-        }
-    }
-
-    func observeMacSleepWake() {
-        let center = NSWorkspace.shared.notificationCenter
-        workspaceObservers.append(
-            center.addObserver(
-                forName: NSWorkspace.willSleepNotification,
-                object: nil,
-                queue: .main
-            ) { [weak self] _ in
-                Task { @MainActor in self?.noteMacWillSleep() }
-            }
-        )
-        workspaceObservers.append(
-            center.addObserver(
-                forName: NSWorkspace.didWakeNotification,
-                object: nil,
-                queue: .main
-            ) { [weak self] _ in
-                Task { @MainActor in self?.noteMacDidWake() }
-            }
-        )
-    }
-
-    func stopObservingMacSleepWake() {
-        let center = NSWorkspace.shared.notificationCenter
-        for observer in workspaceObservers {
-            center.removeObserver(observer)
-        }
-        workspaceObservers = []
+    func invalidateAgentProbe() {
+        agentSnapshotCache.invalidate()
+        probeGeneration &+= 1
+        probeInFlight = false
     }
 }

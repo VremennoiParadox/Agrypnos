@@ -68,6 +68,50 @@ public enum DiscordInboundPolicy: Sendable {
     }
 }
 
+/// Deferred slash ACK can finish after wake. Stale generation must not apply arm/disarm.
+public enum DiscordDeferredSlash: Sendable {
+    public static func shouldApply(current: UInt64, captured: UInt64) -> Bool {
+        TelegramInboundGeneration.allowsApply(current: current, captured: captured)
+    }
+
+    /// Drain captured when the frame was accepted. A later `.live` seed must not apply.
+    public static func shouldApply(
+        capturedDrain: TelegramInboundDrain,
+        current: UInt64,
+        captured: UInt64
+    ) -> Bool {
+        capturedDrain == .live && shouldApply(current: current, captured: captured)
+    }
+
+    /// Stale after wake: reply missed, do not arm/disarm.
+    public static func shouldReplyMissedWhileAsleep(current: UInt64, captured: UInt64) -> Bool {
+        !shouldApply(current: current, captured: captured)
+    }
+
+    public static func shouldReplyMissedWhileAsleep(
+        capturedDrain: TelegramInboundDrain,
+        current: UInt64,
+        captured: UInt64
+    ) -> Bool {
+        switch capturedDrain {
+        case .leftover:
+            return false
+        case .wakeMiss:
+            return true
+        case .live:
+            return !shouldApply(current: current, captured: captured)
+        }
+    }
+
+    public static func shouldApply(
+        intent _: TelegramInboundIntent,
+        current: UInt64,
+        captured: UInt64
+    ) -> Bool {
+        shouldApply(current: current, captured: captured)
+    }
+}
+
 /// Gateway resume cursor. Unseeded first receive acks without running commands.
 public struct DiscordInboundCursor: Equatable, Sendable {
     public var sessionId: String?

@@ -29,6 +29,7 @@ extension WatchRuntime {
         }
         if discordInboundIsReceiving() {
             store.saveDiscordInboundCursor(store.loadDiscordInboundCursor().startingWakeMiss())
+            discordGateway.bumpSlashEpoch()
         }
     }
 
@@ -100,22 +101,13 @@ extension WatchRuntime {
             case .apply(.status):
                 pollLid()
                 let now = Date()
-                let agents = AgentProbeService.snapshot(
-                    now: now,
-                    freshness: engine.preferences.sessionFreshness
-                )
-                let battery = BatteryMonitor.reading()
-                let safety = SafetyInputs(
-                    batteryPercent: battery.percent,
-                    onBatteryDischarging: battery.onBatteryDischarging,
-                    thermalSerious: ThermalMonitor.isSerious(),
-                    lowPowerMode: ProcessInfo.processInfo.isLowPowerModeEnabled
-                )
+                let agentsBusy = cachedAgentsBusy(now: now)
+                let safety = liveStatusSafety()
                 sendTelegramInboundReply(
                     TelegramInboundCopy.status(
                         engine.telegramWatchStatus(
                             now: now,
-                            agentsBusy: agents.anyBusy(included: engine.preferences.includedAgentKinds),
+                            agentsBusy: agentsBusy,
                             lowPowerMode: safety.lowPowerMode,
                             safety: safety
                         ),
@@ -141,29 +133,36 @@ extension WatchRuntime {
     }
 
     func applyTelegramArm(token: String?, chatId: String?) {
-        if TelegramInboundIntent.arm.shouldSetEngaged(currentlyEngaged: engine.engaged) == true {
+        if TelegramInboundIntent.arm.shouldSetEngaged(currentlyEngaged: engaged) == true {
             setEngaged(true)
         }
-        let text = engine.engaged ? TelegramInboundCopy.armed : TelegramInboundCopy.armFailed
+        let text = engaged ? TelegramInboundCopy.armed : TelegramInboundCopy.armFailed
         sendTelegramInboundReply(text, token: token, chatId: chatId)
     }
 
     func applyTelegramDisarm(token: String?, chatId: String?) {
         pollLid()
-        let confirmed = engine.lidCloseConfirmed
-        if engine.engaged {
-            setEngaged(false)
-            if engine.engaged {
+        let confirmed = engine.userOffLidCloseConfirmed(rawClosed: LidStateReader.isClosed())
+        let sleepResult: HygieneApplyResult
+        if engaged {
+            sleepResult = setEngaged(false)
+            if engaged {
                 sendTelegramInboundReply(TelegramInboundCopy.disarmFailed, token: token, chatId: chatId)
                 return
             }
         } else {
             _ = disarmKernel()
+            if TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: confirmed) {
+                sleepResult = apply([.requestSleep])
+            } else {
+                sleepResult = HygieneApplyResult()
+            }
         }
-        if TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: confirmed) {
-            apply([.requestSleep])
-        }
-        sendTelegramInboundReply(TelegramInboundCopy.disarmed, token: token, chatId: chatId)
+        sendTelegramInboundReply(
+            inboundDisarmReply(TelegramInboundCopy.disarmed, sleepResult: sleepResult),
+            token: token,
+            chatId: chatId
+        )
     }
 
     func sendTelegramInboundReply(_ text: String, token: String?, chatId: String?) {

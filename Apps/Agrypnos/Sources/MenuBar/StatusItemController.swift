@@ -49,15 +49,15 @@ final class StatusItemController: NSObject {
 
     func refresh() {
         let on = runtime.engaged
-        let battery = BatteryMonitor.reading()
+        let battery = runtime.lastBatteryReading
         var glyph = offGlyph
         var tooltip = AgrypnosCopy.menuTooltipOff
         if on {
-            glyph = battery.onBatteryDischarging ? armedGlyph : onGlyph
+            glyph = (battery?.onBatteryDischarging ?? false) ? armedGlyph : onGlyph
             tooltip = AgrypnosCopy.menuTooltip(
                 engaged: true,
                 leftover: runtime.adoptedLeftover,
-                onBattery: battery.onBatteryDischarging,
+                onBattery: battery?.onBatteryDischarging ?? false,
                 lidClosed: runtime.engine.lidClosed,
                 panelPowerMode: runtime.preferences.panelPowerMode
             )
