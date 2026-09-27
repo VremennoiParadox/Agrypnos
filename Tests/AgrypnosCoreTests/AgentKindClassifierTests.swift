@@ -38,6 +38,17 @@ final class AgentKindClassifierTests: XCTestCase {
         )
     }
 
+    func testNodeArgContainingCodexSubstringIsNotCodex() {
+        XCTAssertNil(
+            AgentKindClassifier.classify(processName: "node /Users/ada/src/codex-docs/build.js")
+        )
+        XCTAssertFalse(
+            AgentKindClassifier.cpuCountsTowardBusy(
+                processName: "node /Users/ada/src/codex-docs/build.js"
+            )
+        )
+    }
+
     func testBareNodeStillIgnored() {
         XCTAssertNil(AgentKindClassifier.classify(processName: "node"))
         XCTAssertNil(AgentKindClassifier.classify(processName: "/usr/local/bin/node"))
@@ -97,6 +108,15 @@ final class AgentKindClassifierTests: XCTestCase {
         XCTAssertEqual(
             AgentKindClassifier.classify(processName: "/Applications/OpenCode.app/Contents/MacOS/opencode-cli"),
             .openCode
+        )
+    }
+
+    func testNodeArgContainingOpenCodeSubstringIsNotOpenCode() {
+        XCTAssertNil(
+            AgentKindClassifier.classify(processName: "node /Users/ada/src/opencode-tools/index.js")
+        )
+        XCTAssertNil(
+            AgentKindClassifier.classify(processName: "bun /Users/ada/src/opencode-tools/build.ts")
         )
     }
 }

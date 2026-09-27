@@ -56,6 +56,26 @@ final class WatchEngineTests: XCTestCase {
         XCTAssertNil(engine.preferences.lastWatchEnd)
     }
 
+    func testRearmDoesNotIdleOffFromPreviousArmBusy() {
+        var prefs = UserPreferences.default
+        prefs.duration = .untilAgentsSettle
+        prefs.notifEnabled = true
+        var engine = WatchEngine(preferences: prefs)
+        _ = engine.userSetEngaged(true, now: t0)
+        XCTAssertTrue(engine.tick(now: t0.addingTimeInterval(20), safety: .acPower, agents: .busy).isEmpty)
+        XCTAssertTrue(engine.settle.sawBusy)
+        _ = engine.userSetEngaged(false, now: t0.addingTimeInterval(21))
+        _ = engine.userSetEngaged(true, now: t0.addingTimeInterval(22))
+        XCTAssertFalse(engine.settle.sawBusy)
+        XCTAssertTrue(engine.tick(now: t0.addingTimeInterval(23), safety: .acPower, agents: .idle).isEmpty)
+        XCTAssertTrue(
+            engine.tick(now: t0.addingTimeInterval(23 + 120), safety: .acPower, agents: .idle).isEmpty
+        )
+        XCTAssertTrue(engine.engaged)
+        XCTAssertFalse(engine.settle.sawBusy)
+        XCTAssertNotEqual(engine.preferences.lastWatchEnd?.reason, .agentsSettled)
+    }
+
     func testAgentsModeDisengagesAfterBusyThenGrace() {
         var prefs = UserPreferences.default
         prefs.duration = .untilAgentsSettle
@@ -401,4 +421,13 @@ private extension SafetyInputs {
 
 private extension AgentSnapshot {
     static let idle = AgentSnapshot(reports: [])
+    static let busy = AgentSnapshot(reports: [
+        AgentReport(
+            kind: .cursor,
+            processRunning: true,
+            cpuBusy: false,
+            recentSessionWrite: true,
+            isBusy: true
+        )
+    ])
 }

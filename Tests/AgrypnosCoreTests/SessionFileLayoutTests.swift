@@ -107,6 +107,11 @@ final class SessionFileLayoutTests: XCTestCase {
         XCTAssertTrue(SessionFileLayout.shouldSkipDirectory(".git"))
         XCTAssertTrue(SessionFileLayout.shouldSkipDirectory("log"))
         XCTAssertFalse(SessionFileLayout.shouldSkipDirectory("agent-transcripts"))
+        XCTAssertFalse(SessionFileLayout.shouldSkipDirectory("terminals"))
+        XCTAssertTrue(SessionFileLayout.shouldSkipDirectory("terminals", countTerminalSessions: false))
+        XCTAssertFalse(SessionFileLayout.shouldSkipDirectory("terminals", countTerminalSessions: true))
+        XCTAssertFalse(SessionFileLayout.shouldSkipDirectory("agent-transcripts", countTerminalSessions: false))
+        XCTAssertFalse(SessionFileLayout.shouldSkipDirectory("subagents", countTerminalSessions: false))
     }
 
     func testOpenCodeWalkRootsAreStorageTreesPlusDataRootDB() {

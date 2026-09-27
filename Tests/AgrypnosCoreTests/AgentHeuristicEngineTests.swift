@@ -427,6 +427,45 @@ final class AgentHeuristicEngineTests: XCTestCase {
         XCTAssertEqual(snap.report(.openCode)?.processRunning, false)
         XCTAssertFalse(snap.report(.openCode)?.isBusy ?? true)
     }
+
+    func testNodeCodexDocsCPUIsNotCodexBusy() {
+        let snap = engine.evaluate(
+            processes: [
+                ProcessRecord(
+                    pid: 7,
+                    cpuPercent: 22,
+                    name: "node /Users/ada/src/codex-docs/build.js"
+                )
+            ],
+            sessionWrites: [],
+            now: now
+        )
+        XCTAssertEqual(snap.report(.codex)?.processRunning, false)
+        XCTAssertFalse(snap.report(.codex)?.cpuBusy ?? true)
+        XCTAssertFalse(snap.report(.codex)?.isBusy ?? true)
+    }
+
+    func testNodeOpenCodeToolsDoesNotPairWithLeftoverSessionFiles() {
+        let snap = engine.evaluate(
+            processes: [
+                ProcessRecord(
+                    pid: 8,
+                    cpuPercent: 1,
+                    name: "node /Users/ada/src/opencode-tools/index.js"
+                )
+            ],
+            sessionWrites: [
+                SessionFileSignal(
+                    url: URL(fileURLWithPath: "/Users/ada/.local/share/opencode/storage/session/ses_1.json"),
+                    modified: now.addingTimeInterval(-8),
+                    kind: .openCode
+                )
+            ],
+            now: now
+        )
+        XCTAssertEqual(snap.report(.openCode)?.processRunning, false)
+        XCTAssertFalse(snap.report(.openCode)?.isBusy ?? true)
+    }
 }
 
 private extension AgentSnapshot {

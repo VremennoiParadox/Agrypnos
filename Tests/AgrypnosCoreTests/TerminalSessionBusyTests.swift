@@ -180,6 +180,42 @@ final class TerminalSessionBusyTests: XCTestCase {
             SessionFileLayout.countsTowardBusy(transcript, countTerminalSessions: false)
         )
     }
+
+    func testNestedFileUnderTerminalsIsATerminalSession() {
+        let nested = URL(
+            fileURLWithPath: "/Users/a/.claude/projects/p/terminals/session/foo.jsonl"
+        )
+        XCTAssertTrue(SessionFileLayout.isTerminalSessionPath(nested))
+        XCTAssertFalse(
+            SessionFileLayout.countsTowardBusy(nested, countTerminalSessions: false)
+        )
+        XCTAssertTrue(
+            SessionFileLayout.countsTowardBusy(nested, countTerminalSessions: true)
+        )
+
+        let process = ProcessRecord(pid: 9, cpuPercent: 0.1, name: "claude")
+        let signal = SessionFileSignal(
+            url: nested,
+            modified: now.addingTimeInterval(-2),
+            kind: .claudeCode
+        )
+        let off = AgentHeuristicEngine(config: AgentHeuristicConfig(
+            sessionFreshness: 45,
+            countTerminalSessionsAsBusy: false
+        ))
+        XCTAssertFalse(
+            off.evaluate(processes: [process], sessionWrites: [signal], now: now)
+                .report(.claudeCode)?.recentSessionWrite ?? true
+        )
+        let on = AgentHeuristicEngine(config: AgentHeuristicConfig(
+            sessionFreshness: 45,
+            countTerminalSessionsAsBusy: true
+        ))
+        XCTAssertTrue(
+            on.evaluate(processes: [process], sessionWrites: [signal], now: now)
+                .report(.claudeCode)?.recentSessionWrite ?? false
+        )
+    }
 }
 
 private extension AgentSnapshot {
