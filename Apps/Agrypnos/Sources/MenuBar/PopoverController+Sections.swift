@@ -13,7 +13,7 @@ extension PopoverController {
             from: currentSection,
             to: section,
             animated: popover.isShown && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
-            currentHeight: Int(popover.contentSize.height.rounded()),
+            currentHeight: Int((popoverRoot.window?.frame.height ?? popover.contentSize.height).rounded()),
             panelPowerMode: runtime?.preferences.panelPowerMode ?? .default
         )
         currentSection = section
@@ -52,8 +52,9 @@ extension PopoverController {
                 if motion.timing == .easeInEaseOut {
                     context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
                 }
-                // Only contentSize eases. Hosting frames follow via autoresizing —
-                // animating NSScrollView.frame leaves the clip and document out of sync.
+                // Popover owns the window so the menu-bar edge stays put.
+                // One section only — outgoing cards are already hidden.
+                // Root tracks the window via autoresizing; do not set the window frame.
                 self.popover.contentSize = NSSize(width: width, height: popH)
             }, completionHandler: { [weak self] in
                 guard let self, self.sectionMotion == token else { return }
