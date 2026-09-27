@@ -59,6 +59,8 @@ final class DiscordInboundGatewayClient {
         TelegramInboundGeneration.allowsApply(current: generation, captured: captured)
     }
 
+    var currentGeneration: UInt64 { generation }
+
     private func shouldReceive() -> Bool {
         guard let runtime else { return false }
         let snap = runtime.discordInboundSnapshot()
@@ -210,7 +212,7 @@ final class DiscordInboundGatewayClient {
             case .sendIdentify, .sendResume, .sendHeartbeat:
                 send(effect, token: token, cursor: cursor, socket: socket)
             case .inbound(let update):
-                runtime.applyDiscordInbound(update)
+                runtime.applyDiscordInbound(update, generation: captured)
             case .registerCommands(let applicationId):
                 runtime.registerDiscordBotCommands(applicationId: applicationId)
             case .reconnect:

@@ -12,14 +12,22 @@ enum ProcessListReader {
 }
 
 enum SessionFileWalker {
-    static func signals(home: URL, env: [String: String]) -> [SessionFileSignal] {
+    static func signals(
+        home: URL,
+        env: [String: String],
+        countTerminalSessions: Bool
+    ) -> [SessionFileSignal] {
         var collected: [SessionFileSignal] = []
         let roots = SessionFileLayout.roots(home: home, env: env)
         for (kind, urls) in roots {
             for root in urls {
                 if kind == .cursor, root.lastPathComponent == "projects" {
                     let names = projectDirectoryNames(in: root)
-                    for sub in SessionFileLayout.cursorWalkRoots(projectsRoot: root, projectNames: names) {
+                    for sub in SessionFileLayout.cursorWalkRoots(
+                        projectsRoot: root,
+                        projectNames: names,
+                        includeTerminals: countTerminalSessions
+                    ) {
                         collected.append(contentsOf: walk(root: sub, kind: kind))
                     }
                 } else if kind == .openCode {
@@ -28,6 +36,9 @@ enum SessionFileWalker {
                     collected.append(contentsOf: walk(root: root, kind: kind))
                 }
             }
+        }
+        if !countTerminalSessions {
+            collected.removeAll { SessionFileLayout.isTerminalSessionPath($0.url) }
         }
         return collected
     }
@@ -103,15 +114,24 @@ enum SessionFileWalker {
 }
 
 enum AgentProbeService {
-    static func snapshot(now: Date, freshness: TimeInterval) -> AgentSnapshot {
+    static func snapshot(
+        now: Date,
+        freshness: TimeInterval,
+        countTerminalSessions: Bool = false
+    ) -> AgentSnapshot {
         let engine = AgentHeuristicEngine(
-            config: AgentHeuristicConfig(sessionFreshness: freshness, claudeCodexCPUBusyThreshold: 5)
+            config: AgentHeuristicConfig(
+                sessionFreshness: freshness,
+                claudeCodexCPUBusyThreshold: 5,
+                countTerminalSessionsAsBusy: countTerminalSessions
+            )
         )
         return engine.evaluate(
             processes: ProcessListReader.records(),
             sessionWrites: SessionFileWalker.signals(
                 home: FileManager.default.homeDirectoryForCurrentUser,
-                env: ProcessInfo.processInfo.environment
+                env: ProcessInfo.processInfo.environment,
+                countTerminalSessions: countTerminalSessions
             ),
             now: now
         )

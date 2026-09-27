@@ -143,7 +143,7 @@ final class WatchLidHygieneTests: XCTestCase {
         XCTAssertTrue(engine.lidHygieneApplied)
         XCTAssertEqual(
             engine.userSetEngaged(false, now: t0.addingTimeInterval(1), lidClosed: true),
-            [.disengage(.user)]
+            [.disengage(.user), .requestSleep]
         )
         XCTAssertFalse(engine.engaged)
         XCTAssertFalse(engine.lidHygieneApplied)

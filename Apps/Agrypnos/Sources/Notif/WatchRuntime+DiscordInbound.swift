@@ -80,7 +80,7 @@ extension WatchRuntime {
         }
     }
 
-    func applyDiscordInbound(_ update: DiscordInboundUpdate) {
+    func applyDiscordInbound(_ update: DiscordInboundUpdate, generation: UInt64) {
         if update.source == .slash,
            let interactionId = update.interactionId,
            let interactionToken = update.interactionToken,
@@ -91,7 +91,13 @@ extension WatchRuntime {
         {
             Task {
                 await TelegramInboundHTTP.send(deferRequest)
-                await MainActor.run { self.finishDiscordInbound(update, slashDeferred: true) }
+                await MainActor.run {
+                    guard DiscordDeferredSlash.shouldApply(
+                        current: self.discordGateway.currentGeneration,
+                        captured: generation
+                    ) else { return }
+                    self.finishDiscordInbound(update, slashDeferred: true)
+                }
             }
             return
         }
@@ -122,7 +128,8 @@ extension WatchRuntime {
             let now = Date()
             let agents = AgentProbeService.snapshot(
                 now: now,
-                freshness: engine.preferences.sessionFreshness
+                freshness: engine.preferences.sessionFreshness,
+                countTerminalSessions: engine.preferences.countTerminalSessionsAsBusy
             )
             let battery = BatteryMonitor.reading()
             let safety = SafetyInputs(
@@ -175,9 +182,10 @@ extension WatchRuntime {
             }
         } else {
             _ = disarmKernel()
-        }
-        if TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: confirmed) {
-            apply([.requestSleep])
+            // Already off: same lid gate as WatchEngine.applyInbound — no second sleep stack.
+            if TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: confirmed) {
+                apply([.requestSleep])
+            }
         }
         return DiscordInboundCopy.disarmed
     }

@@ -51,3 +51,48 @@ public struct LidCloseConfirm: Equatable, Sendable {
         return nil
     }
 }
+
+/// 4 Hz confirm pulse only while close is still unconfirmed. Confirmed closed uses the 5s tick.
+public enum LidSampleCadence: Equatable, Sendable {
+    case none
+    case confirmPulse
+    case coarse
+}
+
+public enum LidSamplePolicy: Sendable {
+    public static var confirmPulseInterval: TimeInterval { LidCloseConfirm.pulseInterval }
+
+    public static func cadence(
+        engaged: Bool,
+        lidCloseConfirmed: Bool,
+        inboundNeedsLid: Bool = false
+    ) -> LidSampleCadence {
+        guard engaged || inboundNeedsLid else { return .none }
+        if lidCloseConfirmed { return .coarse }
+        return .confirmPulse
+    }
+
+    public static func runsConfirmPulse(
+        engaged: Bool,
+        lidCloseConfirmed: Bool,
+        inboundNeedsLid: Bool = false
+    ) -> Bool {
+        cadence(
+            engaged: engaged,
+            lidCloseConfirmed: lidCloseConfirmed,
+            inboundNeedsLid: inboundNeedsLid
+        ) == .confirmPulse
+    }
+
+    public static func samplesOnTick(
+        engaged: Bool,
+        lidCloseConfirmed: Bool,
+        inboundNeedsLid: Bool = false
+    ) -> Bool {
+        cadence(
+            engaged: engaged,
+            lidCloseConfirmed: lidCloseConfirmed,
+            inboundNeedsLid: inboundNeedsLid
+        ) != .none
+    }
+}

@@ -92,7 +92,14 @@ final class WatchRuntime {
     }
 
     func setPanelPowerMode(_ mode: PanelPowerMode) {
-        engine.preferences.panelPowerMode = mode
+        let commands = engine.userSetPanelPowerMode(mode)
+        store.save(engine.preferences)
+        apply(commands)
+        delegate?.watchRuntimeDidChange(self)
+    }
+
+    func setCountTerminalSessionsAsBusy(_ on: Bool) {
+        engine.userSetCountTerminalSessionsAsBusy(on)
         store.save(engine.preferences)
         delegate?.watchRuntimeDidChange(self)
     }
@@ -256,24 +263,32 @@ final class WatchRuntime {
                 delegate?.watchRuntimeDidChange(self)
                 return
             }
-            if !inboundNeedsLid() {
-                stopLidPulse()
-            }
-            apply(engine.userSetEngaged(false, now: Date(), lidClosed: engine.lidClosed))
+            apply(engine.userSetEngaged(false, now: Date(), lidClosed: engine.lidCloseConfirmed))
             restoreHygiene()
             store.save(engine.preferences)
-            if inboundNeedsLid() {
-                startLidPulse()
-                pollLid()
-            }
+            syncLidPulse()
         }
         delegate?.watchRuntimeDidChange(self)
     }
 
     func poll() {
         if idleOutbound.shouldSkipPoll(engineEngaged: engine.engaged) { return }
-        reconcileKernel(preferClearLeftover: false)
-        pollLid()
+        let probe = WatchTickProbe.needed(engaged: engine.engaged, mode: engine.mode)
+        if LidSamplePolicy.samplesOnTick(
+            engaged: engine.engaged,
+            lidCloseConfirmed: engine.lidCloseConfirmed,
+            inboundNeedsLid: inboundNeedsLid()
+        ) {
+            pollLid()
+        } else {
+            stopLidPulse()
+        }
+
+        guard probe != .none else {
+            // Watch off: skip pmset / battery / ps / session walks. Leftover kernel is start().
+            delegate?.watchRuntimeDidChange(self)
+            return
+        }
 
         let battery = BatteryMonitor.reading()
         let safety = SafetyInputs(
@@ -283,7 +298,13 @@ final class WatchRuntime {
             lowPowerMode: ProcessInfo.processInfo.isLowPowerModeEnabled
         )
         let kernel = SleepDisabledController.read()
-        let agents = AgentProbeService.snapshot(now: Date(), freshness: engine.preferences.sessionFreshness)
+        let agents = probe.probesAgents
+            ? AgentProbeService.snapshot(
+                now: Date(),
+                freshness: engine.preferences.sessionFreshness,
+                countTerminalSessions: engine.preferences.countTerminalSessionsAsBusy
+            )
+            : AgentSnapshot(reports: [])
         let commands = engine.tick(
             now: Date(),
             safety: safety,
@@ -366,25 +387,20 @@ final class WatchRuntime {
 
     func pollLid() {
         let rawClosed = LidStateReader.isClosed()
-        let trackLid = engine.engaged || inboundNeedsLid()
         var lidChanged = false
-        if trackLid {
-            let commands = engine.observeLid(closed: rawClosed, now: Date())
-            if engine.engaged {
-                if !commands.isEmpty {
-                    apply(commands)
-                    lidChanged = true
-                } else if LidCloseConfirm.shouldRecaptureOpenBrightness(
-                    rawClosed: rawClosed,
-                    confirmedClosed: engine.lidClosed
-                ), !engine.lidHygieneApplied, !brightnessRamp.isRunning {
-                    recaptureOpenLidHygiene()
-                }
+        let commands = engine.observeLid(closed: rawClosed, now: Date())
+        if engine.engaged {
+            if !commands.isEmpty {
+                apply(commands)
+                lidChanged = true
+            } else if LidCloseConfirm.shouldRecaptureOpenBrightness(
+                rawClosed: rawClosed,
+                confirmedClosed: engine.lidClosed
+            ), !engine.lidHygieneApplied, !brightnessRamp.isRunning {
+                recaptureOpenLidHygiene()
             }
-            startLidPulse()
-        } else {
-            stopLidPulse()
         }
+        syncLidPulse()
         if lidChanged {
             delegate?.watchRuntimeDidChange(self)
         }
@@ -401,9 +417,25 @@ final class WatchRuntime {
 
     func startLidPulse() {
         guard lidTimer == nil else { return }
-        guard engine.engaged || inboundNeedsLid() else { return }
+        guard LidSamplePolicy.runsConfirmPulse(
+            engaged: engine.engaged,
+            lidCloseConfirmed: engine.lidCloseConfirmed,
+            inboundNeedsLid: inboundNeedsLid()
+        ) else { return }
         lidTimer = Timer.scheduledTimer(withTimeInterval: LidCloseConfirm.pulseInterval, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.pollLid() }
+        }
+    }
+
+    func syncLidPulse() {
+        if LidSamplePolicy.runsConfirmPulse(
+            engaged: engine.engaged,
+            lidCloseConfirmed: engine.lidCloseConfirmed,
+            inboundNeedsLid: inboundNeedsLid()
+        ) {
+            startLidPulse()
+        } else {
+            stopLidPulse()
         }
     }
 
@@ -457,7 +489,8 @@ final class WatchRuntime {
             _ = disarmKernel()
         }
         if engine.engaged {
-            apply(engine.userSetEngaged(false, now: Date(), lidClosed: engine.lidClosed))
+            // Quit is not popover/hotkey I2 — clear hold only, do not sleepnow.
+            apply(engine.userSetEngaged(false, now: Date(), lidClosed: false))
             store.save(engine.preferences)
         }
         restoreHygiene()

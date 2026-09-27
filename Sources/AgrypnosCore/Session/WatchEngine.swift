@@ -92,6 +92,23 @@ public struct WatchEngine: Equatable, Sendable {
         preferences.discordInboundEnabled = on
     }
 
+    public mutating func userSetCountTerminalSessionsAsBusy(_ on: Bool) {
+        preferences.countTerminalSessionsAsBusy = on
+    }
+
+    public mutating func userSetPanelPowerMode(_ mode: PanelPowerMode) -> [WatchCommand] {
+        let from = preferences.panelPowerMode
+        preferences.panelPowerMode = mode
+        guard from != mode else { return [] }
+        guard engaged, lidCloseConfirmed else { return [] }
+        var commands: [WatchCommand] = []
+        if from == .displaySleep, mode == .floor {
+            commands.append(.wakeDisplay)
+        }
+        commands.append(contentsOf: lidCloseHygieneCommands())
+        return commands
+    }
+
     /// Shared Telegram + Discord arm/disarm/status/help. One stack — no second disarm path.
     /// Arm always `lidClosed: false` — one raw clamshell sample is not hygiene.
     /// Disarm sleeps only when lid-close is already confirmed.
@@ -109,14 +126,15 @@ public struct WatchEngine: Equatable, Sendable {
                 return []
             }
         case .disarm:
-            var commands: [WatchCommand] = []
             if intent.shouldSetEngaged(currentlyEngaged: engaged) == false {
-                commands.append(contentsOf: userSetEngaged(false, now: now, lidClosed: lidCloseConfirmed))
+                // userSetEngaged(.user) uses the same lid-gated sleepnow as inbound.
+                return userSetEngaged(false, now: now, lidClosed: lidCloseConfirmed)
             }
+            // Already off: still clear hold + sleepnow when lid-close is confirmed.
             if TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: lidCloseConfirmed) {
-                commands.append(.requestSleep)
+                return [.requestSleep]
             }
-            return commands
+            return []
         case .status, .help, .ignore:
             return []
         }
@@ -274,8 +292,8 @@ public struct WatchEngine: Equatable, Sendable {
         {
             commands.append(wake)
         }
-        // Clearing SleepDisabled does not retrigger clamshell sleep.
-        if wasLidClosed, reason != .user {
+        // One sleep story: inbound `/disarm` and popover/hotkey user-off share this gate.
+        if TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: wasLidClosed) {
             commands.append(.requestSleep)
         }
         return commands

@@ -82,6 +82,16 @@ public enum SessionFileLayout: Sendable {
         url.path.contains("/subagents/")
     }
 
+    /// Any walked agent tree, not Cursor-only. Nested `/subagents` is not this.
+    public static func isTerminalSessionPath(_ url: URL) -> Bool {
+        url.path.contains("/terminals/")
+    }
+
+    public static func countsTowardBusy(_ url: URL, countTerminalSessions: Bool) -> Bool {
+        if isTerminalSessionPath(url) { return countTerminalSessions }
+        return true
+    }
+
     public static let cursorSubtreeNames = ["agent-transcripts", "terminals"]
 
     public static func shouldSkipDirectory(_ name: String) -> Bool {
@@ -91,9 +101,14 @@ public enum SessionFileLayout: Sendable {
         return false
     }
 
-    public static func cursorWalkRoots(projectsRoot: URL, projectNames: [String]) -> [URL] {
-        projectNames.flatMap { name in
-            cursorSubtreeNames.map { projectsRoot.appendingPathComponent(name).appendingPathComponent($0) }
+    public static func cursorWalkRoots(
+        projectsRoot: URL,
+        projectNames: [String],
+        includeTerminals: Bool = true
+    ) -> [URL] {
+        let subtrees = includeTerminals ? cursorSubtreeNames : ["agent-transcripts"]
+        return projectNames.flatMap { name in
+            subtrees.map { projectsRoot.appendingPathComponent(name).appendingPathComponent($0) }
         }
     }
 

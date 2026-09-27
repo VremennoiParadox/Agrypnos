@@ -102,7 +102,8 @@ extension WatchRuntime {
                 let now = Date()
                 let agents = AgentProbeService.snapshot(
                     now: now,
-                    freshness: engine.preferences.sessionFreshness
+                    freshness: engine.preferences.sessionFreshness,
+                    countTerminalSessions: engine.preferences.countTerminalSessionsAsBusy
                 )
                 let battery = BatteryMonitor.reading()
                 let safety = SafetyInputs(
@@ -159,9 +160,10 @@ extension WatchRuntime {
             }
         } else {
             _ = disarmKernel()
-        }
-        if TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: confirmed) {
-            apply([.requestSleep])
+            // Already off: same lid gate as WatchEngine.applyInbound — no second sleep stack.
+            if TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: confirmed) {
+                apply([.requestSleep])
+            }
         }
         sendTelegramInboundReply(TelegramInboundCopy.disarmed, token: token, chatId: chatId)
     }

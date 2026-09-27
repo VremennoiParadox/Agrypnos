@@ -53,13 +53,17 @@ public struct AgentSnapshot: Equatable, Sendable {
 public struct AgentHeuristicConfig: Equatable, Sendable {
     public var sessionFreshness: TimeInterval
     public var claudeCodexCPUBusyThreshold: Double
+    /// I3. Default off. Terminal session files count only when on.
+    public var countTerminalSessionsAsBusy: Bool
 
     public init(
         sessionFreshness: TimeInterval = UserPreferences.defaultSessionFreshness,
-        claudeCodexCPUBusyThreshold: Double = 5
+        claudeCodexCPUBusyThreshold: Double = 5,
+        countTerminalSessionsAsBusy: Bool = false
     ) {
         self.sessionFreshness = sessionFreshness
         self.claudeCodexCPUBusyThreshold = claudeCodexCPUBusyThreshold
+        self.countTerminalSessionsAsBusy = countTerminalSessionsAsBusy
     }
 }
 
@@ -75,8 +79,14 @@ public struct AgentHeuristicEngine: Equatable, Sendable {
         sessionWrites: [SessionFileSignal],
         now: Date
     ) -> AgentSnapshot {
+        let writes = sessionWrites.filter {
+            SessionFileLayout.countsTowardBusy(
+                $0.url,
+                countTerminalSessions: config.countTerminalSessionsAsBusy
+            )
+        }
         let reports = AgentKind.allCases.map { kind in
-            evaluate(kind: kind, processes: processes, sessionWrites: sessionWrites, now: now)
+            evaluate(kind: kind, processes: processes, sessionWrites: writes, now: now)
         }
         return AgentSnapshot(reports: reports)
     }
