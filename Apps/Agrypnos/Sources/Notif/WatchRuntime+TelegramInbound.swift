@@ -146,22 +146,9 @@ extension WatchRuntime {
     }
 
     func applyTelegramDisarm(token: String?, chatId: String?) {
-        pollLid()
-        let confirmed = engine.userOffLidCloseConfirmed(rawClosed: readLid())
-        let sleepResult: HygieneApplyResult
-        if engaged {
-            sleepResult = setEngaged(false)
-            if engaged {
-                sendTelegramInboundReply(TelegramInboundCopy.disarmFailed, token: token, chatId: chatId)
-                return
-            }
-        } else {
-            _ = disarmKernel()
-            if TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: confirmed) {
-                sleepResult = apply([.requestSleep])
-            } else {
-                sleepResult = HygieneApplyResult()
-            }
+        guard let sleepResult = disarmWatch() else {
+            sendTelegramInboundReply(TelegramInboundCopy.disarmFailed, token: token, chatId: chatId)
+            return
         }
         sendTelegramInboundReply(
             inboundDisarmReply(TelegramInboundCopy.disarmed, sleepResult: sleepResult),

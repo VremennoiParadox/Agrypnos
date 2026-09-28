@@ -37,7 +37,7 @@ extension WatchRuntime {
             lowPowerMode: ProcessInfo.processInfo.isLowPowerModeEnabled
         )
         lastSafety = safety
-        let kernel = readKernel()
+        let kernel = readKernel() == .held
         let included = engine.preferences.includedAgentKinds
         let terminals = engine.preferences.countTerminalSessionsAsBusy
         let now = Date()
@@ -149,7 +149,7 @@ extension WatchRuntime {
             now: now,
             safety: safety,
             agents: observation.snapshot,
-            kernel: readKernel(),
+            kernel: readKernel() == .held,
             observeAgents: busy != nil
         )
     }

@@ -58,6 +58,11 @@ public struct WatchEngine: Equatable, Sendable {
         return disengage(.user, at: now)
     }
 
+    /// Stop claiming a protected watch when the native reassertion fails. No sleep request.
+    public mutating func endForWakeHoldFailure(now: Date) {
+        _ = disengage(.wakeHoldFailed, at: now)
+    }
+
     /// Kernel disarm failed after logical disengage. Same user arm — keep the POST latch.
     /// Do not sample `engine.lidClosed` after disengage zeroed it — use the stored lid.
     public mutating func rollbackDisarmFailure(now: Date, lidClosed: Bool = false) -> [WatchCommand] {

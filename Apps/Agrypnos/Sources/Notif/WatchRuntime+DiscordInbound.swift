@@ -207,22 +207,7 @@ extension WatchRuntime {
     }
 
     func applyDiscordDisarm() -> String {
-        pollLid()
-        let confirmed = engine.userOffLidCloseConfirmed(rawClosed: readLid())
-        let sleepResult: HygieneApplyResult
-        if engaged {
-            sleepResult = setEngaged(false)
-            if engaged {
-                return TelegramInboundCopy.disarmFailed
-            }
-        } else {
-            _ = disarmKernel()
-            if TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: confirmed) {
-                sleepResult = apply([.requestSleep])
-            } else {
-                sleepResult = HygieneApplyResult()
-            }
-        }
+        guard let sleepResult = disarmWatch() else { return TelegramInboundCopy.disarmFailed }
         return inboundDisarmReply(DiscordInboundCopy.disarmed, sleepResult: sleepResult)
     }
 

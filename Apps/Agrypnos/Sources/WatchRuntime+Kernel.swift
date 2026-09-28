@@ -7,14 +7,14 @@ import AgrypnosCore
 
 extension WatchRuntime {
     @discardableResult
-    func armKernel() -> Bool {
+    func armKernel(allowInstall: Bool = true) -> Bool {
         var result = setKernel(true)
-        if result == .grantMissing {
+        if result == .grantMissing, allowInstall {
             if GrantInstaller.installViaNativeAuth() {
                 result = setKernel(true)
             }
         }
-        guard result == .ok, readKernel() else {
+        guard result == .ok, readKernel() == .held else {
             if case .failed(let message) = result {
                 notify("Couldn't keep the watch. \(message)")
             } else if result == .grantMissing {
@@ -32,20 +32,21 @@ extension WatchRuntime {
     @discardableResult
     func disarmKernel() -> Bool {
         _ = setKernel(false)
-        let held = readKernel()
-        WatchDiagnostics.event("kernel disarm readback held=\(held)")
-        return !held
+        let state = readKernel()
+        WatchDiagnostics.event("kernel disarm readback=\(state)")
+        return state == .clear
     }
 
     /// Quit must clear actual kernel-held SleepDisabled even if the engine already disengaged for POST.
     func prepareForTermination() {
+        guard ownsWakeHold else { return }
         stopObservingMacSleepWake()
         inboundPoller.stop()
         discordGateway.stop()
         let kernelHeld = readKernel()
         let plan = idleOutbound.terminatePlan(
             engineEngaged: engine.engaged,
-            kernelSleepDisabled: kernelHeld
+            kernelSleepDisabled: kernelHeld != .clear
         )
         idlePostTask?.cancel()
         idlePostTask = nil
@@ -71,11 +72,11 @@ extension WatchRuntime {
 
     func reconcileKernel(preferClearLeftover: Bool) {
         let kernel = readKernel()
-        if kernel, !engine.engaged {
+        if kernel == .held, !engine.engaged {
             if preferClearLeftover {
                 _ = setKernel(false)
             }
-            if readKernel() {
+            if readKernel() == .held {
                 let rawClosed = readLid()
                 if LidCloseConfirm.shouldCaptureBeforeClosedHygiene(rawClosed: rawClosed) {
                     recaptureOpenLidHygiene()

@@ -13,6 +13,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WatchRuntimeDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        guard runtime.start() else { NSApp.terminate(nil); return }
         AppEditMenu.install()
         hotkey.onTrigger = { [weak self] in
             self?.runtime.toggle()
@@ -31,7 +32,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WatchRuntimeDelegate {
         popover = PopoverController(runtime: runtime)
         statusItem = StatusItemController(runtime: runtime, popover: popover)
         runtime.delegate = self
-        runtime.start()
     }
 
     func applicationWillTerminate(_ notification: Notification) {

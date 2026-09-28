@@ -14,7 +14,7 @@ protocol WatchRuntimeDelegate: AnyObject {
 final class WatchRuntime {
     let store: PreferencesStore
     let readLid: () -> Bool
-    let readKernel: () -> Bool
+    let readKernel: () -> SleepDisabledState
     let setKernel: (Bool) -> ToggleResult
     let runCommand: (String, [String]) -> (exit: Int32, out: String, err: String)
     let postIdle: (Bool) async -> Void
@@ -50,11 +50,12 @@ final class WatchRuntime {
     var probeInFlight = false
     var idleProbeTicks: Int = 0
     var diagnostics = WatchDiagnostics()
+    private(set) var ownsWakeHold = false
 
     init(
         store: PreferencesStore = PreferencesStore(),
         readLid: @escaping () -> Bool = LidStateReader.isClosed,
-        readKernel: @escaping () -> Bool = SleepDisabledController.read,
+        readKernel: @escaping () -> SleepDisabledState = SleepDisabledController.read,
         setKernel: @escaping (Bool) -> ToggleResult = SleepDisabledController.set,
         runCommand: @escaping (String, [String]) -> (exit: Int32, out: String, err: String) = {
             ProcessRunner.run($0, $1)
@@ -72,11 +73,15 @@ final class WatchRuntime {
         engine = WatchEngine(preferences: store.load())
     }
 
-    func start() {
+    func start() -> Bool {
+        guard SleepDisabledCrashGuard.start() else {
+            notify("Couldn't take ownership of the wake hold. Agrypnos may already be running.")
+            return false
+        }
+        ownsWakeHold = true
         inboundPoller.runtime = self
         discordGateway.runtime = self
         observeMacSleepWake()
-        SleepDisabledCrashGuard.start()
         reconcileKernel(preferClearLeftover: true)
         pollTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.poll() }
@@ -84,6 +89,7 @@ final class WatchRuntime {
         poll()
         inboundPoller.sync()
         discordGateway.sync()
+        return true
     }
 
     func setDuration(_ option: DurationOption) {
@@ -296,10 +302,15 @@ final class WatchRuntime {
             delegate?.watchRuntimeDidChange(self)
             return HygieneApplyResult()
         }
+        return disarmWatch() ?? HygieneApplyResult()
+    }
+
+    /// Every user/inbound off must verify the same kernel release before sleep or success copy.
+    func disarmWatch() -> HygieneApplyResult? {
         guard disarmKernel() else {
-            notify("Couldn't drop SleepDisabled. The kernel flag is still on.")
+            notify("Couldn't verify SleepDisabled was cleared. The watch state is unchanged.")
             delegate?.watchRuntimeDidChange(self)
-            return HygieneApplyResult()
+            return nil
         }
         idlePostTask?.cancel()
         idlePostTask = nil
@@ -315,7 +326,17 @@ final class WatchRuntime {
     func apply(_ commands: [WatchCommand]) -> HygieneApplyResult {
         for command in commands {
             if case .assertSleepDisabled = command {
-                _ = armKernel()
+                guard armKernel(allowInstall: false) else {
+                    engine.endForWakeHoldFailure(now: Date())
+                    idlePostTask?.cancel()
+                    idlePostTask = nil
+                    idleOutbound.cancelInFlight()
+                    invalidateAgentProbe()
+                    restoreHygiene()
+                    store.save(engine.preferences)
+                    delegate?.watchRuntimeDidChange(self)
+                    return HygieneApplyResult()
+                }
             }
         }
         let result = PowerHygieneCoordinator.apply(

@@ -6,6 +6,8 @@ import AgrypnosCore
 final class RuntimeFixture {
     var lidClosed = true
     var kernelHeld = true
+    var kernelUnknown = false
+    var kernelWriteSucceeds = true
     var sleepRequests = 0
     var panelSleepRequests = 0
     var messages: [String] = []
@@ -18,8 +20,10 @@ final class RuntimeFixture {
         runtime = WatchRuntime(
             store: PreferencesStore(defaults: defaults),
             readLid: { [unowned self] in self.lidClosed },
-            readKernel: { [unowned self] in self.kernelHeld },
-            setKernel: { [unowned self] held in self.kernelHeld = held; return .ok },
+            readKernel: { [unowned self] in self.kernelUnknown ? .unknown : (self.kernelHeld ? .held : .clear) },
+            setKernel: { [unowned self] held in
+                guard self.kernelWriteSucceeds else { return .failed("fixture failure") }
+                self.kernelHeld = held; return .ok },
             runCommand: { [unowned self] _, args in
                 if args == ["sleepnow"] { self.sleepRequests += 1 }
                 if args == ["displaysleepnow"] { self.panelSleepRequests += 1 }
