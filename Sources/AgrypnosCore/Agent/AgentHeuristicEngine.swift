@@ -10,6 +10,11 @@ public struct SessionFileSignal: Equatable, Sendable {
         self.modified = modified
         self.kind = kind
     }
+
+    public func isFresh(now: Date, freshness: TimeInterval) -> Bool {
+        let age = now.timeIntervalSince(modified)
+        return age >= 0 && age <= freshness
+    }
 }
 
 public struct AgentReport: Equatable, Sendable {
@@ -104,7 +109,7 @@ public struct AgentHeuristicEngine: Equatable, Sendable {
                 && $0.cpuPercent >= config.claudeCodexCPUBusyThreshold
         }
         let recentSessionWrite = sessionWrites.contains { signal in
-            signal.kind == kind && now.timeIntervalSince(signal.modified) <= config.sessionFreshness
+            signal.kind == kind && signal.isFresh(now: now, freshness: config.sessionFreshness)
         }
         let isBusy: Bool
         switch kind {

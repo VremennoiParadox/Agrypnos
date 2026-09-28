@@ -80,7 +80,7 @@ public enum SessionFileLayout: Sendable {
         if path.contains("/log/") || name.hasSuffix(".log") { return false }
         if path.contains("/.config/opencode/") { return false }
         guard path.contains("/opencode/") else { return false }
-        return ext == "json" || ext == "jsonl" || ext == "db"
+        return ext == "json" || ext == "jsonl" || ext == "db" || name == "opencode.db-wal"
     }
 
     public static func isSubagentSessionPath(_ url: URL) -> Bool {
@@ -129,7 +129,7 @@ public enum SessionFileLayout: Sendable {
 
     /// Data-root SQLite lives next to `project/` / `storage/`, not inside them.
     public static func openCodeDataRootFiles(dataHome: URL) -> [URL] {
-        [dataHome.appendingPathComponent("opencode.db")]
+        ["opencode.db", "opencode.db-wal"].map { dataHome.appendingPathComponent($0) }
     }
 
     /// Walk session trees only — not the whole data home (logs, auth, plugins).

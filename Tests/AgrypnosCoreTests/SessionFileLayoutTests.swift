@@ -118,7 +118,8 @@ final class SessionFileLayoutTests: XCTestCase {
         let dataHome = URL(fileURLWithPath: "/Users/ada/.local/share/opencode")
         XCTAssertEqual(
             SessionFileLayout.openCodeDataRootFiles(dataHome: dataHome),
-            [URL(fileURLWithPath: "/Users/ada/.local/share/opencode/opencode.db")]
+            [URL(fileURLWithPath: "/Users/ada/.local/share/opencode/opencode.db"),
+             URL(fileURLWithPath: "/Users/ada/.local/share/opencode/opencode.db-wal")]
         )
         XCTAssertEqual(
             SessionFileLayout.openCodeWalkRoots(dataHome: dataHome, projectNames: ["demo", "global"]),

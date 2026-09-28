@@ -323,3 +323,7 @@ python3 Scripts/generate-xcodeproj.py   # after adding or removing app Swift fil
 No file may pass 600 lines. `check-file-sizes.sh` enforces it in CI.
 
 Security details, including exactly what the sudoers rule allows, are in [SECURITY.md](SECURITY.md).
+
+### Custom agent session directories
+
+Agrypnos reads session locations from its own launch environment (`CLAUDE_CONFIG_DIR`, `CODEX_HOME`, `XDG_DATA_HOME`, and Cursor's `XDG_CONFIG_HOME`). An override set only in a terminal running an agent is not automatically available to a menu-bar app launched from Finder or at login. Agrypnos must be launched with the same supported overrides to observe those custom locations. No process-environment scraping is performed.

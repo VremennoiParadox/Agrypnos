@@ -102,6 +102,9 @@ enum SessionFileWalker {
             if !countTerminalSessions {
                 kindSignals.values.removeAll { SessionFileLayout.isTerminalSessionPath($0.url) }
             }
+            if kindSignals.values.contains(where: { $0.modified > now }) {
+                kindSignals.complete = false
+            }
             kindSignals.values = SessionWalkBudget.selectNewest(
                 kindSignals.values, now: now, freshness: freshness, countTerminalSessions: countTerminalSessions
             )
@@ -170,8 +173,10 @@ enum SessionFileWalker {
                 }
                 guard SessionFileLayout.isRelevantFile(url, kind: kind) else { continue }
                 guard let modified = info.modified else { collected.complete = false; continue }
-                collected.values.append(SessionFileSignal(url: url, modified: modified, kind: kind))
-                if now.timeIntervalSince(modified) <= freshness,
+                let signal = SessionFileSignal(url: url, modified: modified, kind: kind)
+                collected.values.append(signal)
+                if modified > now { collected.complete = false }
+                if signal.isFresh(now: now, freshness: freshness),
                    SessionFileLayout.countsTowardBusy(url, countTerminalSessions: countTerminalSessions) {
                     collected.complete = false
                     return true
