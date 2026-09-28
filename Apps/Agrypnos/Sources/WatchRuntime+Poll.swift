@@ -160,6 +160,7 @@ extension WatchRuntime {
         kernel: Bool,
         observeAgents: Bool
     ) {
+        let previousSettle = engine.settle
         let commands = engine.tick(
             now: now,
             safety: safety,
@@ -167,7 +168,7 @@ extension WatchRuntime {
             kernelSleepDisabled: kernel,
             observeAgents: observeAgents
         )
-        diagnostics.tick(engine: engine, busy: agents.anyBusy(included: engine.preferences.includedAgentKinds),
+        diagnostics.tick(engine: engine, settle: engine.engaged ? engine.settle : previousSettle, busy: agents.anyBusy(included: engine.preferences.includedAgentKinds),
                          now: now, kernel: kernel, observed: observeAgents)
         for command in commands {
             if case .disengage(let reason) = command {

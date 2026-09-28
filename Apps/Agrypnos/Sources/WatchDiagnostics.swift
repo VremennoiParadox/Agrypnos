@@ -28,18 +28,18 @@ struct WatchDiagnostics {
         Self.event("probe measured=\(observation.completedAt.timeIntervalSince1970) duration=\(duration) age=\(age) \(state)")
     }
 
-    mutating func tick(engine: WatchEngine, busy: Bool, now: Date, kernel: Bool, observed: Bool) {
+    mutating func tick(engine: WatchEngine, settle: AgentSettleTracker, busy: Bool, now: Date, kernel: Bool, observed: Bool) {
         if lastKernelState != kernel {
             Self.event("kernel readback held=\(kernel)")
             lastKernelState = kernel
         }
         guard observed else { return }
-        let activity = engine.settle.activity(busy: busy, now: now)
-        let state = "armed=\(engine.engaged) activity=\(activity) busySeen=\(engine.settle.sawBusy) lidConfirmed=\(engine.lidCloseConfirmed)"
+        let activity = settle.activity(busy: busy, now: now)
+        let state = "armed=\(engine.engaged) activity=\(activity) busySeen=\(settle.sawBusy) lidConfirmed=\(engine.lidCloseConfirmed)"
         guard state != lastTickState else { return }
         lastTickState = state
-        let elapsed = engine.settle.settleBaselineAt.map { now.timeIntervalSince($0) } ?? 0
-        Self.event("settle \(state) elapsed=\(elapsed) grace=\(engine.settle.grace)")
+        let elapsed = settle.settleBaselineAt.map { now.timeIntervalSince($0) } ?? 0
+        Self.event("settle \(state) elapsed=\(elapsed) grace=\(settle.grace)")
     }
 
     mutating func interrupt() {
