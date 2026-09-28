@@ -23,6 +23,8 @@ final class WatchRuntime {
     var pollTimer: Timer?
     var savedBrightness: Double?
     var savedKeyboard: Double?
+    var hygieneDevices = HygieneDevices()
+    var hygieneEffects = HygieneEffects()
     let brightnessRamp = BrightnessRampController()
     var lidTimer: Timer?
     weak var delegate: WatchRuntimeDelegate?
@@ -128,6 +130,10 @@ final class WatchRuntime {
     }
 
     func setPanelPowerMode(_ mode: PanelPowerMode) {
+        if preferences.panelPowerMode == .floor, mode == .displaySleep {
+            PowerHygieneCoordinator.restoreBrightness(effects: &hygieneEffects, captured: savedBrightness,
+                                                      ramp: brightnessRamp, devices: hygieneDevices)
+        }
         let commands = engine.userSetPanelPowerMode(mode)
         store.save(engine.preferences)
         apply(commands)
@@ -268,6 +274,14 @@ final class WatchRuntime {
     }
 
     func setHygiene(keyboard: Bool? = nil, floor: Bool? = nil) {
+        if keyboard == false {
+            PowerHygieneCoordinator.restoreKeyboard(effects: &hygieneEffects, captured: savedKeyboard,
+                                                     devices: hygieneDevices)
+        }
+        if floor == false {
+            PowerHygieneCoordinator.restoreBrightness(effects: &hygieneEffects, captured: savedBrightness,
+                                                      ramp: brightnessRamp, devices: hygieneDevices)
+        }
         if let keyboard { engine.preferences.keyboardBacklightOff = keyboard }
         if let floor { engine.preferences.applyBrightnessFloor = floor }
         store.save(engine.preferences)
@@ -342,9 +356,13 @@ final class WatchRuntime {
         let result = PowerHygieneCoordinator.apply(
             commands,
             preferences: engine.preferences,
+            armed: engine.engaged,
+            lidCloseConfirmed: engine.lidCloseConfirmed && readLid(),
+            effects: &hygieneEffects,
             savedBrightness: &savedBrightness,
             savedKeyboard: &savedKeyboard,
             ramp: brightnessRamp,
+            devices: hygieneDevices,
             runCommand: runCommand
         )
         if let outcome = result.sleepnow {
@@ -362,10 +380,11 @@ final class WatchRuntime {
     func restoreHygiene() {
         stopLidPulse()
         PowerHygieneCoordinator.restoreAfterDisengage(
-            preferences: engine.preferences,
+            effects: &hygieneEffects,
             savedBrightness: &savedBrightness,
             savedKeyboard: &savedKeyboard,
-            ramp: brightnessRamp
+            ramp: brightnessRamp,
+            devices: hygieneDevices
         )
     }
 
@@ -374,15 +393,12 @@ final class WatchRuntime {
         brightnessRamp.cancel()
         savedBrightness = nil
         savedKeyboard = nil
+        hygieneEffects = HygieneEffects()
     }
 
     func recaptureOpenLidHygiene() {
-        if let current = BrightnessFloorController.current() {
-            savedBrightness = current
-        }
-        if let current = KeyboardBacklightController.current() {
-            savedKeyboard = current
-        }
+        savedBrightness = hygieneDevices.brightness()
+        savedKeyboard = hygieneDevices.keyboard()
     }
 
     func inboundDisarmReply(_ base: String, sleepResult: HygieneApplyResult? = nil) -> String {

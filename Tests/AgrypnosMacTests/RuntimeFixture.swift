@@ -34,6 +34,8 @@ final class RuntimeFixture {
             },
             notify: { [unowned self] in self.messages.append($0) }
         )
+        runtime.hygieneDevices = HygieneDevices(canSetBrightness: { true }, brightness: { nil },
+            setBrightness: { _ in }, keyboard: { nil }, setKeyboard: { _ in })
         runtime.engine.preferences.notifEnabled = true
         runtime.engine.preferences.keyboardBacklightOff = false
         runtime.engine.preferences.applyBrightnessFloor = false
