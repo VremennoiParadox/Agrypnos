@@ -24,6 +24,7 @@ extension WatchRuntime {
     }
 
     func noteMacWillSleep() {
+        invalidateAgentProbe()
         if telegramInboundIsPolling() {
             store.saveTelegramInboundCursor(store.loadTelegramInboundCursor().startingWakeMiss())
         }
@@ -34,8 +35,10 @@ extension WatchRuntime {
     }
 
     func noteMacDidWake() {
+        invalidateAgentProbe()
         inboundPoller.restartForWakeMiss()
         discordGateway.restartForWakeMiss()
+        poll()
     }
 
     func telegramInboundPollSnapshot() -> TelegramInboundPollSnapshot {

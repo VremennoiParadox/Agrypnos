@@ -364,6 +364,7 @@ final class WatchRuntime {
     }
 
     func invalidateAgentProbe() {
+        engine.interruptAgentObservations()
         agentSnapshotCache.invalidate()
         probeGeneration &+= 1
         probeInFlight = false
