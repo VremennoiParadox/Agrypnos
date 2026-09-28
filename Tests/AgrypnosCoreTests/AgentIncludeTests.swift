@@ -253,6 +253,7 @@ final class AgentIncludeTests: XCTestCase {
             now: t0.addingTimeInterval(120)
         )
         XCTAssertFalse(idle.report(.openCode)?.isBusy ?? true)
+        observeHealthyIdle(&watch, before: t0.addingTimeInterval(120))
         XCTAssertEqual(
             watch.tick(now: t0.addingTimeInterval(120), safety: .acPower, agents: idle),
             [.disengage(.agentsSettled)]

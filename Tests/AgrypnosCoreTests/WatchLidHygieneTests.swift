@@ -169,6 +169,7 @@ final class WatchLidHygieneTests: XCTestCase {
                 ])
             ).isEmpty
         )
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(120))
         XCTAssertEqual(
             engine.tick(now: t0.addingTimeInterval(120), safety: .acPower, agents: .idle),
             [.disengage(.agentsSettled), .requestSleep]

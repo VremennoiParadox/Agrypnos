@@ -12,6 +12,7 @@ final class WatchIdlePostHoldTests: XCTestCase {
         _ = engine.userSetEngaged(true, now: t0)
         XCTAssertTrue(engine.tick(now: t0.addingTimeInterval(20), safety: .acPower, agents: .busy).isEmpty)
 
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(20 + 120))
         XCTAssertEqual(
             engine.tick(now: t0.addingTimeInterval(20 + 120), safety: .acPower, agents: .idle),
             [.disengage(.agentsSettled), .postIdleAfterWaitNotif]
@@ -36,6 +37,7 @@ final class WatchIdlePostHoldTests: XCTestCase {
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0)
         XCTAssertTrue(engine.tick(now: t0.addingTimeInterval(20), safety: .acPower, agents: .busy).isEmpty)
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(140))
         _ = engine.tick(now: t0.addingTimeInterval(140), safety: .acPower, agents: .idle)
 
         engine.completeIdlePostHold()
@@ -52,6 +54,7 @@ final class WatchIdlePostHoldTests: XCTestCase {
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0)
         XCTAssertTrue(engine.tick(now: t0.addingTimeInterval(20), safety: .acPower, agents: .busy).isEmpty)
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(140))
         _ = engine.tick(now: t0.addingTimeInterval(140), safety: .acPower, agents: .idle)
         XCTAssertTrue(engine.holdingForIdlePost)
 
@@ -69,6 +72,7 @@ final class WatchIdlePostHoldTests: XCTestCase {
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0)
         XCTAssertTrue(engine.tick(now: t0.addingTimeInterval(20), safety: .acPower, agents: .busy).isEmpty)
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(140))
         _ = engine.tick(now: t0.addingTimeInterval(140), safety: .acPower, agents: .idle)
         XCTAssertFalse(engine.holdingForIdlePost)
         XCTAssertEqual(engine.preferences.lastWatchEnd?.reason, .agentsSettled)
@@ -103,6 +107,12 @@ final class WatchIdlePostHoldTests: XCTestCase {
                 agents: .idle,
                 observeAgents: true
             ),
+            []
+        )
+        XCTAssertTrue(engine.engaged)
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(260))
+        XCTAssertEqual(
+            engine.tick(now: t0.addingTimeInterval(260), safety: .acPower, agents: .idle),
             [.disengage(.agentsSettled)]
         )
     }
@@ -114,6 +124,7 @@ final class WatchIdlePostHoldTests: XCTestCase {
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: true)
         XCTAssertTrue(engine.tick(now: t0.addingTimeInterval(20), safety: .acPower, agents: .busy).isEmpty)
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(140))
         _ = engine.tick(now: t0.addingTimeInterval(140), safety: .acPower, agents: .idle)
 
         XCTAssertTrue(engine.holdingForIdlePost)
@@ -132,6 +143,7 @@ final class WatchIdlePostHoldTests: XCTestCase {
         engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: true)
         XCTAssertTrue(engine.tick(now: t0.addingTimeInterval(20), safety: .acPower, agents: .busy).isEmpty)
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(140))
         _ = engine.tick(now: t0.addingTimeInterval(140), safety: .acPower, agents: .idle)
         let stillClosed = engine.userSetEngaged(
             false,

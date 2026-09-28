@@ -110,6 +110,10 @@ public struct WatchEngine: Equatable, Sendable {
         return []
     }
 
+    public mutating func interruptAgentObservations() {
+        settle.interruptObservations()
+    }
+
     public mutating func userSetAgentSettleGrace(_ seconds: TimeInterval) {
         preferences.agentSettleGrace = UserPreferences.clampAgentSettleGrace(seconds)
         settle.grace = preferences.agentSettleGrace

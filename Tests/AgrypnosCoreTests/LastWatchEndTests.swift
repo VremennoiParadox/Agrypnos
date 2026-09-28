@@ -94,6 +94,7 @@ final class LastWatchEndTests: XCTestCase {
             var engine = WatchEngine(preferences: prefs)
             _ = engine.userSetEngaged(true, now: t0)
             if busyFirst { _ = engine.tick(now: t0, safety: .acPower, agents: .busy) }
+            observeHealthyIdle(&engine, before: t0.addingTimeInterval(wait))
             _ = engine.tick(now: t0.addingTimeInterval(wait), safety: safety, agents: .idle)
             return engine
         }
@@ -126,6 +127,7 @@ final class LastWatchEndTests: XCTestCase {
 
         var leftover = WatchEngine(preferences: .default)
         _ = leftover.adoptLeftoverKernel(now: t0)
+        observeHealthyIdle(&leftover, before: t0.addingTimeInterval(1))
         _ = leftover.tick(now: t0.addingTimeInterval(1), safety: .lowPowerDischarging, agents: .idle)
         XCTAssertEqual(leftover.preferences.lastWatchEnd, LastWatchEnd(endedAt: t0.addingTimeInterval(1), reason: .lowPowerMode))
     }

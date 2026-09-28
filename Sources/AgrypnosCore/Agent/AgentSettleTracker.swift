@@ -8,35 +8,57 @@ public struct AgentSettleTracker: Equatable, Sendable {
         case settled
     }
 
+    /// Three normal poll intervals. Missing measurements are not observed idle.
+    public static let maximumObservationGap: TimeInterval = 15
     public var grace: TimeInterval
     public private(set) var lastBusyAt: Date?
     public private(set) var sawBusy: Bool
+    public private(set) var lastObservedAt: Date?
+    private var settleBaselineAt: Date?
 
     public init(grace: TimeInterval = UserPreferences.defaultAgentSettleGrace) {
         self.grace = grace
         self.lastBusyAt = nil
         self.sawBusy = false
+        self.lastObservedAt = nil
+        self.settleBaselineAt = nil
     }
 
     public mutating func reset() {
         lastBusyAt = nil
         sawBusy = false
+        interruptObservations()
     }
 
-    /// Status and other readers. Does not record busy or move lastBusyAt.
+    /// Keep busy facts from this arm; require a new quiet wait after observations resume.
+    public mutating func interruptObservations() {
+        lastObservedAt = nil
+        settleBaselineAt = nil
+    }
+
+    /// Status and other readers. Does not record busy or extend observation continuity.
     public func activity(busy: Bool, now: Date) -> Activity {
         if busy { return .busy }
-        guard sawBusy, let last = lastBusyAt else { return .quiet }
-        if now.timeIntervalSince(last) >= grace { return .settled }
-        return .settling
+        guard sawBusy else { return .quiet }
+        guard observationIsContinuous(at: now), let baseline = settleBaselineAt else { return .settling }
+        return now.timeIntervalSince(baseline) >= grace ? .settled : .settling
     }
 
     public mutating func observe(busy: Bool, now: Date) -> Activity {
         if busy {
             lastBusyAt = now
             sawBusy = true
-            return .busy
+            settleBaselineAt = now
+        } else if !observationIsContinuous(at: now) {
+            settleBaselineAt = now
         }
-        return activity(busy: false, now: now)
+        lastObservedAt = now
+        return activity(busy: busy, now: now)
+    }
+
+    private func observationIsContinuous(at now: Date) -> Bool {
+        guard let lastObservedAt else { return false }
+        let gap = now.timeIntervalSince(lastObservedAt)
+        return gap >= 0 && gap <= Self.maximumObservationGap
     }
 }

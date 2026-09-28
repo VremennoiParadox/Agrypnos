@@ -11,6 +11,7 @@ final class StickyWatchTests: XCTestCase {
         _ = engine.userSetEngaged(true, now: t0)
 
         XCTAssertTrue(engine.tick(now: t0.addingTimeInterval(20), safety: .acPower, agents: .busy).isEmpty)
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(20 + 120))
         let commands = engine.tick(
             now: t0.addingTimeInterval(20 + 120),
             safety: .acPower,
@@ -103,6 +104,7 @@ final class StickyWatchTests: XCTestCase {
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0)
         XCTAssertTrue(engine.tick(now: t0.addingTimeInterval(20), safety: .acPower, agents: .busy).isEmpty)
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(20 + 120))
         XCTAssertEqual(
             engine.tick(now: t0.addingTimeInterval(20 + 120), safety: .acPower, agents: .idle),
             [.disengage(.agentsSettled), .postIdleAfterWaitNotif]
@@ -110,6 +112,7 @@ final class StickyWatchTests: XCTestCase {
         XCTAssertFalse(engine.engaged)
         XCTAssertTrue(engine.postedThisUserArm)
         XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(20 + 180))
         XCTAssertTrue(
             engine.tick(now: t0.addingTimeInterval(20 + 180), safety: .acPower, agents: .idle).isEmpty
         )
@@ -122,6 +125,7 @@ final class StickyWatchTests: XCTestCase {
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0)
         XCTAssertTrue(engine.tick(now: t0.addingTimeInterval(20), safety: .acPower, agents: .busy).isEmpty)
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(20 + 120))
         XCTAssertEqual(
             engine.tick(
                 now: t0.addingTimeInterval(20 + 120),
@@ -133,6 +137,7 @@ final class StickyWatchTests: XCTestCase {
         )
         XCTAssertFalse(engine.engaged)
         XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(20 + 180))
         XCTAssertTrue(
             engine.tick(
                 now: t0.addingTimeInterval(20 + 180),
