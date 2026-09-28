@@ -24,6 +24,7 @@ extension WatchRuntime {
     }
 
     func noteMacWillSleep() {
+        WatchDiagnostics.event("lifecycle willSleep")
         invalidateAgentProbe()
         if telegramInboundIsPolling() {
             store.saveTelegramInboundCursor(store.loadTelegramInboundCursor().startingWakeMiss())
@@ -35,6 +36,7 @@ extension WatchRuntime {
     }
 
     func noteMacDidWake() {
+        WatchDiagnostics.event("lifecycle didWake")
         invalidateAgentProbe()
         inboundPoller.restartForWakeMiss()
         discordGateway.restartForWakeMiss()

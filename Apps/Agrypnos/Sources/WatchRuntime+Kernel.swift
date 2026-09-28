@@ -22,15 +22,19 @@ extension WatchRuntime {
             } else {
                 UserNotify.post("pmset ran but SleepDisabled did not read back as on.")
             }
+            WatchDiagnostics.event("kernel arm failed")
             return false
         }
+        WatchDiagnostics.event("kernel arm readback held=true")
         return true
     }
 
     @discardableResult
     func disarmKernel() -> Bool {
         _ = SleepDisabledController.set(false)
-        return !SleepDisabledController.read()
+        let held = SleepDisabledController.read()
+        WatchDiagnostics.event("kernel disarm readback held=\(held)")
+        return !held
     }
 
     /// Quit must clear actual kernel-held SleepDisabled even if the engine already disengaged for POST.

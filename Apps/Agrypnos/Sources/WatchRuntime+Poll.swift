@@ -113,10 +113,14 @@ extension WatchRuntime {
         included: Set<AgentKind>,
         countTerminalSessionsAsBusy: Bool
     ) {
-        guard generation == probeGeneration else { return }
+        guard generation == probeGeneration else {
+            WatchDiagnostics.event("probe discarded: generation changed")
+            return
+        }
         probeInFlight = false
         let now = Date()
         let busy = observation.settleBusy(included: included, now: now)
+        diagnostics.probe(observation, busy: busy, included: included, now: now)
         if busy != nil, observation.complete {
             agentSnapshotCache.store(
                 observation.snapshot,
@@ -163,7 +167,15 @@ extension WatchRuntime {
             kernelSleepDisabled: kernel,
             observeAgents: observeAgents
         )
+        diagnostics.tick(engine: engine, busy: agents.anyBusy(included: engine.preferences.includedAgentKinds),
+                         now: now, kernel: kernel, observed: observeAgents)
+        for command in commands {
+            if case .disengage(let reason) = command {
+                WatchDiagnostics.event("watch end reason=\(reason) lidConfirmed=\(engine.lastDisengageLidClosed)")
+            }
+        }
         if commands.contains(where: Self.isPostIdleAfterWait) {
+            WatchDiagnostics.event("idle POST decision enabled=\(engine.preferences.notifEnabled)")
             let token = idleOutbound.beginPost()
             let enabled = engine.preferences.notifEnabled
             idlePostTask?.cancel()
@@ -171,6 +183,7 @@ extension WatchRuntime {
                 await NotifIdlePoster.postIfNeeded(enabled: enabled)
                 guard self.idleOutbound.completePost(token: token) else { return }
                 self.idlePostTask = nil
+                WatchDiagnostics.event("idle POST attempt complete; releasing hold")
                 self.finishTickCommands(commands)
                 self.delegate?.watchRuntimeDidChange(self)
             }

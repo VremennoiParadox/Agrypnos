@@ -37,6 +37,7 @@
 		31DBD3069D96D292DC184EDD /* PreferencesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 986AF8E920E5E71D993DED12 /* PreferencesStore.swift */; };
 		436DA0943AEB42FDD30C5580 /* GrantAndNotify.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD7C3F5A1565378FE3CC9B8A /* GrantAndNotify.swift */; };
 		E62F9714A04AB0D4F946A4FE /* ProcessRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D433AFEE00C6137709B3A3C /* ProcessRunner.swift */; };
+		66D3B1D5907FD0E006894BA9 /* WatchDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DDF74CDCF0EF7E7F8CCA9C /* WatchDiagnostics.swift */; };
 		EEE09B48690E2B1F79A7547C /* WatchRuntime+Kernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED750E218B81FEF5B2711348 /* WatchRuntime+Kernel.swift */; };
 		B61701CD7A9C7B8B971BBE35 /* WatchRuntime+Lid.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE46E54106185894B8859E55 /* WatchRuntime+Lid.swift */; };
 		E3E9E97E96936C3A956AAC68 /* WatchRuntime+Poll.swift in Sources */ = {isa = PBXBuildFile; fileRef = 779C1801A09C9D65CD3D4E70 /* WatchRuntime+Poll.swift */; };
@@ -78,6 +79,7 @@
 		986AF8E920E5E71D993DED12 /* PreferencesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesStore.swift; sourceTree = "<group>"; };
 		BD7C3F5A1565378FE3CC9B8A /* GrantAndNotify.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrantAndNotify.swift; sourceTree = "<group>"; };
 		1D433AFEE00C6137709B3A3C /* ProcessRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessRunner.swift; sourceTree = "<group>"; };
+		22DDF74CDCF0EF7E7F8CCA9C /* WatchDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchDiagnostics.swift; sourceTree = "<group>"; };
 		ED750E218B81FEF5B2711348 /* WatchRuntime+Kernel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+Kernel.swift"; sourceTree = "<group>"; };
 		BE46E54106185894B8859E55 /* WatchRuntime+Lid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+Lid.swift"; sourceTree = "<group>"; };
 		779C1801A09C9D65CD3D4E70 /* WatchRuntime+Poll.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+Poll.swift"; sourceTree = "<group>"; };
@@ -105,6 +107,7 @@
 			children = (
 				83A43E56C10CD6D41E834FFE /* AppDelegate.swift */,
 				AD5204D1B4D62DE6D2D8B414 /* AppMain.swift */,
+				22DDF74CDCF0EF7E7F8CCA9C /* WatchDiagnostics.swift */,
 				ED750E218B81FEF5B2711348 /* WatchRuntime+Kernel.swift */,
 				BE46E54106185894B8859E55 /* WatchRuntime+Lid.swift */,
 				779C1801A09C9D65CD3D4E70 /* WatchRuntime+Poll.swift */,
@@ -334,6 +337,7 @@
 				31DBD3069D96D292DC184EDD /* PreferencesStore.swift in Sources */,
 				436DA0943AEB42FDD30C5580 /* GrantAndNotify.swift in Sources */,
 				E62F9714A04AB0D4F946A4FE /* ProcessRunner.swift in Sources */,
+				66D3B1D5907FD0E006894BA9 /* WatchDiagnostics.swift in Sources */,
 				EEE09B48690E2B1F79A7547C /* WatchRuntime+Kernel.swift in Sources */,
 				B61701CD7A9C7B8B971BBE35 /* WatchRuntime+Lid.swift in Sources */,
 				E3E9E97E96936C3A956AAC68 /* WatchRuntime+Poll.swift in Sources */,

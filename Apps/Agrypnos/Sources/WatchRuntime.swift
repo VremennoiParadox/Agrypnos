@@ -43,6 +43,7 @@ final class WatchRuntime {
     var probeGeneration: UInt64 = 0
     var probeInFlight = false
     var idleProbeTicks: Int = 0
+    var diagnostics = WatchDiagnostics()
 
     init() {
         engine = WatchEngine(preferences: store.load())
@@ -298,6 +299,12 @@ final class WatchRuntime {
             savedKeyboard: &savedKeyboard,
             ramp: brightnessRamp
         )
+        if let outcome = result.sleepnow {
+            WatchDiagnostics.event("sleepnow outcome=\(outcome)")
+        }
+        if let outcome = result.displaysleepnow {
+            WatchDiagnostics.event("displaysleepnow outcome=\(outcome)")
+        }
         for line in result.notifications {
             UserNotify.post(line)
         }
@@ -365,6 +372,7 @@ final class WatchRuntime {
 
     func invalidateAgentProbe() {
         engine.interruptAgentObservations()
+        diagnostics.interrupt()
         agentSnapshotCache.invalidate()
         probeGeneration &+= 1
         probeInFlight = false
