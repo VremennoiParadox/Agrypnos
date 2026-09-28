@@ -8,19 +8,19 @@ import AgrypnosCore
 extension WatchRuntime {
     @discardableResult
     func armKernel() -> Bool {
-        var result = SleepDisabledController.set(true)
+        var result = setKernel(true)
         if result == .grantMissing {
             if GrantInstaller.installViaNativeAuth() {
-                result = SleepDisabledController.set(true)
+                result = setKernel(true)
             }
         }
-        guard result == .ok, SleepDisabledController.read() else {
+        guard result == .ok, readKernel() else {
             if case .failed(let message) = result {
-                UserNotify.post("Couldn't keep the watch. \(message)")
+                notify("Couldn't keep the watch. \(message)")
             } else if result == .grantMissing {
-                UserNotify.post(AgrypnosCopy.grantNeeded)
+                notify(AgrypnosCopy.grantNeeded)
             } else {
-                UserNotify.post("pmset ran but SleepDisabled did not read back as on.")
+                notify("pmset ran but SleepDisabled did not read back as on.")
             }
             WatchDiagnostics.event("kernel arm failed")
             return false
@@ -31,8 +31,8 @@ extension WatchRuntime {
 
     @discardableResult
     func disarmKernel() -> Bool {
-        _ = SleepDisabledController.set(false)
-        let held = SleepDisabledController.read()
+        _ = setKernel(false)
+        let held = readKernel()
         WatchDiagnostics.event("kernel disarm readback held=\(held)")
         return !held
     }
@@ -42,7 +42,7 @@ extension WatchRuntime {
         stopObservingMacSleepWake()
         inboundPoller.stop()
         discordGateway.stop()
-        let kernelHeld = SleepDisabledController.read()
+        let kernelHeld = readKernel()
         let plan = idleOutbound.terminatePlan(
             engineEngaged: engine.engaged,
             kernelSleepDisabled: kernelHeld
@@ -55,7 +55,7 @@ extension WatchRuntime {
         if plan.clearKernel {
             cleared = disarmKernel()
             if let message = KernelQuitPolicy.leftoverNotify(kernelCleared: cleared) {
-                UserNotify.post(message)
+                notify(message)
             }
         }
         if engine.engaged {
@@ -70,13 +70,13 @@ extension WatchRuntime {
     }
 
     func reconcileKernel(preferClearLeftover: Bool) {
-        let kernel = SleepDisabledController.read()
+        let kernel = readKernel()
         if kernel, !engine.engaged {
             if preferClearLeftover {
-                _ = SleepDisabledController.set(false)
+                _ = setKernel(false)
             }
-            if SleepDisabledController.read() {
-                let rawClosed = LidStateReader.isClosed()
+            if readKernel() {
+                let rawClosed = readLid()
                 if LidCloseConfirm.shouldCaptureBeforeClosedHygiene(rawClosed: rawClosed) {
                     recaptureOpenLidHygiene()
                 }
@@ -89,7 +89,7 @@ extension WatchRuntime {
                     recaptureOpenLidHygiene()
                 }
                 startLidPulse()
-                UserNotify.post(AgrypnosCopy.leftoverNotify(for: engine.preferences.panelPowerMode))
+                notify(AgrypnosCopy.leftoverNotify(for: engine.preferences.panelPowerMode))
             }
         }
     }

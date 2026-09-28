@@ -37,7 +37,7 @@ extension WatchRuntime {
             lowPowerMode: ProcessInfo.processInfo.isLowPowerModeEnabled
         )
         lastSafety = safety
-        let kernel = SleepDisabledController.read()
+        let kernel = readKernel()
         let included = engine.preferences.includedAgentKinds
         let terminals = engine.preferences.countTerminalSessionsAsBusy
         let now = Date()
@@ -149,7 +149,7 @@ extension WatchRuntime {
             now: now,
             safety: safety,
             agents: observation.snapshot,
-            kernel: SleepDisabledController.read(),
+            kernel: readKernel(),
             observeAgents: busy != nil
         )
     }
@@ -188,7 +188,7 @@ extension WatchRuntime {
             let enabled = engine.preferences.notifEnabled
             idlePostTask?.cancel()
             idlePostTask = Task { @MainActor in
-                await NotifIdlePoster.postIfNeeded(enabled: enabled)
+                await self.postIdle(enabled)
                 guard self.idleOutbound.completePost(token: token) else { return }
                 self.idlePostTask = nil
                 WatchDiagnostics.event("idle POST attempt complete; releasing hold")
@@ -204,12 +204,19 @@ extension WatchRuntime {
 
     func finishTickCommands(_ commands: [WatchCommand]) {
         var applyCommands = commands.filter { !Self.isPostIdleAfterWait($0) }
-        let sleepNext = commands.contains(.requestSleep)
+        // A network await must not preserve permission to sleep after the lid opens.
+        let sleepNext = commands.contains(.requestSleep) && readLid()
+        if !sleepNext {
+            applyCommands.removeAll { $0 == .requestSleep }
+            if commands.contains(.requestSleep), engine.preferences.panelPowerMode == .displaySleep {
+                applyCommands.append(.wakeDisplay)
+            }
+        }
         for command in commands {
             if case .disengage(let reason) = command {
                 if !disarmKernel() {
                     applyCommands = engine.rollbackDisarmFailure(now: Date())
-                    UserNotify.post("Couldn't drop SleepDisabled. The watch stays up.")
+                    notify("Couldn't drop SleepDisabled. The watch stays up.")
                     break
                 }
                 engine.completeIdlePostHold()
@@ -222,7 +229,7 @@ extension WatchRuntime {
                     dropSavedHygieneWithoutWrite()
                 }
                 if reason != .user {
-                    UserNotify.post(reason: reason)
+                    notify(AgrypnosCopy.notification(for: reason))
                 }
             }
         }
@@ -241,7 +248,7 @@ extension WatchRuntime {
     @discardableResult
     func applyUserOff() -> HygieneApplyResult {
         pollLid()
-        let confirmed = engine.userOffLidCloseConfirmed(rawClosed: LidStateReader.isClosed())
+        let confirmed = engine.userOffLidCloseConfirmed(rawClosed: readLid())
         if engine.holdingForIdlePost {
             engine.completeIdlePostHold()
         }

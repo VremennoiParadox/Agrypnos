@@ -147,7 +147,7 @@ extension WatchRuntime {
 
     func applyTelegramDisarm(token: String?, chatId: String?) {
         pollLid()
-        let confirmed = engine.userOffLidCloseConfirmed(rawClosed: LidStateReader.isClosed())
+        let confirmed = engine.userOffLidCloseConfirmed(rawClosed: readLid())
         let sleepResult: HygieneApplyResult
         if engaged {
             sleepResult = setEngaged(false)

@@ -11,7 +11,8 @@ enum PowerHygieneCoordinator {
         preferences: UserPreferences,
         savedBrightness: inout Double?,
         savedKeyboard: inout Double?,
-        ramp: BrightnessRampController
+        ramp: BrightnessRampController,
+        runCommand: (String, [String]) -> (exit: Int32, out: String, err: String) = { ProcessRunner.run($0, $1) }
     ) -> HygieneApplyResult {
         var result = HygieneApplyResult()
         for command in commands {
@@ -19,12 +20,12 @@ enum PowerHygieneCoordinator {
             case .engage, .disengage, .assertSleepDisabled, .postIdleAfterWaitNotif:
                 break
             case .requestSleep:
-                let exit = ProcessRunner.run("/usr/bin/pmset", ["sleepnow"]).exit
+                let exit = runCommand("/usr/bin/pmset", ["sleepnow"]).exit
                 result.sleepnow = PmsetCommandOutcome.from(exit: exit)
             case .requestDisplaySleep:
                 // Panel only. Never `sleepnow`. Never with a floor write.
                 guard preferences.panelPowerMode.sleepsDisplay else { break }
-                let exit = ProcessRunner.run("/usr/bin/pmset", ["displaysleepnow"]).exit
+                let exit = runCommand("/usr/bin/pmset", ["displaysleepnow"]).exit
                 result.displaysleepnow = PmsetCommandOutcome.from(exit: exit)
             case .wakeDisplay:
                 // Fire-and-forget user-activity pulse. Do not wait — `caffeinate -u -t 1`

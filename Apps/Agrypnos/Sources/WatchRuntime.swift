@@ -12,7 +12,13 @@ protocol WatchRuntimeDelegate: AnyObject {
 
 @MainActor
 final class WatchRuntime {
-    let store = PreferencesStore()
+    let store: PreferencesStore
+    let readLid: () -> Bool
+    let readKernel: () -> Bool
+    let setKernel: (Bool) -> ToggleResult
+    let runCommand: (String, [String]) -> (exit: Int32, out: String, err: String)
+    let postIdle: (Bool) async -> Void
+    let notify: (String) -> Void
     var engine: WatchEngine
     var pollTimer: Timer?
     var savedBrightness: Double?
@@ -45,7 +51,24 @@ final class WatchRuntime {
     var idleProbeTicks: Int = 0
     var diagnostics = WatchDiagnostics()
 
-    init() {
+    init(
+        store: PreferencesStore = PreferencesStore(),
+        readLid: @escaping () -> Bool = LidStateReader.isClosed,
+        readKernel: @escaping () -> Bool = SleepDisabledController.read,
+        setKernel: @escaping (Bool) -> ToggleResult = SleepDisabledController.set,
+        runCommand: @escaping (String, [String]) -> (exit: Int32, out: String, err: String) = {
+            ProcessRunner.run($0, $1)
+        },
+        postIdle: @escaping (Bool) async -> Void = { await NotifIdlePoster.postIfNeeded(enabled: $0) },
+        notify: @escaping (String) -> Void = UserNotify.post
+    ) {
+        self.store = store
+        self.readLid = readLid
+        self.readKernel = readKernel
+        self.setKernel = setKernel
+        self.runCommand = runCommand
+        self.postIdle = postIdle
+        self.notify = notify
         engine = WatchEngine(preferences: store.load())
     }
 
@@ -216,7 +239,7 @@ final class WatchRuntime {
             lastFailedHotkey = plan.failedAttempt
             hotkeyRegistered = bindHotkey?(plan.chordToRegister) ?? false
             if let hint = plan.hint {
-                UserNotify.post(hint)
+                notify(hint)
             }
         }
         delegate?.watchRuntimeDidChange(self)
@@ -257,7 +280,7 @@ final class WatchRuntime {
             idlePostTask?.cancel()
             idlePostTask = nil
             idleOutbound.noteUserArm()
-            let rawClosed = LidStateReader.isClosed()
+            let rawClosed = readLid()
             if LidCloseConfirm.shouldCaptureBeforeClosedHygiene(rawClosed: rawClosed) {
                 recaptureOpenLidHygiene()
             }
@@ -274,10 +297,13 @@ final class WatchRuntime {
             return HygieneApplyResult()
         }
         guard disarmKernel() else {
-            UserNotify.post("Couldn't drop SleepDisabled. The kernel flag is still on.")
+            notify("Couldn't drop SleepDisabled. The kernel flag is still on.")
             delegate?.watchRuntimeDidChange(self)
             return HygieneApplyResult()
         }
+        idlePostTask?.cancel()
+        idlePostTask = nil
+        idleOutbound.cancelInFlight()
         let sleepResult = applyUserOff()
         store.save(engine.preferences)
         syncLidPulse()
@@ -297,7 +323,8 @@ final class WatchRuntime {
             preferences: engine.preferences,
             savedBrightness: &savedBrightness,
             savedKeyboard: &savedKeyboard,
-            ramp: brightnessRamp
+            ramp: brightnessRamp,
+            runCommand: runCommand
         )
         if let outcome = result.sleepnow {
             WatchDiagnostics.event("sleepnow outcome=\(outcome)")
@@ -306,7 +333,7 @@ final class WatchRuntime {
             WatchDiagnostics.event("displaysleepnow outcome=\(outcome)")
         }
         for line in result.notifications {
-            UserNotify.post(line)
+            notify(line)
         }
         return result
     }

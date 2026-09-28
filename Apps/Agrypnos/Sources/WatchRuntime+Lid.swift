@@ -15,7 +15,7 @@ extension WatchRuntime {
     }
 
     func pollLid() {
-        let rawClosed = LidStateReader.isClosed()
+        let rawClosed = readLid()
         var lidChanged = false
         let commands = engine.observeLid(closed: rawClosed, now: Date())
         if engine.engaged {
