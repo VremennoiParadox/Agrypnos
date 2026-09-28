@@ -39,7 +39,8 @@ public struct AgentSnapshotCache: Equatable, Sendable {
         else { return nil }
         guard stored == included else { return nil }
         guard storedTerminals == countTerminalSessionsAsBusy else { return nil }
-        guard now.timeIntervalSince(capturedAt) < Self.reuseWindow else { return nil }
+        let age = now.timeIntervalSince(capturedAt)
+        guard age >= 0, age < Self.reuseWindow else { return nil }
         return snapshot
     }
 

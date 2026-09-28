@@ -108,7 +108,7 @@ extension WatchRuntime {
     }
 
     func finishAgentProbe(
-        _ snap: AgentSnapshot,
+        _ observation: AgentProbeObservation,
         generation: UInt64,
         included: Set<AgentKind>,
         countTerminalSessionsAsBusy: Bool
@@ -116,12 +116,20 @@ extension WatchRuntime {
         guard generation == probeGeneration else { return }
         probeInFlight = false
         let now = Date()
-        agentSnapshotCache.store(
-            snap,
-            included: included,
-            countTerminalSessionsAsBusy: countTerminalSessionsAsBusy,
-            at: now
-        )
+        let busy = observation.settleBusy(included: included, now: now)
+        if busy != nil, observation.complete {
+            agentSnapshotCache.store(
+                observation.snapshot,
+                included: included,
+                countTerminalSessionsAsBusy: countTerminalSessionsAsBusy,
+                at: observation.completedAt
+            )
+        } else {
+            agentSnapshotCache.invalidate()
+        }
+        if busy == nil {
+            engine.interruptAgentObservations()
+        }
         guard engine.engaged else {
             delegate?.watchRuntimeDidChange(self)
             return
@@ -135,9 +143,9 @@ extension WatchRuntime {
         finishPollTick(
             now: now,
             safety: safety,
-            agents: snap,
+            agents: observation.snapshot,
             kernel: SleepDisabledController.read(),
-            observeAgents: true
+            observeAgents: busy != nil
         )
     }
 
