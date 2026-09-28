@@ -7,6 +7,7 @@ import AgrypnosCore
 
 extension WatchRuntime {
     func telegramInboundIsPolling() -> Bool {
+        guard engine.preferences.telegramInboundEnabled else { return false }
         let secrets = NotifSecretsStore.load()
         return TelegramInboundPolicy.shouldPoll(
             enabled: engine.preferences.telegramInboundEnabled,

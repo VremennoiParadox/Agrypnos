@@ -35,9 +35,10 @@ enum ProcessRunner {
             // Foundation gives children their own group on macOS. Check before signaling it.
             let ownsGroup = getpgid(pid) == pid
             _ = kill(ownsGroup ? -pid : pid, SIGTERM)
-            if exited.wait(timeout: .now() + 0.1) == .timedOut, process.isRunning {
-                _ = kill(ownsGroup ? -pid : pid, SIGKILL)
-            }
+            _ = exited.wait(timeout: .now() + 0.1)
+            // The leader may exit on TERM while its descendants ignore it.
+            if ownsGroup { _ = kill(-pid, SIGKILL) }
+            else if process.isRunning { _ = kill(pid, SIGKILL) }
         }
         process.waitUntilExit()
         let out = stdout.finish()

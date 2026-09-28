@@ -363,6 +363,7 @@ final class WatchRuntime {
             savedKeyboard: &savedKeyboard,
             ramp: brightnessRamp,
             devices: hygieneDevices,
+            readLid: readLid,
             runCommand: runCommand
         )
         if let outcome = result.sleepnow {

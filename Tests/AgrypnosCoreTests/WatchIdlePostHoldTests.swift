@@ -117,7 +117,7 @@ final class WatchIdlePostHoldTests: XCTestCase {
         )
     }
 
-    func testUserOffDuringIdlePostHoldUsesLastDisengageLidForSleepnow() {
+    func testUserOffDuringIdlePostHoldUsesLiveConfirmedLidForSleepnow() {
         var prefs = UserPreferences.default
         prefs.duration = .untilAgentsSettle
         prefs.notifEnabled = true
@@ -128,7 +128,7 @@ final class WatchIdlePostHoldTests: XCTestCase {
         _ = engine.tick(now: t0.addingTimeInterval(140), safety: .acPower, agents: .idle)
 
         XCTAssertTrue(engine.holdingForIdlePost)
-        XCTAssertFalse(engine.lidCloseConfirmed)
+        XCTAssertTrue(engine.lidCloseConfirmed)
         XCTAssertTrue(engine.lastDisengageLidClosed)
         XCTAssertTrue(engine.userOffLidCloseConfirmed(rawClosed: true))
         XCTAssertFalse(engine.userOffLidCloseConfirmed(rawClosed: false))

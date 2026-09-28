@@ -6,7 +6,6 @@ import AgrypnosCore
 
 extension WatchRuntime {
     func poll() {
-        if idleOutbound.shouldSkipPoll(engineEngaged: engine.engaged) { return }
         let probe = WatchTickProbe.needed(engaged: engine.engaged, mode: engine.mode)
         if lidCadence() != .none {
             pollLid()
@@ -14,6 +13,7 @@ extension WatchRuntime {
             stopLidPulse()
         }
 
+        if idleOutbound.shouldSkipPoll(engineEngaged: engine.engaged) { return }
         guard probe != .none else {
             idleProbeTicks += 1
             if WatchTickProbe.leftoverReconcileDue(
@@ -204,38 +204,45 @@ extension WatchRuntime {
 
     func finishTickCommands(_ commands: [WatchCommand]) {
         var applyCommands = commands.filter { !Self.isPostIdleAfterWait($0) }
-        // A network await must not preserve permission to sleep after the lid opens.
-        let sleepNext = commands.contains(.requestSleep) && readLid()
-        if !sleepNext {
-            applyCommands.removeAll { $0 == .requestSleep }
-            if commands.contains(.requestSleep), engine.preferences.panelPowerMode == .displaySleep {
-                applyCommands.append(.wakeDisplay)
-            }
-        }
+        var released = false
         for command in commands {
             if case .disengage(let reason) = command {
                 if !disarmKernel() {
-                    applyCommands = engine.rollbackDisarmFailure(now: Date())
-                    notify("Couldn't drop SleepDisabled. The watch stays up.")
-                    break
+                    apply(engine.rollbackDisarmFailure(now: Date()))
+                    notify("Couldn't verify SleepDisabled was cleared.")
+                    store.save(engine.preferences)
+                    return
+                }
+                // Recheck after the blocking clear/read, preserving live confirmation during POST.
+                let rawClosed = readLid()
+                if engine.holdingForIdlePost {
+                    _ = engine.observeLid(closed: rawClosed, now: Date())
+                    if !engine.userOffLidCloseConfirmed(rawClosed: rawClosed) {
+                        applyCommands.removeAll { $0 == .requestSleep }
+                    }
+                } else if !rawClosed {
+                    applyCommands.removeAll { $0 == .requestSleep }
                 }
                 engine.completeIdlePostHold()
-                if HygieneRestore.shouldRestoreAfterDisengage(
-                    lidCloseConfirmed: engine.lastDisengageLidClosed,
-                    nextCommandIsSleep: sleepNext
-                ) {
-                    restoreHygiene()
-                } else {
-                    dropSavedHygieneWithoutWrite()
-                }
-                if reason != .user {
-                    notify(AgrypnosCopy.notification(for: reason))
-                }
+                released = true
+                if reason != .user { notify(AgrypnosCopy.notification(for: reason)) }
             }
         }
-        apply(applyCommands)
-        if commands.contains(where: { if case .disengage = $0 { return true }; return false }) {
+        let result = apply(applyCommands)
+        if released {
+            finishDisengageHygiene(sleepResult: result)
             store.save(engine.preferences)
+        }
+    }
+
+    func finishDisengageHygiene(sleepResult: HygieneApplyResult) {
+        if sleepResult.sleepnow != nil {
+            dropSavedHygieneWithoutWrite()
+        } else {
+            restoreHygiene()
+            if engine.preferences.panelPowerMode == .displaySleep, !readLid() {
+                apply([.wakeDisplay])
+            }
         }
     }
 
@@ -247,22 +254,13 @@ extension WatchRuntime {
     /// Popover/hotkey off: sample lid, restore hygiene only if we are not about to sleepnow.
     @discardableResult
     func applyUserOff() -> HygieneApplyResult {
-        pollLid()
+        // Observe only: close-confirm commands must not reassert the hold we just cleared.
+        _ = engine.observeLid(closed: readLid(), now: Date())
         let confirmed = engine.userOffLidCloseConfirmed(rawClosed: readLid())
-        if engine.holdingForIdlePost {
-            engine.completeIdlePostHold()
-        }
+        if engine.holdingForIdlePost { engine.completeIdlePostHold() }
         let commands = engine.userSetEngaged(false, now: Date(), lidClosed: confirmed)
-        let sleep = commands.filter { $0 == .requestSleep }
-        apply(commands.filter { $0 != .requestSleep })
-        if HygieneRestore.shouldRestoreAfterDisengage(
-            lidCloseConfirmed: confirmed,
-            nextCommandIsSleep: !sleep.isEmpty
-        ) {
-            restoreHygiene()
-        } else {
-            dropSavedHygieneWithoutWrite()
-        }
-        return apply(sleep)
+        let result = apply(commands)
+        finishDisengageHygiene(sleepResult: result)
+        return result
     }
 }

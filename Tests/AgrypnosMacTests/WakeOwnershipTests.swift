@@ -2,6 +2,20 @@ import XCTest
 @testable import AgrypnosMac
 
 final class WakeOwnershipTests: XCTestCase {
+    @MainActor
+    func testAppRetainsOwnershipWhenActualHelperExitsEarly() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: url) }
+        autoreleasepool {
+            XCTAssertTrue(SleepDisabledCrashGuard.start(lockURL: url, cleanupScript: "exit 0"))
+            RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+        }
+        RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+        let competing = SleepDisabledCrashGuard.acquireOwnership(at: url)
+        try competing?.close()
+        XCTAssertNil(competing, "Main app lost its ownership when the helper ended")
+    }
+
     func testCleanupHelperRetainsExclusiveOwnershipAfterAppClosesItsHandle() throws {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)

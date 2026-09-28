@@ -41,6 +41,7 @@ enum SleepDisabledController {
 @MainActor
 enum SleepDisabledCrashGuard {
     private static var lifeline: Pipe?
+    private static var ownership: FileHandle?
 
     nonisolated static func acquireOwnership(at url: URL) -> FileHandle? {
         let fd = open(url.path, O_CREAT | O_RDWR | O_NOFOLLOW | O_CLOEXEC, S_IRUSR | S_IWUSR)
@@ -49,19 +50,20 @@ enum SleepDisabledCrashGuard {
         return FileHandle(fileDescriptor: fd, closeOnDealloc: true)
     }
 
-    static func start() -> Bool {
+    static func start(lockURL: URL? = nil, cleanupScript: String = KernelCrashGuard.script) -> Bool {
         if lifeline != nil { return true }
-        let directory = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Application Support/Agrypnos")
+        let url = lockURL ?? FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Application Support/Agrypnos/wake-owner.lock")
+        let directory = url.deletingLastPathComponent()
         do { try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true) }
         catch { return false }
-        guard let owner = acquireOwnership(at: directory.appendingPathComponent("wake-owner.lock")) else {
+        guard let owner = acquireOwnership(at: url) else {
             return false
         }
         let pipe = Pipe()
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/bin/sh")
-        process.arguments = ["-c", KernelCrashGuard.script]
+        process.arguments = ["-c", cleanupScript]
         process.standardInput = pipe
         // The helper inherits this locked open-file description as stdout. The lock survives
         // app death and is released only after its existing cleanup command exits.
@@ -69,6 +71,7 @@ enum SleepDisabledCrashGuard {
         process.standardError = FileHandle.nullDevice
         guard (try? process.run()) != nil else { return false }
         lifeline = pipe
+        ownership = owner
         return true
     }
 }

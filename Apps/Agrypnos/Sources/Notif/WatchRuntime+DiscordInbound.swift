@@ -11,6 +11,7 @@ extension WatchRuntime {
     }
 
     func discordInboundIsReceiving() -> Bool {
+        guard engine.preferences.discordInboundEnabled else { return false }
         let secrets = NotifSecretsStore.load()
         return DiscordInboundPolicy.shouldReceive(
             enabled: engine.preferences.discordInboundEnabled,

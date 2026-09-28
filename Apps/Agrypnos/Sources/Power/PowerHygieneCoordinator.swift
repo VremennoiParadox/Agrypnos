@@ -8,6 +8,7 @@ struct HygieneDevices {
     var setBrightness: (Double) -> Void = BrightnessFloorController.set
     var keyboard: () -> Double? = KeyboardBacklightController.current
     var setKeyboard: (Double) -> Void = KeyboardBacklightController.setBrightness
+    var wakeDisplay: () -> Void = { ProcessRunner.runDetached("/usr/bin/caffeinate", ["-u", "-t", "1"]) }
 }
 
 struct HygieneEffects {
@@ -29,6 +30,7 @@ enum PowerHygieneCoordinator {
         savedKeyboard: inout Double?,
         ramp: BrightnessRampController,
         devices: HygieneDevices = HygieneDevices(),
+        readLid: () -> Bool,
         runCommand: (String, [String]) -> (exit: Int32, out: String, err: String) = { ProcessRunner.run($0, $1) }
     ) -> HygieneApplyResult {
         var result = HygieneApplyResult()
@@ -37,28 +39,30 @@ enum PowerHygieneCoordinator {
             case .engage, .disengage, .assertSleepDisabled, .postIdleAfterWaitNotif:
                 break
             case .requestSleep:
+                guard readLid() else { break }
                 let exit = runCommand("/usr/bin/pmset", ["sleepnow"]).exit
                 result.sleepnow = PmsetCommandOutcome.from(exit: exit)
             case .requestDisplaySleep:
                 // Panel only. Never `sleepnow`. Never with a floor write.
-                guard preferences.panelPowerMode.sleepsDisplay else { break }
+                guard PanelPowerMode.shouldSleepDisplay(armed: armed, lidCloseConfirmed: lidCloseConfirmed,
+                                                         mode: preferences.panelPowerMode), readLid() else { break }
                 let exit = runCommand("/usr/bin/pmset", ["displaysleepnow"]).exit
                 result.displaysleepnow = PmsetCommandOutcome.from(exit: exit)
             case .wakeDisplay:
                 // Fire-and-forget user-activity pulse. Do not wait — `caffeinate -u -t 1`
                 // would stall the menu extra and fight a following `sleepnow`.
-                ProcessRunner.runDetached("/usr/bin/caffeinate", ["-u", "-t", "1"])
+                devices.wakeDisplay()
             case .applyBrightnessFloor:
                 guard preferences.applyBrightnessFloor,
                       PanelPowerMode.shouldWriteFloor(armed: armed, lidCloseConfirmed: lidCloseConfirmed,
-                                                       mode: preferences.panelPowerMode) else { break }
+                                                       mode: preferences.panelPowerMode), readLid() else { break }
                 ramp.cancel()
                 if devices.canSetBrightness() {
                     devices.setBrightness(preferences.brightnessFloor)
                     effects.floor = true
                 }
             case .requestKeyboardBacklightOff:
-                guard armed, lidCloseConfirmed, preferences.keyboardBacklightOff else { break }
+                guard armed, lidCloseConfirmed, preferences.keyboardBacklightOff, readLid() else { break }
                 devices.setKeyboard(0)
                 effects.keyboard = true
             case .rampBrightnessRestore:

@@ -6,6 +6,7 @@ import AgrypnosCore
 final class RuntimeFixture {
     var lidClosed = true
     var kernelHeld = true
+    var kernelWriteHook: ((Bool) -> Void)?
     var kernelUnknown = false
     var kernelWriteSucceeds = true
     var sleepRequests = 0
@@ -23,7 +24,7 @@ final class RuntimeFixture {
             readKernel: { [unowned self] in self.kernelUnknown ? .unknown : (self.kernelHeld ? .held : .clear) },
             setKernel: { [unowned self] held in
                 guard self.kernelWriteSucceeds else { return .failed("fixture failure") }
-                self.kernelHeld = held; return .ok },
+                self.kernelHeld = held; self.kernelWriteHook?(held); return .ok },
             runCommand: { [unowned self] _, args in
                 if args == ["sleepnow"] { self.sleepRequests += 1 }
                 if args == ["displaysleepnow"] { self.panelSleepRequests += 1 }
@@ -35,7 +36,7 @@ final class RuntimeFixture {
             notify: { [unowned self] in self.messages.append($0) }
         )
         runtime.hygieneDevices = HygieneDevices(canSetBrightness: { true }, brightness: { nil },
-            setBrightness: { _ in }, keyboard: { nil }, setKeyboard: { _ in })
+            setBrightness: { _ in }, keyboard: { nil }, setKeyboard: { _ in }, wakeDisplay: {})
         runtime.engine.preferences.notifEnabled = true
         runtime.engine.preferences.keyboardBacklightOff = false
         runtime.engine.preferences.applyBrightnessFloor = false
