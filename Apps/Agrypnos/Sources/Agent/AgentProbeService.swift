@@ -91,6 +91,8 @@ enum SessionFileWalker {
                 for sub in walkRoots {
                     if SessionWalkBudget.hasFreshBusy(kindSignals.values, now: now, freshness: freshness,
                                                      countTerminalSessions: countTerminalSessions) {
+                        // A positive shortcut does not prove the skipped roots idle if it later expires.
+                        kindSignals.complete = false
                         break rootLoop
                     }
                     kindSignals.append(walk(root: sub, kind: kind, now: now, freshness: freshness,
@@ -170,7 +172,10 @@ enum SessionFileWalker {
                 guard let modified = info.modified else { collected.complete = false; continue }
                 collected.values.append(SessionFileSignal(url: url, modified: modified, kind: kind))
                 if now.timeIntervalSince(modified) <= freshness,
-                   SessionFileLayout.countsTowardBusy(url, countTerminalSessions: countTerminalSessions) { return true }
+                   SessionFileLayout.countsTowardBusy(url, countTerminalSessions: countTerminalSessions) {
+                    collected.complete = false
+                    return true
+                }
             }
             return false
         }

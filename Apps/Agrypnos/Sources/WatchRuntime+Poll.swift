@@ -121,7 +121,8 @@ extension WatchRuntime {
         let now = Date()
         let busy = observation.settleBusy(included: included, now: now)
         diagnostics.probe(observation, busy: busy, included: included, now: now)
-        if busy != nil, observation.complete {
+        // A timely partial positive is safe to reuse; incomplete negatives never get here.
+        if busy != nil {
             agentSnapshotCache.store(
                 observation.snapshot,
                 included: included,
@@ -161,6 +162,12 @@ extension WatchRuntime {
         observeAgents: Bool
     ) {
         let previousSettle = engine.settle
+        if observeAgents, engine.mode == .untilAgentsSettle, let last = previousSettle.lastObservedAt {
+            let gap = now.timeIntervalSince(last)
+            if gap < 0 || gap > AgentSettleTracker.maximumObservationGap {
+                WatchDiagnostics.event("observation gap=\(gap); restarting quiet wait")
+            }
+        }
         let commands = engine.tick(
             now: now,
             safety: safety,

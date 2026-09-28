@@ -44,6 +44,23 @@ let deep = SessionFileAccess(info: { _ in SessionFileInfo(isDirectory: true, mod
                              children: { [$0.appendingPathComponent("child")] })
 check(!walk(deep).complete, "Exhausted depth budget must not become idle")
 
+// An early positive can expire before collection ends; skipped roots are not idle evidence.
+let edge = root.appendingPathComponent("agent-transcripts/edge.jsonl")
+let nested = root.appendingPathComponent("agent-transcripts/nested")
+let stillFresh = nested.appendingPathComponent("still-fresh.jsonl")
+let aging = SessionFileAccess(info: { url in
+    if url == root { return SessionFileInfo(isDirectory: true, modified: now) }
+    if url == nested { return SessionFileInfo(isDirectory: true, modified: stale) }
+    return SessionFileInfo(isDirectory: false, modified: url == edge ? now.addingTimeInterval(-44) : now)
+}, children: { $0 == root ? [edge, nested] : [stillFresh] })
+let stopped = walk(aging)
+let completion = now.addingTimeInterval(2)
+let expiredSnapshot = AgentHeuristicEngine().evaluate(processes: [cursor], sessionWrites: stopped.values, now: completion)
+let expiredPositive = AgentProbeObservation(snapshot: expiredSnapshot, startedAt: now,
+    completedAt: completion, complete: stopped.complete)
+check(expiredPositive.settleBusy(included: [.cursor], now: completion) == nil,
+      "Expired early positive with skipped traversal must not become idle")
+
 let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
 defer { try? FileManager.default.removeItem(at: temp) }
 let subagent = temp.appendingPathComponent("agent-transcripts/parent/subagents/child.jsonl")
@@ -55,4 +72,4 @@ let snap = AgentHeuristicEngine().evaluate(processes: [cursor], sessionWrites: r
 check(snap.anyBusy(included: [.cursor]), "Fresh subagent still counts with terminals off")
 let partial = AgentProbeObservation(snapshot: snap, startedAt: now, completedAt: Date(), complete: false)
 check(partial.settleBusy(included: [.cursor], now: Date()) == true, "Partial positive still protects watch")
-print("Mac probe checks passed: ps failure, missing/error roots, metadata, budgets, real subagent")
+print("Mac probe checks passed: ps failure, missing/error roots, metadata, budgets, expired positive, real subagent")
