@@ -1,6 +1,6 @@
 # Automatic agent questions through Agrypnos
 
-Status: execution authorized by the user on 2026-09-29, local commits only; no push. Task 1 is blocked and no production implementation has started. See [compatibility evidence](../../reviews/2026-09-29-native-question-compatibility.md). Branch: `codex/agent-question-relay`.
+Status: execution authorized by the user on 2026-09-29, local commits only; no push. The user will perform live Cursor checks after coding; shared implementation is underway while native compatibility evidence stays outstanding. See [compatibility evidence](../../reviews/2026-09-29-native-question-compatibility.md). Branch: `codex/agent-question-relay`.
 
 ## Intent and decisions
 
@@ -8,7 +8,7 @@ The user wants a question from an existing agent conversation to appear automati
 
 The user has requested an implementation plan. This design records the decisions that plan needs; it is not a claim that native support already works. The earlier research's skill/MCP-first recommendation is superseded by the user's native-monitoring preference.
 
-The user requires **all four providers before release** and **ten minutes awake after a question is detected, then watch off with a specific bot notification if unanswered**. All four native capability gates therefore precede production implementation. Claude Code/OpenCode are useful first experiments, not an acceptable reduced release. Cursor means the existing desktop conversation; starting an ACP conversation elsewhere does not meet the requirement.
+The user requires **all four providers before release** and **ten minutes awake after a question is detected, then watch off with a specific bot notification if unanswered**. All four native capability gates precede release. The user subsequently deferred live Cursor checks until after coding, so shared implementation may proceed while native API contracts remain required for each adapter. Claude Code/OpenCode are useful first experiments, not an acceptable reduced release. Cursor means the existing desktop conversation; starting an ACP conversation elsewhere does not meet the requirement.
 
 The ten-minute hold applies only to an already armed watch; forwarding never silently arms the Mac. The user clarified: **keep watching while other agents are busy; report the unanswered question**. Current local busy evidence is not reliably conversation-specific, so any fresh positive signal from selected providers conservatively protects the watch; unknown observations do too. Do not claim exact per-conversation busy detection.
 

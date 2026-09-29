@@ -1,12 +1,12 @@
 # Native Agent Questions Implementation Plan
 
-**Execution status, 2026-09-29:** user authorized execution and local commits, with **no push**. Task 1 is blocked on native desktop attachment/probe evidence; Tasks 2–10 are unstarted. See [compatibility evidence](../../reviews/2026-09-29-native-question-compatibility.md) and the [blocked contract supplement](2026-09-29-native-question-contracts.md). No production implementation has landed.
+**Execution status, 2026-09-29:** user authorized execution/local commits, **no push**, and subsequently chose to perform live Cursor checks after coding. Shared implementation may proceed; Task 1 live evidence remains outstanding and no unknown native API may be fabricated. All four still must work before release. See [compatibility evidence](../../reviews/2026-09-29-native-question-compatibility.md) and the [contract supplement](2026-09-29-native-question-contracts.md).
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Automatically forward structured questions from existing Cursor, Claude Code, Codex and OpenCode conversations to the user's Telegram/Discord bots, return chosen answers to the original requests, and end an unanswered-question wake allowance after ten minutes without interrupting other observed work.
 
-**Architecture:** Native provider adapters feed an in-memory question coordinator; it reuses the existing bot consumers and retains each original response path. Pure Core code owns selection validation, request lifecycle and the ten-minute policy; macOS owns IPC, networking and the existing verified wake-release/sleep path. All four provider attachment contracts must pass a feasibility gate before production implementation; no skill or model-guidance fallback.
+**Architecture:** Native provider adapters feed an in-memory question coordinator; it reuses the existing bot consumers and retains each original response path. Pure Core code owns selection validation, request lifecycle and the ten-minute policy; macOS owns IPC, networking and the existing verified wake-release/sleep path. Provider adapters require concrete native contracts; live compatibility tests may follow coding at the user’s request, but all four must pass before release. No skill or model-guidance fallback.
 
 **Tech Stack:** Swift tools 5.9, macOS 14+, Foundation/URLSession, AppKit, Darwin Unix sockets where needed, XCTest and the existing SwiftPM/Xcode targets. No new dependency or hosted service.
 
@@ -24,7 +24,7 @@
 - **64 bytes** maximum Telegram callback data; **100 characters** maximum Discord custom ID. Discord initial acknowledgment within **3 seconds**.
 - No question-history store or content logging; credentials/authorized IDs in existing mode-**0600** secrets file. No Discord mentions or text markup.
 - No file over **600 lines**; prefer around **250**. Menu-bar only; existing **Watch · Power · Agents · Notif · General**; **0.25s ease-in-out**, Reduce Motion respected.
-- No application code/configuration changes during this planning turn. Later execution requires review of this plan. No release/merge is included.
+- Execution is authorized, with local commits only and no push. The user will perform live Cursor verification after coding; this does not authorize a private/fabricated native API or a reduced release. No release/merge into main is included.
 
 ## Review Focus
 
@@ -38,7 +38,7 @@
 
 ## Execution order and feasibility boundary
 
-Task 1 is executable investigation once implementation is authorized. **Do not execute Tasks 2–10 until all four gates pass and the provider-contract supplement is written and reviewed.** This is deliberate: documentation has not established supported attachment to existing Cursor/Codex desktop requests. The plan does not manufacture those APIs. If either is unavailable, report the blocker; do not quietly ship only Claude/OpenCode or reintroduce a skill.
+The original Task 1 gate was before production. The user subsequently chose to run live Cursor verification after coding. **Shared implementation can proceed without those optical checks; all four native round trips remain a release gate.** Concrete provider response contracts are still required before an adapter is implemented or enabled. Documentation has not established supported attachment to existing Cursor/Codex desktop requests. Do not manufacture those APIs, silently advertise desktop support, ship a reduced release or reintroduce a skill.
 
 Tasks 2–4 are the shared mechanism. Tasks 5–8 are separate provider review units. Task 9 integrates wake policy. Task 10 exposes and verifies the complete feature. Each task gets its own focused check and commit; do not commit unrelated untracked build/review artifacts.
 
