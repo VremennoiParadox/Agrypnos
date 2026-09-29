@@ -27,6 +27,7 @@ extension WatchRuntime {
     func noteMacWillSleep() {
         WatchDiagnostics.event("lifecycle willSleep")
         invalidateAgentProbe()
+        questionRelay.invalidateAll()
         if telegramInboundIsPolling() {
             store.saveTelegramInboundCursor(store.loadTelegramInboundCursor().startingWakeMiss())
         }
@@ -83,6 +84,10 @@ extension WatchRuntime {
         let secrets = NotifSecretsStore.load()
         let enabled = engine.preferences.telegramInboundEnabled
         for update in updates {
+            if update.isCallback {
+                if let callback = update.callback { questionRelay.handleTelegram(callback, drain: drain) }
+                continue
+            }
             let intent = TelegramInboundPolicy.intent(
                 enabled: enabled,
                 botToken: secrets.telegramBotToken,

@@ -57,11 +57,15 @@ public struct TelegramInboundUpdate: Equatable, Sendable {
     public var updateId: Int64
     public var chatId: String
     public var text: String?
+    public var callback: TelegramQuestionCallback?
+    public var isCallback: Bool
 
-    public init(updateId: Int64, chatId: String, text: String?) {
+    public init(updateId: Int64, chatId: String, text: String?, callback: TelegramQuestionCallback? = nil, isCallback: Bool = false) {
         self.updateId = updateId
         self.chatId = chatId
         self.text = text
+        self.callback = callback
+        self.isCallback = isCallback || callback != nil
     }
 }
 
@@ -82,7 +86,7 @@ public enum TelegramInboundPolicy: Sendable {
         savedChatId: String?,
         update: TelegramInboundUpdate
     ) -> TelegramInboundIntent {
-        guard shouldPoll(enabled: enabled, botToken: botToken, chatId: savedChatId) else {
+        guard !update.isCallback, shouldPoll(enabled: enabled, botToken: botToken, chatId: savedChatId) else {
             return .ignore
         }
         guard chatMatches(saved: savedChatId, incoming: update.chatId) else {
@@ -250,13 +254,16 @@ public enum TelegramGetUpdatesParser: Sendable {
     static func update(from raw: Any) -> TelegramInboundUpdate? {
         guard let object = raw as? [String: Any] else { return nil }
         guard let updateId = int64(object["update_id"]) else { return nil }
+        let isCallback = object.keys.contains("callback_query")
+        let callback = TelegramQuestionCallback.parse(object["callback_query"])
         let message = object["message"] as? [String: Any]
         let chat = message?["chat"] as? [String: Any]
         let chatId = chatId(from: chat?["id"]) ?? ""
         return TelegramInboundUpdate(
             updateId: updateId,
             chatId: chatId,
-            text: message?["text"] as? String
+            text: message?["text"] as? String,
+            callback: callback, isCallback: isCallback
         )
     }
 

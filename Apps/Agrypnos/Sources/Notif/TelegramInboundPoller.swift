@@ -43,6 +43,20 @@ enum TelegramInboundHTTP {
         }
     }
 
+    static func exchangeQuestion(_ request: NotifOutboundRequest) async -> QuestionHTTPResponse {
+        var urlRequest = URLRequest(url: request.url)
+        urlRequest.httpMethod = request.httpMethod
+        urlRequest.httpBody = request.body
+        urlRequest.timeoutInterval = 10
+        for (header, value) in request.headers { urlRequest.setValue(value, forHTTPHeaderField: header) }
+        do {
+            let (data, response) = try await session.data(for: urlRequest)
+            return QuestionHTTPResponse(statusCode: (response as? HTTPURLResponse)?.statusCode, body: data)
+        } catch {
+            return QuestionHTTPResponse(statusCode: nil, body: Data())
+        }
+    }
+
     static func send(_ request: NotifOutboundRequest) async {
         _ = await fetch(request)
     }

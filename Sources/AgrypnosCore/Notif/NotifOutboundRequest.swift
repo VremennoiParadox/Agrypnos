@@ -71,6 +71,7 @@ public enum NotifOutboundRequestFactory: Sendable {
                 query: [
                     URLQueryItem(name: "offset", value: String(offset)),
                     URLQueryItem(name: "timeout", value: String(max(timeout, 0))),
+                    URLQueryItem(name: "allowed_updates", value: "[\"message\",\"callback_query\"]"),
                 ]
             )
         else {

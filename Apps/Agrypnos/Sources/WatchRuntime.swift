@@ -43,6 +43,7 @@ final class WatchRuntime {
     var idlePostTask: Task<Void, Never>?
     let inboundPoller = TelegramInboundPoller()
     let discordGateway = DiscordInboundGatewayClient()
+    lazy var questionRelay = makeQuestionRelay()
     var discordApplicationId: String?
     var workspaceObservers: [NSObjectProtocol] = []
     var lastBatteryReading: BatteryReading?
@@ -157,6 +158,7 @@ final class WatchRuntime {
         guard engine.preferences.applyIncludedAgentKinds(kinds) else { return }
         store.save(engine.preferences)
         invalidateAgentProbe()
+        questionRelay.refreshSettings()
         delegate?.watchRuntimeDidChange(self)
     }
 
@@ -170,6 +172,7 @@ final class WatchRuntime {
         engine.userSetTelegramInboundEnabled(on)
         store.save(engine.preferences)
         inboundPoller.sync()
+        questionRelay.refreshSettings()
         pollLid()
         delegate?.watchRuntimeDidChange(self)
     }
@@ -178,6 +181,7 @@ final class WatchRuntime {
         engine.userSetDiscordInboundEnabled(on)
         store.save(engine.preferences)
         discordGateway.sync()
+        questionRelay.refreshSettings()
         pollLid()
         delegate?.watchRuntimeDidChange(self)
     }
@@ -193,42 +197,52 @@ final class WatchRuntime {
 
     @discardableResult
     func setNotifTelegramBotToken(_ value: String?) -> Bool {
+        questionRelay.invalidateAll()
         store.resetTelegramInboundCursor()
         inboundPoller.invalidate()
         let saved = NotifSecretsStore.setTelegramBotToken(value)
         inboundPoller.sync()
+        questionRelay.refreshSettings()
         return saved
     }
 
     @discardableResult
     func setNotifTelegramChatId(_ value: String?) -> Bool {
+        questionRelay.invalidateAll()
         let saved = NotifSecretsStore.setTelegramChatId(value)
         inboundPoller.sync()
+        questionRelay.refreshSettings()
         return saved
     }
 
     @discardableResult
     func setNotifDiscordBotToken(_ value: String?) -> Bool {
+        questionRelay.invalidateAll()
         store.resetDiscordInboundCursor()
         discordGateway.invalidate()
         let saved = NotifSecretsStore.setDiscordBotToken(value)
         discordGateway.sync()
+        questionRelay.refreshSettings()
         return saved
     }
 
     @discardableResult
     func setNotifDiscordChannelId(_ value: String?) -> Bool {
+        questionRelay.invalidateAll()
         let saved = NotifSecretsStore.setDiscordChannelId(value)
         discordGateway.sync()
+        questionRelay.refreshSettings()
         return saved
     }
 
     func clearNotifSecrets() {
+        questionRelay.invalidateAll()
         store.resetTelegramInboundCursor()
         store.resetDiscordInboundCursor()
         inboundPoller.invalidate()
         discordGateway.invalidate()
         NotifSecretsStore.clear()
+        questionRelay.refreshSettings()
         inboundPoller.sync()
         discordGateway.sync()
     }

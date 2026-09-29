@@ -33,6 +33,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
     /// Telegram inbound commands on the same bot. Default off. Separate from outbound POST.
     public var telegramInboundEnabled: Bool
     /// Discord inbound commands on the user's bot. Default off. Separate from outbound POST and Telegram inbound.
+    public var forwardAgentQuestions: Bool
     public var discordInboundEnabled: Bool
     /// Last time the watch ended, with why. Nil until a watch has ended on this Mac.
     public var lastWatchEnd: LastWatchEnd?
@@ -61,6 +62,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         notifEnabled: Bool = false,
         telegramInboundEnabled: Bool = false,
         discordInboundEnabled: Bool = false,
+        forwardAgentQuestions: Bool = false,
         lastWatchEnd: LastWatchEnd? = nil,
         includedAgentKinds: Set<AgentKind> = AgentIncludeChrome.defaultIncluded,
         countTerminalSessionsAsBusy: Bool = false
@@ -79,6 +81,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         self.notifEnabled = notifEnabled
         self.telegramInboundEnabled = telegramInboundEnabled
         self.discordInboundEnabled = discordInboundEnabled
+        self.forwardAgentQuestions = forwardAgentQuestions
         self.lastWatchEnd = lastWatchEnd
         self.includedAgentKinds = Self.clampIncludedAgentKinds(includedAgentKinds)
         self.countTerminalSessionsAsBusy = countTerminalSessionsAsBusy
@@ -163,6 +166,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         case notifEnabled
         case telegramInboundEnabled
         case discordInboundEnabled
+        case forwardAgentQuestions
         case lastWatchEnd
         case includedAgentKinds
         case countTerminalSessionsAsBusy
@@ -193,6 +197,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
             notifEnabled: try container.decodeIfPresent(Bool.self, forKey: .notifEnabled) ?? false,
             telegramInboundEnabled: try container.decodeIfPresent(Bool.self, forKey: .telegramInboundEnabled) ?? false,
             discordInboundEnabled: try container.decodeIfPresent(Bool.self, forKey: .discordInboundEnabled) ?? false,
+            forwardAgentQuestions: try container.decodeIfPresent(Bool.self, forKey: .forwardAgentQuestions) ?? false,
             lastWatchEnd: try container.decodeIfPresent(LastWatchEnd.self, forKey: .lastWatchEnd),
             includedAgentKinds: try AgentIncludeFlags.decode(from: container),
             countTerminalSessionsAsBusy: try container.decodeIfPresent(Bool.self, forKey: .countTerminalSessionsAsBusy) ?? false
@@ -216,6 +221,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         try container.encode(notifEnabled, forKey: .notifEnabled)
         try container.encode(telegramInboundEnabled, forKey: .telegramInboundEnabled)
         try container.encode(discordInboundEnabled, forKey: .discordInboundEnabled)
+        try container.encode(forwardAgentQuestions, forKey: .forwardAgentQuestions)
         try container.encodeIfPresent(lastWatchEnd, forKey: .lastWatchEnd)
         try container.encode(AgentIncludeFlags(includedAgentKinds), forKey: .includedAgentKinds)
         try container.encode(countTerminalSessionsAsBusy, forKey: .countTerminalSessionsAsBusy)

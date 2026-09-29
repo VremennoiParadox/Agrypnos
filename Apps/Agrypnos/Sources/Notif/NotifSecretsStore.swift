@@ -10,6 +10,8 @@ struct NotifSecrets: Equatable {
     var telegramChatId: String?
     var discordBotToken: String?
     var discordChannelId: String?
+    var telegramQuestionUserId: String?
+    var discordQuestionUserId: String?
 }
 
 /// Application Support file, mode 0600. Not Keychain (unsigned builds prompt for
@@ -24,7 +26,9 @@ enum NotifSecretsStore {
             telegramBotToken: payload.telegramBotToken,
             telegramChatId: payload.telegramChatId,
             discordBotToken: payload.discordBotToken,
-            discordChannelId: payload.discordChannelId
+            discordChannelId: payload.discordChannelId,
+            telegramQuestionUserId: payload.telegramQuestionUserId,
+            discordQuestionUserId: payload.discordQuestionUserId
         )
     }
 
@@ -63,6 +67,20 @@ enum NotifSecretsStore {
         return write(secrets)
     }
 
+    @discardableResult
+    static func setTelegramQuestionUserId(_ value: String?) -> Bool {
+        var secrets = load()
+        secrets.telegramQuestionUserId = NotifSecretsPayload.present(value)
+        return write(secrets)
+    }
+
+    @discardableResult
+    static func setDiscordQuestionUserId(_ value: String?) -> Bool {
+        var secrets = load()
+        secrets.discordQuestionUserId = NotifSecretsPayload.present(value)
+        return write(secrets)
+    }
+
     static func clear() {
         try? FileManager.default.removeItem(at: fileURL())
     }
@@ -74,7 +92,9 @@ enum NotifSecretsStore {
             telegramBotToken: secrets.telegramBotToken,
             telegramChatId: secrets.telegramChatId,
             discordBotToken: secrets.discordBotToken,
-            discordChannelId: secrets.discordChannelId
+            discordChannelId: secrets.discordChannelId,
+            telegramQuestionUserId: secrets.telegramQuestionUserId,
+            discordQuestionUserId: secrets.discordQuestionUserId
         )
         guard let data = NotifSecretsPayload.encode(payload) else { return false }
         do {
@@ -96,7 +116,11 @@ enum NotifSecretsStore {
                 return false
             }
             do {
-                _ = try FileManager.default.replaceItemAt(url, withItemAt: temp)
+                if FileManager.default.fileExists(atPath: url.path) {
+                    _ = try FileManager.default.replaceItemAt(url, withItemAt: temp)
+                } else {
+                    try FileManager.default.moveItem(at: temp, to: url)
+                }
             } catch {
                 try? FileManager.default.removeItem(at: temp)
                 throw error

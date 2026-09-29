@@ -6,19 +6,25 @@ public struct NotifSecretsPayload: Equatable, Sendable {
     public var telegramChatId: String?
     public var discordBotToken: String?
     public var discordChannelId: String?
+    public var telegramQuestionUserId: String?
+    public var discordQuestionUserId: String?
 
     public init(
         discordWebhookURL: String? = nil,
         telegramBotToken: String? = nil,
         telegramChatId: String? = nil,
         discordBotToken: String? = nil,
-        discordChannelId: String? = nil
+        discordChannelId: String? = nil,
+        telegramQuestionUserId: String? = nil,
+        discordQuestionUserId: String? = nil
     ) {
         self.discordWebhookURL = Self.present(discordWebhookURL)
         self.telegramBotToken = Self.present(telegramBotToken)
         self.telegramChatId = Self.present(telegramChatId)
         self.discordBotToken = Self.present(discordBotToken)
         self.discordChannelId = Self.present(discordChannelId)
+        self.telegramQuestionUserId = Self.present(telegramQuestionUserId)
+        self.discordQuestionUserId = Self.present(discordQuestionUserId)
     }
 
     public static func encode(
@@ -26,7 +32,9 @@ public struct NotifSecretsPayload: Equatable, Sendable {
         telegramBotToken: String?,
         telegramChatId: String?,
         discordBotToken: String? = nil,
-        discordChannelId: String? = nil
+        discordChannelId: String? = nil,
+        telegramQuestionUserId: String? = nil,
+        discordQuestionUserId: String? = nil
     ) -> Data? {
         encode(
             NotifSecretsPayload(
@@ -34,7 +42,9 @@ public struct NotifSecretsPayload: Equatable, Sendable {
                 telegramBotToken: telegramBotToken,
                 telegramChatId: telegramChatId,
                 discordBotToken: discordBotToken,
-                discordChannelId: discordChannelId
+                discordChannelId: discordChannelId,
+                telegramQuestionUserId: telegramQuestionUserId,
+                discordQuestionUserId: discordQuestionUserId
             )
         )
     }
@@ -46,6 +56,8 @@ public struct NotifSecretsPayload: Equatable, Sendable {
         if let value = payload.telegramChatId { object["telegramChatId"] = value }
         if let value = payload.discordBotToken { object["discordBotToken"] = value }
         if let value = payload.discordChannelId { object["discordChannelId"] = value }
+        if let value = payload.telegramQuestionUserId { object["telegramQuestionUserId"] = value }
+        if let value = payload.discordQuestionUserId { object["discordQuestionUserId"] = value }
         return try? JSONSerialization.data(withJSONObject: object)
     }
 
@@ -58,7 +70,9 @@ public struct NotifSecretsPayload: Equatable, Sendable {
             telegramBotToken: object["telegramBotToken"] as? String,
             telegramChatId: object["telegramChatId"] as? String,
             discordBotToken: object["discordBotToken"] as? String,
-            discordChannelId: object["discordChannelId"] as? String
+            discordChannelId: object["discordChannelId"] as? String,
+            telegramQuestionUserId: object["telegramQuestionUserId"] as? String,
+            discordQuestionUserId: object["discordQuestionUserId"] as? String
         )
     }
 

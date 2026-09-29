@@ -133,6 +133,11 @@ public struct QuestionRegistry: Sendable {
         entries[handle]?.state = .delivered(result)
     }
 
+    public mutating func returnToLocal(handle: UUID) {
+        guard entries[handle]?.state == .pending else { return }
+        entries[handle]?.state = .local
+    }
+
     public mutating func cancel(key: QuestionKey) {
         entries = entries.filter { $0.value.batch.key != key }
     }
