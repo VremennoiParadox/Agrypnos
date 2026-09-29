@@ -111,6 +111,7 @@ public enum AgrypnosCopy: Sendable {
         case .batteryFloor: return batteryEnded
         case .thermal: return thermalEnded
         case .agentsSettled: return agentsEnded
+        case .questionUnanswered: return "Watch turned off after an agent question went unanswered for 10 minutes."
         case .lowPowerMode: return lpmEnded
         case .wakeHoldFailed: return "Wake protection could not be verified. Watch turned off."
         }
@@ -125,6 +126,7 @@ public enum AgrypnosCopy: Sendable {
         case .batteryFloor: return "the battery floor was reached"
         case .thermal: return "thermal pressure turned the watch off"
         case .agentsSettled: return "local busy signals stayed idle after the wait"
+        case .questionUnanswered: return "a question went unanswered for 10 minutes"
         case .lowPowerMode: return "Low Power Mode was on"
         case .wakeHoldFailed: return "wake protection could not be verified"
         }

@@ -19,6 +19,16 @@ final class WatchRuntime {
     let runCommand: (String, [String]) -> (exit: Int32, out: String, err: String)
     let postIdle: (Bool) async -> Void
     let notify: (String) -> Void
+    let postQuestionNotice: @MainActor (String) async -> Void
+    var questionUptime: () -> TimeInterval = { ProcessInfo.processInfo.systemUptime }
+    var questionWaitPolicy = QuestionWaitPolicy()
+    var questionDeadlines: [QuestionKey: TimeInterval] = [:]
+    var questionNewlyExpired: Set<QuestionKey> = []
+    var questionUnansweredKeys: Set<QuestionKey> = []
+    var questionCleared: Set<QuestionKey> = []
+    var questionSleepTask: Task<Void, Never>?
+    var questionSleepGeneration: UInt64 = 0
+    var questionReleaseFailureReported = false
     var engine: WatchEngine
     var pollTimer: Timer?
     var savedBrightness: Double?
@@ -64,7 +74,8 @@ final class WatchRuntime {
             ProcessRunner.run($0, $1)
         },
         postIdle: @escaping (Bool) async -> Void = { await NotifIdlePoster.postIfNeeded(enabled: $0) },
-        notify: @escaping (String) -> Void = UserNotify.post
+        notify: @escaping (String) -> Void = UserNotify.post,
+        postQuestionNotice: @escaping @MainActor (String) async -> Void = { await QuestionNoticeSender.send($0) }
     ) {
         self.store = store
         self.readLid = readLid
@@ -73,6 +84,7 @@ final class WatchRuntime {
         self.runCommand = runCommand
         self.postIdle = postIdle
         self.notify = notify
+        self.postQuestionNotice = postQuestionNotice
         engine = WatchEngine(preferences: store.load())
     }
 
@@ -310,6 +322,7 @@ final class WatchRuntime {
     func setEngaged(_ on: Bool) -> HygieneApplyResult {
         if on {
             guard armKernel() else { return HygieneApplyResult() }
+            resetQuestionWatchForNewArm()
             invalidateAgentProbe()
             idlePostTask?.cancel()
             idlePostTask = nil
@@ -340,10 +353,12 @@ final class WatchRuntime {
             delegate?.watchRuntimeDidChange(self)
             return nil
         }
+        cancelQuestionSleep()
         idlePostTask?.cancel()
         idlePostTask = nil
         idleOutbound.cancelInFlight()
         let sleepResult = applyUserOff()
+        clearQuestionWatch()
         store.save(engine.preferences)
         syncLidPulse()
         delegate?.watchRuntimeDidChange(self)

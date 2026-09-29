@@ -189,7 +189,8 @@ public struct WatchEngine: Equatable, Sendable {
         safety: SafetyInputs,
         agents: AgentSnapshot,
         kernelSleepDisabled: Bool = true,
-        observeAgents: Bool = true
+        observeAgents: Bool = true,
+        questionWait: QuestionWaitDecision = .normal
     ) -> [WatchCommand] {
         guard engaged else { return [] }
         if let reason = AutoOffEvaluator.reason(
@@ -203,7 +204,16 @@ public struct WatchEngine: Equatable, Sendable {
         ), reason.turnsWatchOff {
             return disengage(reason, at: now)
         }
-        if observeAgents, mode == .untilAgentsSettle {
+        if questionWait.action == .endUnanswered {
+            return disengage(.questionUnanswered, at: now)
+        }
+        if questionWait.action == .hold || questionWait.action == .deferTimeout {
+            if observeAgents, agents.anyBusy(included: preferences.includedAgentKinds) {
+                _ = settle.observe(busy: true, now: now)
+            } else {
+                settle.interruptObservations()
+            }
+        } else if observeAgents, mode == .untilAgentsSettle {
             let activity = settle.observe(
                 busy: agents.anyBusy(included: preferences.includedAgentKinds),
                 now: now

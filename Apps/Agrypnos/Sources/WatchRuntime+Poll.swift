@@ -6,7 +6,8 @@ import AgrypnosCore
 
 extension WatchRuntime {
     func poll() {
-        let probe = WatchTickProbe.needed(engaged: engine.engaged, mode: engine.mode)
+        let probe = WatchTickProbe.needed(engaged: engine.engaged, mode: engine.mode,
+            questionTimeoutPending: !questionUnansweredKeys.isEmpty)
         if lidCadence() != .none {
             pollLid()
         } else {
@@ -168,12 +169,14 @@ extension WatchRuntime {
                 WatchDiagnostics.event("observation gap=\(gap); restarting quiet wait")
             }
         }
+        let questionWait = questionWaitDecision(agents: agents, observeAgents: observeAgents)
         let commands = engine.tick(
             now: now,
             safety: safety,
             agents: agents,
             kernelSleepDisabled: kernel,
-            observeAgents: observeAgents
+            observeAgents: observeAgents,
+            questionWait: questionWait
         )
         diagnostics.tick(engine: engine, settle: engine.engaged ? engine.settle : previousSettle, busy: agents.anyBusy(included: engine.preferences.includedAgentKinds),
                          now: now, kernel: kernel, observed: observeAgents)
@@ -208,11 +211,42 @@ extension WatchRuntime {
         for command in commands {
             if case .disengage(let reason) = command {
                 if !disarmKernel() {
-                    apply(engine.rollbackDisarmFailure(now: Date()))
+                    let rollback = engine.rollbackDisarmFailure(now: Date())
+                    // A failed clear left SleepDisabled held; do not turn a valid rollback into a failed reassertion.
+                    let commands = readKernel() == .held ? rollback.filter { $0 != .assertSleepDisabled } : rollback
+                    apply(commands)
                     notify("Couldn't verify SleepDisabled was cleared.")
+                    if reason == .questionUnanswered, !questionReleaseFailureReported {
+                        questionReleaseFailureReported = true
+                        Task { await attemptQuestionNotice("Agrypnos couldn't turn the watch off after an unanswered question.") }
+                    }
                     store.save(engine.preferences)
                     return
                 }
+                if reason == .questionUnanswered {
+                    let key = questionUnansweredKeys.first
+                    let shouldSleep = applyCommands.contains(.requestSleep) && engine.lastDisengageLidClosed
+                    applyCommands.removeAll { $0 == .requestSleep }
+                    let result = apply(applyCommands)
+                    store.save(engine.preferences)
+                    clearQuestionWatch()
+                    let context = key.map { "\n\($0.provider.displayName) · session \($0.sessionID.prefix(80))" } ?? ""
+                    let message = "Agrypnos: watch turned off because an agent question went unanswered for 10 minutes." + context
+                    let captured = questionSleepGeneration
+                    questionSleepTask = Task { [weak self] in
+                        guard let self else { return }
+                        await self.attemptQuestionNotice(message)
+                        guard !Task.isCancelled, self.questionSleepGeneration == captured,
+                              !self.engine.engaged else { return }
+                        let canSleep = shouldSleep && self.readLid() && self.engine.lastDisengageLidClosed
+                        let final = canSleep ? self.apply([.requestSleep]) : result
+                        self.finishDisengageHygiene(sleepResult: final)
+                        self.questionSleepTask = nil
+                        self.delegate?.watchRuntimeDidChange(self)
+                    }
+                    return
+                }
+                clearQuestionWatch()
                 // Recheck after the blocking clear/read, preserving live confirmation during POST.
                 let rawClosed = readLid()
                 if engine.holdingForIdlePost {

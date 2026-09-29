@@ -34,6 +34,11 @@ public struct DiscordQuestionInteraction: Equatable, Sendable {
 }
 
 public enum DiscordQuestionMessage {
+    public static func notice(_ content: String, botToken: String, channelID: String) -> NotifOutboundRequest? {
+        request(method: "POST", botToken: botToken, channelID: channelID, messageID: nil,
+            body: ["content": content, "allowed_mentions": noMentions])
+    }
+
     public static func initial(batch: QuestionBatch, botToken: String, channelID: String) -> NotifOutboundRequest? {
         request(method: "POST", botToken: botToken, channelID: channelID, messageID: nil,
             body: ["content": batch.panelText(at: 0) + "\n\nPreparing controls…", "allowed_mentions": noMentions])

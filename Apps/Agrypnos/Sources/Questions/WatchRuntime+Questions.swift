@@ -33,11 +33,6 @@ extension WatchRuntime {
             includedKinds: engine.preferences.includedAgentKinds, telegram: telegram, discord: discord)
     }
 
-    func questionRelayDidChange(_ event: QuestionRelayEvent) {
-        // WatchEngine consumes these observations when native adapters are wired in Task 9.
-        _ = event
-    }
-
     func setForwardAgentQuestions(_ on: Bool) {
         questionRelay.invalidateAll()
         engine.preferences.forwardAgentQuestions = on
@@ -62,5 +57,86 @@ extension WatchRuntime {
         questionRelay.refreshSettings()
         delegate?.watchRuntimeDidChange(self)
         return saved
+    }
+}
+
+extension WatchRuntime {
+    func questionRelayDidChange(_ event: QuestionRelayEvent) {
+        switch event {
+        case let .observed(key, deadline):
+            if engine.engaged, questionUptime() < deadline { questionDeadlines[key] = deadline }
+        case let .cleared(key):
+            questionDeadlines.removeValue(forKey: key)
+            questionNewlyExpired.remove(key)
+            questionUnansweredKeys.remove(key)
+            questionCleared.insert(key)
+        case let .expired(key):
+            guard questionDeadlines.removeValue(forKey: key) != nil else { return }
+            questionNewlyExpired.insert(key)
+            questionUnansweredKeys.insert(key)
+        }
+        if ownsWakeHold, engine.engaged { poll() }
+    }
+
+    func questionWaitDecision(agents: AgentSnapshot, observeAgents: Bool) -> QuestionWaitDecision {
+        guard engine.engaged else { return .normal }
+        let decision = questionWaitPolicy.observe(pendingDeadlines: questionDeadlines,
+            newlyExpired: questionNewlyExpired, cleared: questionCleared,
+            now: questionUptime(),
+            busy: observeAgents ? agents.anyBusy(included: engine.preferences.includedAgentKinds) : nil,
+            grace: engine.preferences.agentSettleGrace)
+        questionNewlyExpired.removeAll()
+        questionCleared.removeAll()
+        for timeout in decision.timeouts where decision.action != .endUnanswered {
+            let text: String
+            switch timeout.reason {
+            case .busy:
+                text = "Question unanswered for 10 minutes; watch remains on because local busy signals are present."
+            case .unknown:
+                text = "Question unanswered for 10 minutes; watch remains on because agent activity could not be checked."
+            case .anotherQuestion:
+                text = "Question unanswered for 10 minutes; watch remains on while another question awaits an answer."
+            case .idle:
+                continue
+            }
+            let context = "\n\(timeout.key.provider.displayName) · session \(timeout.key.sessionID.prefix(80))"
+            Task { await attemptQuestionNotice(text + context) }
+        }
+        return decision
+    }
+
+    func cancelQuestionSleep() {
+        questionSleepGeneration &+= 1
+        questionSleepTask?.cancel()
+        questionSleepTask = nil
+    }
+
+    func clearQuestionWatch() {
+        cancelQuestionSleep()
+        questionRelay.invalidateAll()
+        questionWaitPolicy.reset()
+        questionDeadlines.removeAll()
+        questionNewlyExpired.removeAll()
+        questionUnansweredKeys.removeAll()
+        questionCleared.removeAll()
+        questionReleaseFailureReported = false
+    }
+
+    func resetQuestionWatchForNewArm() {
+        clearQuestionWatch()
+    }
+
+    func attemptQuestionNotice(_ text: String) async {
+        await withCheckedContinuation { continuation in
+            let gate = QuestionNoticeGate(continuation)
+            gate.sending = Task { [postQuestionNotice] in
+                await postQuestionNotice(text)
+                gate.finish()
+            }
+            gate.timeout = Task {
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
+                gate.finish()
+            }
+        }
     }
 }

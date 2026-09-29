@@ -27,7 +27,7 @@ extension WatchRuntime {
     func noteMacWillSleep() {
         WatchDiagnostics.event("lifecycle willSleep")
         invalidateAgentProbe()
-        questionRelay.invalidateAll()
+        clearQuestionWatch()
         if telegramInboundIsPolling() {
             store.saveTelegramInboundCursor(store.loadTelegramInboundCursor().startingWakeMiss())
         }
