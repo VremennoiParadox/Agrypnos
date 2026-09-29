@@ -18,6 +18,7 @@ public enum DiscordGatewayEvent: Equatable, Sendable {
     case ready(sessionId: String, applicationId: String?, resumeGatewayURL: String?)
     case resumed
     case inbound(DiscordInboundUpdate)
+    case questionInteraction(DiscordQuestionInteraction)
     case other
 }
 
@@ -115,6 +116,10 @@ public enum DiscordGatewayParser: Sendable {
             guard let update = messageUpdate(data) else { return .other }
             return .inbound(update)
         case "INTERACTION_CREATE":
+            if DiscordJSON.int(data?["type"]) == 3 {
+                guard let click = DiscordQuestionInteraction.parse(data) else { return .other }
+                return .questionInteraction(click)
+            }
             guard let update = slashUpdate(data) else { return .other }
             return .inbound(update)
         default:

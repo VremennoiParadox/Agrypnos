@@ -12,10 +12,19 @@ struct TelegramQuestionDestination: Equatable {
     var isComplete: Bool { !token.isEmpty && Int64(chatID) != nil && (Int64(userID) ?? 0) > 0 }
 }
 
+struct DiscordQuestionDestination: Equatable {
+    let token: String
+    let channelID: String
+    let userID: String
+
+    var isComplete: Bool { !token.isEmpty && !channelID.isEmpty && !userID.isEmpty }
+}
+
 struct QuestionRelaySettings: Equatable {
     var enabled: Bool
     var includedKinds: Set<AgentKind>
     var telegram: TelegramQuestionDestination?
+    var discord: DiscordQuestionDestination? = nil
 }
 
 struct QuestionHTTPResponse: Sendable {
@@ -39,6 +48,8 @@ final class QuestionRelayCoordinator {
         let returnLocal: @MainActor () async -> Void
         var returnedLocal = false
         var telegramRef: QuestionMessageRef?
+        var discordRef: QuestionMessageRef?
+        var pendingCreates: Int = 0
     }
 
     private var registry = QuestionRegistry()
@@ -46,6 +57,7 @@ final class QuestionRelayCoordinator {
     private var currentSettings: QuestionRelaySettings?
     private var deadlineTask: Task<Void, Never>?
     private var recentCallbacks: [String] = []
+    private var edits: [QuestionMessageRef: Task<Void, Never>] = [:]
     private let settings: @MainActor () -> QuestionRelaySettings
     private let transport: Transport
     private let uptime: @MainActor () -> TimeInterval
@@ -70,7 +82,7 @@ final class QuestionRelayCoordinator {
         refreshSettings()
         guard let currentSettings, currentSettings.enabled,
               currentSettings.includedKinds.contains(batch.key.provider),
-              let target = currentSettings.telegram, target.isComplete,
+              (currentSettings.telegram?.isComplete == true || currentSettings.discord?.isComplete == true),
               uptime() < batch.deadlineUptime else { return false }
         let handle = UUID()
         guard registry.insert(batch, handle: handle) else {
@@ -80,11 +92,15 @@ final class QuestionRelayCoordinator {
             }
             return false
         }
-        records[handle] = Record(batch: batch, submit: submit, returnLocal: returnLocal)
+        let telegram = currentSettings.telegram?.isComplete == true ? currentSettings.telegram : nil
+        let discord = currentSettings.discord?.isComplete == true ? currentSettings.discord : nil
+        records[handle] = Record(batch: batch, submit: submit, returnLocal: returnLocal,
+            pendingCreates: (telegram == nil ? 0 : 1) + (discord == nil ? 0 : 1))
         onChange(.observed(batch.key, batch.deadlineUptime))
         scheduleDeadline()
         let captured = registry.generation
-        Task { [weak self] in await self?.createMessage(handle: handle, target: target, captured: captured) }
+        if let telegram { Task { [weak self] in await self?.createMessage(handle: handle, target: telegram, captured: captured) } }
+        if let discord { Task { [weak self] in await self?.createDiscordMessage(handle: handle, target: discord, captured: captured) } }
         return true
     }
 
@@ -102,27 +118,45 @@ final class QuestionRelayCoordinator {
         if recentCallbacks.count > 256 { recentCallbacks.removeFirst(recentCallbacks.count - 256) }
         let effect = registry.handle(QuestionCallback(reference: click.reference, senderID: click.senderID,
             actionToken: click.actionToken, generation: registry.generation), authorizedUserID: target.userID, now: uptime())
+        apply(effect)
+    }
+
+    func handleDiscord(_ click: DiscordQuestionInteraction, drain: TelegramInboundDrain) {
+        refreshSettings()
+        guard drain == .live, let target = currentSettings?.discord, target.isComplete,
+              click.reference.destinationID == target.channelID, click.senderID == target.userID else { return }
+        let dedupeID = target.token + ":" + click.interactionID
+        guard !recentCallbacks.contains(dedupeID) else { return }
+        recentCallbacks.append(dedupeID)
+        if recentCallbacks.count > 256 { recentCallbacks.removeFirst(recentCallbacks.count - 256) }
+        let effect = registry.handle(QuestionCallback(reference: click.reference, senderID: click.senderID,
+            actionToken: click.actionToken, generation: registry.generation), authorizedUserID: target.userID, now: uptime())
+        apply(effect)
+    }
+
+    private func apply(_ effect: QuestionEffect) {
         switch effect {
         case .ignore: break
         case let .rerender(handle, _):
-            editMessage(handle: handle, target: target)
+            editMessages(handle: handle)
         case let .returnLocal(handle, _):
-            onChange(.cleared(records[handle]!.batch.key))
+            guard let key = records[handle]?.batch.key else { return }
+            onChange(.cleared(key))
             callReturnLocal(handle)
             scheduleDeadline()
-            editMessage(handle: handle, target: target)
+            editMessages(handle: handle)
         case let .submit(handle, answer):
             // Core reserved submitting synchronously. Clear the unanswered timer before native I/O.
             onChange(.cleared(answer.key))
             scheduleDeadline()
-            editMessage(handle: handle, target: target)
+            editMessages(handle: handle)
             let captured = registry.generation
             guard let submit = records[handle]?.submit else { return }
             Task { [weak self] in
                 let result = await submit(answer)
                 guard let self, self.registry.generation == captured, self.records[handle] != nil else { return }
                 self.registry.complete(handle: handle, result: result)
-                self.editMessage(handle: handle, target: target)
+                self.editMessages(handle: handle)
             }
         }
     }
@@ -134,7 +168,7 @@ final class QuestionRelayCoordinator {
         for key in due {
             if let handle = records.first(where: { $0.value.batch.key == key })?.key {
                 callReturnLocal(handle)
-                if let target = currentSettings?.telegram { editMessage(handle: handle, target: target) }
+                editMessages(handle: handle)
             }
             // Native expiry earlier than ten minutes is unavailable, not "unanswered for ten minutes".
             let original = records.first(where: { $0.value.batch.key == key })?.value.batch.receivedUptime ?? now
@@ -158,6 +192,8 @@ final class QuestionRelayCoordinator {
         registry.invalidateAll()
         records.removeAll()
         recentCallbacks.removeAll()
+        edits.values.forEach { $0.cancel() }
+        edits.removeAll()
         for (_, record) in old {
             onChange(.cleared(record.batch.key))
             if !record.returnedLocal { Task { await record.returnLocal() } }
@@ -173,7 +209,7 @@ final class QuestionRelayCoordinator {
 
     private func createMessage(handle: UUID, target: TelegramQuestionDestination, captured: UInt64) async {
         guard let record = records[handle], let request = TelegramQuestionMessage.initial(batch: record.batch,
-            botToken: target.token, chatID: target.chatID) else { endLocally(handle); return }
+            botToken: target.token, chatID: target.chatID) else { finishCreation(handle, succeeded: false); return }
         var result = TelegramQuestionResponse.parse(status: nil, body: Data())
         for attempt in 0..<2 {
             let response = await transport(request)
@@ -189,21 +225,68 @@ final class QuestionRelayCoordinator {
         guard registry.generation == captured, records[handle] != nil else { return }
         guard uptime() < record.batch.deadlineUptime,
               case let .sent(reference) = result, reference.destinationID == target.chatID,
-              registry.bindMessage(handle: handle, reference: reference) else { endLocally(handle); return }
+              registry.bindMessage(handle: handle, reference: reference) else { finishCreation(handle, succeeded: false); return }
         records[handle]?.telegramRef = reference
-        editMessage(handle: handle, target: target)
+        finishCreation(handle, succeeded: true)
+        editMessages(handle: handle)
     }
 
-    private func editMessage(handle: UUID, target: TelegramQuestionDestination) {
-        guard let reference = records[handle]?.telegramRef,
-              let view = registry.view(handle: handle, reference: reference),
-              let request = TelegramQuestionMessage.edit(view: view, botToken: target.token, reference: reference)
-        else { return }
+    private func createDiscordMessage(handle: UUID, target: DiscordQuestionDestination, captured: UInt64) async {
+        guard let record = records[handle], let request = DiscordQuestionMessage.initial(batch: record.batch,
+            botToken: target.token, channelID: target.channelID) else { finishCreation(handle, succeeded: false); return }
+        var result = DiscordQuestionResponse.parse(status: nil, body: Data())
+        for attempt in 0..<2 {
+            let response = await transport(request)
+            guard registry.generation == captured, records[handle] != nil else { return }
+            result = DiscordQuestionResponse.parse(status: response.statusCode, body: response.body)
+            if case let .rejected(retryAfter) = result, let retryAfter, attempt == 0,
+               uptime() + retryAfter < record.batch.deadlineUptime {
+                try? await Task.sleep(nanoseconds: UInt64(retryAfter * 1_000_000_000))
+                continue
+            }
+            break
+        }
+        guard registry.generation == captured, records[handle] != nil else { return }
+        guard uptime() < record.batch.deadlineUptime,
+              case let .sent(reference) = result, reference.destinationID == target.channelID,
+              registry.bindMessage(handle: handle, reference: reference) else { finishCreation(handle, succeeded: false); return }
+        records[handle]?.discordRef = reference
+        finishCreation(handle, succeeded: true)
+        editMessages(handle: handle)
+    }
+
+    private func finishCreation(_ handle: UUID, succeeded: Bool) {
+        guard records[handle] != nil else { return }
+        records[handle]!.pendingCreates -= 1
+        if !succeeded, records[handle]!.pendingCreates == 0,
+           records[handle]!.telegramRef == nil, records[handle]!.discordRef == nil {
+            endLocally(handle)
+        }
+    }
+
+    private func editMessages(handle: UUID) {
+        guard let record = records[handle] else { return }
+        if let target = currentSettings?.telegram, let reference = record.telegramRef,
+           let view = registry.view(handle: handle, reference: reference),
+           let request = TelegramQuestionMessage.edit(view: view, botToken: target.token, reference: reference) {
+            queueEdit(request, reference: reference, handle: handle)
+        }
+        if let target = currentSettings?.discord, let reference = record.discordRef,
+           let view = registry.view(handle: handle, reference: reference),
+           let request = DiscordQuestionMessage.edit(view: view, botToken: target.token, reference: reference) {
+            queueEdit(request, reference: reference, handle: handle)
+        }
+    }
+
+    private func queueEdit(_ request: NotifOutboundRequest, reference: QuestionMessageRef, handle: UUID) {
         let captured = registry.generation
-        Task { [weak self, transport] in
+        let previous = edits[reference]
+        let task = Task { [weak self, transport] in
+            await previous?.value
             guard let self, self.registry.generation == captured, self.records[handle] != nil else { return }
             _ = await transport(request)
         }
+        edits[reference] = task
     }
 
     private func endLocally(_ handle: UUID) {
@@ -211,7 +294,7 @@ final class QuestionRelayCoordinator {
         registry.returnToLocal(handle: handle)
         onChange(.cleared(record.batch.key))
         callReturnLocal(handle)
-        if let target = currentSettings?.telegram { editMessage(handle: handle, target: target) }
+        editMessages(handle: handle)
         scheduleDeadline()
     }
 

@@ -224,6 +224,8 @@ final class DiscordInboundGatewayClient {
                 send(effect, token: token, cursor: cursor, socket: socket)
             case .inbound(let update):
                 runtime.applyDiscordInbound(update, generation: slashEpoch, socketToken: token)
+            case .questionInteraction(let click):
+                runtime.applyDiscordQuestionInteraction(click, generation: slashEpoch, socketToken: token)
             case .registerCommands(let applicationId):
                 runtime.registerDiscordBotCommands(applicationId: applicationId)
             case .reconnect:

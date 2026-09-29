@@ -5,6 +5,7 @@ public enum DiscordGatewayEffect: Equatable, Sendable {
     case sendResume
     case sendHeartbeat
     case inbound(DiscordInboundUpdate)
+    case questionInteraction(DiscordQuestionInteraction)
     case registerCommands(applicationId: String)
     case reconnect(resume: Bool)
 }
@@ -52,6 +53,9 @@ public struct DiscordGatewaySession: Equatable, Sendable {
         case .inbound(let update):
             cursor = cursor.recording(sequence: frame.sequence)
             return [.inbound(update)]
+        case .questionInteraction(let click):
+            cursor = cursor.recording(sequence: frame.sequence)
+            return [.questionInteraction(click)]
         case .other:
             if let sequence = frame.sequence {
                 cursor = cursor.recording(sequence: sequence)
@@ -76,7 +80,7 @@ public struct DiscordGatewaySession: Equatable, Sendable {
             )
         case .sendHeartbeat:
             return DiscordGatewayPayload.heartbeat(sequence: cursor.sequence)
-        case .inbound, .registerCommands, .reconnect:
+        case .inbound, .questionInteraction, .registerCommands, .reconnect:
             return nil
         }
     }

@@ -7,7 +7,7 @@ import AgrypnosCore
 extension WatchRuntime {
     func makeQuestionRelay() -> QuestionRelayCoordinator {
         QuestionRelayCoordinator(settings: { [weak self] in
-            self?.questionRelaySettings() ?? QuestionRelaySettings(enabled: false, includedKinds: [], telegram: nil)
+            self?.questionRelaySettings() ?? QuestionRelaySettings(enabled: false, includedKinds: [], telegram: nil, discord: nil)
         }, transport: { request in await TelegramInboundHTTP.exchangeQuestion(request) }, onChange: { [weak self] event in
             self?.questionRelayDidChange(event)
         })
@@ -22,8 +22,15 @@ extension WatchRuntime {
            let userID = secrets.telegramQuestionUserId {
             telegram = TelegramQuestionDestination(token: token, chatID: chatID, userID: userID)
         } else { telegram = nil }
+        let discord: DiscordQuestionDestination?
+        if engine.preferences.discordInboundEnabled,
+           let token = secrets.discordBotToken,
+           let channelID = secrets.discordChannelId,
+           let userID = secrets.discordQuestionUserId {
+            discord = DiscordQuestionDestination(token: token, channelID: channelID, userID: userID)
+        } else { discord = nil }
         return QuestionRelaySettings(enabled: engine.preferences.forwardAgentQuestions,
-            includedKinds: engine.preferences.includedAgentKinds, telegram: telegram)
+            includedKinds: engine.preferences.includedAgentKinds, telegram: telegram, discord: discord)
     }
 
     func questionRelayDidChange(_ event: QuestionRelayEvent) {

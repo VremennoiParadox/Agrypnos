@@ -99,6 +99,29 @@ final class QuestionRelayCoordinatorTests: XCTestCase {
         XCTAssertTrue(early.events.contains { if case .cleared = $0 { return true }; return false })
     }
 
+    func testFirstCompleteAnswerWinsAcrossTelegramAndDiscord() async throws {
+        let fixture = QuestionRelayFixture()
+        fixture.settings.discord = DiscordQuestionDestination(token: "discord", channelID: "10", userID: "43")
+        XCTAssertTrue(fixture.receive())
+        await fixture.waitForEdits(2)
+        XCTAssertNotNil(fixture.discordCallback("1"))
+        fixture.relay.handleDiscord(try XCTUnwrap(fixture.discordCallback("1")), drain: .live)
+        await fixture.waitForEdits(4)
+        fixture.relay.handleDiscord(try XCTUnwrap(fixture.discordCallback("Review / next")), drain: .live)
+        await fixture.waitForEdits(6)
+        let discordSend = try XCTUnwrap(fixture.discordCallback("Send answers"))
+        try fixture.click("1")
+        await fixture.waitForEdits(8)
+        try fixture.click("Review / next")
+        await fixture.waitForEdits(10)
+        try fixture.click("Send answers")
+        await fixture.waitForSubmissions(1)
+        fixture.relay.handleDiscord(discordSend, drain: .live)
+        await fixture.yieldTasks()
+        XCTAssertEqual(fixture.submissions.count, 1)
+        fixture.delivery?.resume(returning: .accepted); fixture.delivery = nil
+    }
+
     func testDisabledAndMissingOwnerNeverForward() async {
         let fixture = QuestionRelayFixture()
         fixture.settings.enabled = false
@@ -120,28 +143,34 @@ private final class QuestionRelayFixture {
     var delivery: CheckedContinuation<QuestionDelivery, Never>?
     var creation: CheckedContinuation<QuestionHTTPResponse, Never>?
     var localReturns = 0
+    var interactionCounter = 500
     var events: [QuestionRelayEvent] = []
     var holdCreate = false
     var reply = QuestionHTTPResponse(statusCode: 200, body: Data(#"{"ok":true,"result":{"message_id":18,"chat":{"id":9}}}"#.utf8))
     var batch = QuestionBatch(key: QuestionKey(provider: .cursor, instanceID: "app", sessionID: "thread", requestID: "r"), questions: [AgentQuestion(id: "q", prompt: "Which?", options: [QuestionOption(id: "a", label: "Alpha"), QuestionOption(id: "b", label: "Beta")], multiple: true)], receivedUptime: 0, deadlineUptime: 600)
-    lazy var relay = QuestionRelayCoordinator(settings: { [unowned self] in settings },
-        transport: { [unowned self] request in
+    lazy var relay = QuestionRelayCoordinator(settings: { [weak self] in self?.settings ?? QuestionRelaySettings(enabled: false, includedKinds: [], telegram: nil) },
+        transport: { [weak self] request in
+            guard let self else { return QuestionHTTPResponse(statusCode: nil, body: Data()) }
             requests.append(request)
             if request.url.path.hasSuffix("/sendMessage") {
-                if holdCreate { return await withCheckedContinuation { creation = $0 } }
+                if holdCreate { return await withCheckedContinuation { self.creation = $0 } }
                 return reply
             }
+            if request.httpMethod == "POST", request.url.path.hasSuffix("/messages") {
+                return QuestionHTTPResponse(statusCode: 200, body: Data(#"{"id":"19","channel_id":"10"}"#.utf8))
+            }
             return QuestionHTTPResponse(statusCode: 200, body: Data(#"{"ok":true}"#.utf8))
-        }, uptime: { [unowned self] in now }, onChange: { [unowned self] in events.append($0) })
+        }, uptime: { [weak self] in self?.now ?? 0 }, onChange: { [weak self] in self?.events.append($0) })
 
     var createCount: Int { requests.filter { $0.url.path.hasSuffix("/sendMessage") }.count }
-    var editCount: Int { requests.filter { $0.url.path.hasSuffix("/editMessageText") }.count }
+    var editCount: Int { requests.filter { $0.url.path.hasSuffix("/editMessageText") || ($0.httpMethod == "PATCH" && $0.url.path.hasSuffix("/messages/19")) }.count }
     var messages: [String] { requests.compactMap { (try? JSONSerialization.jsonObject(with: $0.body) as? [String: Any])?["text"] as? String } }
     func receive() -> Bool {
-        relay.receive(batch, submit: { [unowned self] answer in
+        relay.receive(batch, submit: { [weak self] answer in
+            guard let self else { return .unconfirmed }
             submissions.append(answer)
-            return await withCheckedContinuation { delivery = $0 }
-        }, returnLocal: { [unowned self] in localReturns += 1 })
+            return await withCheckedContinuation { self.delivery = $0 }
+        }, returnLocal: { [weak self] in self?.localReturns += 1 })
     }
     func callback(_ label: String) throws -> TelegramQuestionCallback {
         let request = try XCTUnwrap(requests.last { $0.url.path.hasSuffix("/editMessageText") })
@@ -151,6 +180,18 @@ private final class QuestionRelayFixture {
         return TelegramQuestionCallback(id: UUID().uuidString, senderID: "42", reference: QuestionMessageRef(destination: .telegram, destinationID: "9", messageID: "18"), actionToken: String(data.dropFirst(3)))
     }
     func click(_ label: String) throws { relay.handleTelegram(try callback(label), drain: .live) }
+    func discordCallback(_ label: String) -> DiscordQuestionInteraction? {
+        guard let request = requests.last(where: { $0.httpMethod == "PATCH" && $0.url.path.hasSuffix("/messages/19") }),
+              let body = try? JSONSerialization.jsonObject(with: request.body) as? [String: Any],
+              let rows = body["components"] as? [[String: Any]],
+              let token = rows.compactMap({ $0["components"] as? [[String: Any]] }).flatMap({ $0 })
+                  .first(where: { $0["label"] as? String == label })?["custom_id"] as? String
+        else { return nil }
+        interactionCounter += 1
+        let wire: [String: Any] = ["type": 3, "id": String(interactionCounter), "token": "interaction", "channel_id": "10", "message": ["id": "19"], "user": ["id": "43", "bot": false], "data": ["custom_id": token]]
+        return DiscordQuestionInteraction.parse(wire)
+    }
+
     func yieldTasks() async { for _ in 0..<100 { await Task.yield() } }
     func waitForEdits(_ count: Int) async { for _ in 0..<200 where editCount < count { await Task.yield() }; XCTAssertGreaterThanOrEqual(editCount, count) }
     func waitForSubmissions(_ count: Int) async { for _ in 0..<200 where submissions.count < count { await Task.yield() }; XCTAssertEqual(submissions.count, count) }

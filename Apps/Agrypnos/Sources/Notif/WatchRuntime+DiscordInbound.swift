@@ -82,6 +82,20 @@ extension WatchRuntime {
         }
     }
 
+    func applyDiscordQuestionInteraction(_ click: DiscordQuestionInteraction,
+                                         generation: UInt64, socketToken: String?) {
+        let drain = store.loadDiscordInboundCursor().drain
+        let secrets = NotifSecretsStore.load()
+        guard DiscordInboundPolicy.sameBot(fetchedToken: socketToken, currentToken: secrets.discordBotToken) else { return }
+        if let request = DiscordQuestionMessage.deferInteraction(interactionID: click.interactionID,
+            token: click.interactionToken) {
+            Task { _ = await TelegramInboundHTTP.exchangeQuestion(request) }
+        }
+        guard DiscordDeferredSlash.shouldApply(capturedDrain: drain,
+            current: discordGateway.currentSlashEpoch, captured: generation) else { return }
+        questionRelay.handleDiscord(click, drain: drain)
+    }
+
     func applyDiscordInbound(
         _ update: DiscordInboundUpdate,
         generation: UInt64,
