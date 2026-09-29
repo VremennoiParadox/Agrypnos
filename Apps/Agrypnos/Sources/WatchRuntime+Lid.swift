@@ -7,7 +7,7 @@ import AgrypnosCore
 extension WatchRuntime {
     func lidCadence() -> LidSampleCadence {
         LidSamplePolicy.cadence(
-            engaged: engine.engaged,
+            engaged: engine.engaged || engine.holdingForIdlePost,
             lidCloseConfirmed: engine.lidCloseConfirmed,
             inboundNeedsLid: inboundNeedsLid(),
             pendingClose: engine.lidClosePending
@@ -15,7 +15,7 @@ extension WatchRuntime {
     }
 
     func pollLid() {
-        let rawClosed = LidStateReader.isClosed()
+        let rawClosed = readLid()
         var lidChanged = false
         let commands = engine.observeLid(closed: rawClosed, now: Date())
         if engine.engaged {

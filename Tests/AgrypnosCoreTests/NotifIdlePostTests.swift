@@ -210,6 +210,7 @@ final class NotifWatchEngineTests: XCTestCase {
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0)
         busyThenSettle(&engine)
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(20 + 120))
         XCTAssertEqual(
             engine.tick(now: t0.addingTimeInterval(20 + 120), safety: .acPower, agents: .idle),
             [.disengage(.agentsSettled)]
@@ -225,11 +226,13 @@ final class NotifWatchEngineTests: XCTestCase {
         prefs.notifEnabled = true
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0)
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(10))
         XCTAssertTrue(
             engine.tick(now: t0.addingTimeInterval(10), safety: .acPower, agents: .idle).isEmpty
         )
         XCTAssertTrue(engine.engaged)
         busyThenSettle(&engine)
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(20 + 120))
         XCTAssertEqual(
             engine.tick(now: t0.addingTimeInterval(20 + 120), safety: .acPower, agents: .idle),
             [.disengage(.agentsSettled), .postIdleAfterWaitNotif]
@@ -341,6 +344,7 @@ final class NotifWatchEngineTests: XCTestCase {
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: true)
         busyThenSettle(&engine)
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(20 + 120))
         XCTAssertEqual(
             engine.tick(now: t0.addingTimeInterval(20 + 120), safety: .acPower, agents: .idle),
             [.disengage(.agentsSettled), .postIdleAfterWaitNotif, .requestSleep]
@@ -356,6 +360,7 @@ final class NotifWatchEngineTests: XCTestCase {
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0)
         busyThenSettle(&engine)
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(20 + 120))
         XCTAssertEqual(
             engine.tick(now: t0.addingTimeInterval(20 + 120), safety: .acPower, agents: .idle),
             [.disengage(.agentsSettled), .postIdleAfterWaitNotif]
@@ -371,9 +376,11 @@ final class NotifWatchEngineTests: XCTestCase {
         XCTAssertTrue(
             engine.tick(now: t0.addingTimeInterval(40), safety: .acPower, agents: .busy).isEmpty
         )
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(40 + 119))
         XCTAssertTrue(
             engine.tick(now: t0.addingTimeInterval(40 + 119), safety: .acPower, agents: .idle).isEmpty
         )
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(40 + 120))
         XCTAssertEqual(
             engine.tick(now: t0.addingTimeInterval(40 + 120), safety: .acPower, agents: .idle),
             [.disengage(.agentsSettled)]
@@ -389,6 +396,7 @@ final class NotifWatchEngineTests: XCTestCase {
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0)
         busyThenSettle(&engine)
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(20 + 120))
         XCTAssertEqual(
             engine.tick(now: t0.addingTimeInterval(20 + 120), safety: .acPower, agents: .idle),
             [.disengage(.agentsSettled), .postIdleAfterWaitNotif]
@@ -401,9 +409,11 @@ final class NotifWatchEngineTests: XCTestCase {
         XCTAssertTrue(
             engine.tick(now: t0.addingTimeInterval(220), safety: .acPower, agents: .busy).isEmpty
         )
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(220 + 119))
         XCTAssertTrue(
             engine.tick(now: t0.addingTimeInterval(220 + 119), safety: .acPower, agents: .idle).isEmpty
         )
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(220 + 120))
         XCTAssertEqual(
             engine.tick(now: t0.addingTimeInterval(220 + 120), safety: .acPower, agents: .idle),
             [.disengage(.agentsSettled), .postIdleAfterWaitNotif]
@@ -420,6 +430,7 @@ final class NotifWatchEngineTests: XCTestCase {
                 agents: .busy
             ).isEmpty
         )
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(20 + 119))
         XCTAssertTrue(
             engine.tick(
                 now: t0.addingTimeInterval(20 + 119),

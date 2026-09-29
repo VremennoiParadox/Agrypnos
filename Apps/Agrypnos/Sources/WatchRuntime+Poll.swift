@@ -6,7 +6,6 @@ import AgrypnosCore
 
 extension WatchRuntime {
     func poll() {
-        if idleOutbound.shouldSkipPoll(engineEngaged: engine.engaged) { return }
         let probe = WatchTickProbe.needed(engaged: engine.engaged, mode: engine.mode)
         if lidCadence() != .none {
             pollLid()
@@ -14,6 +13,7 @@ extension WatchRuntime {
             stopLidPulse()
         }
 
+        if idleOutbound.shouldSkipPoll(engineEngaged: engine.engaged) { return }
         guard probe != .none else {
             idleProbeTicks += 1
             if WatchTickProbe.leftoverReconcileDue(
@@ -37,7 +37,7 @@ extension WatchRuntime {
             lowPowerMode: ProcessInfo.processInfo.isLowPowerModeEnabled
         )
         lastSafety = safety
-        let kernel = SleepDisabledController.read()
+        let kernel = readKernel() == .held
         let included = engine.preferences.includedAgentKinds
         let terminals = engine.preferences.countTerminalSessionsAsBusy
         let now = Date()
@@ -108,20 +108,33 @@ extension WatchRuntime {
     }
 
     func finishAgentProbe(
-        _ snap: AgentSnapshot,
+        _ observation: AgentProbeObservation,
         generation: UInt64,
         included: Set<AgentKind>,
         countTerminalSessionsAsBusy: Bool
     ) {
-        guard generation == probeGeneration else { return }
+        guard generation == probeGeneration else {
+            WatchDiagnostics.event("probe discarded: generation changed")
+            return
+        }
         probeInFlight = false
         let now = Date()
-        agentSnapshotCache.store(
-            snap,
-            included: included,
-            countTerminalSessionsAsBusy: countTerminalSessionsAsBusy,
-            at: now
-        )
+        let busy = observation.settleBusy(included: included, now: now)
+        diagnostics.probe(observation, busy: busy, included: included, now: now)
+        // A timely partial positive is safe to reuse; incomplete negatives never get here.
+        if busy != nil {
+            agentSnapshotCache.store(
+                observation.snapshot,
+                included: included,
+                countTerminalSessionsAsBusy: countTerminalSessionsAsBusy,
+                at: observation.completedAt
+            )
+        } else {
+            agentSnapshotCache.invalidate()
+        }
+        if busy == nil {
+            engine.interruptAgentObservations()
+        }
         guard engine.engaged else {
             delegate?.watchRuntimeDidChange(self)
             return
@@ -135,9 +148,9 @@ extension WatchRuntime {
         finishPollTick(
             now: now,
             safety: safety,
-            agents: snap,
-            kernel: SleepDisabledController.read(),
-            observeAgents: true
+            agents: observation.snapshot,
+            kernel: readKernel() == .held,
+            observeAgents: busy != nil
         )
     }
 
@@ -148,6 +161,13 @@ extension WatchRuntime {
         kernel: Bool,
         observeAgents: Bool
     ) {
+        let previousSettle = engine.settle
+        if observeAgents, engine.mode == .untilAgentsSettle, let last = previousSettle.lastObservedAt {
+            let gap = now.timeIntervalSince(last)
+            if gap < 0 || gap > AgentSettleTracker.maximumObservationGap {
+                WatchDiagnostics.event("observation gap=\(gap); restarting quiet wait")
+            }
+        }
         let commands = engine.tick(
             now: now,
             safety: safety,
@@ -155,14 +175,23 @@ extension WatchRuntime {
             kernelSleepDisabled: kernel,
             observeAgents: observeAgents
         )
+        diagnostics.tick(engine: engine, settle: engine.engaged ? engine.settle : previousSettle, busy: agents.anyBusy(included: engine.preferences.includedAgentKinds),
+                         now: now, kernel: kernel, observed: observeAgents)
+        for command in commands {
+            if case .disengage(let reason) = command {
+                WatchDiagnostics.event("watch end reason=\(reason) lidConfirmed=\(engine.lastDisengageLidClosed)")
+            }
+        }
         if commands.contains(where: Self.isPostIdleAfterWait) {
+            WatchDiagnostics.event("idle POST decision enabled=\(engine.preferences.notifEnabled)")
             let token = idleOutbound.beginPost()
             let enabled = engine.preferences.notifEnabled
             idlePostTask?.cancel()
             idlePostTask = Task { @MainActor in
-                await NotifIdlePoster.postIfNeeded(enabled: enabled)
+                await self.postIdle(enabled)
                 guard self.idleOutbound.completePost(token: token) else { return }
                 self.idlePostTask = nil
+                WatchDiagnostics.event("idle POST attempt complete; releasing hold")
                 self.finishTickCommands(commands)
                 self.delegate?.watchRuntimeDidChange(self)
             }
@@ -175,31 +204,45 @@ extension WatchRuntime {
 
     func finishTickCommands(_ commands: [WatchCommand]) {
         var applyCommands = commands.filter { !Self.isPostIdleAfterWait($0) }
-        let sleepNext = commands.contains(.requestSleep)
+        var released = false
         for command in commands {
             if case .disengage(let reason) = command {
                 if !disarmKernel() {
-                    applyCommands = engine.rollbackDisarmFailure(now: Date())
-                    UserNotify.post("Couldn't drop SleepDisabled. The watch stays up.")
-                    break
+                    apply(engine.rollbackDisarmFailure(now: Date()))
+                    notify("Couldn't verify SleepDisabled was cleared.")
+                    store.save(engine.preferences)
+                    return
+                }
+                // Recheck after the blocking clear/read, preserving live confirmation during POST.
+                let rawClosed = readLid()
+                if engine.holdingForIdlePost {
+                    _ = engine.observeLid(closed: rawClosed, now: Date())
+                    if !engine.userOffLidCloseConfirmed(rawClosed: rawClosed) {
+                        applyCommands.removeAll { $0 == .requestSleep }
+                    }
+                } else if !rawClosed {
+                    applyCommands.removeAll { $0 == .requestSleep }
                 }
                 engine.completeIdlePostHold()
-                if HygieneRestore.shouldRestoreAfterDisengage(
-                    lidCloseConfirmed: engine.lastDisengageLidClosed,
-                    nextCommandIsSleep: sleepNext
-                ) {
-                    restoreHygiene()
-                } else {
-                    dropSavedHygieneWithoutWrite()
-                }
-                if reason != .user {
-                    UserNotify.post(reason: reason)
-                }
+                released = true
+                if reason != .user { notify(AgrypnosCopy.notification(for: reason)) }
             }
         }
-        apply(applyCommands)
-        if commands.contains(where: { if case .disengage = $0 { return true }; return false }) {
+        let result = apply(applyCommands)
+        if released {
+            finishDisengageHygiene(sleepResult: result)
             store.save(engine.preferences)
+        }
+    }
+
+    func finishDisengageHygiene(sleepResult: HygieneApplyResult) {
+        if sleepResult.sleepnow != nil {
+            dropSavedHygieneWithoutWrite()
+        } else {
+            restoreHygiene()
+            if engine.preferences.panelPowerMode == .displaySleep, !readLid() {
+                apply([.wakeDisplay])
+            }
         }
     }
 
@@ -211,22 +254,13 @@ extension WatchRuntime {
     /// Popover/hotkey off: sample lid, restore hygiene only if we are not about to sleepnow.
     @discardableResult
     func applyUserOff() -> HygieneApplyResult {
-        pollLid()
-        let confirmed = engine.userOffLidCloseConfirmed(rawClosed: LidStateReader.isClosed())
-        if engine.holdingForIdlePost {
-            engine.completeIdlePostHold()
-        }
+        // Observe only: close-confirm commands must not reassert the hold we just cleared.
+        _ = engine.observeLid(closed: readLid(), now: Date())
+        let confirmed = engine.userOffLidCloseConfirmed(rawClosed: readLid())
+        if engine.holdingForIdlePost { engine.completeIdlePostHold() }
         let commands = engine.userSetEngaged(false, now: Date(), lidClosed: confirmed)
-        let sleep = commands.filter { $0 == .requestSleep }
-        apply(commands.filter { $0 != .requestSleep })
-        if HygieneRestore.shouldRestoreAfterDisengage(
-            lidCloseConfirmed: confirmed,
-            nextCommandIsSleep: !sleep.isEmpty
-        ) {
-            restoreHygiene()
-        } else {
-            dropSavedHygieneWithoutWrite()
-        }
-        return apply(sleep)
+        let result = apply(commands)
+        finishDisengageHygiene(sleepResult: result)
+        return result
     }
 }

@@ -82,6 +82,7 @@ final class WatchEngineTests: XCTestCase {
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0)
 
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(10))
         XCTAssertTrue(engine.tick(now: t0.addingTimeInterval(10), safety: .acPower, agents: .idle).isEmpty)
 
         XCTAssertTrue(
@@ -94,6 +95,7 @@ final class WatchEngineTests: XCTestCase {
             ).isEmpty
         )
 
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(20 + 119))
         XCTAssertTrue(
             engine.tick(
                 now: t0.addingTimeInterval(20 + 119),
@@ -103,6 +105,7 @@ final class WatchEngineTests: XCTestCase {
         )
         XCTAssertTrue(engine.engaged)
 
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(20 + 120))
         XCTAssertEqual(
             engine.tick(
                 now: t0.addingTimeInterval(20 + 120),
@@ -149,6 +152,7 @@ final class WatchEngineTests: XCTestCase {
                 kernelSleepDisabled: true
             ).isEmpty
         )
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(120))
         XCTAssertEqual(
             engine.tick(
                 now: t0.addingTimeInterval(120),
@@ -371,6 +375,7 @@ final class WatchEngineTests: XCTestCase {
             now: t0.addingTimeInterval(46)
         )
         XCTAssertFalse(staleBeforeGrace.anyBusy)
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(46))
         XCTAssertTrue(
             engine.tick(now: t0.addingTimeInterval(46), safety: .acPower, agents: staleBeforeGrace).isEmpty
         )
@@ -393,6 +398,7 @@ final class WatchEngineTests: XCTestCase {
             now: t0.addingTimeInterval(120)
         )
         XCTAssertFalse(stale.anyBusy)
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(120))
         XCTAssertEqual(
             engine.tick(now: t0.addingTimeInterval(120), safety: .acPower, agents: stale),
             [.disengage(.agentsSettled), .postIdleAfterWaitNotif]

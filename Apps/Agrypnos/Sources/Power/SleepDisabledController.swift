@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 
 #if canImport(AgrypnosCore)
 import AgrypnosCore
@@ -11,8 +12,9 @@ enum ToggleResult: Equatable {
 }
 
 enum SleepDisabledController {
-    static func read() -> Bool {
-        SleepDisabledParser.parse(pmsetG: ProcessRunner.run("/usr/bin/pmset", ["-g"]).out)
+    static func read() -> SleepDisabledState {
+        let result = ProcessRunner.run("/usr/bin/pmset", ["-g"])
+        return SleepDisabledParser.state(pmsetG: result.out, exit: result.exit)
     }
 
     static func set(_ on: Bool) -> ToggleResult {
@@ -39,17 +41,37 @@ enum SleepDisabledController {
 @MainActor
 enum SleepDisabledCrashGuard {
     private static var lifeline: Pipe?
+    private static var ownership: FileHandle?
 
-    static func start() {
-        guard lifeline == nil else { return }
+    nonisolated static func acquireOwnership(at url: URL) -> FileHandle? {
+        let fd = open(url.path, O_CREAT | O_RDWR | O_NOFOLLOW | O_CLOEXEC, S_IRUSR | S_IWUSR)
+        guard fd >= 0 else { return nil }
+        guard flock(fd, LOCK_EX | LOCK_NB) == 0 else { close(fd); return nil }
+        return FileHandle(fileDescriptor: fd, closeOnDealloc: true)
+    }
+
+    static func start(lockURL: URL? = nil, cleanupScript: String = KernelCrashGuard.script) -> Bool {
+        if lifeline != nil { return true }
+        let url = lockURL ?? FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Application Support/Agrypnos/wake-owner.lock")
+        let directory = url.deletingLastPathComponent()
+        do { try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true) }
+        catch { return false }
+        guard let owner = acquireOwnership(at: url) else {
+            return false
+        }
         let pipe = Pipe()
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/bin/sh")
-        process.arguments = ["-c", KernelCrashGuard.script]
+        process.arguments = ["-c", cleanupScript]
         process.standardInput = pipe
-        process.standardOutput = FileHandle.nullDevice
+        // The helper inherits this locked open-file description as stdout. The lock survives
+        // app death and is released only after its existing cleanup command exits.
+        process.standardOutput = owner
         process.standardError = FileHandle.nullDevice
-        guard (try? process.run()) != nil else { return }
+        guard (try? process.run()) != nil else { return false }
         lifeline = pipe
+        ownership = owner
+        return true
     }
 }

@@ -30,7 +30,7 @@ public enum SessionWalkBudget: Sendable {
                 countTerminalSessions: countTerminalSessions
             ) else { continue }
             picked.append(signal)
-            if now.timeIntervalSince(signal.modified) <= freshness {
+            if signal.isFresh(now: now, freshness: freshness) {
                 break
             }
         }
@@ -45,7 +45,7 @@ public enum SessionWalkBudget: Sendable {
         countTerminalSessions: Bool
     ) -> Bool {
         signals.contains {
-            now.timeIntervalSince($0.modified) <= freshness
+            $0.isFresh(now: now, freshness: freshness)
                 && SessionFileLayout.countsTowardBusy(
                     $0.url,
                     countTerminalSessions: countTerminalSessions

@@ -205,9 +205,11 @@ final class CorePrefsMathTests: XCTestCase {
         XCTAssertTrue(
             engine.tick(now: t0, safety: .acPower, agents: .busy).isEmpty
         )
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(179))
         XCTAssertTrue(
             engine.tick(now: t0.addingTimeInterval(179), safety: .acPower, agents: .idle).isEmpty
         )
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(180))
         XCTAssertEqual(
             engine.tick(now: t0.addingTimeInterval(180), safety: .acPower, agents: .idle),
             [.disengage(.agentsSettled), .postIdleAfterWaitNotif]
@@ -223,11 +225,13 @@ final class CorePrefsMathTests: XCTestCase {
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
         XCTAssertTrue(engine.tick(now: t0, safety: .acPower, agents: .busy).isEmpty)
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(150))
         XCTAssertTrue(
             engine.tick(now: t0.addingTimeInterval(150), safety: .acPower, agents: .idle).isEmpty
         )
         engine.userSetAgentSettleGrace(120)
         XCTAssertEqual(engine.preferences.agentSettleGrace, 120)
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(150))
         XCTAssertEqual(
             engine.tick(now: t0.addingTimeInterval(150), safety: .acPower, agents: .idle),
             [.disengage(.agentsSettled), .postIdleAfterWaitNotif]

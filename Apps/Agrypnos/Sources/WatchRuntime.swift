@@ -12,11 +12,19 @@ protocol WatchRuntimeDelegate: AnyObject {
 
 @MainActor
 final class WatchRuntime {
-    let store = PreferencesStore()
+    let store: PreferencesStore
+    let readLid: () -> Bool
+    let readKernel: () -> SleepDisabledState
+    let setKernel: (Bool) -> ToggleResult
+    let runCommand: (String, [String]) -> (exit: Int32, out: String, err: String)
+    let postIdle: (Bool) async -> Void
+    let notify: (String) -> Void
     var engine: WatchEngine
     var pollTimer: Timer?
     var savedBrightness: Double?
     var savedKeyboard: Double?
+    var hygieneDevices = HygieneDevices()
+    var hygieneEffects = HygieneEffects()
     let brightnessRamp = BrightnessRampController()
     var lidTimer: Timer?
     weak var delegate: WatchRuntimeDelegate?
@@ -43,16 +51,39 @@ final class WatchRuntime {
     var probeGeneration: UInt64 = 0
     var probeInFlight = false
     var idleProbeTicks: Int = 0
+    var diagnostics = WatchDiagnostics()
+    private(set) var ownsWakeHold = false
 
-    init() {
+    init(
+        store: PreferencesStore = PreferencesStore(),
+        readLid: @escaping () -> Bool = LidStateReader.isClosed,
+        readKernel: @escaping () -> SleepDisabledState = SleepDisabledController.read,
+        setKernel: @escaping (Bool) -> ToggleResult = SleepDisabledController.set,
+        runCommand: @escaping (String, [String]) -> (exit: Int32, out: String, err: String) = {
+            ProcessRunner.run($0, $1)
+        },
+        postIdle: @escaping (Bool) async -> Void = { await NotifIdlePoster.postIfNeeded(enabled: $0) },
+        notify: @escaping (String) -> Void = UserNotify.post
+    ) {
+        self.store = store
+        self.readLid = readLid
+        self.readKernel = readKernel
+        self.setKernel = setKernel
+        self.runCommand = runCommand
+        self.postIdle = postIdle
+        self.notify = notify
         engine = WatchEngine(preferences: store.load())
     }
 
-    func start() {
+    func start() -> Bool {
+        guard SleepDisabledCrashGuard.start() else {
+            notify("Couldn't take ownership of the wake hold. Agrypnos may already be running.")
+            return false
+        }
+        ownsWakeHold = true
         inboundPoller.runtime = self
         discordGateway.runtime = self
         observeMacSleepWake()
-        SleepDisabledCrashGuard.start()
         reconcileKernel(preferClearLeftover: true)
         pollTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.poll() }
@@ -60,6 +91,7 @@ final class WatchRuntime {
         poll()
         inboundPoller.sync()
         discordGateway.sync()
+        return true
     }
 
     func setDuration(_ option: DurationOption) {
@@ -98,6 +130,10 @@ final class WatchRuntime {
     }
 
     func setPanelPowerMode(_ mode: PanelPowerMode) {
+        if preferences.panelPowerMode == .floor, mode == .displaySleep {
+            PowerHygieneCoordinator.restoreBrightness(effects: &hygieneEffects, captured: savedBrightness,
+                                                      ramp: brightnessRamp, devices: hygieneDevices)
+        }
         let commands = engine.userSetPanelPowerMode(mode)
         store.save(engine.preferences)
         apply(commands)
@@ -215,7 +251,7 @@ final class WatchRuntime {
             lastFailedHotkey = plan.failedAttempt
             hotkeyRegistered = bindHotkey?(plan.chordToRegister) ?? false
             if let hint = plan.hint {
-                UserNotify.post(hint)
+                notify(hint)
             }
         }
         delegate?.watchRuntimeDidChange(self)
@@ -238,6 +274,14 @@ final class WatchRuntime {
     }
 
     func setHygiene(keyboard: Bool? = nil, floor: Bool? = nil) {
+        if keyboard == false {
+            PowerHygieneCoordinator.restoreKeyboard(effects: &hygieneEffects, captured: savedKeyboard,
+                                                     devices: hygieneDevices)
+        }
+        if floor == false {
+            PowerHygieneCoordinator.restoreBrightness(effects: &hygieneEffects, captured: savedBrightness,
+                                                      ramp: brightnessRamp, devices: hygieneDevices)
+        }
         if let keyboard { engine.preferences.keyboardBacklightOff = keyboard }
         if let floor { engine.preferences.applyBrightnessFloor = floor }
         store.save(engine.preferences)
@@ -256,7 +300,7 @@ final class WatchRuntime {
             idlePostTask?.cancel()
             idlePostTask = nil
             idleOutbound.noteUserArm()
-            let rawClosed = LidStateReader.isClosed()
+            let rawClosed = readLid()
             if LidCloseConfirm.shouldCaptureBeforeClosedHygiene(rawClosed: rawClosed) {
                 recaptureOpenLidHygiene()
             }
@@ -272,11 +316,19 @@ final class WatchRuntime {
             delegate?.watchRuntimeDidChange(self)
             return HygieneApplyResult()
         }
+        return disarmWatch() ?? HygieneApplyResult()
+    }
+
+    /// Every user/inbound off must verify the same kernel release before sleep or success copy.
+    func disarmWatch() -> HygieneApplyResult? {
         guard disarmKernel() else {
-            UserNotify.post("Couldn't drop SleepDisabled. The kernel flag is still on.")
+            notify("Couldn't verify SleepDisabled was cleared. The watch state is unchanged.")
             delegate?.watchRuntimeDidChange(self)
-            return HygieneApplyResult()
+            return nil
         }
+        idlePostTask?.cancel()
+        idlePostTask = nil
+        idleOutbound.cancelInFlight()
         let sleepResult = applyUserOff()
         store.save(engine.preferences)
         syncLidPulse()
@@ -288,18 +340,40 @@ final class WatchRuntime {
     func apply(_ commands: [WatchCommand]) -> HygieneApplyResult {
         for command in commands {
             if case .assertSleepDisabled = command {
-                _ = armKernel()
+                guard armKernel(allowInstall: false) else {
+                    engine.endForWakeHoldFailure(now: Date())
+                    idlePostTask?.cancel()
+                    idlePostTask = nil
+                    idleOutbound.cancelInFlight()
+                    invalidateAgentProbe()
+                    restoreHygiene()
+                    store.save(engine.preferences)
+                    delegate?.watchRuntimeDidChange(self)
+                    return HygieneApplyResult()
+                }
             }
         }
         let result = PowerHygieneCoordinator.apply(
             commands,
             preferences: engine.preferences,
+            armed: engine.engaged,
+            lidCloseConfirmed: engine.lidCloseConfirmed && readLid(),
+            effects: &hygieneEffects,
             savedBrightness: &savedBrightness,
             savedKeyboard: &savedKeyboard,
-            ramp: brightnessRamp
+            ramp: brightnessRamp,
+            devices: hygieneDevices,
+            readLid: readLid,
+            runCommand: runCommand
         )
+        if let outcome = result.sleepnow {
+            WatchDiagnostics.event("sleepnow outcome=\(outcome)")
+        }
+        if let outcome = result.displaysleepnow {
+            WatchDiagnostics.event("displaysleepnow outcome=\(outcome)")
+        }
         for line in result.notifications {
-            UserNotify.post(line)
+            notify(line)
         }
         return result
     }
@@ -307,10 +381,11 @@ final class WatchRuntime {
     func restoreHygiene() {
         stopLidPulse()
         PowerHygieneCoordinator.restoreAfterDisengage(
-            preferences: engine.preferences,
+            effects: &hygieneEffects,
             savedBrightness: &savedBrightness,
             savedKeyboard: &savedKeyboard,
-            ramp: brightnessRamp
+            ramp: brightnessRamp,
+            devices: hygieneDevices
         )
     }
 
@@ -319,15 +394,12 @@ final class WatchRuntime {
         brightnessRamp.cancel()
         savedBrightness = nil
         savedKeyboard = nil
+        hygieneEffects = HygieneEffects()
     }
 
     func recaptureOpenLidHygiene() {
-        if let current = BrightnessFloorController.current() {
-            savedBrightness = current
-        }
-        if let current = KeyboardBacklightController.current() {
-            savedKeyboard = current
-        }
+        savedBrightness = hygieneDevices.brightness()
+        savedKeyboard = hygieneDevices.keyboard()
     }
 
     func inboundDisarmReply(_ base: String, sleepResult: HygieneApplyResult? = nil) -> String {
@@ -364,6 +436,8 @@ final class WatchRuntime {
     }
 
     func invalidateAgentProbe() {
+        engine.interruptAgentObservations()
+        diagnostics.interrupt()
         agentSnapshotCache.invalidate()
         probeGeneration &+= 1
         probeInFlight = false

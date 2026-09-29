@@ -35,7 +35,27 @@ public enum BatteryStatusParser: Sendable {
     }
 }
 
+public enum SleepDisabledState: Equatable, Sendable {
+    case held, clear, unknown
+}
+
 public enum SleepDisabledParser: Sendable {
+    public static func state(pmsetG: String, exit: Int32) -> SleepDisabledState {
+        guard exit == 0 else { return .unknown }
+        var result: SleepDisabledState = .unknown
+        for line in pmsetG.split(whereSeparator: \.isNewline) {
+            let tokens = line.split(whereSeparator: { $0 == " " || $0 == "\t" })
+            guard tokens.first?.lowercased() == "sleepdisabled" else { continue }
+            guard tokens.count == 2, result == .unknown else { return .unknown }
+            switch tokens[1] {
+            case "0": result = .clear
+            case "1": result = .held
+            default: return .unknown
+            }
+        }
+        return result
+    }
+
     public static func parse(pmsetG: String) -> Bool {
         for line in pmsetG.split(whereSeparator: \.isNewline) {
             if line.range(of: "SleepDisabled", options: .caseInsensitive) != nil {

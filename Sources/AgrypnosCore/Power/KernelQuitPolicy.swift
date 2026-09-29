@@ -5,7 +5,7 @@ public enum KernelQuitPolicy: Sendable {
     }
 
     public static func leftoverNotify(kernelCleared: Bool) -> String? {
-        kernelCleared ? nil : "Couldn't drop SleepDisabled. The kernel flag is still on."
+        kernelCleared ? nil : "Couldn't verify SleepDisabled was cleared."
     }
 }
 

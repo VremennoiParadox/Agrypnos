@@ -112,6 +112,7 @@ public enum AgrypnosCopy: Sendable {
         case .thermal: return thermalEnded
         case .agentsSettled: return agentsEnded
         case .lowPowerMode: return lpmEnded
+        case .wakeHoldFailed: return "Wake protection could not be verified. Watch turned off."
         }
     }
 
@@ -125,6 +126,7 @@ public enum AgrypnosCopy: Sendable {
         case .thermal: return "thermal pressure turned the watch off"
         case .agentsSettled: return "local busy signals stayed idle after the wait"
         case .lowPowerMode: return "Low Power Mode was on"
+        case .wakeHoldFailed: return "wake protection could not be verified"
         }
     }
 

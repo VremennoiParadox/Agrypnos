@@ -49,7 +49,7 @@ enum GrantInstaller {
         NSApp.activate(ignoringOtherApps: true)
         guard intro.runModal() == .alertFirstButtonReturn else { return false }
 
-        let result = ProcessRunner.run("/usr/bin/osascript", ["-e", osa])
+        let result = ProcessRunner.run("/usr/bin/osascript", ["-e", osa], timeout: 120)
         return result.exit == 0
     }
 }

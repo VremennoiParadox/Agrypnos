@@ -17,6 +17,9 @@ final class AgentSettleTrackerTests: XCTestCase {
     func testBusyThenGraceThenSettled() {
         var tracker = AgentSettleTracker(grace: 90)
         XCTAssertEqual(tracker.observe(busy: true, now: t0), .busy)
+        for second in stride(from: 5, through: 85, by: 5) {
+            XCTAssertEqual(tracker.observe(busy: false, now: t0.addingTimeInterval(Double(second))), .settling)
+        }
         XCTAssertEqual(tracker.observe(busy: false, now: t0.addingTimeInterval(89)), .settling)
         XCTAssertEqual(tracker.observe(busy: false, now: t0.addingTimeInterval(90)), .settled)
     }
@@ -35,6 +38,9 @@ final class AgentSettleTrackerTests: XCTestCase {
         XCTAssertEqual(tracker.observe(busy: true, now: t0), .busy)
         XCTAssertTrue(tracker.sawBusy)
         XCTAssertEqual(tracker.activity(busy: false, now: t0.addingTimeInterval(89)), .settling)
+        for second in stride(from: 5, through: 85, by: 5) {
+            XCTAssertEqual(tracker.observe(busy: false, now: t0.addingTimeInterval(Double(second))), .settling)
+        }
         XCTAssertEqual(tracker.observe(busy: false, now: t0.addingTimeInterval(89)), .settling)
     }
 }

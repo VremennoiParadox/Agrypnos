@@ -93,6 +93,7 @@ final class WatchUserOffSleepTests: XCTestCase {
                 ])
             ).isEmpty
         )
+        observeHealthyIdle(&agents, before: t0.addingTimeInterval(120))
         XCTAssertEqual(
             agents.tick(now: t0.addingTimeInterval(120), safety: .acPower, agents: .idle),
             [.disengage(.agentsSettled), .requestSleep]
@@ -100,6 +101,7 @@ final class WatchUserOffSleepTests: XCTestCase {
 
         var safety = WatchEngine(preferences: .default)
         _ = safety.userSetEngaged(true, now: t0, lidClosed: true)
+        observeHealthyIdle(&safety, before: t0.addingTimeInterval(1))
         XCTAssertEqual(
             safety.tick(
                 now: t0.addingTimeInterval(1),

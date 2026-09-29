@@ -2,6 +2,20 @@
 import AgrypnosCore
 #endif
 
+struct HygieneDevices {
+    var canSetBrightness: () -> Bool = BrightnessFloorController.canSetBuiltIn
+    var brightness: () -> Double? = BrightnessFloorController.current
+    var setBrightness: (Double) -> Void = BrightnessFloorController.set
+    var keyboard: () -> Double? = KeyboardBacklightController.current
+    var setKeyboard: (Double) -> Void = KeyboardBacklightController.setBrightness
+    var wakeDisplay: () -> Void = { ProcessRunner.runDetached("/usr/bin/caffeinate", ["-u", "-t", "1"]) }
+}
+
+struct HygieneEffects {
+    var floor = false
+    var keyboard = false
+}
+
 enum PowerHygieneCoordinator {
     static var canSetBuiltInBrightness: Bool { BrightnessFloorController.canSetBuiltIn() }
 
@@ -9,9 +23,15 @@ enum PowerHygieneCoordinator {
     static func apply(
         _ commands: [WatchCommand],
         preferences: UserPreferences,
+        armed: Bool,
+        lidCloseConfirmed: Bool,
+        effects: inout HygieneEffects,
         savedBrightness: inout Double?,
         savedKeyboard: inout Double?,
-        ramp: BrightnessRampController
+        ramp: BrightnessRampController,
+        devices: HygieneDevices = HygieneDevices(),
+        readLid: () -> Bool,
+        runCommand: (String, [String]) -> (exit: Int32, out: String, err: String) = { ProcessRunner.run($0, $1) }
     ) -> HygieneApplyResult {
         var result = HygieneApplyResult()
         for command in commands {
@@ -19,66 +39,78 @@ enum PowerHygieneCoordinator {
             case .engage, .disengage, .assertSleepDisabled, .postIdleAfterWaitNotif:
                 break
             case .requestSleep:
-                let exit = ProcessRunner.run("/usr/bin/pmset", ["sleepnow"]).exit
+                guard readLid() else { break }
+                let exit = runCommand("/usr/bin/pmset", ["sleepnow"]).exit
                 result.sleepnow = PmsetCommandOutcome.from(exit: exit)
             case .requestDisplaySleep:
                 // Panel only. Never `sleepnow`. Never with a floor write.
-                guard preferences.panelPowerMode.sleepsDisplay else { break }
-                let exit = ProcessRunner.run("/usr/bin/pmset", ["displaysleepnow"]).exit
+                guard PanelPowerMode.shouldSleepDisplay(armed: armed, lidCloseConfirmed: lidCloseConfirmed,
+                                                         mode: preferences.panelPowerMode), readLid() else { break }
+                let exit = runCommand("/usr/bin/pmset", ["displaysleepnow"]).exit
                 result.displaysleepnow = PmsetCommandOutcome.from(exit: exit)
             case .wakeDisplay:
                 // Fire-and-forget user-activity pulse. Do not wait — `caffeinate -u -t 1`
                 // would stall the menu extra and fight a following `sleepnow`.
-                ProcessRunner.runDetached("/usr/bin/caffeinate", ["-u", "-t", "1"])
+                devices.wakeDisplay()
             case .applyBrightnessFloor:
-                guard preferences.panelPowerMode.writesBrightnessFloor else { break }
+                guard preferences.applyBrightnessFloor,
+                      PanelPowerMode.shouldWriteFloor(armed: armed, lidCloseConfirmed: lidCloseConfirmed,
+                                                       mode: preferences.panelPowerMode), readLid() else { break }
                 ramp.cancel()
-                if canSetBuiltInBrightness {
-                    BrightnessFloorController.set(preferences.brightnessFloor)
+                if devices.canSetBrightness() {
+                    devices.setBrightness(preferences.brightnessFloor)
+                    effects.floor = true
                 }
             case .requestKeyboardBacklightOff:
-                KeyboardBacklightController.setOff()
+                guard armed, lidCloseConfirmed, preferences.keyboardBacklightOff, readLid() else { break }
+                devices.setKeyboard(0)
+                effects.keyboard = true
             case .rampBrightnessRestore:
-                guard preferences.panelPowerMode.showsLidOpenRamp else { break }
-                guard canSetBuiltInBrightness else { break }
+                guard effects.floor, preferences.panelPowerMode.showsLidOpenRamp else { break }
+                guard devices.canSetBrightness() else { break }
                 guard let target = HygieneRestore.displayBrightnessToRestore(
                     captured: savedBrightness,
                     floor: preferences.brightnessFloor
                 ) else { break }
-                let from = BrightnessFloorController.current() ?? target
+                let from = devices.brightness() ?? target
                 ramp.start(
                     from: from,
                     to: target,
-                    duration: HygieneRestore.lidOpenRampDuration(seconds: preferences.lidOpenRampSeconds)
+                    duration: HygieneRestore.lidOpenRampDuration(seconds: preferences.lidOpenRampSeconds),
+                    setBrightness: devices.setBrightness
                 )
             case .restoreKeyboardBacklight:
-                if let brightness = HygieneRestore.keyboardBrightnessToRestore(captured: savedKeyboard) {
-                    KeyboardBacklightController.setBrightness(brightness)
-                }
+                restoreKeyboard(effects: &effects, captured: savedKeyboard, devices: devices)
             }
         }
         return result
     }
 
-    static func restoreAfterDisengage(
-        preferences: UserPreferences,
-        savedBrightness: inout Double?,
-        savedKeyboard: inout Double?,
-        ramp: BrightnessRampController
+    static func restoreBrightness(
+        effects: inout HygieneEffects, captured: Double?,
+        ramp: BrightnessRampController, devices: HygieneDevices
     ) {
         ramp.cancel()
-        if preferences.panelPowerMode.writesBrightnessFloor,
-           preferences.applyBrightnessFloor, canSetBuiltInBrightness,
-           let target = HygieneRestore.displayBrightnessToRestore(
-               captured: savedBrightness,
-               floor: preferences.brightnessFloor
-           ) {
-            BrightnessFloorController.set(target)
+        if effects.floor, devices.canSetBrightness(), let captured {
+            devices.setBrightness(captured)
         }
-        if preferences.keyboardBacklightOff,
-           let brightness = HygieneRestore.keyboardBrightnessToRestore(captured: savedKeyboard) {
-            KeyboardBacklightController.setBrightness(brightness)
-        }
+        effects.floor = false
+    }
+
+    static func restoreKeyboard(effects: inout HygieneEffects, captured: Double?, devices: HygieneDevices) {
+        if effects.keyboard, let captured { devices.setKeyboard(captured) }
+        effects.keyboard = false
+    }
+
+    static func restoreAfterDisengage(
+        effects: inout HygieneEffects,
+        savedBrightness: inout Double?,
+        savedKeyboard: inout Double?,
+        ramp: BrightnessRampController,
+        devices: HygieneDevices = HygieneDevices()
+    ) {
+        restoreBrightness(effects: &effects, captured: savedBrightness, ramp: ramp, devices: devices)
+        restoreKeyboard(effects: &effects, captured: savedKeyboard, devices: devices)
         savedBrightness = nil
         savedKeyboard = nil
     }

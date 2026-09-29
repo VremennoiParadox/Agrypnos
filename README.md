@@ -272,26 +272,6 @@ Everything is in the popover, one section at a time.
 | **Notif** | Idle message switch, Discord webhook, Telegram token and chat id, Telegram inbound, Discord inbound (token and channel), clear secrets, setup instructions |
 | **General** | Global shortcut (default `⌥⌘A`, remappable), launch at login, quit |
 
-## What's been tested on a real Mac
-
-Core logic runs under `swift test` on Linux in CI. The table below covers what someone has checked by hand on real hardware.
-
-| Behavior | Checked on a Mac |
-|---|---|
-| Lid closed stays awake, Dim panel floor and fade back | ✅ |
-| Sleep panel mode, and switching between the two | ✅ |
-| No surprise dimming after the watch ends | ✅ |
-| Agents picker and OpenCode detection | ✅ |
-| Telegram commands, missed-while-asleep, lid-aware `/disarm` | ✅ |
-| Telegram `/status`, including battery | ✅ |
-| Discord commands | Not yet |
-| Idle message to a webhook or Telegram bot | Not yet |
-| Turning the watch off with the lid closed puts the Mac to sleep | Not yet |
-| Count terminal sessions as busy | Not yet |
-| Agents idle wait turning the watch off | Not yet |
-| Battery or thermal auto-off letting a closed Mac sleep | Not yet |
-| Low Power Mode with the watch on | Not yet |
-
 ## What it won't do
 
 - Detect every AI tool. It knows the four above.
@@ -323,3 +303,7 @@ python3 Scripts/generate-xcodeproj.py   # after adding or removing app Swift fil
 No file may pass 600 lines. `check-file-sizes.sh` enforces it in CI.
 
 Security details, including exactly what the sudoers rule allows, are in [SECURITY.md](SECURITY.md).
+
+### Custom agent session directories
+
+Agrypnos reads session locations from its own launch environment (`CLAUDE_CONFIG_DIR`, `CODEX_HOME`, `XDG_DATA_HOME`, and Cursor's `XDG_CONFIG_HOME`). An override set only in a terminal running an agent is not automatically available to a menu-bar app launched from Finder or at login. Agrypnos must be launched with the same supported overrides to observe those custom locations. No process-environment scraping is performed.

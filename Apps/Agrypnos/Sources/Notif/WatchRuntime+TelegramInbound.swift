@@ -7,6 +7,7 @@ import AgrypnosCore
 
 extension WatchRuntime {
     func telegramInboundIsPolling() -> Bool {
+        guard engine.preferences.telegramInboundEnabled else { return false }
         let secrets = NotifSecretsStore.load()
         return TelegramInboundPolicy.shouldPoll(
             enabled: engine.preferences.telegramInboundEnabled,
@@ -24,6 +25,8 @@ extension WatchRuntime {
     }
 
     func noteMacWillSleep() {
+        WatchDiagnostics.event("lifecycle willSleep")
+        invalidateAgentProbe()
         if telegramInboundIsPolling() {
             store.saveTelegramInboundCursor(store.loadTelegramInboundCursor().startingWakeMiss())
         }
@@ -34,8 +37,11 @@ extension WatchRuntime {
     }
 
     func noteMacDidWake() {
+        WatchDiagnostics.event("lifecycle didWake")
+        invalidateAgentProbe()
         inboundPoller.restartForWakeMiss()
         discordGateway.restartForWakeMiss()
+        poll()
     }
 
     func telegramInboundPollSnapshot() -> TelegramInboundPollSnapshot {
@@ -141,22 +147,9 @@ extension WatchRuntime {
     }
 
     func applyTelegramDisarm(token: String?, chatId: String?) {
-        pollLid()
-        let confirmed = engine.userOffLidCloseConfirmed(rawClosed: LidStateReader.isClosed())
-        let sleepResult: HygieneApplyResult
-        if engaged {
-            sleepResult = setEngaged(false)
-            if engaged {
-                sendTelegramInboundReply(TelegramInboundCopy.disarmFailed, token: token, chatId: chatId)
-                return
-            }
-        } else {
-            _ = disarmKernel()
-            if TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: confirmed) {
-                sleepResult = apply([.requestSleep])
-            } else {
-                sleepResult = HygieneApplyResult()
-            }
+        guard let sleepResult = disarmWatch() else {
+            sendTelegramInboundReply(TelegramInboundCopy.disarmFailed, token: token, chatId: chatId)
+            return
         }
         sendTelegramInboundReply(
             inboundDisarmReply(TelegramInboundCopy.disarmed, sleepResult: sleepResult),

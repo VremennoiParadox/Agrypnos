@@ -143,6 +143,7 @@ final class StatusItemStateTests: XCTestCase {
         XCTAssertEqual(engine.statusItemState, .agents)
         XCTAssertNil(engine.statusItemRemainingSeconds(now: t0.addingTimeInterval(20)))
 
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(20 + 120))
         _ = engine.tick(
             now: t0.addingTimeInterval(20 + 120),
             safety: .acPower,
