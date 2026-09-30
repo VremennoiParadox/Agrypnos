@@ -46,6 +46,20 @@ final class OpenCodeQuestionSourceTests: XCTestCase {
         XCTAssertTrue(fixture.requests.isEmpty)
     }
 
+    func testNativeResolvedEventDuringOwnSendDoesNotDiscardTheHTTPOutcome() async throws {
+        for (status, expected) in [(200, QuestionDelivery.accepted), (404, .rejected)] {
+            let fixture = try Fixture()
+            fixture.source.ingest(asked)
+            let batch = try XCTUnwrap(fixture.observed.first)
+            fixture.response = QuestionHTTPResponse(statusCode: status, body: Data("true".utf8))
+            fixture.onRequest = { [weak fixture, resolved] in fixture?.source.ingest(resolved) }
+            let result = await fixture.source.submit(key: batch.key, answer: QuestionAnswer(key: batch.key,
+                selections: [QuestionSelection(questionID: "q0", optionIDs: ["o1"])]))
+            XCTAssertEqual(result, expected)
+            XCTAssertTrue(fixture.cleared.isEmpty)
+        }
+    }
+
     func testAmbiguousOrStaleHTTPResultIsNeverAcceptedOrRetried() async throws {
         let fixture = try Fixture()
         fixture.source.ingest(asked)
@@ -223,10 +237,12 @@ private final class Fixture {
     var cleared: [QuestionKey] = []
     var response = QuestionHTTPResponse(statusCode: 200, body: Data("true".utf8))
     var now: TimeInterval = 1000
+    var onRequest: (() -> Void)?
     let config: OpenCodeQuestionConfiguration
     lazy var source = OpenCodeQuestionSource(configuration: config, exchange: { [weak self] request in
         guard let self else { return QuestionHTTPResponse(statusCode: nil, body: Data()) }
         requests.append(request)
+        onRequest?()
         return response
     }, uptime: { [weak self] in self?.now ?? 0 }, receive: { [weak self] batch in
         self?.observed.append(batch)

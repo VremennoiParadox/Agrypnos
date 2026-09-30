@@ -65,6 +65,7 @@ final class OpenCodeQuestionSource {
         let original: Data
         var active = true
         var attempted = false
+        var submitting = false
     }
 
     private let configuration: OpenCodeQuestionConfiguration
@@ -150,6 +151,12 @@ final class OpenCodeQuestionSource {
             if receive(batch) { records[batch.key] = Record(batch: batch, original: original) }
         case let .resolved(key):
             seen.remove(key)
+            if records[key]?.submitting == true {
+                // OpenCode publishes the native event before replying to our POST.
+                // Only that POST's outcome distinguishes our answer from a local winner.
+                records[key]?.active = false
+                return
+            }
             if records.removeValue(forKey: key) != nil { resolved(key) }
         }
     }
@@ -160,6 +167,11 @@ final class OpenCodeQuestionSource {
               let body = try? OpenCodeQuestionPayload.reply(original: record.original, answer: answer,
                   instanceID: instanceID) else { return .rejected }
         records[key]?.attempted = true
+        records[key]?.submitting = true
+        defer {
+            if records[key]?.active == false { records.removeValue(forKey: key) }
+            else { records[key]?.submitting = false }
+        }
         let request = configuration.request("/question/\(key.requestID)/reply", method: "POST",
             body: body, directoryQuery: true)
         let response = await exchange(request)
