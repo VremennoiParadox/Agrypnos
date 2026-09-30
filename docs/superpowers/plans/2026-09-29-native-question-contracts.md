@@ -13,4 +13,4 @@ There are no verified installed-version round-trip fixtures. Consequently no con
 
 For every row, the supplement must eventually include sanitized **observed** payloads, exact versions, callable signatures/configuration, fixture assertions and failure outcomes. A public example can guide a probe but cannot replace its result. Freeze/review this supplement only after all four same-conversation gates pass.
 
-Production Tasks 2–10 remain unstarted. Preserve the approved 600-second policy, busy/unknown protection, original deadlines and no-skill requirement; none has been relaxed to work around these gaps.
+Provider-independent Tasks 2–4 and 9 have local implementations, but Tasks 5–8 and the setup/optical gate in Task 10 remain incomplete. Preserve the approved 600-second policy, busy/unknown protection, original deadlines and no-skill requirement; none has been relaxed to work around these gaps.
