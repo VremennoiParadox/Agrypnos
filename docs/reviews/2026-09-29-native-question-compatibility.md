@@ -1,6 +1,6 @@
 # Native question compatibility — execution evidence
 
-Status: **Task 1 blocked; no provider has passed the release gate.** Checked on 2026-09-29 on the user's Mac. The user authorized execution and local commits, but no push. Provider-independent relay, bot and watch components (Tasks 2–4 and 9) have since been implemented and tested locally. No native provider adapter or question setup UI is enabled.
+Status: **Task 1 blocked; no provider has passed the release gate.** Checked on 2026-09-29 and revalidated on 2026-09-30 on the user's Mac. The user authorized execution and local commits, but no push. Provider-independent relay, bot and watch components (Tasks 2–4 and 9) have since been implemented and tested locally. No native provider adapter or question setup UI is enabled.
 
 This is a capability check, not a finding that native forwarding is impossible in every version. The approved [plan](../superpowers/plans/2026-09-29-native-agent-questions.md) requires access to existing desktop/local conversations for all four providers. An API that creates a separate agent does not meet that gate.
 
@@ -8,11 +8,11 @@ This is a capability check, not a finding that native forwarding is impossible i
 
 | Surface | Observed version | Result |
 | --- | --- | --- |
-| Cursor desktop | 3.22.12 (latest probe) | BLOCKED ON QUESTION HOOK. A disposable desktop chat rendered a native structured question and consumed a local B answer, but its working project `preToolUse` hook did not fire for that question. No supported answer route was observed. |
+| Cursor desktop | 3.22.12 (Sonnet 5.5 High probe) | BLOCKED ON QUESTION HOOK. A disposable desktop chat rendered a native structured question and consumed a local B answer, but its working project `preToolUse` and `postToolUse` hooks did not fire for that question. No supported answer route was observed. |
 | Claude Code CLI | 2.1.183 | BLOCKED ON SIGN-IN. The user has no Claude subscription. A disposable interactive probe reached "Not logged in" before any question or hook event. |
 | Claude desktop | 2.7032.0 | NOT TESTED. Desktop hook behavior must be proved separately from a CLI-owned run. |
-| Codex desktop (`com.openai.codex`) | 26.924.22138, build 11645 | BLOCKED ON ATTACHMENT. The running desktop server has no observed named Unix endpoint; the documented default control socket is absent. |
-| Bundled Codex CLI | 0.158.0-alpha.2.1 | `app-server proxy` exists, but cannot attach without the original server's control socket. |
+| Codex desktop surface (now in ChatGPT.app) | 26.928.21956, build 12404 (latest check) | BLOCKED ON ATTACHMENT. Current app-server explicitly uses `--listen stdio://`; canonical control socket candidates remain absent and no TCP listener was found. |
+| Bundled Codex CLI | 0.159.2 (latest check) | `app-server proxy` exists and requires a Unix socket; no attachment to the current desktop server was established. |
 | OpenCode TUI and official server | 1.18.32 | SAME-CHAT CHOICE PROVEN in a disposable ordinary TUI attached to its own official loopback server. A pending native A/B question was read through `GET /question`, and `POST /question/:id/reply` with B resumed that exact session to `OPENCODE_QUESTION_TEST_B`. SSE emitted a second `question.asked` event. No Agrypnos or bot round trip yet. |
 
 Versions came from bundle `Info.plist`, `claude --version`, `codex --version` and Cursor CLI help. No credentials or unrelated conversation contents were read.
@@ -27,6 +27,8 @@ No such file or directory (os error 2)
 ```
 
 A narrowly filtered process check identified the desktop's bundled `codex app-server` process with no explicit `--listen` flag. Checking only its Unix descriptors with `lsof -a -p <pid> -U -Fn` returned unnamed peer connections (`n->0x…`), with no pathname endpoint. `lsof -a -p <pid> -iTCP -sTCP:LISTEN -Fn` returned no listener (exit 1). These observations establish that the default proxy path is unavailable here; they do not prove that every possible desktop transport is unavailable.
+
+**2026-09-30 revalidation after app update:** The earlier app was 26.924.22138/build 11645 with CLI 0.158.0-alpha.2.1. The running desktop is now ChatGPT.app 26.928.21956/build 12404 with bundled CLI 0.159.2. Its current app-server process explicitly has `--listen stdio://`, and a listener check on that process found no TCP listener. Neither `~/.codex/app-server-control/app-server-control.sock` nor the checked app-server-daemon socket candidate exists. Current CLI help still describes `proxy` as attaching through a Unix socket; stdio belongs to the process's existing host, not an independently attachable endpoint. No listener was opened, server restarted or undocumented setting enabled.
 
 The public app-server protocol supports native `item/tool/requestUserInput` responses, but a schema alone does not grant access to the instance holding that pending request. `thread/read` does not subscribe, and resuming stored history on another server is not proof of controlling the desktop's original request. The app-server command also carries experimental maturity. No server was started, restarted, replaced or reconfigured during this check. [Official protocol](https://learn.chatgpt.com/docs/app-server), [command maturity](https://learn.chatgpt.com/docs/developer-commands).
 
