@@ -75,11 +75,17 @@ extension WatchRuntime {
             questionNewlyExpired.insert(key)
             questionUnansweredKeys.insert(key)
         }
-        if ownsWakeHold, engine.engaged { poll() }
+        if !evaluatingQuestionTick, ownsWakeHold, engine.engaged { poll() }
     }
 
-    func questionWaitDecision(agents: AgentSnapshot, observeAgents: Bool) -> QuestionWaitDecision {
-        guard engine.engaged else { return .normal }
+    func questionWaitDecision(agents: AgentSnapshot, observeAgents: Bool) -> (QuestionWaitDecision, [String]) {
+        guard engine.engaged else { return (.normal, []) }
+        if !questionDeadlines.isEmpty {
+            // Resolve shorter native lifetimes before the ten-minute watch decision.
+            evaluatingQuestionTick = true
+            questionRelay.expireDueQuestions()
+            evaluatingQuestionTick = false
+        }
         let decision = questionWaitPolicy.observe(pendingDeadlines: questionDeadlines,
             newlyExpired: questionNewlyExpired, cleared: questionCleared,
             now: questionUptime(),
@@ -87,6 +93,7 @@ extension WatchRuntime {
             grace: engine.preferences.agentSettleGrace)
         questionNewlyExpired.removeAll()
         questionCleared.removeAll()
+        var notices: [String] = []
         for timeout in decision.timeouts where decision.action != .endUnanswered {
             let text: String
             switch timeout.reason {
@@ -100,9 +107,9 @@ extension WatchRuntime {
                 continue
             }
             let context = "\n\(timeout.key.provider.displayName) · session \(timeout.key.sessionID.prefix(80))"
-            Task { await attemptQuestionNotice(text + context) }
+            notices.append(text + context)
         }
-        return decision
+        return (decision, notices)
     }
 
     func cancelQuestionSleep() {

@@ -169,7 +169,7 @@ extension WatchRuntime {
                 WatchDiagnostics.event("observation gap=\(gap); restarting quiet wait")
             }
         }
-        let questionWait = questionWaitDecision(agents: agents, observeAgents: observeAgents)
+        let (questionWait, questionNotices) = questionWaitDecision(agents: agents, observeAgents: observeAgents)
         let commands = engine.tick(
             now: now,
             safety: safety,
@@ -178,6 +178,9 @@ extension WatchRuntime {
             observeAgents: observeAgents,
             questionWait: questionWait
         )
+        if engine.engaged {
+            for notice in questionNotices { Task { await attemptQuestionNotice(notice) } }
+        }
         diagnostics.tick(engine: engine, settle: engine.engaged ? engine.settle : previousSettle, busy: agents.anyBusy(included: engine.preferences.includedAgentKinds),
                          now: now, kernel: kernel, observed: observeAgents)
         for command in commands {
@@ -238,7 +241,15 @@ extension WatchRuntime {
                         await self.attemptQuestionNotice(message)
                         guard !Task.isCancelled, self.questionSleepGeneration == captured,
                               !self.engine.engaged else { return }
-                        let canSleep = shouldSleep && self.readLid() && self.engine.lastDisengageLidClosed
+                        // The notification can take three seconds. Confirm the current close again
+                        // so an open/reclose during delivery cannot borrow the old confirmation.
+                        var lid = LidCloseConfirm()
+                        _ = lid.sample(self.readLid(), now: Date())
+                        if shouldSleep { try? await Task.sleep(nanoseconds: 250_000_000) }
+                        guard !Task.isCancelled, self.questionSleepGeneration == captured,
+                              !self.engine.engaged else { return }
+                        _ = lid.sample(self.readLid(), now: Date())
+                        let canSleep = shouldSleep && lid.confirmedClosed
                         let final = canSleep ? self.apply([.requestSleep]) : result
                         self.finishDisengageHygiene(sleepResult: final)
                         self.questionSleepTask = nil

@@ -29,6 +29,7 @@ final class WatchRuntime {
     var questionSleepTask: Task<Void, Never>?
     var questionSleepGeneration: UInt64 = 0
     var questionReleaseFailureReported = false
+    var evaluatingQuestionTick = false
     var engine: WatchEngine
     var pollTimer: Timer?
     var savedBrightness: Double?

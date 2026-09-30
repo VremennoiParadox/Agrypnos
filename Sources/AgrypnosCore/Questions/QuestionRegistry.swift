@@ -24,9 +24,12 @@ public struct QuestionRegistry: Sendable {
             .map { ($0.batch.key, $0.batch.deadlineUptime) })
     }
 
+    public func state(handle: UUID) -> QuestionState? { entries[handle]?.state }
+
     @discardableResult
     public mutating func insert(_ batch: QuestionBatch, handle: UUID) -> Bool {
         if let existing = entries.first(where: { $0.value.batch.key == batch.key }) {
+            guard existing.value.state == .pending else { return false }
             if existing.value.batch.questions != batch.questions || existing.value.batch.projectLabel != batch.projectLabel {
                 entries[existing.key]?.state = .invalid
             } else if batch.isValid, batch.deadlineUptime < existing.value.batch.deadlineUptime {
@@ -114,6 +117,8 @@ public struct QuestionRegistry: Sendable {
             entries[handle]?.state = .local
             return .returnLocal(handle, batch.key)
         }
+        // A button from an older render must not advance another page before that page is shown.
+        draft.tokens = draft.tokens.mapValues { _ in UUID().uuidString }
         entries[handle]?.drafts[callback.reference.destination] = draft
         return .rerender(handle, callback.reference.destination)
     }

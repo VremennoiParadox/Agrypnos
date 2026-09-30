@@ -1,6 +1,6 @@
 # Native question compatibility — execution evidence
 
-Status: **Task 1 blocked; no provider has passed the release gate.** Checked on 2026-09-29 on the user's Mac. The user authorized execution and local commits, but no push. Production Tasks 2–10 have not started.
+Status: **Task 1 blocked; no provider has passed the release gate.** Checked on 2026-09-29 on the user's Mac. The user authorized execution and local commits, but no push. Provider-independent relay, bot and watch components (Tasks 2–4 and 9) have since been implemented and tested locally. No native provider adapter or question setup UI is enabled.
 
 This is a capability check, not a finding that native forwarding is impossible in every version. The approved [plan](../superpowers/plans/2026-09-29-native-agent-questions.md) requires access to existing desktop/local conversations for all four providers. An API that creates a separate agent does not meet that gate.
 
@@ -60,6 +60,6 @@ OpenCode documents a server/event architecture. Its candidate question API must 
 
 For **each** provider: native A/B request → B returned through the original response path → unique B continuation exactly once; near-600-second answer and expiry; two simultaneous sessions; local answer/cancel first; disconnect before/after submission; pending recovery; existing hook denials. No sanitized question fixtures were captured because no question was observed. Neither Telegram nor Discord received a test message.
 
-The [contract supplement](../superpowers/plans/2026-09-29-native-question-contracts.md) is deliberately blocked. Task 1 is not complete. Production implementation must wait for the missing native desktop contracts and the all-four experiments, or an explicit user-approved change to the requirements. No silent two-provider implementation or skill fallback is authorized.
+The [contract supplement](../superpowers/plans/2026-09-29-native-question-contracts.md) is deliberately blocked. Task 1 is not complete. Provider adapters and the user-facing setup must wait for the missing native desktop contracts and the all-four experiments, or an explicit user-approved change to the requirements. The shared code remains off by default and cannot forward a real agent question on its own. No silent two-provider implementation or skill fallback is authorized.
 
-Fresh read-only review agreed this is a valid blocked-evidence checkpoint, found no Critical/Important documentation issue and no supported desktop attachment overlooked in its source check. Two minor planning-copy issues are deferred: the design's historical “two provider implementations” wording and the plan's stale planning-turn prohibition. This is not a production/release review; native timing/races/bot delivery and power behavior remain untested.
+The initial read-only feasibility review found no supported desktop attachment overlooked in its source check. Later shared-code review and local tests cover simulated relay, bot and watch behavior; live provider round trips, bot delivery, locked-screen operation and power impact remain untested. This is not a release review.

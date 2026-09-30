@@ -35,6 +35,9 @@
 		2AECF1A258D31B94B7028546 /* PowerHygieneCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D443A71D05E57A14624F2175 /* PowerHygieneCoordinator.swift */; };
 		CE82BC78031023E280DBD432 /* SleepDisabledController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A325704A38E6F231B4A961F1 /* SleepDisabledController.swift */; };
 		31DBD3069D96D292DC184EDD /* PreferencesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 986AF8E920E5E71D993DED12 /* PreferencesStore.swift */; };
+		4A547D34E748E74CA1E5E7F0 /* QuestionNoticeSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFE80B315E75852FC6FB9487 /* QuestionNoticeSender.swift */; };
+		8E4E13B32E0259DCDFD42AAC /* QuestionRelayCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12C9FECD0358EC968A877043 /* QuestionRelayCoordinator.swift */; };
+		DC26D17267A407DFB2705C3E /* WatchRuntime+Questions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C325B421A7E2C074D618543 /* WatchRuntime+Questions.swift */; };
 		436DA0943AEB42FDD30C5580 /* GrantAndNotify.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD7C3F5A1565378FE3CC9B8A /* GrantAndNotify.swift */; };
 		E62F9714A04AB0D4F946A4FE /* ProcessRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D433AFEE00C6137709B3A3C /* ProcessRunner.swift */; };
 		66D3B1D5907FD0E006894BA9 /* WatchDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DDF74CDCF0EF7E7F8CCA9C /* WatchDiagnostics.swift */; };
@@ -77,6 +80,9 @@
 		D443A71D05E57A14624F2175 /* PowerHygieneCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerHygieneCoordinator.swift; sourceTree = "<group>"; };
 		A325704A38E6F231B4A961F1 /* SleepDisabledController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepDisabledController.swift; sourceTree = "<group>"; };
 		986AF8E920E5E71D993DED12 /* PreferencesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesStore.swift; sourceTree = "<group>"; };
+		CFE80B315E75852FC6FB9487 /* QuestionNoticeSender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionNoticeSender.swift; sourceTree = "<group>"; };
+		12C9FECD0358EC968A877043 /* QuestionRelayCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionRelayCoordinator.swift; sourceTree = "<group>"; };
+		1C325B421A7E2C074D618543 /* WatchRuntime+Questions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+Questions.swift"; sourceTree = "<group>"; };
 		BD7C3F5A1565378FE3CC9B8A /* GrantAndNotify.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrantAndNotify.swift; sourceTree = "<group>"; };
 		1D433AFEE00C6137709B3A3C /* ProcessRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessRunner.swift; sourceTree = "<group>"; };
 		22DDF74CDCF0EF7E7F8CCA9C /* WatchDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchDiagnostics.swift; sourceTree = "<group>"; };
@@ -119,6 +125,7 @@
 				5913BA042BB61CF261FD559C /* Notif */,
 				3A741AA2944FECC4DD57D0E6 /* Power */,
 				E00B57B6F57F8169DF300C19 /* Preferences */,
+				3E9E73735ACBC1559FC30155 /* Questions */,
 				B2ADD567ADCD61F91327283F /* Support */,
 			);
 			path = Sources;
@@ -197,6 +204,16 @@
 				986AF8E920E5E71D993DED12 /* PreferencesStore.swift */,
 			);
 			path = Preferences;
+			sourceTree = "<group>";
+		};
+		3E9E73735ACBC1559FC30155 /* Questions */ = {
+			isa = PBXGroup;
+			children = (
+				CFE80B315E75852FC6FB9487 /* QuestionNoticeSender.swift */,
+				12C9FECD0358EC968A877043 /* QuestionRelayCoordinator.swift */,
+				1C325B421A7E2C074D618543 /* WatchRuntime+Questions.swift */,
+			);
+			path = Questions;
 			sourceTree = "<group>";
 		};
 		B2ADD567ADCD61F91327283F /* Support */ = {
@@ -335,6 +352,9 @@
 				2AECF1A258D31B94B7028546 /* PowerHygieneCoordinator.swift in Sources */,
 				CE82BC78031023E280DBD432 /* SleepDisabledController.swift in Sources */,
 				31DBD3069D96D292DC184EDD /* PreferencesStore.swift in Sources */,
+				4A547D34E748E74CA1E5E7F0 /* QuestionNoticeSender.swift in Sources */,
+				8E4E13B32E0259DCDFD42AAC /* QuestionRelayCoordinator.swift in Sources */,
+				DC26D17267A407DFB2705C3E /* WatchRuntime+Questions.swift in Sources */,
 				436DA0943AEB42FDD30C5580 /* GrantAndNotify.swift in Sources */,
 				E62F9714A04AB0D4F946A4FE /* ProcessRunner.swift in Sources */,
 				66D3B1D5907FD0E006894BA9 /* WatchDiagnostics.swift in Sources */,

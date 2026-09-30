@@ -97,6 +97,7 @@ final class RuntimeFixture {
     }
 
     func waitForCompletion() async {
+        await runtime.questionSleepTask?.value
         for _ in 0..<100 { await Task.yield() }
     }
 }

@@ -92,6 +92,7 @@ final class QuestionRelayCoordinatorTests: XCTestCase {
         let early = QuestionRelayFixture()
         early.batch = QuestionBatch(key: early.batch.key, questions: early.batch.questions, receivedUptime: 0, deadlineUptime: 30)
         XCTAssertTrue(early.receive())
+        XCTAssertTrue(early.events.contains { if case let .observed(_, deadline) = $0 { return deadline == 600 }; return false })
         early.now = 30
         early.relay.expireDueQuestions()
         await early.yieldTasks()
@@ -131,6 +132,58 @@ final class QuestionRelayCoordinatorTests: XCTestCase {
         XCTAssertFalse(fixture.receive())
         await fixture.yieldTasks()
         XCTAssertEqual(fixture.createCount, 0)
+    }
+
+    func testInvalidationDuringNativeSubmissionNeverReturnsLocalToo() async throws {
+        let fixture = QuestionRelayFixture()
+        XCTAssertTrue(fixture.receive())
+        await fixture.waitForEdits(1)
+        try fixture.click("1"); await fixture.waitForEdits(2)
+        try fixture.click("Review / next"); await fixture.waitForEdits(3)
+        try fixture.click("Send answers"); await fixture.waitForSubmissions(1)
+        fixture.relay.invalidateAll()
+        await fixture.yieldTasks()
+        XCTAssertEqual(fixture.localReturns, 0)
+        fixture.delivery?.resume(returning: .unconfirmed); fixture.delivery = nil
+    }
+
+    func testChangedProjectLabelReturnsOriginalQuestionLocally() async {
+        let fixture = QuestionRelayFixture()
+        XCTAssertTrue(fixture.receive())
+        fixture.batch = QuestionBatch(key: fixture.batch.key, projectLabel: "Changed",
+            questions: fixture.batch.questions, receivedUptime: 0, deadlineUptime: 600)
+        XCTAssertFalse(fixture.receive())
+        await fixture.yieldTasks()
+        XCTAssertEqual(fixture.localReturns, 1)
+        XCTAssertTrue(fixture.relay.pendingDeadlines.isEmpty)
+        XCTAssertTrue(fixture.events.contains { if case .cleared = $0 { return true }; return false })
+    }
+
+    func testDuplicateShorterNativeDeadlineExpiresLocallyWithoutTenMinuteEvent() async {
+        let fixture = QuestionRelayFixture()
+        XCTAssertTrue(fixture.receive())
+        fixture.batch = QuestionBatch(key: fixture.batch.key, questions: fixture.batch.questions,
+            receivedUptime: 0, deadlineUptime: 30)
+        XCTAssertFalse(fixture.receive())
+        XCTAssertEqual(fixture.relay.pendingDeadlines[fixture.batch.key], 30)
+        fixture.now = 30
+        fixture.relay.expireDueQuestions()
+        await fixture.yieldTasks()
+        XCTAssertEqual(fixture.localReturns, 1)
+        XCTAssertFalse(fixture.events.contains { if case .expired = $0 { return true }; return false })
+    }
+
+    func testAlreadyDueNativeDeadlineUpdateClearsOldButtonsImmediately() async {
+        let fixture = QuestionRelayFixture()
+        XCTAssertTrue(fixture.receive())
+        fixture.now = 31
+        fixture.batch = QuestionBatch(key: fixture.batch.key, questions: fixture.batch.questions,
+            receivedUptime: 0, deadlineUptime: 30)
+        XCTAssertFalse(fixture.receive())
+        await fixture.yieldTasks()
+        XCTAssertTrue(fixture.relay.pendingDeadlines.isEmpty)
+        XCTAssertEqual(fixture.localReturns, 1)
+        XCTAssertFalse(fixture.events.contains { if case .expired = $0 { return true }; return false })
     }
 }
 

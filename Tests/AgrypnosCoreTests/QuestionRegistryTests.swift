@@ -192,6 +192,19 @@ final class QuestionRegistryTests: XCTestCase {
         XCTAssertEqual(answer.selections.map(\.optionIDs), [["o1"], ["o0"]])
     }
 
+    func testRepeatedNavigationTokenCannotSkipAnUnseenPage() throws {
+        var (registry, handle) = bound(questionBatch(count: 3))
+        questionAction(.choose(questionID: "q0", optionID: "o0"), registry: &registry, handle: handle)
+        let firstNext = try XCTUnwrap(registry.view(handle: handle, reference: telegramQuestionRef)?
+            .controls.first(where: { $0.action == .next })?.token)
+        let callback = QuestionCallback(reference: telegramQuestionRef, senderID: "owner",
+            actionToken: firstNext, generation: registry.generation)
+        XCTAssertEqual(registry.handle(callback, authorizedUserID: "owner", now: 1100),
+            .rerender(handle, .telegram))
+        XCTAssertEqual(registry.handle(callback, authorizedUserID: "owner", now: 1100), .ignore)
+        XCTAssertEqual(registry.view(handle: handle, reference: telegramQuestionRef)?.page, 1)
+    }
+
     func testQuestionWindowNeverExceedsTenMinutes() {
         let batch = QuestionBatch(key: questionKey(), questions: questionBatch().questions,
             receivedUptime: 1000, deadlineUptime: 9000)

@@ -82,13 +82,23 @@ final class QuestionRelayCoordinator {
         refreshSettings()
         guard let currentSettings, currentSettings.enabled,
               currentSettings.includedKinds.contains(batch.key.provider),
-              (currentSettings.telegram?.isComplete == true || currentSettings.discord?.isComplete == true),
-              uptime() < batch.deadlineUptime else { return false }
+              (currentSettings.telegram?.isComplete == true || currentSettings.discord?.isComplete == true)
+        else { return false }
+        let previousDeadline = registry.pendingDeadlines[batch.key]
+        if previousDeadline == nil, uptime() >= batch.deadlineUptime { return false }
         let handle = UUID()
         guard registry.insert(batch, handle: handle) else {
             // A changed payload for the same native request invalidates the old buttons.
-            if let old = records.first(where: { $0.value.batch.key == batch.key }), old.value.batch.questions != batch.questions {
-                endLocally(old.key)
+            if let old = records.first(where: { $0.value.batch.key == batch.key }) {
+                if old.value.batch.questions != batch.questions || old.value.batch.projectLabel != batch.projectLabel {
+                    endLocally(old.key)
+                } else if let previousDeadline, let shortened = registry.pendingDeadlines[batch.key],
+                          shortened < previousDeadline {
+                    // A shorter native lifetime is not a ten-minute unanswered event.
+                    // Native expiry clears the watch's pending question when it occurs.
+                    scheduleDeadline()
+                    if shortened <= uptime() { expireDueQuestions() }
+                }
             }
             return false
         }
@@ -96,7 +106,9 @@ final class QuestionRelayCoordinator {
         let discord = currentSettings.discord?.isComplete == true ? currentSettings.discord : nil
         records[handle] = Record(batch: batch, submit: submit, returnLocal: returnLocal,
             pendingCreates: (telegram == nil ? 0 : 1) + (discord == nil ? 0 : 1))
-        onChange(.observed(batch.key, batch.deadlineUptime))
+        // The watch's unanswered reason is ten minutes; a shorter native lifetime
+        // ends via .cleared, never via .expired.
+        onChange(.observed(batch.key, batch.receivedUptime + 600))
         scheduleDeadline()
         let captured = registry.generation
         if let telegram { Task { [weak self] in await self?.createMessage(handle: handle, target: telegram, captured: captured) } }
@@ -189,14 +201,20 @@ final class QuestionRelayCoordinator {
     func invalidateAll() {
         deadlineTask?.cancel(); deadlineTask = nil
         let old = records
+        let needsFallback = Set(old.keys.filter { handle in
+            switch registry.state(handle: handle) {
+            case .pending, .expired, .invalid: true
+            default: false
+            }
+        })
         registry.invalidateAll()
         records.removeAll()
         recentCallbacks.removeAll()
         edits.values.forEach { $0.cancel() }
         edits.removeAll()
-        for (_, record) in old {
+        for (handle, record) in old {
             onChange(.cleared(record.batch.key))
-            if !record.returnedLocal { Task { await record.returnLocal() } }
+            if needsFallback.contains(handle), !record.returnedLocal { Task { await record.returnLocal() } }
         }
     }
 
@@ -290,7 +308,8 @@ final class QuestionRelayCoordinator {
     }
 
     private func endLocally(_ handle: UUID) {
-        guard let record = records[handle] else { return }
+        guard let record = records[handle],
+              registry.state(handle: handle) == .pending || registry.state(handle: handle) == .invalid else { return }
         registry.returnToLocal(handle: handle)
         onChange(.cleared(record.batch.key))
         callReturnLocal(handle)
