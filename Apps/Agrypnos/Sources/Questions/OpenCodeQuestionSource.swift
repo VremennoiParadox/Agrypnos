@@ -63,6 +63,8 @@ final class OpenCodeQuestionSource {
     private struct Record {
         let batch: QuestionBatch
         let original: Data
+        var active = true
+        var attempted = false
     }
 
     private let configuration: OpenCodeQuestionConfiguration
@@ -79,11 +81,13 @@ final class OpenCodeQuestionSource {
 
     init(configuration: OpenCodeQuestionConfiguration,
          exchange: Exchange? = nil,
+         streamSession: URLSession? = nil,
          uptime: @escaping @MainActor () -> TimeInterval = { ProcessInfo.processInfo.systemUptime },
          receive: @escaping Receive,
          resolved: @escaping @MainActor (QuestionKey) -> Void) {
         self.configuration = configuration
-        let session = URLSession(configuration: .ephemeral, delegate: NoOpenCodeRedirects(), delegateQueue: nil)
+        let session = streamSession ?? URLSession(configuration: .ephemeral,
+            delegate: NoOpenCodeRedirects(), delegateQueue: nil)
         self.streamSession = session
         self.exchange = exchange ?? { request in
             do {
@@ -100,16 +104,33 @@ final class OpenCodeQuestionSource {
         guard task == nil else { return }
         generation &+= 1
         let captured = generation
-        task = Task { [weak self] in await self?.run(generation: captured) }
+        let configuration = configuration, exchange = exchange, session = streamSession
+        task = Task { [weak self] in
+            await Self.run(configuration: configuration, exchange: exchange, session: session,
+                isCurrent: { [weak self] in self?.generation == captured },
+                reconcile: { [weak self] in try self?.reconcilePending($0) },
+                ingest: { [weak self] in self?.ingest($0) },
+                disconnected: { [weak self] in self?.connectionLost() })
+            if self?.generation == captured { self?.task = nil }
+        }
     }
+
+    deinit { task?.cancel(); streamSession.invalidateAndCancel() }
 
     func stop() {
         generation &+= 1
         task?.cancel()
         task = nil
-        for key in records.keys { resolved(key) }
+        connectionLost()
         records.removeAll()
         seen.removeAll()
+    }
+
+    func connectionLost() {
+        for (key, record) in records where record.active {
+            records[key]?.active = false
+            resolved(key)
+        }
     }
 
     func ingest(_ data: Data) {
@@ -134,9 +155,11 @@ final class OpenCodeQuestionSource {
     }
 
     func submit(key: QuestionKey, answer: QuestionAnswer) async -> QuestionDelivery {
-        guard let record = records[key],
+        guard let record = records[key], record.active, !record.attempted,
+              uptime() < record.batch.deadlineUptime,
               let body = try? OpenCodeQuestionPayload.reply(original: record.original, answer: answer,
                   instanceID: instanceID) else { return .rejected }
+        records[key]?.attempted = true
         let request = configuration.request("/question/\(key.requestID)/reply", method: "POST",
             body: body, directoryQuery: true)
         let response = await exchange(request)
@@ -151,42 +174,44 @@ final class OpenCodeQuestionSource {
         return .accepted
     }
 
-    private func run(generation captured: UInt64) async {
+    private static func run(configuration: OpenCodeQuestionConfiguration, exchange: Exchange,
+                            session: URLSession, isCurrent: () -> Bool,
+                            reconcile: (Data) throws -> Void, ingest: (Data) -> Void,
+                            disconnected: () -> Void) async {
         var retry = 1
-        while !Task.isCancelled && generation == captured {
+        while !Task.isCancelled && isCurrent() {
             do {
-                let health = await serverHealth()
-                guard generation == captured, !Task.isCancelled else { break }
+                let health = await serverHealth(configuration: configuration, exchange: exchange)
+                guard isCurrent(), !Task.isCancelled else { break }
                 if health == .unsupported { break }
                 if health == .offline { throw OpenCodeQuestionConfiguration.Error.invalidEndpoint }
                 let request = configuration.request("/global/event")
-                let (bytes, response) = try await streamSession.bytes(for: request)
-                guard generation == captured, !Task.isCancelled else { break }
+                let (bytes, response) = try await session.bytes(for: request)
+                guard isCurrent(), !Task.isCancelled else { break }
                 guard (response as? HTTPURLResponse)?.statusCode == 200 else { break }
-                try await reconcilePending(generation: captured)
+                let pending = await exchange(configuration.request("/question", directoryQuery: true))
+                guard isCurrent(), !Task.isCancelled else { break }
+                guard pending.statusCode == 200 else { throw OpenCodeQuestionConfiguration.Error.invalidEndpoint }
+                try reconcile(pending.body)
                 retry = 1
-                var frame = ""
-                for try await line in bytes.lines {
-                    if Task.isCancelled || generation != captured { break }
-                    if line.hasPrefix("data:") {
-                        frame += String(line.dropFirst(5)).trimmingCharacters(in: .whitespaces) + "\n"
-                        if frame.utf8.count > 256 * 1024 { frame = "" }
-                    } else if line.isEmpty, !frame.isEmpty {
-                        ingest(Data(frame.trimmingCharacters(in: .newlines).utf8))
-                        frame = ""
-                    }
+                var frames = OpenCodeEventFrames()
+                for try await byte in bytes {
+                    if Task.isCancelled || !isCurrent() { break }
+                    if let frame = frames.append(byte) { ingest(frame) }
                 }
-            } catch { /* Disconnection: reconcile pending requests after reconnect. */ }
-            if Task.isCancelled || generation != captured { break }
+            } catch { /* Reconnect below. */ }
+            if isCurrent() { disconnected() }
+            if Task.isCancelled || !isCurrent() { break }
             try? await Task.sleep(nanoseconds: UInt64(retry) * 1_000_000_000)
             retry = min(retry * 2, 30)
         }
-        if generation == captured { task = nil }
+        if isCurrent() { disconnected() }
     }
 
     private enum ServerHealth: Equatable { case supported, offline, unsupported }
 
-    private func serverHealth() async -> ServerHealth {
+    private static func serverHealth(configuration: OpenCodeQuestionConfiguration,
+                                     exchange: Exchange) async -> ServerHealth {
         let response = await exchange(configuration.request("/global/health"))
         guard let status = response.statusCode else { return .offline }
         guard status == 200,
@@ -196,26 +221,27 @@ final class OpenCodeQuestionSource {
         return .supported
     }
 
-    private func reconcilePending(generation captured: UInt64) async throws {
-        let response = await exchange(configuration.request("/question", directoryQuery: true))
-        guard generation == captured, !Task.isCancelled else { return }
-        guard response.statusCode == 200, response.body.count <= 256 * 1024,
-              let pending = try JSONSerialization.jsonObject(with: response.body) as? [[String: Any]]
+    func reconcilePending(_ data: Data) throws {
+        guard data.count <= 256 * 1024,
+              let pending = try JSONSerialization.jsonObject(with: data) as? [[String: Any]]
         else { throw OpenCodeQuestionConfiguration.Error.invalidEndpoint }
-        var keys: Set<QuestionKey> = []
+        var verified: [QuestionKey: QuestionBatch] = [:]
         for record in pending {
-            guard let session = record["sessionID"] as? String, !session.isEmpty,
-                  let request = record["id"] as? String, !request.isEmpty else {
-                throw OpenCodeQuestionConfiguration.Error.invalidEndpoint
+            let batch = try OpenCodeQuestionPayload.decode(JSONSerialization.data(withJSONObject: record),
+                instanceID: instanceID, receivedUptime: uptime())
+            guard verified[batch.key] == nil else { throw OpenCodeQuestionPayload.Error.invalidRequest }
+            verified[batch.key] = batch
+        }
+        for (key, record) in records {
+            guard let current = verified[key], current.questions == record.batch.questions else {
+                records.removeValue(forKey: key)
+                if record.active { resolved(key) }
+                continue
             }
-            keys.insert(QuestionKey(provider: .openCode, instanceID: instanceID,
-                sessionID: session, requestID: request))
+            if !record.active, !record.attempted, uptime() < record.batch.deadlineUptime,
+               receive(record.batch) { records[key]?.active = true }
         }
-        for key in records.keys where !keys.contains(key) {
-            records.removeValue(forKey: key)
-            resolved(key)
-        }
-        seen.formIntersection(keys)
+        seen.formIntersection(verified.keys)
         // Unknown pending requests predate this connection; their original deadline is unknown.
         // Only a fresh event on this stream may create bot controls for them.
     }

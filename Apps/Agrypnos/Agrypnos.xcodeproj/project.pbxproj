@@ -35,6 +35,7 @@
 		2AECF1A258D31B94B7028546 /* PowerHygieneCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D443A71D05E57A14624F2175 /* PowerHygieneCoordinator.swift */; };
 		CE82BC78031023E280DBD432 /* SleepDisabledController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A325704A38E6F231B4A961F1 /* SleepDisabledController.swift */; };
 		31DBD3069D96D292DC184EDD /* PreferencesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 986AF8E920E5E71D993DED12 /* PreferencesStore.swift */; };
+		C13AF58296A206B4C6CB98D7 /* OpenCodeEventFrames.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B758FA4AA59BA763C06F474 /* OpenCodeEventFrames.swift */; };
 		26997208C8E3082769BE45F2 /* OpenCodeQuestionSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1039890FF19ADB62E5C568F9 /* OpenCodeQuestionSource.swift */; };
 		4A547D34E748E74CA1E5E7F0 /* QuestionNoticeSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFE80B315E75852FC6FB9487 /* QuestionNoticeSender.swift */; };
 		8E4E13B32E0259DCDFD42AAC /* QuestionRelayCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12C9FECD0358EC968A877043 /* QuestionRelayCoordinator.swift */; };
@@ -81,6 +82,7 @@
 		D443A71D05E57A14624F2175 /* PowerHygieneCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerHygieneCoordinator.swift; sourceTree = "<group>"; };
 		A325704A38E6F231B4A961F1 /* SleepDisabledController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepDisabledController.swift; sourceTree = "<group>"; };
 		986AF8E920E5E71D993DED12 /* PreferencesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesStore.swift; sourceTree = "<group>"; };
+		1B758FA4AA59BA763C06F474 /* OpenCodeEventFrames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenCodeEventFrames.swift; sourceTree = "<group>"; };
 		1039890FF19ADB62E5C568F9 /* OpenCodeQuestionSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenCodeQuestionSource.swift; sourceTree = "<group>"; };
 		CFE80B315E75852FC6FB9487 /* QuestionNoticeSender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionNoticeSender.swift; sourceTree = "<group>"; };
 		12C9FECD0358EC968A877043 /* QuestionRelayCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionRelayCoordinator.swift; sourceTree = "<group>"; };
@@ -211,6 +213,7 @@
 		3E9E73735ACBC1559FC30155 /* Questions */ = {
 			isa = PBXGroup;
 			children = (
+				1B758FA4AA59BA763C06F474 /* OpenCodeEventFrames.swift */,
 				1039890FF19ADB62E5C568F9 /* OpenCodeQuestionSource.swift */,
 				CFE80B315E75852FC6FB9487 /* QuestionNoticeSender.swift */,
 				12C9FECD0358EC968A877043 /* QuestionRelayCoordinator.swift */,
@@ -355,6 +358,7 @@
 				2AECF1A258D31B94B7028546 /* PowerHygieneCoordinator.swift in Sources */,
 				CE82BC78031023E280DBD432 /* SleepDisabledController.swift in Sources */,
 				31DBD3069D96D292DC184EDD /* PreferencesStore.swift in Sources */,
+				C13AF58296A206B4C6CB98D7 /* OpenCodeEventFrames.swift in Sources */,
 				26997208C8E3082769BE45F2 /* OpenCodeQuestionSource.swift in Sources */,
 				4A547D34E748E74CA1E5E7F0 /* QuestionNoticeSender.swift in Sources */,
 				8E4E13B32E0259DCDFD42AAC /* QuestionRelayCoordinator.swift in Sources */,
