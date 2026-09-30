@@ -9,7 +9,7 @@ This is a capability check, not a finding that native forwarding is impossible i
 | Surface | Observed version | Result |
 | --- | --- | --- |
 | Cursor desktop | 3.22.7 | NOT PROVEN. Public hooks/ACP/SDK contracts do not establish an answer route into its live desktop question. The scoped desktop experiment could not be inspected. |
-| Claude Code CLI | 2.1.183 | NOT TESTED. Native question hook is a documented candidate; its installed-version behavior, timeout, acceptance and coexistence still need probes. |
+| Claude Code CLI | 2.1.183 | BLOCKED ON SIGN-IN. Native question hook is a documented candidate; a disposable interactive probe reached "Not logged in" before any question or hook event. |
 | Claude desktop | 2.7032.0 | NOT TESTED. Desktop hook behavior must be proved separately from a CLI-owned run. |
 | Codex desktop (`com.openai.codex`) | 26.924.22138, build 11645 | BLOCKED ON ATTACHMENT. The running desktop server has no observed named Unix endpoint; the documented default control socket is absent. |
 | Bundled Codex CLI | 0.158.0-alpha.2.1 | `app-server proxy` exists, but cannot attach without the original server's control socket. |
@@ -52,7 +52,9 @@ An additional read-only check of installed application JavaScript found native A
 
 ## Claude and OpenCode: candidates, not passes
 
-Claude's current documentation describes a synchronous `PreToolUse` hook with original questions and an answers map in `updatedInput`. Headless `-p` additionally needs a permission host; simply launching it with a hook is not a valid native question probe. The installed 2.1.183 build still needs interactive/desktop validation, denial coexistence and near-600-second tests. No new Claude conversation or hook configuration was launched. [Claude hooks](https://code.claude.com/docs/en/hooks).
+Claude's current documentation describes a synchronous `PreToolUse` hook with original questions and an answers map in `updatedInput`. Headless `-p` additionally needs a permission host; simply launching it with a hook is not a valid native question probe. The installed 2.1.183 build still needs interactive/desktop validation, denial coexistence and near-600-second tests. [Claude hooks](https://code.claude.com/docs/en/hooks).
+
+On 2026-09-30, a temporary CLI-only `--settings` hook was scoped to a disposable folder and configured to answer a synthetic A/B `AskUserQuestion` with B. The interactive CLI opened, but the first prompt returned `Not logged in · Please run /login` before any native question or hook callback. The CLI was exited and the temporary hook files were removed. This establishes no round trip and did not affect existing Claude settings or sessions.
 
 OpenCode documents a server/event architecture. Its candidate question API must be matched to a pinned installed version and the server actually hosting the user's conversation. No active endpoint was available for a round trip; no replacement server or port scan was started. [OpenCode server](https://opencode.ai/docs/server/).
 
