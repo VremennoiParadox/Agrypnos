@@ -102,11 +102,21 @@ public struct QuestionBatch: Equatable, Sendable {
 public struct QuestionSelection: Equatable, Sendable {
     public let questionID: String
     public let optionIDs: [String]
+
+    public init(questionID: String, optionIDs: [String]) {
+        self.questionID = questionID
+        self.optionIDs = optionIDs
+    }
 }
 
 public struct QuestionAnswer: Equatable, Sendable {
     public let key: QuestionKey
     public let selections: [QuestionSelection]
+
+    public init(key: QuestionKey, selections: [QuestionSelection]) {
+        self.key = key
+        self.selections = selections
+    }
 }
 
 public enum QuestionDestination: Hashable, Sendable { case telegram, discord }

@@ -37,6 +37,10 @@ public enum OpenCodeQuestionPayload {
                               receivedUptime: TimeInterval) throws -> QuestionBatch {
         guard data.count <= 256 * 1024, !instanceID.isEmpty else { throw Error.invalidRequest }
         let native = try JSONDecoder().decode(NativeRequest.self, from: data)
+        let suffix = native.id.utf8.dropFirst(4)
+        guard native.id.hasPrefix("que_"), !suffix.isEmpty, native.id.utf8.count <= 100,
+              suffix.allSatisfy({ (48...57).contains($0) || (65...90).contains($0) || (97...122).contains($0) })
+        else { throw Error.invalidRequest }
         let questions = native.questions.enumerated().map { index, item in
             AgentQuestion(id: "q\(index)", prompt: item.question,
                 options: item.options.enumerated().map { optionIndex, option in

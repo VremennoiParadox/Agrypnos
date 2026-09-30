@@ -88,4 +88,10 @@ final class OpenCodeQuestionPayloadTests: XCTestCase {
         XCTAssertNil(try OpenCodeQuestionPayload.event(heartbeat, instanceID: "instance",
             directory: "/project", receivedUptime: 1000))
     }
+
+    func testRejectsRequestIdThatCannotBeOneURLPathComponent() {
+        let unsafe = Data(#"{"id":"que_../reply","sessionID":"ses_1","questions":[{"question":"Which?","header":"Choice","options":[{"label":"A","description":"First"}]}]}"#.utf8)
+        XCTAssertThrowsError(try OpenCodeQuestionPayload.decode(unsafe,
+            instanceID: "server+directory", receivedUptime: 1000))
+    }
 }
