@@ -25,4 +25,6 @@ The official release server and an ordinary TUI were attached to the same explic
 
 This is enough to specify a prospective decoder and one reply encoder for OpenCode 1.18.32, but not to enable the adapter. The implementation must require an explicitly configured endpoint and directory for the instance hosting the user's existing chat, reject origin-changing redirects, reconcile pending requests on reconnect without extending deadlines, and prove cancellation and restart handling. The all-four release gate remains unchanged.
 
+The branch now contains `OpenCodeQuestionPayload` with fixture tests for the observed request/event and label-based reply shapes. It has no server connection, settings UI or bot delivery path yet. The parser ignores global heartbeat frames and rejects unsupported or ambiguous choice batches. This is an isolated contract implementation, not OpenCode support in the running app.
+
 Provider-independent Tasks 2–4 and 9 have local implementations, but Tasks 5–8 and the setup/optical gate in Task 10 remain incomplete. Preserve the approved 600-second policy, busy/unknown protection, original deadlines and no-skill requirement; none has been relaxed to work around these gaps.
