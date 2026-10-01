@@ -1,6 +1,6 @@
 # Native question compatibility — execution evidence
 
-Status: **Task 1 blocked; no provider has passed the release gate.** Checked on 2026-09-29 and revalidated on 2026-09-30 on the user's Mac. The user authorized execution and local commits, but no push. Provider-independent relay, bot and watch components (Tasks 2–4 and 9) have since been implemented and tested locally. No native provider adapter or question setup UI is enabled.
+Status, updated 2026-10-01: **all-provider release gate remains open**. The human authorized an OpenCode-only test build; its native HTTP source and Notif setup are enabled, and the user confirmed the OpenCode → Agrypnos → Telegram → original-question flow. Discord's live question flow, simultaneous sessions, recovery, Mac safety/lid checks and energy measurements remain open. Claude/Cursor/Codex remain unavailable. The detailed 2026-09-29/30 probes below are historical evidence; the [current handoff](2026-10-01-opencode-one-button-handoff.md) records the later acceptance.
 
 This is a capability check, not a finding that native forwarding is impossible in every version. The approved [plan](../superpowers/plans/2026-09-29-native-agent-questions.md) requires access to existing desktop/local conversations for all four providers. An API that creates a separate agent does not meet that gate.
 
@@ -13,7 +13,7 @@ This is a capability check, not a finding that native forwarding is impossible i
 | Claude desktop | 2.7032.0 | NOT TESTED. Desktop hook behavior must be proved separately from a CLI-owned run. |
 | Codex desktop surface (now in ChatGPT.app) | 26.928.21956, build 12404 (latest check) | BLOCKED ON ATTACHMENT. Current app-server explicitly uses `--listen stdio://`; canonical control socket candidates remain absent and no TCP listener was found. |
 | Bundled Codex CLI | 0.159.2 (latest check) | `app-server proxy` exists and requires a Unix socket; no attachment to the current desktop server was established. |
-| OpenCode TUI and official server | 1.18.32 | SAME-CHAT CHOICE PROVEN in a disposable ordinary TUI attached to its own official loopback server. A pending native A/B question was read through `GET /question`, and `POST /question/:id/reply` with B resumed that exact session to `OPENCODE_QUESTION_TEST_B`. SSE emitted a second `question.asked` event. No Agrypnos or bot round trip yet. |
+| OpenCode TUI and official server | 1.18.32 | SAME-CHAT CHOICE PROVEN through native GET/POST and SSE; the later wired Agrypnos/Telegram/original-chat flow is human-confirmed. Live Discord and the remaining release matrix are unproved. |
 
 Versions came from bundle `Info.plist`, `claude --version`, `codex --version` and Cursor CLI help. No credentials or unrelated conversation contents were read.
 
@@ -74,8 +74,8 @@ A second native question in that same TUI was captured on `GET /global/event` as
 
 ## Required experiments still outstanding
 
-For **each** provider: native A/B request → B returned through the original response path → unique B continuation exactly once; near-600-second answer and expiry; two simultaneous sessions; local answer/cancel first; disconnect before/after submission; pending recovery; existing hook denials where applicable. OpenCode alone has a synthetic A/B round trip and a sanitized event shape above; the rest of its matrix remains. Neither Telegram nor Discord received a test message.
+For **each** provider: near-600-second answer and expiry; two simultaneous sessions; local answer/cancel first; disconnect before/after submission; pending recovery; existing hook denials where applicable. OpenCode's native A/B proof and later user-confirmed Telegram round trip are recorded; its live Discord and remaining matrix are still open. Claude/Cursor/Codex still need the original-request native answer path and both-bot proof.
 
-The [contract supplement](../superpowers/plans/2026-09-29-native-question-contracts.md) is deliberately blocked. Task 1 is not complete. Provider adapters and the user-facing setup must wait for the missing native desktop contracts and the all-four experiments, or an explicit user-approved change to the requirements. The shared code remains off by default and cannot forward a real agent question on its own. No silent two-provider implementation or skill fallback is authorized.
+The [contract supplement](../superpowers/plans/2026-09-29-native-question-contracts.md) remains incomplete for the full release. The human explicitly authorized staged OpenCode runtime/setup work, now wired; this does not waive the all-four release requirement or permit invented native desktop contracts. Forwarding remains off by default. The proposed one-button plugin has a separate unpassed feasibility gate.
 
-The initial read-only feasibility review found no supported desktop attachment overlooked in its source check. Later shared-code review and local tests cover simulated relay, bot and watch behavior; live provider round trips, bot delivery, locked-screen operation and power impact remain untested. This is not a release review.
+The initial read-only feasibility review found no supported desktop attachment overlooked in its source check. Later automated review/tests and the confirmed OpenCode/Telegram flow are separate evidence. The remaining live provider/bot matrix, locked-screen operation and power impact remain untested. This is not a release review.

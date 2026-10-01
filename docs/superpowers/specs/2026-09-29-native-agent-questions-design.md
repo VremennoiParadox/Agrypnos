@@ -2,6 +2,8 @@
 
 Status: execution authorized by the user on 2026-09-29, local commits only; no push. The user will perform live Cursor checks after coding; shared implementation is underway while native compatibility evidence stays outstanding. See [compatibility evidence](../../reviews/2026-09-29-native-question-compatibility.md). Branch: `codex/agent-question-relay`.
 
+Update, 2026-10-01: the separately authorized OpenCode-only test build is wired and its HTTP/Telegram/original-question flow is human-confirmed. Other native providers and the complete release matrix remain gated. The [one-button setup plan](../plans/2026-10-01-opencode-one-button-setup.md) proposes a replacement OpenCode connection behind a native feasibility gate; this design's working explicit HTTP path remains in place until that replacement is proved.
+
 ## Intent and decisions
 
 The user wants a question from an existing agent conversation to appear automatically on their own Telegram/Discord bot, with selectable answers returned to that same request. Setup happens once. No skill, per-prompt command, injected model instruction, or replacement conversation is required.

@@ -3,7 +3,13 @@
 The human authorized finishing OpenCode first on 2026-10-01, then testing
 it before proceeding. Continue on `codex/agent-question-relay`; local commits
 only. The existing native-question design remains authoritative. This is a
-test build, not an all-provider release or a claim of live bot validation.
+test build, not an all-provider release.
+
+Status, 2026-10-01: the milestone is implemented; the user confirmed its
+HTTP/OpenCode/Telegram/original-chat flow. The remaining Discord, recovery,
+simultaneous-session, Mac safety/lid and energy matrix is open. See
+[verification](../../reviews/2026-10-01-opencode-question-verification.md) and
+the [current handoff](../../reviews/2026-10-01-opencode-one-button-handoff.md).
 
 ## Deliverable
 
@@ -33,6 +39,7 @@ defaults off and never arms the watch.
 
 ## Validation limits
 
-The user performs the real OpenCode/bot/Mac optical test after this milestone.
-Record automated versus live evidence separately. Do not enable Claude,
+The user confirmed the Telegram round trip after this milestone; that is
+not proof of the remaining bot/Mac matrix. Record automated versus live
+evidence separately. Do not enable Claude,
 Cursor or Codex or push/merge/release as part of this work.

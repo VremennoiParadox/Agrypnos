@@ -15,17 +15,20 @@ its implementation/live-test status. Check current Git state before continuing.
 2. Follow `superpowers:using-superpowers`. Use brainstorming/writing-plans
    for the new integration design; TDD, systematic debugging, verification,
    and review for subsequent implementation as applicable.
-3. Write the one-button integration plan first. Include a native feasibility
-   gate before promising the plugin can eliminate manual server setup.
-4. Review the concrete plan with the human. Clean up only agreed unused work;
-   preserve the working HTTP integration until its replacement is proved.
-   Then execute the reviewed plan and validate the real bot round trip.
+3. Read the saved [one-button integration plan](../superpowers/plans/2026-10-01-opencode-one-button-setup.md).
+   Its native feasibility gate remains unpassed; do not promise that the
+   plugin eliminates manual server setup before proving that gate.
+4. Read the [authorized cleanup record](2026-10-01-question-relay-cleanup.md).
+   Preserve the working HTTP integration until its replacement is proved.
+   Review the concrete feature plan with the human before executing it and
+   validating the new real bot round trip.
 
-The current request is **write this handoff**. The human agreed with the
-sequence above, then chose to move to a new chat before planning. No new
-plugin implementation, cleanup, or branch creation has started. This handoff
-is not blanket approval to install an integration into the user's global
-OpenCode configuration or remove working behavior.
+The original request was **write this handoff**. The human subsequently
+requested the one-button plan, then authorized cleanup of the unused work.
+The plan is saved; the unused Claude codec/tests are shelved and stale
+status notes are reconciled. No plugin implementation or branch creation
+has started. This does not authorize global installation or removal of
+working HTTP behavior.
 
 The human previously waived the Grok-only rule for this task: “ignore the
 grok rule, you can continue as chatgpt for this task.” Preserve that waiver.
@@ -115,10 +118,12 @@ Discord code is wired and tested, though live question validation is pending.
 Cursor/Codex native source adapters were never implemented; there are no
 abandoned adapters for those providers to remove.
 
-Concrete optional cleanup: `Sources/AgrypnosCore/Questions/ClaudeQuestionPayload.swift`
-is an 88-line codec with no app caller; its tests add 115 lines. Shelving those
-203 lines until Claude integration resumes was suggested, **not approved as
-a deletion**. The codec is documentation-based, not live-validated.
+The subsequent cleanup request authorized shelving
+`Sources/AgrypnosCore/Questions/ClaudeQuestionPayload.swift` (88 lines with
+no app caller) and its 115-line test file: **203 removed lines**. Both remain
+recoverable from commit `499dcba`. The codec used documentation-based
+fixtures and had no live native validation; revisit the native contract
+before restoring it.
 
 Manual connection UI/settings may become unnecessary after the plugin works.
 Consolidate stale planning status then; preserve meaningful contract/review
@@ -132,7 +137,8 @@ This was a targeted diff/wiring assessment, not an exhaustive new code review.
 ## Other providers remain separate
 
 - **Claude Code:** documented global `PreToolUse`/`AskUserQuestion` candidate
-  and codec exist. Helper/socket/runtime integration and live answer consumption
+  remains; the unused codec/tests are shelved. Helper/socket/runtime integration
+  and live answer consumption
   are unfinished. The user has no Claude subscription; avoid paid live probes.
 - **Cursor desktop:** a Sonnet 5.5 High native A/B test resumed correctly after
   a local click, but functioning pre/post tool hooks did not observe that question.

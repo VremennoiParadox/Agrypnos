@@ -4,6 +4,9 @@ Fresh, read-only review: `review_opencode_milestone`, GPT-6 Astra Extra High.
 Range: original branch base `e615e00761ece7bb09f37c354d2957bbd25a6777`
 through committed HEAD `af72b98`, plus the milestone working changes.
 Scope: an OpenCode-only test build, with no push, merge or release.
+Later evidence: the user confirmed the OpenCode/Agrypnos/Telegram/original-chat
+flow. The pending-live statements below are narrowed to the remaining matrix;
+see the [current handoff](2026-10-01-opencode-one-button-handoff.md).
 The reviewer found no Critical issues, four Important issues and two Minor
 issues. The executor addressed these in one regression/fix pass; no second
 review was requested.
@@ -65,9 +68,10 @@ review was requested.
   cannot be recovered safely after restart. Network-only reconnect preserves
   verified original deadlines. Cost: a pre-existing question needs a local
   answer after sleep/restart.
-- Live OpenCode → bot → original-chat acceptance and service timing remain
-  for the human test. Fixtures establish routing/identity, not real service
-  acceptance. Cost: a live integration failure may still require a fix.
+- The user confirmed live OpenCode → Telegram → original-chat acceptance.
+  Discord and the remaining service/recovery matrix still need live proof.
+  Fixtures establish routing/identity, not those remaining service outcomes.
+  Cost: an untested integration path may still require a fix.
 - AppKit optical behavior, typing/reveal interactions and section animations
   remain for the human test. Layout/build checks pass. Cost: UI interaction
   or clipping issues may still require a fix.
@@ -84,5 +88,5 @@ review was requested.
   remain incomplete. Local milestone completion does not close that plan.
 
 No deferred review findings remain within this OpenCode test-build scope.
-Live evidence is explicitly pending. See the milestone verification record
-for the final suite/build results and the human smoke test.
+Telegram acceptance is human-confirmed; remaining live categories are pending.
+See the milestone verification record for its suite/build results and smoke test.

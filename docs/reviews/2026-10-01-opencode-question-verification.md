@@ -3,6 +3,14 @@
 Authorization: finish OpenCode first, then wait for the human's test feedback.
 Branch: `codex/agent-question-relay`. Local work only; no push/merge/release.
 
+**Later status, 2026-10-01:** The prepared app was launched for the user's
+test; the user subsequently confirmed the OpenCode → Agrypnos → Telegram →
+original-question flow: “The feature works as I intended and is what I wanted.”
+Discord's live question round trip, simultaneous sessions, recovery, Mac
+safety/lid checks and energy measurements remain open. See the
+[current handoff](2026-10-01-opencode-one-button-handoff.md). Automated results
+below describe the original milestone, before the later branch cleanup.
+
 ## Implemented
 
 - Optional server endpoint/directory/username/password preserved alongside
@@ -24,7 +32,7 @@ corresponding implementation. Logs are under `/private/tmp/agrypnos-opencode-*`.
 The first integrated suite passed 725 tests; the extended runtime tests cover
 Foundation byte-stream ingestion, both bots' controls, manual off, selection/
 authorization gates, unchanged/changed setup and native answer after expiry.
-Final suite/build/review evidence will be recorded below after verification.
+Final milestone suite/build/review results are recorded below.
 
 ## Human smoke test
 
@@ -42,8 +50,8 @@ Final suite/build/review evidence will be recorded below after verification.
    Idle may end the watch; busy/unknown must defer. Manual off and safety
    must invalidate phone controls. Screen lock alone must preserve the wait.
 
-Record exact OpenCode/app/bot versions and any failed step. Live bot round
-trips, Mac optical and energy measurements remain unverified until performed.
+Record exact OpenCode/app/bot versions and any failed step. The Telegram flow
+is now human-confirmed; the remaining live/optical and energy matrix is open.
 No all-provider support or measured-wattage claim follows from unit tests.
 
 Final automated result: full Swift suite **743/743 PASS**; app **Debug and
@@ -54,12 +62,14 @@ issues; these and two smaller findings were fixed with regressions. See
 Tracked files plus milestone additions pass the 600-line cap. The stock
 checker also scans pre-existing untracked build binaries and two earlier
 untracked docs, which exceed that limit and were preserved unchanged.
-`git diff --check` passes. No real bot message, user session change or running
-app replacement was performed.
+`git diff --check` passed at the milestone checkpoint. No real bot message,
+user session change or app replacement was performed during that automated
+verification; the user subsequently tested the Telegram flow.
 
 Prepared Release app:
 `dist/opencode-question-test-2026-10-01/Agrypnos.app`.
 The bundle uses ad-hoc signing for this local test; `codesign --verify --deep
 --strict` passes. Quit the currently running Agrypnos before opening it.
 It reads your existing preferences; forwarding still defaults off. The app
-has not been launched by the executor. Live proof remains the next step.
+was subsequently launched for the user. The confirmed Telegram flow does
+not prove Discord or the complete Mac/recovery matrix.

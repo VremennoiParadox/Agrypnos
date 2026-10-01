@@ -2,6 +2,8 @@
 
 **Execution status, 2026-09-29:** user authorized execution/local commits, **no push**, and subsequently chose to perform live Cursor checks after coding. Shared implementation may proceed; Task 1 live evidence remains outstanding and no unknown native API may be fabricated. All four still must work before release. See [compatibility evidence](../../reviews/2026-09-29-native-question-compatibility.md) and the [contract supplement](2026-09-29-native-question-contracts.md).
 
+**Current status, 2026-10-01:** the separately authorized [OpenCode milestone](2026-10-01-opencode-relay-milestone.md) is wired and its Telegram/original-chat flow is human-confirmed. Other providers and the full release matrix remain gated. The unused Claude codec/tests were shelved in the authorized [cleanup](../../reviews/2026-10-01-question-relay-cleanup.md); Task 5 must establish its native contract before restoring them. The [one-button plan](2026-10-01-opencode-one-button-setup.md) is written, with its plugin feasibility gate still unpassed. Original task checkboxes below are not a claim that the staged milestone is unwired.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Automatically forward structured questions from existing Cursor, Claude Code, Codex and OpenCode conversations to the user's Telegram/Discord bots, return chosen answers to the original requests, and end an unanswered-question wake allowance after ten minutes without interrupting other observed work.
