@@ -4,6 +4,112 @@ import AgrypnosCore
 
 @MainActor
 final class QuestionRelayCoordinatorTests: XCTestCase {
+    func testCancellationCoalescesOverAnInFlightFailedEditOnBothBots() async throws {
+        for destination in [QuestionDestination.telegram, .discord] {
+            let fixture = QuestionRelayFixture()
+            fixture.use(destination)
+            XCTAssertTrue(fixture.receive())
+            await fixture.waitForEdits(1)
+            fixture.holdNextEdit = true
+            try fixture.click("1", on: destination)
+            await fixture.waitForEdits(2)
+            fixture.relay.cancel(key: fixture.batch.key)
+            fixture.editing?.resume(returning: fixture.rateLimit(destination, seconds: 2))
+            fixture.editing = nil
+            await fixture.waitForEdits(3)
+            let final = try XCTUnwrap(fixture.requests.last { fixture.isEdit($0) })
+            let body = try XCTUnwrap(JSONSerialization.jsonObject(with: final.body) as? [String: Any])
+            XCTAssertTrue(((body["text"] ?? body["content"]) as? String)?.contains("no longer available remotely") == true)
+            XCTAssertTrue(fixture.retryDelays.isEmpty)
+            XCTAssertTrue(fixture.submissions.isEmpty)
+        }
+    }
+
+    func testPermanentEditFailureClosesControlsAndReturnsLocalOnBothBots() async {
+        for destination in [QuestionDestination.telegram, .discord] {
+            let fixture = QuestionRelayFixture()
+            fixture.use(destination)
+            fixture.editResponses = [QuestionHTTPResponse(statusCode: 403, body: Data())]
+            XCTAssertTrue(fixture.receive())
+            await fixture.yieldTasks()
+            XCTAssertEqual(fixture.localReturns, 1)
+            XCTAssertTrue(fixture.relay.pendingDeadlines.isEmpty)
+            XCTAssertTrue(fixture.retryDelays.isEmpty)
+            XCTAssertTrue(fixture.submissions.isEmpty)
+        }
+    }
+
+    func testFailedInitialEditRecoversOnBothBotsWithoutExtendingDeadline() async throws {
+        for destination in [QuestionDestination.telegram, .discord] {
+            let fixture = QuestionRelayFixture()
+            fixture.use(destination)
+            fixture.editResponses = [fixture.rateLimit(destination, seconds: 2),
+                QuestionHTTPResponse(statusCode: nil, body: Data())]
+            XCTAssertTrue(fixture.receive())
+            await fixture.waitForEdits(3)
+            XCTAssertEqual(fixture.retryDelays, [2, 2])
+            XCTAssertEqual(fixture.relay.pendingDeadlines[fixture.batch.key], 600)
+            try fixture.click("1", on: destination)
+            await fixture.waitForEdits(4)
+            try fixture.click("Review / next", on: destination)
+            await fixture.waitForEdits(5)
+            try fixture.click("Send answers", on: destination)
+            await fixture.waitForSubmissions(1)
+            fixture.delivery?.resume(returning: .accepted); fixture.delivery = nil
+            await fixture.yieldTasks()
+            XCTAssertEqual(fixture.submissions.count, 1)
+        }
+    }
+
+    func testFailedSelectionEditRetriesTheSameControlsOnBothBots() async throws {
+        for destination in [QuestionDestination.telegram, .discord] {
+            let fixture = QuestionRelayFixture()
+            fixture.use(destination)
+            XCTAssertTrue(fixture.receive())
+            await fixture.waitForEdits(1)
+            fixture.editResponses = [QuestionHTTPResponse(statusCode: nil, body: Data())]
+            try fixture.click("1", on: destination)
+            await fixture.waitForEdits(3)
+            let edits = fixture.requests.filter { fixture.isEdit($0) }
+            XCTAssertEqual(edits[1].body, edits[2].body)
+            try fixture.click("Review / next", on: destination)
+            await fixture.waitForEdits(4)
+            try fixture.click("Send answers", on: destination)
+            await fixture.waitForSubmissions(1)
+            fixture.delivery?.resume(returning: .accepted); fixture.delivery = nil
+        }
+    }
+
+    func testEditRetryPastOriginalDeadlineReturnsLocalOnBothBots() async {
+        for destination in [QuestionDestination.telegram, .discord] {
+            let fixture = QuestionRelayFixture()
+            fixture.use(destination)
+            fixture.now = 599
+            fixture.editResponses = [fixture.rateLimit(destination, seconds: 2)]
+            XCTAssertTrue(fixture.receive())
+            await fixture.yieldTasks()
+            XCTAssertTrue(fixture.retryDelays.isEmpty)
+            XCTAssertEqual(fixture.localReturns, 1)
+            XCTAssertTrue(fixture.relay.pendingDeadlines.isEmpty)
+            XCTAssertTrue(fixture.submissions.isEmpty)
+        }
+    }
+
+    func testNativeCancellationEditsBothMessagesToUnavailable() async {
+        let fixture = QuestionRelayFixture()
+        fixture.settings.discord = DiscordQuestionDestination(token: "discord", channelID: "10", userID: "43")
+        XCTAssertTrue(fixture.receive())
+        await fixture.waitForEdits(2)
+        fixture.relay.cancel(key: fixture.batch.key)
+        await fixture.waitForEdits(4)
+        for request in fixture.requests.suffix(2) {
+            let body = try? JSONSerialization.jsonObject(with: request.body) as? [String: Any]
+            let text = (body?["text"] ?? body?["content"]) as? String
+            XCTAssertTrue(text?.contains("no longer available remotely") == true)
+        }
+        XCTAssertTrue(fixture.relay.pendingDeadlines.isEmpty)
+    }
+
     func testReviewSubmitReservesBeforeAwaitAndAckDoesNotProveDelivery() async throws {
         let fixture = QuestionRelayFixture()
         XCTAssertTrue(fixture.receive())
@@ -199,12 +305,21 @@ private final class QuestionRelayFixture {
     var interactionCounter = 500
     var events: [QuestionRelayEvent] = []
     var holdCreate = false
+    var holdNextEdit = false
+    var editing: CheckedContinuation<QuestionHTTPResponse, Never>?
+    var editResponses: [QuestionHTTPResponse] = []
+    var retryDelays: [TimeInterval] = []
     var reply = QuestionHTTPResponse(statusCode: 200, body: Data(#"{"ok":true,"result":{"message_id":18,"chat":{"id":9}}}"#.utf8))
     var batch = QuestionBatch(key: QuestionKey(provider: .cursor, instanceID: "app", sessionID: "thread", requestID: "r"), questions: [AgentQuestion(id: "q", prompt: "Which?", options: [QuestionOption(id: "a", label: "Alpha"), QuestionOption(id: "b", label: "Beta")], multiple: true)], receivedUptime: 0, deadlineUptime: 600)
     lazy var relay = QuestionRelayCoordinator(settings: { [weak self] in self?.settings ?? QuestionRelaySettings(enabled: false, includedKinds: [], telegram: nil) },
         transport: { [weak self] request in
             guard let self else { return QuestionHTTPResponse(statusCode: nil, body: Data()) }
             requests.append(request)
+            if isEdit(request), holdNextEdit {
+                holdNextEdit = false
+                return await withCheckedContinuation { self.editing = $0 }
+            }
+            if isEdit(request), !editResponses.isEmpty { return editResponses.removeFirst() }
             if request.url.path.hasSuffix("/sendMessage") {
                 if holdCreate { return await withCheckedContinuation { self.creation = $0 } }
                 return reply
@@ -213,7 +328,28 @@ private final class QuestionRelayFixture {
                 return QuestionHTTPResponse(statusCode: 200, body: Data(#"{"id":"19","channel_id":"10"}"#.utf8))
             }
             return QuestionHTTPResponse(statusCode: 200, body: Data(#"{"ok":true}"#.utf8))
-        }, uptime: { [weak self] in self?.now ?? 0 }, onChange: { [weak self] in self?.events.append($0) })
+        }, uptime: { [weak self] in self?.now ?? 0 },
+        retryWait: { [weak self] seconds in self?.retryDelays.append(seconds); await Task.yield() },
+        onChange: { [weak self] in self?.events.append($0) })
+
+    func isEdit(_ request: NotifOutboundRequest) -> Bool {
+        request.url.path.hasSuffix("/editMessageText") || request.httpMethod == "PATCH"
+    }
+    func rateLimit(_ destination: QuestionDestination, seconds: Int) -> QuestionHTTPResponse {
+        QuestionHTTPResponse(statusCode: 429, body: Data((destination == .telegram
+            ? "{\"ok\":false,\"parameters\":{\"retry_after\":\(seconds)}}"
+            : "{\"retry_after\":\(seconds)}").utf8))
+    }
+    func use(_ destination: QuestionDestination) {
+        if destination == .discord {
+            settings.telegram = nil
+            settings.discord = DiscordQuestionDestination(token: "discord", channelID: "10", userID: "43")
+        }
+    }
+    func click(_ label: String, on destination: QuestionDestination) throws {
+        if destination == .telegram { try click(label) }
+        else { relay.handleDiscord(try XCTUnwrap(discordCallback(label)), drain: .live) }
+    }
 
     var createCount: Int { requests.filter { $0.url.path.hasSuffix("/sendMessage") }.count }
     var editCount: Int { requests.filter { $0.url.path.hasSuffix("/editMessageText") || ($0.httpMethod == "PATCH" && $0.url.path.hasSuffix("/messages/19")) }.count }

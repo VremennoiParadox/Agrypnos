@@ -98,6 +98,14 @@ public enum DiscordQuestionMessage {
 
     private static func request(method: String, botToken: String, channelID: String,
                                 messageID: String?, body: [String: Any]) -> NotifOutboundRequest? {
+        var body = body
+        if let text = body["content"] as? String {
+            let markers = Set("\\`*_~|<>[]()#+-.!".unicodeScalars)
+            let escaped = text.unicodeScalars.map { markers.contains($0) ? "\\" + String($0) : String($0) }.joined()
+            guard escaped.utf16.count <= 2000 else { return nil }
+            body["content"] = escaped
+            body["flags"] = 4 // SUPPRESS_EMBEDS, including previews of local question URLs.
+        }
         guard let channelID = DiscordInboundRequestFactory.snowflakePath(channelID),
               let data = try? JSONSerialization.data(withJSONObject: body) else { return nil }
         var path = "/api/v10/channels/\(channelID)/messages"

@@ -20,6 +20,16 @@ final class WatchRuntime {
     let postIdle: (Bool) async -> Void
     let notify: (String) -> Void
     let postQuestionNotice: @MainActor (String) async -> Void
+    let readNotifSecrets: () -> NotifSecrets
+    let questionTransport: QuestionRelayCoordinator.Transport
+    let openCodeQuestionExchange: OpenCodeQuestionSource.Exchange?
+    let openCodeQuestionStreamSession: URLSession?
+    var openCodeQuestionSource: OpenCodeQuestionSource?
+    var openCodeSourceSettings: OpenCodeQuestionSettings?
+    var openCodeRelaySettings: QuestionRelaySettings?
+    var openCodeQuestionState: OpenCodeQuestionConnectionState = .stopped
+    var questionSourcesSuspended = false
+    var questionSourcesTerminated = false
     var questionUptime: () -> TimeInterval = { ProcessInfo.processInfo.systemUptime }
     var questionWaitPolicy = QuestionWaitPolicy()
     var questionDeadlines: [QuestionKey: TimeInterval] = [:]
@@ -76,7 +86,11 @@ final class WatchRuntime {
         },
         postIdle: @escaping (Bool) async -> Void = { await NotifIdlePoster.postIfNeeded(enabled: $0) },
         notify: @escaping (String) -> Void = UserNotify.post,
-        postQuestionNotice: @escaping @MainActor (String) async -> Void = { await QuestionNoticeSender.send($0) }
+        postQuestionNotice: @escaping @MainActor (String) async -> Void = { await QuestionNoticeSender.send($0) },
+        readNotifSecrets: @escaping () -> NotifSecrets = NotifSecretsStore.load,
+        questionTransport: @escaping QuestionRelayCoordinator.Transport = { await TelegramInboundHTTP.exchangeQuestion($0) },
+        openCodeQuestionExchange: OpenCodeQuestionSource.Exchange? = nil,
+        openCodeQuestionStreamSession: URLSession? = nil
     ) {
         self.store = store
         self.readLid = readLid
@@ -86,6 +100,10 @@ final class WatchRuntime {
         self.postIdle = postIdle
         self.notify = notify
         self.postQuestionNotice = postQuestionNotice
+        self.readNotifSecrets = readNotifSecrets
+        self.questionTransport = questionTransport
+        self.openCodeQuestionExchange = openCodeQuestionExchange
+        self.openCodeQuestionStreamSession = openCodeQuestionStreamSession
         engine = WatchEngine(preferences: store.load())
     }
 
@@ -105,6 +123,7 @@ final class WatchRuntime {
         poll()
         inboundPoller.sync()
         discordGateway.sync()
+        syncQuestionSources()
         return true
     }
 
@@ -171,7 +190,7 @@ final class WatchRuntime {
         guard engine.preferences.applyIncludedAgentKinds(kinds) else { return }
         store.save(engine.preferences)
         invalidateAgentProbe()
-        questionRelay.refreshSettings()
+        clearQuestionWatch()
         delegate?.watchRuntimeDidChange(self)
     }
 
@@ -182,25 +201,27 @@ final class WatchRuntime {
     }
 
     func setTelegramInboundEnabled(_ on: Bool) {
+        guard preferences.telegramInboundEnabled != on else { return }
         engine.userSetTelegramInboundEnabled(on)
         store.save(engine.preferences)
         inboundPoller.sync()
-        questionRelay.refreshSettings()
+        clearQuestionWatch()
         pollLid()
         delegate?.watchRuntimeDidChange(self)
     }
 
     func setDiscordInboundEnabled(_ on: Bool) {
+        guard preferences.discordInboundEnabled != on else { return }
         engine.userSetDiscordInboundEnabled(on)
         store.save(engine.preferences)
         discordGateway.sync()
-        questionRelay.refreshSettings()
+        clearQuestionWatch()
         pollLid()
         delegate?.watchRuntimeDidChange(self)
     }
 
     func notifSecrets() -> NotifSecrets {
-        NotifSecretsStore.load()
+        readNotifSecrets()
     }
 
     @discardableResult
@@ -210,41 +231,45 @@ final class WatchRuntime {
 
     @discardableResult
     func setNotifTelegramBotToken(_ value: String?) -> Bool {
+        guard NotifSecretsPayload.present(value) != readNotifSecrets().telegramBotToken else { return true }
         questionRelay.invalidateAll()
         store.resetTelegramInboundCursor()
         inboundPoller.invalidate()
         let saved = NotifSecretsStore.setTelegramBotToken(value)
         inboundPoller.sync()
-        questionRelay.refreshSettings()
+        clearQuestionWatch()
         return saved
     }
 
     @discardableResult
     func setNotifTelegramChatId(_ value: String?) -> Bool {
+        guard NotifSecretsPayload.present(value) != readNotifSecrets().telegramChatId else { return true }
         questionRelay.invalidateAll()
         let saved = NotifSecretsStore.setTelegramChatId(value)
         inboundPoller.sync()
-        questionRelay.refreshSettings()
+        clearQuestionWatch()
         return saved
     }
 
     @discardableResult
     func setNotifDiscordBotToken(_ value: String?) -> Bool {
+        guard NotifSecretsPayload.present(value) != readNotifSecrets().discordBotToken else { return true }
         questionRelay.invalidateAll()
         store.resetDiscordInboundCursor()
         discordGateway.invalidate()
         let saved = NotifSecretsStore.setDiscordBotToken(value)
         discordGateway.sync()
-        questionRelay.refreshSettings()
+        clearQuestionWatch()
         return saved
     }
 
     @discardableResult
     func setNotifDiscordChannelId(_ value: String?) -> Bool {
+        guard NotifSecretsPayload.present(value) != readNotifSecrets().discordChannelId else { return true }
         questionRelay.invalidateAll()
         let saved = NotifSecretsStore.setDiscordChannelId(value)
         discordGateway.sync()
-        questionRelay.refreshSettings()
+        clearQuestionWatch()
         return saved
     }
 
@@ -255,7 +280,7 @@ final class WatchRuntime {
         inboundPoller.invalidate()
         discordGateway.invalidate()
         NotifSecretsStore.clear()
-        questionRelay.refreshSettings()
+        clearQuestionWatch()
         inboundPoller.sync()
         discordGateway.sync()
     }

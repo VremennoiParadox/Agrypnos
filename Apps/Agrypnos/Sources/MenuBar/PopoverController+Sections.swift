@@ -103,6 +103,8 @@ extension PopoverController {
         PopoverForm.apply(notifDiscordInboundCard, slot: layout.notifDiscordInbound, pad: pad, width: width)
         PopoverForm.apply(notifTelegramCard, slot: layout.notifTelegram, pad: pad, width: width)
         PopoverForm.apply(notifTelegramInboundCard, slot: layout.notifTelegramInbound, pad: pad, width: width)
+        PopoverForm.apply(questionRelayCard, slot: layout.questionRelay, pad: pad, width: width)
+        PopoverForm.apply(openCodeQuestionsCard, slot: layout.openCodeQuestions, pad: pad, width: width)
         PopoverForm.apply(notifSetupCard, slot: layout.notifSetup, pad: pad, width: width)
         PopoverForm.apply(notifClearCard, slot: layout.notifClear, pad: pad, width: width)
         PopoverForm.apply(loginCard, slot: layout.login, pad: pad, width: width)

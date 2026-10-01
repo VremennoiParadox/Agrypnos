@@ -39,6 +39,8 @@ extension WatchRuntime {
 
     /// Quit must clear actual kernel-held SleepDisabled even if the engine already disengaged for POST.
     func prepareForTermination() {
+        questionSourcesTerminated = true
+        stopQuestionSources()
         guard ownsWakeHold else { return }
         clearQuestionWatch()
         stopObservingMacSleepWake()

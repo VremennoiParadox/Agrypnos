@@ -35,10 +35,36 @@ When Telegram inbound is on, Agrypnos may poll `getUpdates`, register `/arm` `/d
 
 When Discord inbound is on, Agrypnos may receive updates on **your** Discord bot on this Mac (Gateway or equivalent — Core picks the smallest reliable path) and send command replies using a **bot token** and **channel id** stored with the other Notif secrets. Default **off**, separate from outbound Notif and from Telegram inbound. Empty token or empty channel id: no inbound. Commands are accepted only from the saved channel. The incoming webhook URL is never inbound — do not mix them. Do **not** set Discord’s Interactions Endpoint URL. Do **not** open a listen port. Same `/arm` `/disarm` `/status` `/help` WatchEngine path as Telegram (Discord-native slash may map to those commands). Agrypnos does not reply while the Mac is asleep (no relay). On wake, queued commands are drained without applying (facts-only **missed while asleep**) if anything was queued — do not scrape channel history on wake to invent missed commands. Confirmed lid-closed Discord `/disarm` may call `pmset sleepnow` (same user-level path as Telegram `/disarm` and as popover/hotkey user-off; not a new sudoers grant). Lid-open or unconfirmed `/disarm` must not sleep the Mac. If that channel is a server channel, anyone who can post there can send those commands. This is not telemetry. Agrypnos does not run a shared Discord bot. Gateway/UI landed on main; not Mac-proven until soft Mac optical.
 
+## Opt-in OpenCode question forwarding (test build)
+
+Forward agent questions defaults off. With it on, OpenCode selected in
+Agents, and at least one configured inbound bot plus explicit answering-user
+ID, Agrypnos connects to the specified HTTP `127.0.0.1` server and project
+directory. Only OpenCode 1.18.32 is enabled in this test build. It checks
+`/global/health`, reads `/global/event` and `/question`, and may submit a
+complete answer to the original `/question/:id/reply`. Redirects are rejected.
+It does not scan ports, start OpenCode or create replacement sessions.
+
+Structured question text/options go to the user's existing Telegram or
+Discord bot through its existing inbound connection. Callback checks include
+the saved answering-user ID, destination, message, live request handle and
+lifecycle generation. The Discord webhook remains outbound-only. No extra
+bot consumer, listening port, shared bot or sudoers grant is added. A lost
+native reply is unconfirmed and is never retried blindly.
+
+Answering IDs and the local-server connection/password are saved alongside
+bot credentials in `notif-secrets.json` (0600), not UserDefaults or Keychain.
+Question content stays in memory and on the opted-in messaging service; no
+local question history or content logs. Free text and approvals stay local.
+Clearing secrets deletes the saved file. Sleep, shutdown and setup changes
+invalidate old phone controls. Forwarding never arms the watch or overrides
+manual/safety off. The existing confirmed-lid sleep path may be used after
+an unanswered ten-minute watch end; a bot notification is best effort.
+
 ## What we will not do
 
 - Telemetry, analytics, or stealth network
 - Kernel extensions
 - Broad sudo
-- Storing your password
+- Storing your Mac login password (the optional OpenCode server password is separate)
 - A shared Agrypnos bot

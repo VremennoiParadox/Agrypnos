@@ -235,6 +235,7 @@ extension PopoverController {
         notifSwitch?.state = runtime.preferences.notifEnabled ? .on : .off
         telegramInboundSwitch?.state = runtime.preferences.telegramInboundEnabled ? .on : .off
         discordInboundSwitch?.state = runtime.preferences.discordInboundEnabled ? .on : .off
+        refreshQuestionChrome(runtime: runtime)
         discordStatus?.stringValue = discordInvalid ? AgrypnosCopy.notifDiscordInvalid : ""
     }
 
@@ -246,6 +247,7 @@ extension PopoverController {
         discordInboundChannelSecrets?.stringValue = secrets.discordChannelId ?? ""
         telegramTokenSecrets?.stringValue = secrets.telegramBotToken ?? ""
         telegramChatSecrets?.stringValue = secrets.telegramChatId ?? ""
+        loadQuestionFields()
         discordInvalid = false
         discordStatus?.stringValue = ""
     }
@@ -261,6 +263,7 @@ extension PopoverController {
         if let discordInboundChannelSecrets { discordInboundChannelCommitted(discordInboundChannelSecrets.field) }
         if let telegramTokenSecrets { telegramTokenCommitted(telegramTokenSecrets.field) }
         if let telegramChatSecrets { telegramChatCommitted(telegramChatSecrets.field) }
+        commitQuestionUserFields()
     }
 
     func flushSecretFieldEditor(_ field: NSTextField?) {
@@ -376,6 +379,7 @@ extension PopoverController {
 
     @objc func clearNotifSecretsTapped() {
         stopRecordingIfNeeded()
+        popover.contentViewController?.view.window?.makeFirstResponder(nil)
         runtime?.clearNotifSecrets()
         discordInvalid = false
         discordSecrets?.stringValue = ""
@@ -383,6 +387,8 @@ extension PopoverController {
         discordInboundChannelSecrets?.stringValue = ""
         telegramTokenSecrets?.stringValue = ""
         telegramChatSecrets?.stringValue = ""
+        loadQuestionFields()
+        refresh()
         discordStatus?.stringValue = ""
     }
 }

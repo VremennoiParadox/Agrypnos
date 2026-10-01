@@ -51,6 +51,13 @@ final class QuestionRelayCoordinator {
         var discordRef: QuestionMessageRef?
         var pendingCreates: Int = 0
     }
+    private struct QueuedEdit {
+        let id = UUID()
+        let request: NotifOutboundRequest
+        let handle: UUID
+        let deadline: TimeInterval
+        let terminal: Bool
+    }
 
     private var registry = QuestionRegistry()
     private var records: [UUID: Record] = [:]
@@ -58,18 +65,24 @@ final class QuestionRelayCoordinator {
     private var deadlineTask: Task<Void, Never>?
     private var recentCallbacks: [String] = []
     private var edits: [QuestionMessageRef: Task<Void, Never>] = [:]
+    private var queuedEdits: [QuestionMessageRef: QueuedEdit] = [:]
     private let settings: @MainActor () -> QuestionRelaySettings
     private let transport: Transport
     private let uptime: @MainActor () -> TimeInterval
+    private let retryWait: @MainActor (TimeInterval) async -> Void
     private let onChange: @MainActor (QuestionRelayEvent) -> Void
 
     init(settings: @escaping @MainActor () -> QuestionRelaySettings,
          transport: @escaping Transport,
          uptime: @escaping @MainActor () -> TimeInterval = { ProcessInfo.processInfo.systemUptime },
+         retryWait: @escaping @MainActor (TimeInterval) async -> Void = {
+             try? await Task.sleep(nanoseconds: UInt64($0 * 1_000_000_000))
+         },
          onChange: @escaping @MainActor (QuestionRelayEvent) -> Void) {
         self.settings = settings
         self.transport = transport
         self.uptime = uptime
+        self.retryWait = retryWait
         self.onChange = onChange
     }
 
@@ -157,6 +170,7 @@ final class QuestionRelayCoordinator {
             callReturnLocal(handle)
             scheduleDeadline()
             editMessages(handle: handle)
+            retire(handle)
         case let .submit(handle, answer):
             // Core reserved submitting synchronously. Clear the unanswered timer before native I/O.
             onChange(.cleared(answer.key))
@@ -169,6 +183,7 @@ final class QuestionRelayCoordinator {
                 guard let self, self.registry.generation == captured, self.records[handle] != nil else { return }
                 self.registry.complete(handle: handle, result: result)
                 self.editMessages(handle: handle)
+                self.retire(handle)
             }
         }
     }
@@ -178,12 +193,13 @@ final class QuestionRelayCoordinator {
         let deadlines = registry.pendingDeadlines
         let due = registry.expire(now: now)
         for key in due {
+            let original = records.first(where: { $0.value.batch.key == key })?.value.batch.receivedUptime ?? now
             if let handle = records.first(where: { $0.value.batch.key == key })?.key {
                 callReturnLocal(handle)
                 editMessages(handle: handle)
+                retire(handle)
             }
             // Native expiry earlier than ten minutes is unavailable, not "unanswered for ten minutes".
-            let original = records.first(where: { $0.value.batch.key == key })?.value.batch.receivedUptime ?? now
             if (deadlines[key] ?? 0) < original + 600 { onChange(.cleared(key)) }
             else { onChange(.expired(key)) }
         }
@@ -192,8 +208,12 @@ final class QuestionRelayCoordinator {
 
     func cancel(key: QuestionKey) {
         let affected = records.filter { $0.value.batch.key == key }
-        registry.cancel(key: key)
-        for (handle, _) in affected { records.removeValue(forKey: handle) }
+        for (handle, _) in affected {
+            registry.makeUnavailable(handle: handle)
+            editMessages(handle: handle)
+            // A verified reconnect may bind fresh controls for this original native request.
+            retire(handle, preventingReplay: false)
+        }
         if !affected.isEmpty { onChange(.cleared(key)) }
         scheduleDeadline()
     }
@@ -212,6 +232,7 @@ final class QuestionRelayCoordinator {
         recentCallbacks.removeAll()
         edits.values.forEach { $0.cancel() }
         edits.removeAll()
+        queuedEdits.removeAll()
         for (handle, record) in old {
             onChange(.cleared(record.batch.key))
             if needsFallback.contains(handle), !record.returnedLocal { Task { await record.returnLocal() } }
@@ -235,7 +256,7 @@ final class QuestionRelayCoordinator {
             result = TelegramQuestionResponse.parse(status: response.statusCode, body: response.body)
             if case let .rejected(retryAfter) = result, let retryAfter, attempt == 0,
                uptime() + retryAfter < record.batch.deadlineUptime {
-                try? await Task.sleep(nanoseconds: UInt64(retryAfter * 1_000_000_000))
+                await retryWait(retryAfter)
                 continue
             }
             break
@@ -259,7 +280,7 @@ final class QuestionRelayCoordinator {
             result = DiscordQuestionResponse.parse(status: response.statusCode, body: response.body)
             if case let .rejected(retryAfter) = result, let retryAfter, attempt == 0,
                uptime() + retryAfter < record.batch.deadlineUptime {
-                try? await Task.sleep(nanoseconds: UInt64(retryAfter * 1_000_000_000))
+                await retryWait(retryAfter)
                 continue
             }
             break
@@ -297,14 +318,75 @@ final class QuestionRelayCoordinator {
     }
 
     private func queueEdit(_ request: NotifOutboundRequest, reference: QuestionMessageRef, handle: UUID) {
-        let captured = registry.generation
-        let previous = edits[reference]
-        let task = Task { [weak self, transport] in
-            await previous?.value
-            guard let self, self.registry.generation == captured, self.records[handle] != nil else { return }
-            _ = await transport(request)
+        guard let record = records[handle] else { return }
+        // Active requests need at most 64 message slots. Bound terminal edit work too.
+        guard queuedEdits[reference] != nil || queuedEdits.count < 128 else {
+            endLocally(handle)
+            return
         }
-        edits[reference] = task
+        queuedEdits[reference] = QueuedEdit(request: request, handle: handle,
+            deadline: record.batch.deadlineUptime, terminal: registry.state(handle: handle) != .pending)
+        guard edits[reference] == nil else { return }
+        let captured = registry.generation
+        edits[reference] = Task { [weak self] in
+            await self?.drainEdits(reference: reference, captured: captured)
+        }
+    }
+
+    private func drainEdits(reference: QuestionMessageRef, captured: UInt64) async {
+        var lastID: UUID?
+        var attempts = 0
+        defer { if registry.generation == captured { edits.removeValue(forKey: reference) } }
+        while registry.generation == captured, !Task.isCancelled, let edit = queuedEdits[reference] {
+            if lastID != edit.id { attempts = 0; lastID = edit.id }
+            if !edit.terminal, uptime() >= edit.deadline { expireDueQuestions(); continue }
+            let response = await transport(edit.request)
+            guard registry.generation == captured, !Task.isCancelled else { return }
+            // A newer rendering replaces a failed/stale edit instead of restoring older controls.
+            guard queuedEdits[reference]?.id == edit.id else { continue }
+            attempts += 1
+            let result = Self.editResult(response, destination: reference.destination)
+            if case .accepted = result {
+                queuedEdits.removeValue(forKey: reference)
+                continue
+            }
+            if case let .retry(retryAfter) = result {
+                let delay = retryAfter ?? pow(2, Double(attempts - 1))
+                if attempts < 3, uptime() + delay < edit.deadline {
+                    await retryWait(delay)
+                    continue
+                }
+            }
+            queuedEdits.removeValue(forKey: reference)
+            if !edit.terminal { endLocally(edit.handle) }
+        }
+    }
+
+    private enum EditResult { case accepted, retry(TimeInterval?), rejected }
+
+    private static func editResult(_ response: QuestionHTTPResponse,
+                                   destination: QuestionDestination) -> EditResult {
+        guard let status = response.statusCode, status < 500 else { return .retry(nil) }
+        let body = (try? JSONSerialization.jsonObject(with: response.body)) as? [String: Any]
+        if status == 429 {
+            let value = destination == .telegram
+                ? (body?["parameters"] as? [String: Any])?["retry_after"] : body?["retry_after"]
+            guard let seconds = (value as? NSNumber)?.doubleValue,
+                  seconds.isFinite, seconds > 0, seconds <= 600 else { return .rejected }
+            return .retry(seconds)
+        }
+        if destination == .discord { return (200...299).contains(status) ? .accepted : .rejected }
+        if (200...299).contains(status), body?["ok"] as? Bool == true { return .accepted }
+        // Telegram rejects an idempotent edit when the requested text/controls are already present.
+        if status == 400, (body?["description"] as? String)?.contains("message is not modified") == true {
+            return .accepted
+        }
+        return .rejected
+    }
+
+    private func retire(_ handle: UUID, preventingReplay: Bool = true) {
+        registry.retire(handle: handle, preventingReplay: preventingReplay)
+        records.removeValue(forKey: handle)
     }
 
     private func endLocally(_ handle: UUID) {
@@ -314,6 +396,7 @@ final class QuestionRelayCoordinator {
         onChange(.cleared(record.batch.key))
         callReturnLocal(handle)
         editMessages(handle: handle)
+        retire(handle)
         scheduleDeadline()
     }
 

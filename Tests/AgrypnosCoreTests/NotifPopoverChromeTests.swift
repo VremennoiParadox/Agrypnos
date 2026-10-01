@@ -11,6 +11,8 @@ final class NotifPopoverChromeTests: XCTestCase {
                 .notifDiscordInbound,
                 .notifTelegram,
                 .notifTelegramInbound,
+                .questionRelay,
+                .openCodeQuestions,
                 .notifSetup,
                 .notifClear,
             ]
@@ -314,7 +316,7 @@ final class NotifPopoverChromeTests: XCTestCase {
         }
     }
 
-    func testNotifSectionStacksSevenCardsAndMayScroll() {
+    func testNotifSectionStacksCardsAndMayScroll() {
         let layout = PopoverStackLayout.make(section: .notif)
         XCTAssertEqual(layout.section, .notif)
         XCTAssertEqual(
@@ -325,6 +327,8 @@ final class NotifPopoverChromeTests: XCTestCase {
                 layout.notifDiscordInbound,
                 layout.notifTelegram,
                 layout.notifTelegramInbound,
+                layout.questionRelay,
+                layout.openCodeQuestions,
                 layout.notifSetup,
                 layout.notifClear
             )
@@ -342,7 +346,7 @@ final class NotifPopoverChromeTests: XCTestCase {
         )
         XCTAssertEqual(
             layout.notifSetup?.y,
-            layout.notifTelegramInbound!.maxY + PopoverStackLayout.cardGap
+            layout.openCodeQuestions!.maxY + PopoverStackLayout.cardGap
         )
         XCTAssertEqual(layout.notifClear?.y, layout.notifSetup!.maxY + PopoverStackLayout.cardGap)
         XCTAssertEqual(layout.contentHeight, layout.notifClear!.maxY + PopoverStackLayout.pad)

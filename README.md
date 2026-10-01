@@ -260,6 +260,67 @@ When you first turn inbound on, or quit and relaunch, Agrypnos quietly skips any
 
 </details>
 
+## OpenCode question forwarding (test build)
+
+This branch connects **OpenCode 1.18.32** native structured questions to your
+existing Telegram/Discord bot. Live bot/Mac verification is pending. Claude
+Code, Cursor and Codex question forwarding remain unavailable. Ordinary
+prose questions, free text and permission/plan approvals stay on the Mac.
+
+1. Configure your own Telegram or Discord bot using the steps above, and
+   enable its **inbound** switch. Idle-after-wait POST is independent.
+2. Save your **answering user ID** under Notif → Forward agent questions.
+   For Telegram, temporarily turn inbound off, message your bot, then use
+   `getUpdates` and copy `message.from.id`; this is your user ID, not the bot
+   or chat ID. Turn inbound back on. For Discord, enable Developer Mode,
+   right-click your own profile and choose **Copy User ID**. Only this user
+   may answer questions, even in a shared chat/channel.
+3. Use the loopback server hosting your ordinary OpenCode chat. The normal
+   TUI supports `opencode --hostname 127.0.0.1 --port 4096`; `--continue` or
+   `--session <session-id>` resumes an existing conversation when opening
+   that TUI. If you already use `opencode attach`, use that server's endpoint.
+   Finish any existing pending question locally before changing how you
+   start OpenCode. A second server cannot answer a question owned by the
+   first. See [OpenCode CLI](https://opencode.ai/docs/cli/) and
+   [server setup](https://opencode.ai/docs/server/).
+4. In Notif → **OpenCode connection**, enter `http://127.0.0.1:4096` (or your
+   explicit port), the absolute project directory used by that chat, the
+   server username (normally `opencode`), and its optional
+   `OPENCODE_SERVER_PASSWORD`. Click **Save connection**. Agrypnos connects
+   to that instance; it does not start a server, scan ports or create chats.
+5. Include OpenCode in Agents, turn **Forward agent questions** on, and
+   wait for **OpenCode 1.18.32: connected.** Newly observed questions can
+   then forward. Other server versions are unavailable until validated.
+
+To test, ask OpenCode in that same chat: “Use your native question tool to
+ask which letter, A or B. After the answer, print OPENCODE_RELAY_TEST_A or
+OPENCODE_RELAY_TEST_B for the selected letter.” On your bot select B, review
+the complete selection, then **Send answers**. Expect the original chat to
+continue once with `OPENCODE_RELAY_TEST_B`. Repeat for the other bot if you
+use both. A local answer must make the old phone buttons harmless.
+
+**Answer on Mac** relinquishes remote answering without rejecting or
+answering OpenCode's question. Disconnection invalidates old controls; a
+verified, previously observed pending question may get fresh controls on
+reconnect, with its original deadline. App restart or system sleep leaves
+existing pending questions local; new questions forward after reconnect.
+Screen lock alone does not cancel them. There is no asleep relay.
+
+Forwarding never arms Keep the watch. While it is already armed, a pending
+question holds it for up to **10 minutes**. An unanswered expiry ends the
+watch when selected agents are observably idle; busy or unknown activity
+defers that end. After a busy/unknown deferral, the usual continuous idle
+wait applies. Manual off, battery, thermal and LPM safety still win. On a
+successful unanswered end, Agrypnos attempts a plain bot notification before
+the existing confirmed-lid sleep path. Network delivery is best effort.
+
+Turn forwarding off to stop. **Remove** clears only the OpenCode connection;
+**Clear secrets** deletes bot secrets, answering IDs and the connection from
+this Mac. All are stored in the existing mode-0600 secrets file. Question
+content stays in memory and on your opted-in messaging service, without a
+local question history or content log. The read-only **Setup instructions…**
+guide in Notif includes the same setup steps.
+
 ## Settings
 
 Everything is in the popover, one section at a time.
@@ -278,7 +339,7 @@ Everything is in the popover, one section at a time.
 - Turn off Wi-Fi or Bluetooth.
 - Blank the screen when you turn the watch on.
 - Claim power savings nobody measured.
-- Read your transcripts, upload anything, or run a shared bot.
+- Upload your transcripts or run a shared bot. Opted-in question forwarding sends the structured question/options to your own bot.
 - Report what your agent is doing or when it will finish. `/status` only reports what Agrypnos can see.
 
 ## Development

@@ -44,13 +44,30 @@ public enum BotGuide {
 
     public static func sections(for tab: BotGuideTab) -> [BotGuideSection] {
         switch tab {
-        case .telegram: return [telegramSetup, telegramTurnOn, commands(asleep: telegramAsleep), turnOff]
-        case .discord: return [discordWebhook, discordBot, commands(asleep: discordAsleep), turnOff]
+        case .telegram: return [telegramSetup, telegramTurnOn, questionSetup(telegram: true), commands(asleep: telegramAsleep), turnOff]
+        case .discord: return [discordWebhook, discordBot, questionSetup(telegram: false), commands(asleep: discordAsleep), turnOff]
         }
     }
 
     static let telegramAsleep = "If the bot isn’t replying, the Mac is likely asleep / Agrypnos isn’t polling."
     static let discordAsleep = "If the bot isn’t replying, the Mac is likely asleep / Agrypnos isn’t receiving updates."
+
+    static func questionSetup(telegram: Bool) -> BotGuideSection {
+        BotGuideSection(title: "OpenCode questions (test build)",
+            note: "Only OpenCode 1.18.32 is connected in this build. Free text and approvals stay on Mac.",
+            numbered: true, steps: [
+                BotGuideStep("Save your answering user ID", telegram
+                    ? "With Telegram inbound off, send your bot a message and use getUpdates as above. Copy message.from.id (your user, not the bot or chat). Paste it into Notif → Forward agent questions → Telegram. Then turn Telegram inbound on. Only that user can answer."
+                    : "Enable Discord Developer Mode, right-click your own profile → Copy User ID. Paste it into Notif → Forward agent questions → Discord. Turn Discord inbound on. The existing bot token and channel are used; the webhook does not handle answers."),
+                BotGuideStep("Connect the same OpenCode server",
+                    "Use the loopback server hosting your ordinary OpenCode chat. Save its http://127.0.0.1:PORT, absolute project directory, username (normally opencode) and optional server password in Notif → OpenCode connection. Click Save connection. Agrypnos does not start a server or move your chat.",
+                    link: BotGuideLink(title: "OpenCode server setup", url: "https://opencode.ai/docs/server/")),
+                BotGuideStep("Enable forwarding",
+                    "Select OpenCode in Agents. Turn Forward agent questions on and check for OpenCode 1.18.32: connected. Start a new structured choice question in that same chat. Select every answer on your bot, review, then Send answers. Answer on Mac leaves it local without rejecting the question."),
+                BotGuideStep("Watch and expiry",
+                    "Forwarding never arms Keep the watch. While already armed, a question holds it for up to 10 minutes; other busy or unknown agent activity delays auto-off. Manual off and safety still win. App restart and sleep invalidate phone controls and leave existing pending questions local; new questions can forward when connected again. Screen lock alone does not cancel forwarding."),
+            ])
+    }
 
     static let idleAfterWait =
         "Arm Keep the watch with How long set to Agents and run an agent so Agrypnos sees a local busy signal. When those signals stay idle through the wait (the idle wait in Agents), expect one message. Then Keep the watch turns off."

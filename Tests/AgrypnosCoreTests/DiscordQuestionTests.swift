@@ -2,6 +2,36 @@ import XCTest
 @testable import AgrypnosCore
 
 final class DiscordQuestionTests: XCTestCase {
+    func testQuestionMarkdownIsEscapedInInitialEditsAndNotices() throws {
+        var registry = QuestionRegistry()
+        let text = #"**Bold** ||spoiler|| [label](https://example.com) `code` <@42>"#
+        let escaped = #"\*\*Bold\*\* \|\|spoiler\|\| \[label\]\(https://example\.com\) \`code\` \<@42\>"#
+        let batch = QuestionBatch(key: QuestionKey(provider: .openCode, instanceID: "i", sessionID: "s", requestID: "r"),
+            questions: [AgentQuestion(id: "q", prompt: text, options: [QuestionOption(id: "a", label: text)])],
+            receivedUptime: 0, deadlineUptime: 600)
+        let handle = UUID(), ref = QuestionMessageRef(destination: .discord, destinationID: "9", messageID: "18")
+        XCTAssertTrue(registry.insert(batch, handle: handle))
+        XCTAssertTrue(registry.bindMessage(handle: handle, reference: ref))
+        let view = try XCTUnwrap(registry.view(handle: handle, reference: ref))
+        let requests = [DiscordQuestionMessage.initial(batch: batch, botToken: "fixture", channelID: "9"),
+            DiscordQuestionMessage.edit(view: view, botToken: "fixture", reference: ref),
+            DiscordQuestionMessage.notice(text, botToken: "fixture", channelID: "9")]
+        for request in requests {
+            let body = try XCTUnwrap(JSONSerialization.jsonObject(with: try XCTUnwrap(request).body) as? [String: Any])
+            XCTAssertTrue((body["content"] as? String)?.contains(escaped) == true)
+            XCTAssertEqual(body["flags"] as? Int, 4)
+            XCTAssertEqual((body["allowed_mentions"] as? [String: Any])?["parse"] as? [String], [])
+        }
+    }
+
+    func testEscapingOverTheDiscordLimitReturnsLocalWithoutTruncatingChoices() {
+        let batch = QuestionBatch(key: QuestionKey(provider: .openCode, instanceID: "i", sessionID: "s", requestID: "r"),
+            questions: [AgentQuestion(id: "q", prompt: String(repeating: "*", count: 1600),
+                options: [QuestionOption(id: "a", label: "Whole choice")])], receivedUptime: 0, deadlineUptime: 600)
+        XCTAssertTrue(batch.isValid)
+        XCTAssertNil(DiscordQuestionMessage.initial(batch: batch, botToken: "fixture", channelID: "9"))
+    }
+
     func testComponentInteractionCarriesSenderChannelMessageAndCustomID() throws {
         for userField in [#""member":{"user":{"id":"42","bot":false}},"#, #""user":{"id":"42","bot":false},"#] {
             let wire = "{\"op\":0,\"t\":\"INTERACTION_CREATE\",\"s\":12,\"d\":{\"type\":3,\"id\":\"500\",\"token\":\"token\",\"channel_id\":\"9\",\"message\":{\"id\":\"18\"},\(userField)\"data\":{\"custom_id\":\"aq:opaque\"}}}"
@@ -36,7 +66,7 @@ final class DiscordQuestionTests: XCTestCase {
         let body = try XCTUnwrap(JSONSerialization.jsonObject(with: req.body) as? [String: Any])
         let content = try XCTUnwrap(body["content"] as? String)
         XCTAssertTrue(content.contains("Full detail 20"))
-        XCTAssertTrue(content.contains("<@42>"))
+        XCTAssertTrue(content.contains(#"\<@42\>"#))
         XCTAssertLessThanOrEqual(content.utf16.count, 2000)
         XCTAssertEqual((body["allowed_mentions"] as? [String: Any])?["parse"] as? [String], [])
         let rows = try XCTUnwrap(body["components"] as? [[String: Any]])

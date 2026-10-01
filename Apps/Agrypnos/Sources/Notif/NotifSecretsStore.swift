@@ -12,6 +12,7 @@ struct NotifSecrets: Equatable {
     var discordChannelId: String?
     var telegramQuestionUserId: String?
     var discordQuestionUserId: String?
+    var openCodeQuestions: OpenCodeQuestionSettings?
 }
 
 /// Application Support file, mode 0600. Not Keychain (unsigned builds prompt for
@@ -28,7 +29,8 @@ enum NotifSecretsStore {
             discordBotToken: payload.discordBotToken,
             discordChannelId: payload.discordChannelId,
             telegramQuestionUserId: payload.telegramQuestionUserId,
-            discordQuestionUserId: payload.discordQuestionUserId
+            discordQuestionUserId: payload.discordQuestionUserId,
+            openCodeQuestions: payload.openCodeQuestions
         )
     }
 
@@ -86,6 +88,13 @@ enum NotifSecretsStore {
     }
 
     @discardableResult
+    static func setOpenCodeQuestions(_ value: OpenCodeQuestionSettings?) -> Bool {
+        var secrets = load()
+        secrets.openCodeQuestions = value
+        return write(secrets)
+    }
+
+    @discardableResult
     static func write(_ secrets: NotifSecrets) -> Bool {
         let payload = NotifSecretsPayload(
             discordWebhookURL: secrets.discordWebhookURL,
@@ -94,7 +103,8 @@ enum NotifSecretsStore {
             discordBotToken: secrets.discordBotToken,
             discordChannelId: secrets.discordChannelId,
             telegramQuestionUserId: secrets.telegramQuestionUserId,
-            discordQuestionUserId: secrets.discordQuestionUserId
+            discordQuestionUserId: secrets.discordQuestionUserId,
+            openCodeQuestions: secrets.openCodeQuestions
         )
         guard let data = NotifSecretsPayload.encode(payload) else { return false }
         do {

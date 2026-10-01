@@ -16,6 +16,7 @@ public enum OpenCodeQuestionPayload {
         let sessionID: String
         let questions: [NativeQuestion]
     }
+    private struct NativeIdentity: Decodable { let id: String; let sessionID: String }
 
     private struct NativeQuestion: Decodable {
         let question: String
@@ -37,21 +38,29 @@ public enum OpenCodeQuestionPayload {
                               receivedUptime: TimeInterval) throws -> QuestionBatch {
         guard data.count <= 256 * 1024, !instanceID.isEmpty else { throw Error.invalidRequest }
         let native = try JSONDecoder().decode(NativeRequest.self, from: data)
-        let suffix = native.id.utf8.dropFirst(4)
-        guard native.id.hasPrefix("que_"), !suffix.isEmpty, native.id.utf8.count <= 100,
-              suffix.allSatisfy({ (48...57).contains($0) || (65...90).contains($0) || (97...122).contains($0) })
-        else { throw Error.invalidRequest }
+        let key = try identity(data, instanceID: instanceID)
         let questions = native.questions.enumerated().map { index, item in
             AgentQuestion(id: "q\(index)", prompt: item.question,
                 options: item.options.enumerated().map { optionIndex, option in
                     QuestionOption(id: "o\(optionIndex)", label: option.label, detail: option.description)
                 }, multiple: item.multiple ?? false, allowsFreeText: item.custom ?? true)
         }
-        let batch = QuestionBatch(key: QuestionKey(provider: .openCode, instanceID: instanceID,
-            sessionID: native.sessionID, requestID: native.id), questions: questions,
+        let batch = QuestionBatch(key: key, questions: questions,
             receivedUptime: receivedUptime, deadlineUptime: receivedUptime + 600)
         guard batch.isValid else { throw Error.invalidRequest }
         return batch
+    }
+
+    public static func identity(_ data: Data, instanceID: String) throws -> QuestionKey {
+        guard data.count <= 256 * 1024, !instanceID.isEmpty else { throw Error.invalidRequest }
+        let native = try JSONDecoder().decode(NativeIdentity.self, from: data)
+        let suffix = native.id.utf8.dropFirst(4)
+        guard native.id.hasPrefix("que_"), !suffix.isEmpty, native.id.utf8.count <= 100,
+              !native.sessionID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              suffix.allSatisfy({ (48...57).contains($0) || (65...90).contains($0) || (97...122).contains($0) })
+        else { throw Error.invalidRequest }
+        return QuestionKey(provider: .openCode, instanceID: instanceID,
+            sessionID: native.sessionID, requestID: native.id)
     }
 
     public static func reply(original: Data, answer: QuestionAnswer,

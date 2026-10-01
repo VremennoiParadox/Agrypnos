@@ -8,6 +8,7 @@ public struct NotifSecretsPayload: Equatable, Sendable {
     public var discordChannelId: String?
     public var telegramQuestionUserId: String?
     public var discordQuestionUserId: String?
+    public var openCodeQuestions: OpenCodeQuestionSettings?
 
     public init(
         discordWebhookURL: String? = nil,
@@ -16,7 +17,8 @@ public struct NotifSecretsPayload: Equatable, Sendable {
         discordBotToken: String? = nil,
         discordChannelId: String? = nil,
         telegramQuestionUserId: String? = nil,
-        discordQuestionUserId: String? = nil
+        discordQuestionUserId: String? = nil,
+        openCodeQuestions: OpenCodeQuestionSettings? = nil
     ) {
         self.discordWebhookURL = Self.present(discordWebhookURL)
         self.telegramBotToken = Self.present(telegramBotToken)
@@ -25,6 +27,7 @@ public struct NotifSecretsPayload: Equatable, Sendable {
         self.discordChannelId = Self.present(discordChannelId)
         self.telegramQuestionUserId = Self.present(telegramQuestionUserId)
         self.discordQuestionUserId = Self.present(discordQuestionUserId)
+        self.openCodeQuestions = openCodeQuestions
     }
 
     public static func encode(
@@ -50,7 +53,7 @@ public struct NotifSecretsPayload: Equatable, Sendable {
     }
 
     public static func encode(_ payload: NotifSecretsPayload) -> Data? {
-        var object: [String: String] = [:]
+        var object: [String: Any] = [:]
         if let value = payload.discordWebhookURL { object["discordWebhookURL"] = value }
         if let value = payload.telegramBotToken { object["telegramBotToken"] = value }
         if let value = payload.telegramChatId { object["telegramChatId"] = value }
@@ -58,12 +61,22 @@ public struct NotifSecretsPayload: Equatable, Sendable {
         if let value = payload.discordChannelId { object["discordChannelId"] = value }
         if let value = payload.telegramQuestionUserId { object["telegramQuestionUserId"] = value }
         if let value = payload.discordQuestionUserId { object["discordQuestionUserId"] = value }
+        if let value = payload.openCodeQuestions,
+           let data = try? JSONEncoder().encode(value),
+           let connection = try? JSONSerialization.jsonObject(with: data) {
+            object["openCodeQuestions"] = connection
+        }
         return try? JSONSerialization.data(withJSONObject: object)
     }
 
     public static func decode(_ data: Data) -> NotifSecretsPayload? {
         guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             return nil
+        }
+        let connection = (object["openCodeQuestions"] as? [String: Any]).flatMap { value in
+            (try? JSONSerialization.data(withJSONObject: value)).flatMap {
+                try? JSONDecoder().decode(OpenCodeQuestionSettings.self, from: $0)
+            }
         }
         return NotifSecretsPayload(
             discordWebhookURL: object["discordWebhookURL"] as? String,
@@ -72,7 +85,8 @@ public struct NotifSecretsPayload: Equatable, Sendable {
             discordBotToken: object["discordBotToken"] as? String,
             discordChannelId: object["discordChannelId"] as? String,
             telegramQuestionUserId: object["telegramQuestionUserId"] as? String,
-            discordQuestionUserId: object["discordQuestionUserId"] as? String
+            discordQuestionUserId: object["discordQuestionUserId"] as? String,
+            openCodeQuestions: connection
         )
     }
 

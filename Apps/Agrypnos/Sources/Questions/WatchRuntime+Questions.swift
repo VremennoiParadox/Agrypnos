@@ -8,13 +8,13 @@ extension WatchRuntime {
     func makeQuestionRelay() -> QuestionRelayCoordinator {
         QuestionRelayCoordinator(settings: { [weak self] in
             self?.questionRelaySettings() ?? QuestionRelaySettings(enabled: false, includedKinds: [], telegram: nil, discord: nil)
-        }, transport: { request in await TelegramInboundHTTP.exchangeQuestion(request) }, onChange: { [weak self] event in
+        }, transport: questionTransport, uptime: { [weak self] in self?.questionUptime() ?? 0 }, onChange: { [weak self] event in
             self?.questionRelayDidChange(event)
         })
     }
 
     func questionRelaySettings() -> QuestionRelaySettings {
-        let secrets = NotifSecretsStore.load()
+        let secrets = readNotifSecrets()
         let telegram: TelegramQuestionDestination?
         if engine.preferences.telegramInboundEnabled,
            let token = secrets.telegramBotToken,
@@ -34,27 +34,31 @@ extension WatchRuntime {
     }
 
     func setForwardAgentQuestions(_ on: Bool) {
-        questionRelay.invalidateAll()
+        guard on != engine.preferences.forwardAgentQuestions else { return }
         engine.preferences.forwardAgentQuestions = on
+        clearQuestionWatch()
         store.save(engine.preferences)
         questionRelay.refreshSettings()
+        syncQuestionSources()
         delegate?.watchRuntimeDidChange(self)
     }
 
     @discardableResult
     func setNotifTelegramQuestionUserId(_ value: String?) -> Bool {
+        guard NotifSecretsPayload.present(value) != readNotifSecrets().telegramQuestionUserId else { return true }
         questionRelay.invalidateAll()
         let saved = NotifSecretsStore.setTelegramQuestionUserId(value)
-        questionRelay.refreshSettings()
+        clearQuestionWatch()
         delegate?.watchRuntimeDidChange(self)
         return saved
     }
 
     @discardableResult
     func setNotifDiscordQuestionUserId(_ value: String?) -> Bool {
+        guard NotifSecretsPayload.present(value) != readNotifSecrets().discordQuestionUserId else { return true }
         questionRelay.invalidateAll()
         let saved = NotifSecretsStore.setDiscordQuestionUserId(value)
-        questionRelay.refreshSettings()
+        clearQuestionWatch()
         delegate?.watchRuntimeDidChange(self)
         return saved
     }
@@ -127,6 +131,8 @@ extension WatchRuntime {
         questionUnansweredKeys.removeAll()
         questionCleared.removeAll()
         questionReleaseFailureReported = false
+        stopQuestionSources()
+        syncQuestionSources()
     }
 
     func resetQuestionWatchForNewArm() {

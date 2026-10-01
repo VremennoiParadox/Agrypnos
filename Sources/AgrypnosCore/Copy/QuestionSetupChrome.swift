@@ -1,0 +1,20 @@
+public enum QuestionSetupChrome {
+    public static let title = "Forward agent questions"
+    public static let help = "Structured OpenCode choices on your bot. Free text and approvals stay on Mac. Other providers are unavailable in this test build."
+    public static let policy = "While armed, questions hold the watch for 10 minutes. Busy or unknown activity delays auto-off. Forwarding never arms it."
+    public static let helpY = 40
+    public static let telegramUserY = 112
+    public static let discordUserY = 140
+    public static let policyY = 176
+    public static let statusY = 248
+    public static let statusHeight = 56
+    public static let relayCardHeight = 316
+    public static let connectionTitle = "OpenCode connection"
+    public static let connectionHelp = "Connect to the server hosting your chat. Requires OpenCode 1.18.32. Setup instructions are below."
+    public static let endpointY = 88
+    public static let directoryY = 116
+    public static let usernameY = 144
+    public static let passwordY = 172
+    public static let connectionButtonsY = 208
+    public static let connectionCardHeight = 294
+}

@@ -169,6 +169,11 @@ extension PopoverController {
             swH: swH
         )
 
+        questionRelayCard = PopoverForm.card(in: document, slot: notif.questionRelay!, pad: pad, width: contentW)
+        addQuestionRelayCard(questionRelayCard, contentW: contentW, ci: ci, cw: cw, swW: swW, swH: swH)
+        openCodeQuestionsCard = PopoverForm.card(in: document, slot: notif.openCodeQuestions!, pad: pad, width: contentW)
+        addOpenCodeQuestionsCard(openCodeQuestionsCard, ci: ci, cw: cw)
+
         notifSetupCard = PopoverForm.card(in: document, slot: notif.notifSetup!, pad: pad, width: contentW)
         addNotifSetupCard(notifSetupCard, ci: ci, cw: cw)
 

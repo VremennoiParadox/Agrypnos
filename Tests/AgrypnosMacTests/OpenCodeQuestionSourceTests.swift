@@ -8,6 +8,100 @@ final class OpenCodeQuestionSourceTests: XCTestCase {
     private let asked = Data(#"{"directory":"/project","payload":{"type":"question.asked","properties":{"id":"que_123","sessionID":"ses_456","questions":[{"question":"Which letter?","header":"Letter","options":[{"label":"A","description":"First"},{"label":"B","description":"Second"}]}]}}}"#.utf8)
     private let resolved = Data(#"{"directory":"/project","payload":{"type":"question.replied","properties":{"sessionID":"ses_456","requestID":"que_123"}}}"#.utf8)
 
+    func testSourceKeepsOnly32UnresolvedPayloadsAndRejectsResolvedReplays() throws {
+        let fixture = try Fixture()
+        fixture.source.ingest(asked)
+        for number in 1..<64 {
+            fixture.source.ingest(Data(String(decoding: asked, as: UTF8.self)
+                .replacingOccurrences(of: "que_123", with: "que_Capacity\(number)").utf8))
+        }
+        XCTAssertEqual(fixture.observed.count, 32)
+        fixture.source.ingest(resolved)
+        try fixture.source.reconcilePending(Data("[]".utf8))
+        fixture.source.ingest(asked)
+        XCTAssertEqual(fixture.observed.count, 32)
+        fixture.source.ingest(Data(String(decoding: asked, as: UTF8.self)
+            .replacingOccurrences(of: "que_123", with: "que_New").utf8))
+        XCTAssertEqual(fixture.observed.count, 33)
+    }
+
+    func testUnsupportedPendingQuestionDoesNotBlockVerifiedQuestionOrNewEvents() throws {
+        let fixture = try Fixture()
+        fixture.source.ingest(asked)
+        let original = try XCTUnwrap(fixture.observed.first)
+        fixture.source.connectionLost()
+        let supported = try XCTUnwrap(JSONSerialization.jsonObject(with: pending()) as? [[String: Any]])[0]
+        var unsupported = supported
+        unsupported["id"] = "que_TooLarge"
+        unsupported["questions"] = Array(repeating: (supported["questions"] as! [Any])[0], count: 5)
+        try fixture.source.reconcilePending(JSONSerialization.data(withJSONObject: [unsupported, supported]))
+        XCTAssertEqual(fixture.observed, [original, original])
+        let fresh = Data(String(decoding: asked, as: UTF8.self).replacingOccurrences(of: "que_123", with: "que_Fresh").utf8)
+        fixture.source.ingest(fresh)
+        XCTAssertEqual(fixture.observed.last?.key.requestID, "que_Fresh")
+    }
+
+    func testReturnedLocalQuestionAbsentAfterReconnectStillReportsResolution() throws {
+        let fixture = try Fixture()
+        fixture.source.ingest(asked)
+        let batch = try XCTUnwrap(fixture.observed.first)
+        fixture.source.returnToLocal(key: batch.key)
+        fixture.source.connectionLost()
+        XCTAssertTrue(fixture.cleared.isEmpty)
+        try fixture.source.reconcilePending(Data("[]".utf8))
+        XCTAssertEqual(fixture.cleared, [batch.key])
+    }
+
+    func testReturningToMacDoesNotRejectNativeQuestionOrReissueControls() async throws {
+        let fixture = try Fixture()
+        fixture.source.ingest(asked)
+        let batch = try XCTUnwrap(fixture.observed.first)
+        fixture.source.returnToLocal(key: batch.key)
+        fixture.source.connectionLost()
+        try fixture.source.reconcilePending(pending())
+        let result = await fixture.source.submit(key: batch.key, answer: QuestionAnswer(key: batch.key,
+            selections: [QuestionSelection(questionID: "q0", optionIDs: ["o1"])]))
+        XCTAssertEqual(result, .rejected)
+        XCTAssertTrue(fixture.requests.isEmpty)
+        XCTAssertEqual(fixture.observed.count, 1)
+        // A later native answer still clears a deferred unanswered-watch decision.
+        fixture.source.ingest(resolved)
+        XCTAssertEqual(fixture.cleared.last, batch.key)
+    }
+
+    func testPausePreservesOriginalRequestIdentityAndDeadlineForWakeReconciliation() throws {
+        let fixture = try Fixture()
+        fixture.source.ingest(asked)
+        let original = try XCTUnwrap(fixture.observed.first)
+        fixture.source.pause()
+        fixture.now = 1300
+        try fixture.source.reconcilePending(pending())
+        XCTAssertEqual(fixture.observed, [original, original])
+        XCTAssertEqual(fixture.observed.last?.deadlineUptime, 1600)
+    }
+
+    func testUnsupportedServerReportsUnavailableWithoutOpeningAStream() async throws {
+        let unavailable = expectation(description: "version gate reported")
+        var requests: [URLRequest] = []
+        let source = OpenCodeQuestionSource(configuration: try Fixture().config, exchange: { request in
+            requests.append(request)
+            return QuestionHTTPResponse(statusCode: 200,
+                body: Data(#"{"healthy":true,"version":"other"}"#.utf8))
+        }, receive: { _ in XCTFail("unsupported server forwarded a question"); return false },
+            resolved: { _ in }, stateChanged: { state in
+                if case .unavailable = state { unavailable.fulfill() }
+            })
+        source.start()
+        await fulfillment(of: [unavailable], timeout: 1)
+        XCTAssertEqual(requests.map { $0.url?.path }, ["/global/health"])
+        source.stop()
+    }
+
+    func testBasicAuthUsernameCannotContainASeparator() {
+        XCTAssertThrowsError(try OpenCodeQuestionConfiguration(
+            endpoint: URL(string: "http://127.0.0.1:4096")!, directory: "/project", username: "name:password"))
+    }
+
     func testConfigurationRequiresExplicitLoopbackServerAndAbsoluteDirectory() throws {
         XCTAssertNoThrow(try OpenCodeQuestionConfiguration(endpoint: URL(string: "http://127.0.0.1:4096")!, directory: "/project", password: "fixture"))
         for endpoint in ["http://example.com:4096", "https://127.0.0.1:4096", "http://127.0.0.1:4096/other", "http://user@127.0.0.1:4096"] {
@@ -75,9 +169,23 @@ final class OpenCodeQuestionSourceTests: XCTestCase {
         let another = try Fixture()
         another.source.ingest(asked)
         another.response = QuestionHTTPResponse(statusCode: 200, body: Data("false".utf8))
-        let falseSuccess = await another.source.submit(key: answer.key, answer: answer)
+        let otherBatch = try XCTUnwrap(another.observed.first)
+        let otherAnswer = QuestionAnswer(key: otherBatch.key, selections: answer.selections)
+        let falseSuccess = await another.source.submit(key: otherBatch.key, answer: otherAnswer)
         XCTAssertEqual(falseSuccess, .unconfirmed)
         XCTAssertEqual(another.requests.count, 1)
+    }
+
+    func testRecreatedSourceCannotConsumeAnOldInstancesAnswer() async throws {
+        let first = try Fixture(), second = try Fixture()
+        first.source.ingest(asked)
+        second.source.ingest(asked)
+        let old = try XCTUnwrap(first.observed.first)
+        XCTAssertNotEqual(old.key, second.observed.first?.key)
+        let result = await second.source.submit(key: old.key, answer: QuestionAnswer(key: old.key,
+            selections: [QuestionSelection(questionID: "q0", optionIDs: ["o1"])]))
+        XCTAssertEqual(result, .rejected)
+        XCTAssertTrue(second.requests.isEmpty)
     }
 
     func testDuplicateAndChangedNativeEventsDoNotExtendOrReplaceOriginalControls() throws {

@@ -15,6 +15,7 @@ public struct QuestionRegistry: Sendable {
     }
 
     private var entries: [UUID: Entry] = [:]
+    private var retiredKeys: [QuestionKey] = []
     public private(set) var generation: UInt64 = 0
 
     public init() {}
@@ -28,6 +29,7 @@ public struct QuestionRegistry: Sendable {
 
     @discardableResult
     public mutating func insert(_ batch: QuestionBatch, handle: UUID) -> Bool {
+        guard !retiredKeys.contains(batch.key) else { return false }
         if let existing = entries.first(where: { $0.value.batch.key == batch.key }) {
             guard existing.value.state == .pending else { return false }
             if existing.value.batch.questions != batch.questions || existing.value.batch.projectLabel != batch.projectLabel {
@@ -41,7 +43,7 @@ public struct QuestionRegistry: Sendable {
             return false
         }
         guard batch.isValid else { return false }
-        // Terminal records prevent replay until the source is cleared; they consume the same bounded capacity.
+        // Terminal payloads are retired by the relay after capturing their final rendering.
         guard entries.count < 32, entries[handle] == nil else { return false }
         entries[handle] = Entry(batch: batch)
         return true
@@ -147,9 +149,21 @@ public struct QuestionRegistry: Sendable {
         entries = entries.filter { $0.value.batch.key != key }
     }
 
+    public mutating func makeUnavailable(handle: UUID) {
+        entries[handle]?.state = .invalid
+    }
+
+    public mutating func retire(handle: UUID, preventingReplay: Bool = true) {
+        guard let entry = entries.removeValue(forKey: handle) else { return }
+        guard preventingReplay else { return }
+        retiredKeys.append(entry.batch.key)
+        if retiredKeys.count > 256 { retiredKeys.removeFirst(retiredKeys.count - 256) }
+    }
+
     public mutating func invalidateAll() {
         generation &+= 1
         entries.removeAll()
+        retiredKeys.removeAll()
     }
 
     private func validSelection(_ question: AgentQuestion, draft: Draft) -> Bool {

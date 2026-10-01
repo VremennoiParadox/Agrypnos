@@ -27,6 +27,7 @@ extension WatchRuntime {
     func noteMacWillSleep() {
         WatchDiagnostics.event("lifecycle willSleep")
         invalidateAgentProbe()
+        questionSourcesSuspended = true
         clearQuestionWatch()
         if telegramInboundIsPolling() {
             store.saveTelegramInboundCursor(store.loadTelegramInboundCursor().startingWakeMiss())
@@ -42,6 +43,8 @@ extension WatchRuntime {
         invalidateAgentProbe()
         inboundPoller.restartForWakeMiss()
         discordGateway.restartForWakeMiss()
+        questionSourcesSuspended = false
+        syncQuestionSources()
         poll()
     }
 

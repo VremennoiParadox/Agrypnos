@@ -105,6 +105,8 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public let notifDiscordInbound: PopoverSlot?
     public let notifTelegram: PopoverSlot?
     public let notifTelegramInbound: PopoverSlot?
+    public let questionRelay: PopoverSlot?
+    public let openCodeQuestions: PopoverSlot?
     public let notifSetup: PopoverSlot?
     public let notifClear: PopoverSlot?
     public let shortcutY: Int?
@@ -138,6 +140,8 @@ public struct PopoverStackLayout: Equatable, Sendable {
         case .notifDiscordInbound: return notifDiscordInbound
         case .notifTelegram: return notifTelegram
         case .notifTelegramInbound: return notifTelegramInbound
+        case .questionRelay: return questionRelay
+        case .openCodeQuestions: return openCodeQuestions
         case .notifSetup: return notifSetup
         case .notifClear: return notifClear
         }
@@ -244,6 +248,8 @@ public struct PopoverStackLayout: Equatable, Sendable {
             case .notifDiscordInbound: return notifDiscordInboundHeight
             case .notifTelegram: return notifTelegramHeight
             case .notifTelegramInbound: return notifTelegramInboundHeight
+            case .questionRelay: return QuestionSetupChrome.relayCardHeight
+            case .openCodeQuestions: return QuestionSetupChrome.connectionCardHeight
             case .notifSetup: return loginCardHeight
             case .notifClear: return loginCardHeight
             }
@@ -304,6 +310,8 @@ public struct PopoverStackLayout: Equatable, Sendable {
             notifDiscordInbound: placed[.notifDiscordInbound],
             notifTelegram: placed[.notifTelegram],
             notifTelegramInbound: placed[.notifTelegramInbound],
+            questionRelay: placed[.questionRelay],
+            openCodeQuestions: placed[.openCodeQuestions],
             notifSetup: placed[.notifSetup],
             notifClear: placed[.notifClear],
             shortcutY: shortcutY,

@@ -77,6 +77,16 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var notifDiscordInboundCard: CardView!
     var notifTelegramCard: CardView!
     var notifTelegramInboundCard: CardView!
+    var questionRelayCard: CardView!
+    var openCodeQuestionsCard: CardView!
+    var forwardQuestionsSwitch: NSSwitch!
+    var telegramQuestionUser: SecretRevealRow!
+    var discordQuestionUser: SecretRevealRow!
+    var openCodeEndpoint: NSTextField!
+    var openCodeDirectory: NSTextField!
+    var openCodeUsername: NSTextField!
+    var openCodePassword: SecretRevealRow!
+    var questionConnectionStatus: NSTextField!
     var notifSetupCard: CardView!
     var notifClearCard: CardView!
     var notifClearButton: NSButton!
