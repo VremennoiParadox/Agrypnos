@@ -6,6 +6,7 @@ import AgrypnosCore
 
 extension WatchRuntime {
     var openCodeQuestionCaption: String {
+        if let failure = openCodeSetupFailure { return failure }
         if !preferences.forwardAgentQuestions { return "OpenCode: forwarding off." }
         if questionSourcesSuspended { return "OpenCode: paused while the Mac sleeps." }
         if !preferences.includedAgentKinds.contains(.openCode) { return "OpenCode: select it in Agents first." }
@@ -13,17 +14,24 @@ extension WatchRuntime {
         if relay.telegram?.isComplete != true && relay.discord?.isComplete != true {
             return "OpenCode: enable bot inbound and save its answering user ID."
         }
+        if preferences.openCodePluginEnabled {
+            let count = openCodePluginSource?.connectedCount ?? 0
+            if count > 0 { return "OpenCode 1.18.32: connected (\(count) terminal\(count == 1 ? "" : "s"))." }
+            return "OpenCode: installed, waiting. Restart OpenCode once to load forwarding."
+        }
         if readNotifSecrets().openCodeQuestions == nil { return "OpenCode: save a server connection below." }
         return openCodeQuestionState.caption
     }
 
     func syncQuestionSources() {
+        guard !openCodeSetupInProgress else { return }
         let relay = questionRelaySettings()
         let settings = readNotifSecrets().openCodeQuestions
         guard !questionSourcesSuspended, !questionSourcesTerminated, relay.enabled,
               relay.includedKinds.contains(.openCode),
-              relay.telegram?.isComplete == true || relay.discord?.isComplete == true,
-              let settings else { stopQuestionSources(); return }
+              relay.telegram?.isComplete == true || relay.discord?.isComplete == true else { stopQuestionSources(); return }
+        if preferences.openCodePluginEnabled { syncOpenCodePlugin(relay: relay); return }
+        guard let settings else { stopQuestionSources(); return }
         guard let configuration = try? OpenCodeQuestionConfiguration(settings) else {
             stopQuestionSources()
             openCodeQuestionState = .unavailable("Use http://127.0.0.1:PORT and an absolute project directory.")
@@ -57,6 +65,8 @@ extension WatchRuntime {
     }
 
     func stopQuestionSources() {
+        openCodeSetupRevision &+= 1
+        stopOpenCodePlugin()
         let source = openCodeQuestionSource
         openCodeQuestionSource = nil
         openCodeSourceSettings = nil
@@ -68,8 +78,14 @@ extension WatchRuntime {
     @discardableResult
     func setOpenCodeQuestionSettings(_ settings: OpenCodeQuestionSettings?) -> Bool {
         if let settings, (try? OpenCodeQuestionConfiguration(settings)) == nil { return false }
-        guard readNotifSecrets().openCodeQuestions != settings else { return true }
-        guard NotifSecretsStore.setOpenCodeQuestions(settings) else { return false }
+        let wasPlugin = preferences.openCodePluginEnabled
+        if settings != nil { engine.preferences.openCodePluginEnabled = false }
+        guard readNotifSecrets().openCodeQuestions != settings || wasPlugin else { return true }
+        guard NotifSecretsStore.setOpenCodeQuestions(settings) else {
+            engine.preferences.openCodePluginEnabled = wasPlugin; return false
+        }
+        openCodeSetupFailure = nil
+        store.save(engine.preferences)
         clearQuestionWatch()
         delegate?.watchRuntimeDidChange(self)
         return true

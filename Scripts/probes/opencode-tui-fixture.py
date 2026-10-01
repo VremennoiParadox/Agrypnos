@@ -20,7 +20,8 @@ import threading
 import time
 import uuid
 
-probe = Path(__file__).with_name("opencode-tui-question.js").resolve()
+mode = sys.argv[1] if len(sys.argv) > 1 else "ordinary"
+probe = Path(__file__).with_name("opencode-tui-product.js" if mode == "bridge" else "opencode-tui-question.js").resolve()
 fixture = Path(tempfile.mkdtemp(prefix="agrypnos-tui-probe-", dir="/private/tmp"))
 marker = "AGRYPNOS_NATIVE_B_" + uuid.uuid4().hex
 requests = []
@@ -59,11 +60,15 @@ config = {"share": "disabled", "model": "fixture/native-probe", "provider": {"fi
     "models": {"native-probe": {"name": "Native probe", "limit": {"context": 32000, "output": 2000}}}}}}
 (fixture / "config/opencode/opencode.json").write_text(json.dumps(config))
 (fixture / "config/opencode/tui.json").write_text(json.dumps({"plugin": [probe.as_uri()]}))
-mode = sys.argv[1] if len(sys.argv) > 1 else "ordinary"
 env = {"PATH": "/opt/homebrew/bin:/usr/bin:/bin", "TERM": "xterm-256color",
        "OPENCODE_DISABLE_AUTOUPDATE": "1", "OPENCODE_DISABLE_DEFAULT_PLUGINS": "1",
        "OPENCODE_DISABLE_MODELS_FETCH": "1", "AGRYPNOS_PROBE_OUTPUT": str(fixture / "runtime.json"),
        "AGRYPNOS_PROBE_MODE": mode, "AGRYPNOS_PROBE_MARKER": marker}
+if mode == "bridge":
+    module = fixture / "agrypnos-opencode.mjs"
+    module.write_bytes((Path(__file__).resolve().parents[2] / "Apps/Agrypnos/Resources/agrypnos-opencode.js").read_bytes())
+    env["AGRYPNOS_PRODUCT_MODULE"] = module.as_uri()
+    env["AGRYPNOS_PRODUCT_MANIFEST"] = sys.argv[2]
 for name in ["CONFIG", "DATA", "CACHE", "STATE"]:
     env[f"XDG_{name}_HOME"] = str(fixture / name.lower())
 master, slave = pty.openpty()
@@ -103,9 +108,11 @@ finally:
             process.wait()
     os.close(master)
     server.shutdown()
+if (fixture / "runtime.json").exists():
+    report = json.loads((fixture / "runtime.json").read_text())
 print("Fixture:", fixture)
 print(json.dumps(report, indent=2))
 print("Model requests:", json.dumps(requests))
 ok = report.get("hostVersion") == "1.18.32" and report.get("questionReply") and report.get("pendingListed")
-ok = ok and (report.get("localPromptAvailable") if mode == "unavailable" else report.get("accepted") and report.get("markerCount") == 1 and report.get("continuedSessionID") == report.get("originalSessionID"))
+ok = ok and (report.get("localPromptAvailable") if mode == "unavailable" else (mode == "bridge" or report.get("accepted")) and report.get("markerCount") == 1 and report.get("continuedSessionID") == report.get("originalSessionID"))
 sys.exit(0 if ok else 1)

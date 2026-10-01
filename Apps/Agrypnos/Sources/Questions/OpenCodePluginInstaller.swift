@@ -54,6 +54,17 @@ struct OpenCodePluginInstaller {
         return pluginURL
     }
 
+    func isInstalled() throws -> Bool {
+        let receipt = try OpenCodePrivateFiles.read(receiptURL)
+        let plugin = try OpenCodePrivateFiles.read(pluginURL)
+        guard receipt != nil, plugin != nil else { return false }
+        try checkOwnership(plugin: plugin, receipt: receipt)
+        guard let config = try OpenCodePrivateFiles.read(configURL),
+              let object = try JSONSerialization.jsonObject(with: config) as? [String: Any],
+              let entries = object["plugin"] as? [Any] else { return false }
+        return entries.contains { ($0 as? String) == pluginURL.absoluteString }
+    }
+
     func remove() throws {
         close(try OpenCodePrivateFiles.directory(configRoot, create: false))
         close(try OpenCodePrivateFiles.directory(bridgeRoot, create: false, privateOnly: true))

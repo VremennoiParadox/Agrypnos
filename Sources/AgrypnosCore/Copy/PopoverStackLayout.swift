@@ -106,6 +106,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public let notifTelegram: PopoverSlot?
     public let notifTelegramInbound: PopoverSlot?
     public let questionRelay: PopoverSlot?
+    public let pluginConnection: PopoverSlot?
     public let openCodeQuestions: PopoverSlot?
     public let notifSetup: PopoverSlot?
     public let notifClear: PopoverSlot?
@@ -141,6 +142,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
         case .notifTelegram: return notifTelegram
         case .notifTelegramInbound: return notifTelegramInbound
         case .questionRelay: return questionRelay
+        case .pluginConnection: return pluginConnection
         case .openCodeQuestions: return openCodeQuestions
         case .notifSetup: return notifSetup
         case .notifClear: return notifClear
@@ -149,7 +151,8 @@ public struct PopoverStackLayout: Equatable, Sendable {
 
     public static func make(
         section: PopoverSection = .default,
-        panelPowerMode: PanelPowerMode = .default
+        panelPowerMode: PanelPowerMode = .default,
+        showManualOpenCodeConnection: Bool = false
     ) -> PopoverStackLayout {
         let watchHeight = inset + 28 + PopoverCopyLayout.captionHeightPoints + inset
         let hygieneHeight =
@@ -249,6 +252,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
             case .notifTelegram: return notifTelegramHeight
             case .notifTelegramInbound: return notifTelegramInboundHeight
             case .questionRelay: return QuestionSetupChrome.relayCardHeight
+            case .pluginConnection: return QuestionSetupChrome.pluginCardHeight
             case .openCodeQuestions: return QuestionSetupChrome.connectionCardHeight
             case .notifSetup: return loginCardHeight
             case .notifClear: return loginCardHeight
@@ -264,6 +268,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
 
         var placed: [PopoverCard: PopoverSlot] = [:]
         for card in section.cards {
+            if card == .openCodeQuestions, !showManualOpenCodeConnection { continue }
             if card == .ramp, !PanelPowerChrome.showsLidOpenRamp(panelPowerMode) {
                 continue
             }
@@ -311,6 +316,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
             notifTelegram: placed[.notifTelegram],
             notifTelegramInbound: placed[.notifTelegramInbound],
             questionRelay: placed[.questionRelay],
+            pluginConnection: placed[.pluginConnection],
             openCodeQuestions: placed[.openCodeQuestions],
             notifSetup: placed[.notifSetup],
             notifClear: placed[.notifClear],

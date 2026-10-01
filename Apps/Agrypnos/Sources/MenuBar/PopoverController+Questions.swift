@@ -92,6 +92,10 @@ extension PopoverController {
     func refreshQuestionChrome(runtime: WatchRuntime) {
         forwardQuestionsSwitch?.state = runtime.preferences.forwardAgentQuestions ? .on : .off
         questionConnectionStatus?.stringValue = runtime.openCodeQuestionCaption
+        let active = runtime.preferences.openCodePluginEnabled && runtime.preferences.forwardAgentQuestions
+        openCodeEnableButton?.isEnabled = !runtime.openCodeSetupInProgress && !active
+        openCodeDisableButton?.isEnabled = !runtime.openCodeSetupInProgress && active
+        openCodeRemoveButton?.isEnabled = !runtime.openCodeSetupInProgress && runtime.preferences.openCodePluginEnabled
     }
 
     func commitQuestionUserFields() {

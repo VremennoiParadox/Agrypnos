@@ -14,12 +14,14 @@ extension PopoverController {
             to: section,
             animated: popover.isShown && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
             currentHeight: Int((popoverRoot.window?.frame.height ?? popover.contentSize.height).rounded()),
-            panelPowerMode: runtime?.preferences.panelPowerMode ?? .default
+            panelPowerMode: runtime?.preferences.panelPowerMode ?? .default,
+            showManualOpenCodeConnection: showManualOpenCodeConnection
         )
         currentSection = section
         let layout = PopoverStackLayout.make(
             section: section,
-            panelPowerMode: runtime?.preferences.panelPowerMode ?? .default
+            panelPowerMode: runtime?.preferences.panelPowerMode ?? .default,
+            showManualOpenCodeConnection: showManualOpenCodeConnection
         )
         let pad = CGFloat(PopoverStackLayout.pad)
         let width = CGFloat(PopoverStackLayout.width)
@@ -104,6 +106,7 @@ extension PopoverController {
         PopoverForm.apply(notifTelegramCard, slot: layout.notifTelegram, pad: pad, width: width)
         PopoverForm.apply(notifTelegramInboundCard, slot: layout.notifTelegramInbound, pad: pad, width: width)
         PopoverForm.apply(questionRelayCard, slot: layout.questionRelay, pad: pad, width: width)
+        PopoverForm.apply(openCodePluginCard, slot: layout.pluginConnection, pad: pad, width: width)
         PopoverForm.apply(openCodeQuestionsCard, slot: layout.openCodeQuestions, pad: pad, width: width)
         PopoverForm.apply(notifSetupCard, slot: layout.notifSetup, pad: pad, width: width)
         PopoverForm.apply(notifClearCard, slot: layout.notifClear, pad: pad, width: width)

@@ -61,6 +61,7 @@ final class PopoverSectionTests: XCTestCase {
                 .notifTelegram,
                 .notifTelegramInbound,
                 .questionRelay,
+                .pluginConnection,
                 .openCodeQuestions,
                 .notifSetup,
                 .notifClear,

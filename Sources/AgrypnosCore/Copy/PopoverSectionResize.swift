@@ -30,10 +30,11 @@ public struct PopoverSectionResize: Equatable, Sendable {
         to: PopoverSection,
         animated: Bool,
         currentHeight: Int? = nil,
-        panelPowerMode: PanelPowerMode = .default
+        panelPowerMode: PanelPowerMode = .default,
+        showManualOpenCodeConnection: Bool = false
     ) -> PopoverSectionResize {
-        let fromLayout = PopoverStackLayout.make(section: from, panelPowerMode: panelPowerMode)
-        let toLayout = PopoverStackLayout.make(section: to, panelPowerMode: panelPowerMode)
+        let fromLayout = PopoverStackLayout.make(section: from, panelPowerMode: panelPowerMode, showManualOpenCodeConnection: showManualOpenCodeConnection)
+        let toLayout = PopoverStackLayout.make(section: to, panelPowerMode: panelPowerMode, showManualOpenCodeConnection: showManualOpenCodeConnection)
         let fromHeight = fromLayout.popoverHeight
         let toHeight = toLayout.popoverHeight
         let fromContentHeight = fromLayout.contentHeight

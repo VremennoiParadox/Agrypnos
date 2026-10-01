@@ -59,11 +59,13 @@ public enum BotGuide {
                 BotGuideStep("Save your answering user ID", telegram
                     ? "With Telegram inbound off, send your bot a message and use getUpdates as above. Copy message.from.id (your user, not the bot or chat). Paste it into Notif → Forward agent questions → Telegram. Then turn Telegram inbound on. Only that user can answer."
                     : "Enable Discord Developer Mode, right-click your own profile → Copy User ID. Paste it into Notif → Forward agent questions → Discord. Turn Discord inbound on. The existing bot token and channel are used; the webhook does not handle answers."),
-                BotGuideStep("Connect the same OpenCode server",
-                    "Use the loopback server hosting your ordinary OpenCode chat. Save its http://127.0.0.1:PORT, absolute project directory, username (normally opencode) and optional server password in Notif → OpenCode connection. Click Save connection. Agrypnos does not start a server or move your chat.",
-                    link: BotGuideLink(title: "OpenCode server setup", url: "https://opencode.ai/docs/server/")),
-                BotGuideStep("Enable forwarding",
-                    "Select OpenCode in Agents. Turn Forward agent questions on and check for OpenCode 1.18.32: connected. Start a new structured choice question in that same chat. Select every answer on your bot, review, then Send answers. Answer on Mac leaves it local without rejecting the question."),
+                BotGuideStep("Enable OpenCode forwarding",
+                    "Select OpenCode in Agents, then click Enable OpenCode forwarding in Notif. Agrypnos installs and registers its global terminal plugin. Restart OpenCode once to load forwarding, then use your normal chats. No port or project-directory setup is needed.",
+                    link: BotGuideLink(title: "OpenCode plugins", url: "https://opencode.ai/docs/plugins/")),
+                BotGuideStep("Answer a new question",
+                    "Check for a connected terminal count. Start a new structured choice question in that same chat. Select every answer on your bot, review, then Send answers. Answer on Mac leaves it local without rejecting the question."),
+                BotGuideStep("Disable, remove, or use a server",
+                    "Disable OpenCode forwarding keeps the plugin installed but inactive. Remove OpenCode integration removes only unchanged Agrypnos-owned files and its registration. Manual server connection… is an explicit fallback for an already running loopback server; save its port, absolute directory and optional credentials to switch modes."),
                 BotGuideStep("Watch and expiry",
                     "Forwarding never arms Keep the watch. While already armed, a question holds it for up to 10 minutes; other busy or unknown agent activity delays auto-off. Manual off and safety still win. App restart and sleep invalidate phone controls and leave existing pending questions local; new questions can forward when connected again. Screen lock alone does not cancel forwarding."),
             ])

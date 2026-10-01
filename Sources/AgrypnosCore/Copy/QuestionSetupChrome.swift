@@ -9,7 +9,10 @@ public enum QuestionSetupChrome {
     public static let statusY = 248
     public static let statusHeight = 56
     public static let relayCardHeight = 316
-    public static let connectionTitle = "OpenCode connection"
+    public static let pluginCardHeight = 176
+    public static let enableTitle = "Enable OpenCode forwarding"
+    public static let pluginHelp = "One-time setup for OpenCode 1.18.32 terminals. Restart OpenCode once, then use your normal chats."
+    public static let connectionTitle = "Manual server connection"
     public static let connectionHelp = "Connect to the server hosting your chat. Requires OpenCode 1.18.32. Setup instructions are below."
     public static let endpointY = 88
     public static let directoryY = 116

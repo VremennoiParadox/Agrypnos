@@ -129,7 +129,7 @@ extension PopoverController {
         thermalCard = PopoverForm.card(in: document, slot: power.thermal!, pad: pad, width: contentW)
         addThermalCard(thermalCard, contentW: contentW, ci: ci, cw: cw, swW: swW, swH: swH)
 
-        let notif = PopoverStackLayout.make(section: .notif)
+        let notif = PopoverStackLayout.make(section: .notif, showManualOpenCodeConnection: true)
         notifEnableCard = PopoverForm.card(in: document, slot: notif.notifEnable!, pad: pad, width: contentW)
         addNotifEnableCard(notifEnableCard, contentW: contentW, ci: ci, cw: cw, swW: swW, swH: swH)
 
@@ -171,6 +171,8 @@ extension PopoverController {
 
         questionRelayCard = PopoverForm.card(in: document, slot: notif.questionRelay!, pad: pad, width: contentW)
         addQuestionRelayCard(questionRelayCard, contentW: contentW, ci: ci, cw: cw, swW: swW, swH: swH)
+        openCodePluginCard = PopoverForm.card(in: document, slot: notif.pluginConnection!, pad: pad, width: contentW)
+        addOpenCodePluginCard(openCodePluginCard, ci: ci, cw: cw)
         openCodeQuestionsCard = PopoverForm.card(in: document, slot: notif.openCodeQuestions!, pad: pad, width: contentW)
         addOpenCodeQuestionsCard(openCodeQuestionsCard, ci: ci, cw: cw)
 

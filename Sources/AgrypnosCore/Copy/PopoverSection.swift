@@ -17,6 +17,7 @@ public enum PopoverCard: Equatable, Hashable, Sendable {
     case notifTelegram
     case notifTelegramInbound
     case questionRelay
+    case pluginConnection
     case openCodeQuestions
     case notifSetup
     case notifClear
@@ -50,7 +51,7 @@ public enum PopoverSection: Int, CaseIterable, Sendable {
         case .agents: return [.agentInclude, .settle, .terminalBusy]
         case .notif: return [
             .notifEnable, .notifDiscord, .notifDiscordInbound, .notifTelegram, .notifTelegramInbound,
-            .questionRelay, .openCodeQuestions, .notifSetup, .notifClear,
+            .questionRelay, .pluginConnection, .openCodeQuestions, .notifSetup, .notifClear,
         ]
         case .general: return [.login]
         }

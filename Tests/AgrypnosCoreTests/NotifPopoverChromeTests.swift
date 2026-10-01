@@ -12,6 +12,7 @@ final class NotifPopoverChromeTests: XCTestCase {
                 .notifTelegram,
                 .notifTelegramInbound,
                 .questionRelay,
+                .pluginConnection,
                 .openCodeQuestions,
                 .notifSetup,
                 .notifClear,
@@ -328,6 +329,7 @@ final class NotifPopoverChromeTests: XCTestCase {
                 layout.notifTelegram,
                 layout.notifTelegramInbound,
                 layout.questionRelay,
+                layout.pluginConnection,
                 layout.openCodeQuestions,
                 layout.notifSetup,
                 layout.notifClear
@@ -346,7 +348,7 @@ final class NotifPopoverChromeTests: XCTestCase {
         )
         XCTAssertEqual(
             layout.notifSetup?.y,
-            layout.openCodeQuestions!.maxY + PopoverStackLayout.cardGap
+            layout.pluginConnection!.maxY + PopoverStackLayout.cardGap
         )
         XCTAssertEqual(layout.notifClear?.y, layout.notifSetup!.maxY + PopoverStackLayout.cardGap)
         XCTAssertEqual(layout.contentHeight, layout.notifClear!.maxY + PopoverStackLayout.pad)

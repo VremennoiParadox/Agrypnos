@@ -24,6 +24,13 @@ final class WatchRuntime {
     let questionTransport: QuestionRelayCoordinator.Transport
     let openCodeQuestionExchange: OpenCodeQuestionSource.Exchange?
     let openCodeQuestionStreamSession: URLSession?
+    let openCodePluginInstaller: (() throws -> OpenCodePluginInstaller)?
+    var openCodePluginSource: OpenCodePluginQuestionSource?
+    var openCodePluginSocketRoot: URL?
+    var openCodePluginBridgeRoot: URL?
+    var openCodeSetupRevision: UInt64 = 0
+    var openCodeSetupInProgress = false
+    var openCodeSetupFailure: String?
     var openCodeQuestionSource: OpenCodeQuestionSource?
     var openCodeSourceSettings: OpenCodeQuestionSettings?
     var openCodeRelaySettings: QuestionRelaySettings?
@@ -90,7 +97,8 @@ final class WatchRuntime {
         readNotifSecrets: @escaping () -> NotifSecrets = NotifSecretsStore.load,
         questionTransport: @escaping QuestionRelayCoordinator.Transport = { await TelegramInboundHTTP.exchangeQuestion($0) },
         openCodeQuestionExchange: OpenCodeQuestionSource.Exchange? = nil,
-        openCodeQuestionStreamSession: URLSession? = nil
+        openCodeQuestionStreamSession: URLSession? = nil,
+        openCodePluginInstaller: (() throws -> OpenCodePluginInstaller)? = nil
     ) {
         self.store = store
         self.readLid = readLid
@@ -104,6 +112,7 @@ final class WatchRuntime {
         self.questionTransport = questionTransport
         self.openCodeQuestionExchange = openCodeQuestionExchange
         self.openCodeQuestionStreamSession = openCodeQuestionStreamSession
+        self.openCodePluginInstaller = openCodePluginInstaller
         engine = WatchEngine(preferences: store.load())
     }
 
