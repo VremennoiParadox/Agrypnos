@@ -275,22 +275,29 @@ prose questions, free text and permission/plan approvals stay on the Mac.
    or chat ID. Turn inbound back on. For Discord, enable Developer Mode,
    right-click your own profile and choose **Copy User ID**. Only this user
    may answer questions, even in a shared chat/channel.
-3. Use the loopback server hosting your ordinary OpenCode chat. The normal
-   TUI supports `opencode --hostname 127.0.0.1 --port 4096`; `--continue` or
-   `--session <session-id>` resumes an existing conversation when opening
-   that TUI. If you already use `opencode attach`, use that server's endpoint.
-   Finish any existing pending question locally before changing how you
-   start OpenCode. A second server cannot answer a question owned by the
-   first. See [OpenCode CLI](https://opencode.ai/docs/cli/) and
-   [server setup](https://opencode.ai/docs/server/).
-4. In Notif → **OpenCode connection**, enter `http://127.0.0.1:4096` (or your
-   explicit port), the absolute project directory used by that chat, the
-   server username (normally `opencode`), and its optional
-   `OPENCODE_SERVER_PASSWORD`. Click **Save connection**. Agrypnos connects
-   to that instance; it does not start a server, scan ports or create chats.
-5. Include OpenCode in Agents, turn **Forward agent questions** on, and
-   wait for **OpenCode 1.18.32: connected.** Newly observed questions can
-   then forward. Other server versions are unavailable until validated.
+3. Include **OpenCode** in Agents. In Notif, click **Enable OpenCode forwarding**.
+   Setup installs and registers a global terminal plugin without changing
+   your other OpenCode settings. It enables forwarding without arming the watch.
+4. **Restart OpenCode once to load forwarding**, then use your normal terminal
+   chats in any project. Wait for a real connected terminal count in Notif.
+   No server address, project directory, port or password is needed.
+   This test build supports OpenCode **1.18.32** interactive terminals;
+   headless and desktop clients have not been verified.
+
+The plugin is registered in `~/.config/opencode/tui.json` (or
+`$XDG_CONFIG_HOME/opencode/tui.json`) and stored beside it as
+`agrypnos-opencode.js`. Existing `tui.jsonc` stays unchanged. Setup refuses
+symlinks, edited Agrypnos files and unsupported `tui.json` content; it reports
+why instead of overwriting them. The app must see the same config root as
+OpenCode. A shell-only custom XDG root must also be supplied when launching
+Agrypnos.
+
+**Manual server connection…** reveals the existing fallback. For a chat
+already hosted by a loopback server, save its `http://127.0.0.1:PORT`,
+absolute project directory, username and optional `OPENCODE_SERVER_PASSWORD`.
+Saving switches to manual mode and revokes the plugin bridge. Turn **Forward
+agent questions** on to use it. The modes are exclusive; a failed plugin
+connection never silently switches to a server. See [OpenCode server setup](https://opencode.ai/docs/server/).
 
 To test, ask OpenCode in that same chat: “Use your native question tool to
 ask which letter, A or B. After the answer, print OPENCODE_RELAY_TEST_A or
@@ -314,12 +321,24 @@ wait applies. Manual off, battery, thermal and LPM safety still win. On a
 successful unanswered end, Agrypnos attempts a plain bot notification before
 the existing confirmed-lid sleep path. Network delivery is best effort.
 
-Turn forwarding off to stop. **Remove** clears only the OpenCode connection;
-**Clear secrets** deletes bot secrets, answering IDs and the connection from
-this Mac. All are stored in the existing mode-0600 secrets file. Question
-content stays in memory and on your opted-in messaging service, without a
-local question history or content log. The read-only **Setup instructions…**
-guide in Notif includes the same setup steps.
+**Disable** turns forwarding off while leaving the plugin installed and inactive.
+**Remove integration** also removes its registration and unchanged owned plugin
+file. It keeps bot secrets and the saved manual connection. Edited files are
+kept and forwarding stays off. **Clear secrets** deletes saved bot secrets,
+answering IDs and the manual connection, and revokes the local bridge.
+
+Bot credentials and manual server credentials stay in the existing mode-0600
+secrets file. The plugin receives only a separate local bridge token, stored
+in a private mode-0700 Application Support directory. The bridge uses a short
+private Unix socket, with no TCP listening port. Question content stays in
+memory and on your opted-in messaging service, without local history or content
+logs. **Setup instructions…** in Notif includes the same setup steps.
+
+Automated tests have answered a real native question through the production
+plugin and Swift socket source, continuing the original isolated conversation
+once. New live bot, Mac optical and energy checks remain pending; the earlier
+human-confirmed manual HTTP/Telegram flow is separate evidence. See the
+[one-button verification record](docs/reviews/2026-10-01-opencode-one-button-verification.md).
 
 ## Settings
 

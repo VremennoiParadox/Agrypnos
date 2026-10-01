@@ -37,13 +37,28 @@ When Discord inbound is on, Agrypnos may receive updates on **your** Discord bot
 
 ## Opt-in OpenCode question forwarding (test build)
 
-Forward agent questions defaults off. With it on, OpenCode selected in
-Agents, and at least one configured inbound bot plus explicit answering-user
-ID, Agrypnos connects to the specified HTTP `127.0.0.1` server and project
-directory. Only OpenCode 1.18.32 is enabled in this test build. It checks
-`/global/health`, reads `/global/event` and `/question`, and may submit a
-complete answer to the original `/question/:id/reply`. Redirects are rejected.
-It does not scan ports, start OpenCode or create replacement sessions.
+Forward agent questions defaults off. Only OpenCode 1.18.32 is enabled in
+this test build. One-button setup requires OpenCode selected in Agents and
+an enabled, complete inbound bot destination with an explicit answering-user ID.
+It installs an owned global terminal plugin and registers it in `tui.json`,
+preserving other entries and leaving `tui.jsonc` untouched. Modified or foreign
+files and symlinks are refused. Disable leaves the plugin inactive; removal
+only deletes unchanged receipt-owned files and its registration.
+
+The plugin uses the public terminal SDK to observe native questions and submit
+complete answers to their original requests. IPC is a bounded authenticated
+Unix socket in a private 0700 directory, with a 0600 socket and a same-UID peer
+check. An independent random token and lifecycle generation live in
+`~/Library/Application Support/Agrypnos/opencode-bridge/bridge.json` (0600);
+no bot credentials go to OpenCode. Tokens are revoked on disable, clear-secrets,
+sleep, quit and source replacement. No local token protects against a compromised
+process running as the same user. No question polling heartbeat is added.
+
+The explicit manual fallback connects to the saved HTTP `127.0.0.1` server
+and directory. It checks `/global/health`, reads `/global/event` and `/question`,
+and may submit a complete answer to the original `/question/:id/reply`.
+Redirects are rejected. The modes are exclusive. Neither mode scans ports,
+starts a replacement OpenCode server, or creates replacement conversations.
 
 Structured question text/options go to the user's existing Telegram or
 Discord bot through its existing inbound connection. Callback checks include
