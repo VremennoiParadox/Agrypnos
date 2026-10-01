@@ -1,4 +1,4 @@
-# OpenCode plugin feasibility — FAIL
+# OpenCode server-plugin feasibility — historical FAIL
 
 Date: 2026-10-01. Installed host: **OpenCode 1.18.32**. This is Task 1 of
 the [one-button setup plan](../superpowers/plans/2026-10-01-opencode-one-button-setup.md).
@@ -145,3 +145,50 @@ was upheld. One minor is deferred: the probe's CLI usage string spells the
 tracked `Scripts/` directory as lowercase `scripts/`, which fails on a
 case-sensitive filesystem. The reproducible command above uses the correct
 spelling. No product implementation or new live acceptance was reviewed.
+
+## Authorized terminal-plugin revision — native gate PASS
+
+The human approved the terminal-plugin proposal and implementation after this
+server-plugin failure. Its separate public surface is available in 1.18.32:
+[terminal plugin input](https://github.com/anomalyco/opencode/blob/v1.18.32/packages/plugin/src/tui.ts).
+A default-exported `{ id, tui }` module registered in global `tui.json` receives
+`api.app.version`, `api.client` (SDK v2), `api.event.on` and
+`api.lifecycle.onDispose`. Dropping a file in plugins/ alone is insufficient.
+
+The reproducible `Scripts/probes/opencode-tui-fixture.py` uses normal TUI
+startup with `--prompt` solely to create the harmless test conversation,
+no OpenCode listener flags, and a deterministic local OpenAI-compatible model.
+The fixture emulates model output only; the actual installed OpenCode question
+tool, registry, TUI, SDK transport, replies and persisted conversation are real.
+It uses no paid provider, bot credentials or existing user conversation.
+The model's title-generation request has no question tool; the actual session
+request does. The original session alone continues after the native answer.
+
+Public expressions successfully exercised:
+`api.client.question.list({ directory })`,
+`api.client.question.reply({ requestID, directory, answers: [["B"]] })`,
+`api.client.session.messages({ sessionID, directory })`;
+`api.event.on("question.asked", ...)`, `question.replied`, `session.idle`.
+Version came from `api.app.version`, not a compiled constant.
+Reply acceptance was HTTP 200 plus JSON true. The supplied client handled the
+original worker transport without exposing an OpenCode network listener or
+extracting protected fields/authentication. `node:net` import and disposal
+worked. Initial pending lists were empty; the actual asked ID/session then
+appeared in the native list before submission.
+
+Two simultaneous fixture processes/projects independently resumed their
+original sessions, each with one B marker and one remote reply attempt.
+Both observed question.replied before reply acknowledgment; neither claimed
+acceptance from that event. An independent native API answer won another
+fixture request, yielding one original B continuation and zero remote attempts.
+That is an automated competing-native-API characterization, not a physical
+local keyboard-click proof. With an absent Unix socket, the native question
+remained in the TUI state and pending list, with zero replies and no continuation.
+All six evidence checks passed against these captured native results.
+
+Global registration was exercised in isolated XDG tui.json roots. Real user
+config installation, alternate/custom-root overrides, disabled-plugin startup,
+live Telegram/Discord, physical Mac/local-answer races, and energy remain
+separate unperformed acceptance categories. Product runtime must fail visibly
+when overridden/disabled rather than claiming an installed plugin is connected.
+The server-plugin failure above remains valid for that older client surface.

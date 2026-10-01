@@ -4,7 +4,7 @@
 
 **Goal:** After connecting their own bot once, the user clicks **Enable OpenCode forwarding**, restarts OpenCode if needed, and answers native structured questions in their original local conversations across projects without entering a server address, directory, port, or password.
 
-**Architecture:** First prove that an external global plugin in OpenCode **1.18.32** can observe and answer the original native question through supported public interfaces during ordinary startup. If that gate passes, install one bundled JavaScript plugin and connect it to Agrypnos through authenticated Unix-domain IPC; reuse the existing question coordinator, bot controls, and watch policy. Keep the working explicit HTTP integration as a mutually exclusive fallback until the replacement is live-proven; a failed feasibility gate stops this plan before product implementation.
+**Architecture:** First prove that an external globally registered terminal (TUI) plugin in OpenCode **1.18.32** can observe and answer the original native question through supported public interfaces during ordinary startup. If that gate passes, install one bundled JavaScript plugin and connect it to Agrypnos through authenticated Unix-domain IPC; reuse the existing question coordinator, bot controls, and watch policy. Keep the working explicit HTTP integration as a mutually exclusive fallback until the replacement is live-proven; a failed feasibility gate stops this plan before product implementation.
 
 **Tech Stack:** macOS **14+**, Swift tools **5.9**, Foundation/Darwin/Dispatch, AppKit, OpenCode's existing JavaScript runtime and standard `node:` modules, XCTest and a standard-library JavaScript test runner. No new third-party dependency, daemon, or separately installed runtime.
 
@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- This request authorizes writing this plan only. Do not implement, install into global OpenCode configuration, clean up code, create a branch, push, merge, or release while planning.
+- Execution and a terminal-plugin redesign are now authorized by the human (2026-10-01). Continue inline; local commits only. Isolated native probes are authorized. Preserve existing live config and bot credentials until a concrete app is ready.
 - Continue from `codex/agent-question-relay`; planning HEAD is `5b50efd177985143a5e0c668a0e28020c931a23d`. Recheck Git state before execution. The handoff preserves the human's Grok-rule waiver for this task.
 - Only OpenCode **1.18.32** may be enabled in this test build. Claude/Cursor/Codex remain unavailable; the full four-provider release gate is unchanged.
 - Forwarding defaults **OFF**, never arms the watch, and requires selected OpenCode plus an enabled, complete inbound bot destination with an explicitly authorized answering-user ID. Outbound idle notifications remain independent.
@@ -88,9 +88,9 @@ Keep `OpenCodeQuestionSource.swift`, existing settings/secrets codecs, and their
 
 ### Task 1: Prove the supported native plugin path before building it
 
-**Files:** Create `scripts/probes/opencode-plugin-question.js` and `docs/reviews/2026-10-01-opencode-plugin-feasibility.md`. Read the pinned plugin/SDK/question routes and local installed package; do not patch OpenCode.
+**Files:** Create `Scripts/probes/opencode-tui-question.js` (retain the previous server-plugin probe) and `docs/reviews/2026-10-01-opencode-plugin-feasibility.md`. Read the pinned plugin/SDK/question routes and local installed package; do not patch OpenCode.
 
-**Interfaces:** Consumes OpenCode 1.18.32's public `PluginInput` and `event`/`dispose` hooks. Produces a PASS/FAIL record specifying exact public call expressions, signatures, directory/auth behavior, version verification, pending listing, native acceptance/error semantics, and verified global loading path. Tasks 2–6 may execute only after PASS; their native calls must match this record.
+**Interfaces:** Consumes OpenCode 1.18.32's public `TuiPluginApi`, `api.client` (SDK v2), `api.event.on`, `api.app.version`, and `api.lifecycle.onDispose`. A default-exported `{ id, tui }` module is registered in global `tui.json`'s plugin list; directory dropping alone does not register a TUI plugin. Produces a PASS/FAIL record specifying exact public call expressions, signatures, directory/auth behavior, version verification, pending listing, native acceptance/error semantics, and verified global loading path. Tasks 2–6 may execute only after PASS; their native calls must match this record.
 
 - [ ] **Step 1: Write the probe's failing acceptance checks.** Name cases `ordinaryStartupOriginalReply`, `localAnswerWins`, `resolvedBeforeAcknowledgment`, `twoProjectsAndProcesses`, `appUnavailableLeavesLocal`, and `publicContractOnly`. Assert original instance/session/request identity, a B continuation marker exactly once, no reply after local resolution, distinct ownership for simultaneous chats, and no prompt blocking when IPC is absent. Require both reply and pending-list access without private imports, `_client`, monkey patches, or an explicitly exposed listener. Include a host-version check that cannot merely echo the plugin's compiled version.
 
@@ -222,4 +222,4 @@ If Task 1 fails, the useful deliverable is the exact failure record and unchange
 
 Planning self-review: the handoff's once-only setup, feasibility uncertainty, original-conversation ownership, multi-instance scope, privacy, watch policy, fallback, cleanup restraint and staged-provider honesty each map to the tasks above. Public OpenCode calls are deliberately decided by Task 1's evidence rather than invented in this document. No implementation or probe was run while writing this plan.
 
-**Stop after saving and reviewing this plan. Execution method, global installation, and live-test approval are later decisions.**
+**Execution amendment (2026-10-01):** The human approved the terminal-plugin approach and requested implementation, authorizing plan revisions without another planning handoff. Keep the existing limits and tasks. Task 1 now proves the terminal plugin with the actual installed host and normal TUI startup. A local deterministic model fixture may trigger the real native question tool and validate original-session continuation; report it as automated native evidence, separately from live bot/Mac evidence. Public calls: `api.client.question.list({ directory })`, `api.client.question.reply({ requestID, directory, answers })`, host version `api.app.version`, native events `api.event.on(type, handler)`, disposal `api.lifecycle.onDispose(handler)`. Task 2 must safely register the owned file URL in global `tui.json` in addition to installing bytes, preserving existing configuration and removing only its owned entry. Keep `.jsonc` untouched; reject unsupported/ambiguous configuration visibly. Task 4 uses a default-exported `{ id: "agrypnos-opencode", tui: async (api) => ... }` module, not legacy server hooks. Terminal interactive OpenCode is the supported surface; headless/desktop coverage remains unproved. Native FAIL still stops product implementation. Previous server-plugin FAIL is historical evidence, not a terminal-plugin verdict.
