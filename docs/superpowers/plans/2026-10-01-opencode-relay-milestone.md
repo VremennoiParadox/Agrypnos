@@ -11,6 +11,8 @@ simultaneous-session, Mac safety/lid and energy matrix is open. See
 [verification](../../reviews/2026-10-01-opencode-question-verification.md) and
 the [current handoff](../../reviews/2026-10-01-opencode-one-button-handoff.md).
 
+Update, 2026-10-01: **one-button OpenCode forwarding is also live verified by the user** after launching build `7e8661c`. See the [one-button verification record](../../reviews/2026-10-01-opencode-one-button-verification.md). The original HTTP route remains the manual fallback; the remaining acceptance matrix and other-provider gates stay open.
+
 ## Deliverable
 
 OpenCode 1.18.32 on an explicitly configured loopback server and directory

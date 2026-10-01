@@ -6,6 +6,10 @@ Branch `codex/agent-question-relay`; product checkpoint
 This document is newer than the earlier question-relay handoff and supersedes
 its implementation/live-test status. Check current Git state before continuing.
 
+## Later verification update — 2026-10-01
+
+The one-button terminal plugin is implemented and **live verified by the user** in launched build `7e8661c`: “opencode is working.” See the [verification record](2026-10-01-opencode-one-button-verification.md) for current evidence and remaining acceptance categories. The sections below preserve the pre-implementation snapshot; their unpassed-gate and unimplemented-plugin statements are historical.
+
 ## Start here
 
 1. Read `AGENTS.md`, the [OpenCode milestone](../superpowers/plans/2026-10-01-opencode-relay-milestone.md),

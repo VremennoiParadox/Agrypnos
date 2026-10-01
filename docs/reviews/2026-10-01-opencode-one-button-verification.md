@@ -32,12 +32,17 @@ codesign --verify --deep --strict /private/tmp/agrypnos-one-button-release/Build
 
 Swift module caches were redirected to private temporary paths. Socket/native tests require permission for temporary local sockets. Bundle resources were compared byte-for-byte with source. Final automated verification: **766 Swift tests, 0 failures; 11 JavaScript tests, 0 failures**. Debug and Release builds succeeded; both exact bundles passed signature verification and resource byte comparison. Relevant tracked/new files are at most 600 lines and `git diff --check` passed. Feature commit: `33c2006`, installer `4d8eb02`, IPC `bc1c778`; native feasibility `5a26ef7`. Build paths are the commands above; fresh review disposition follows below.
 
+## Human verification — PASS
+
+On 2026-10-01, after launching the Release build from feature/fix commit `7e8661c` (`dist/opencode-one-button-2026-10-01-7e8661c/Agrypnos.app`), the user confirmed: “opencode is working” and explicitly asked to mark the feature verified. **One-button OpenCode forwarding is live verified by the user.** This confirms the tested feature on their Mac; it does not separately establish a named bot channel, simultaneous-session races, sleep/lid safety or energy results.
+
 ## Live evidence remains separate
 
 | Check | Result |
 |---|---|
+| One-button OpenCode forwarding on the user's Mac | **PASS — human-confirmed, 2026-10-01**, launched build `7e8661c` |
 | Prior original-chat HTTP/Telegram round trip | Human-confirmed in the handoff; preserved, not plugin proof |
-| New one-button install in the user's global config | Not tested; no global user config changed |
+| New one-button install in the user's global config | Live feature confirmed by the user; installation files were not independently inspected |
 | New production plugin → real Telegram bot → original chat | Not tested |
 | New production plugin → real Discord bot → original chat | Not tested |
 | Two human chats/processes with physical local answer and competing bots | Not tested; automated native/source characterization only |
@@ -46,7 +51,7 @@ Swift module caches were redirected to private temporary paths. Socket/native te
 | Forwarding off/on with matched workload/display/bots, energy or watts | Not measured; no energy claim |
 | Headless or desktop OpenCode; other provider question forwarding | Unverified/unavailable; full-provider release remains gated |
 
-The built app is concrete and reviewable. Live validation requires the user's existing bot and a one-time global installation; implementation authorization has not been treated as permission to send real bot messages or change those live files.
+The user performed the live OpenCode check after launch and confirmed it works. The assistant did not inspect live secrets, send real bot messages or change global OpenCode configuration during this verification update.
 
 ## Final review and fix pass
 
@@ -61,7 +66,7 @@ A fresh reviewer examined the whole branch (`e615e00..47b1094`) and reported six
 | Later Discord page cannot render | Every page/state is preflighted before any destination is offered; subsequent edit rendering failure explicitly ends locally. `testUnrenderableLaterDiscordPanelStaysLocalBeforeOfferingControls` |
 | Socket floods main-actor tasks | Per peer: one ordered callback outstanding, at most 64 messages/256 KiB retained; overload closes the peer. Its connection slot stays occupied until disconnect acknowledgment, bounding reconnect churn too. `testFloodWhileMainActorIsBusyClosesWithBoundedOrderedDeliveries` |
 
-Configuration checks detect concurrent saves observed before replacement; they do not establish mutual exclusion with an unrelated editor that does not share a file lock. Real bot and Mac acceptance categories above remain unperformed.
+Configuration checks detect concurrent saves observed before replacement; they do not establish mutual exclusion with an unrelated editor that does not share a file lock. The basic live OpenCode feature is now user-confirmed; the separately listed bot-channel and Mac acceptance cases remain unconfirmed.
 
 ## Execution decisions (chronological)
 
