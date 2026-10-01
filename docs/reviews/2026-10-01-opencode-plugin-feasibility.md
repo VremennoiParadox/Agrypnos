@@ -136,3 +136,12 @@ connection design/version with the human. Automatic port discovery, accessing
 `_client`, private imports, and starting a replacement server/conversation
 were not substituted for the missing capability. The working explicit HTTP
 integration remains the available setup.
+
+## Review disposition
+
+A fresh reviewer checked the two local probe/evidence commits and captured
+runtime against the plan: no Critical or Important findings; the failed gate
+was upheld. One minor is deferred: the probe's CLI usage string spells the
+tracked `Scripts/` directory as lowercase `scripts/`, which fails on a
+case-sensitive filesystem. The reproducible command above uses the correct
+spelling. No product implementation or new live acceptance was reviewed.
