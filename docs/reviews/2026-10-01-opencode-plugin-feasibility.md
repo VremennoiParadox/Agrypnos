@@ -14,7 +14,7 @@ remain unchanged.
 
 ## Observed runtime evidence
 
-The disposable [probe](../../scripts/probes/opencode-plugin-question.js)
+The disposable [probe](../../Scripts/probes/opencode-plugin-question.js)
 was copied into an isolated XDG config root at
 `config/opencode/plugins/agrypnos-probe.js`. Config, data, cache, state, and
 project files were under `/private/tmp/agrypnos-plugin-feasibility-f1vwg8q_`.
@@ -121,7 +121,7 @@ No new Telegram/Discord, Mac optical, recovery, safety, or energy proof exists.
 Re-run the evidence checker against a captured probe report:
 
 ```sh
-node scripts/probes/opencode-plugin-question.js --verify /path/to/runtime.json
+node Scripts/probes/opencode-plugin-question.js --verify /path/to/runtime.json
 ```
 
 Expected for this captured report: exit 1, six failures. `node --check` passed.
