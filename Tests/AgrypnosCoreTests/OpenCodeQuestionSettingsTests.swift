@@ -3,6 +3,16 @@ import XCTest
 @testable import AgrypnosCore
 
 final class OpenCodeQuestionSettingsTests: XCTestCase {
+    func testMissingPluginPreferenceDefaultsOff() throws {
+        var object = try JSONSerialization.jsonObject(with: JSONEncoder().encode(UserPreferences(forwardAgentQuestions: true))) as! [String: Any]
+        object.removeValue(forKey: "openCodePluginEnabled")
+        let decoded = try JSONDecoder().decode(UserPreferences.self, from: JSONSerialization.data(withJSONObject: object))
+        XCTAssertFalse(decoded.openCodePluginEnabled)
+        XCTAssertTrue(decoded.forwardAgentQuestions)
+        var enabled = decoded
+        enabled.openCodePluginEnabled = true
+        XCTAssertTrue(try JSONDecoder().decode(UserPreferences.self, from: JSONEncoder().encode(enabled)).openCodePluginEnabled)
+    }
     // Dropping the nested connection or a pre-existing bot field would break setup.
     func testConnectionRoundTripPreservesExistingBotSecretsAndAnsweringUsers() throws {
         let connection = OpenCodeQuestionSettings(endpoint: "http://127.0.0.1:4096",

@@ -52,6 +52,8 @@
 		095E19E7CB28F7EE95D82908 /* AgrypnosCore in Frameworks */ = {isa = PBXBuildFile; productRef = C81CD5F22406E4B780AC870D /* AgrypnosCore */; };
 		6B8001DABC00C7B45D3BFA0C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8B40A3F1CAC9ADB66B78DD5C /* Assets.xcassets */; };
 		BBE0CDF003CDB2E92B81738B /* grant.sh in Resources */ = {isa = PBXBuildFile; fileRef = 9A657A8A538B844742E8496C /* grant.sh */; };
+		604B346E35D59DE1830C0A39 /* OpenCodePluginInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97738DC24BF21AEB4ACCCF7B /* OpenCodePluginInstaller.swift */; };
+		2AB51F102FB8206FEF36F1B1 /* OpenCodePrivateFiles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70151CD50AC2A5B8DEFBEE80 /* OpenCodePrivateFiles.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -102,6 +104,8 @@
 		0111024D5CF6358695630612 /* Agrypnos.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Agrypnos.entitlements; sourceTree = "<group>"; };
 		8B40A3F1CAC9ADB66B78DD5C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		9A657A8A538B844742E8496C /* grant.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = grant.sh; sourceTree = "<group>"; };
+		97738DC24BF21AEB4ACCCF7B /* OpenCodePluginInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OpenCodePluginInstaller.swift"; sourceTree = "<group>"; };
+		70151CD50AC2A5B8DEFBEE80 /* OpenCodePrivateFiles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OpenCodePrivateFiles.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -220,6 +224,8 @@
 			children = (
 				1B758FA4AA59BA763C06F474 /* OpenCodeEventFrames.swift */,
 				1039890FF19ADB62E5C568F9 /* OpenCodeQuestionSource.swift */,
+				70151CD50AC2A5B8DEFBEE80 /* OpenCodePrivateFiles.swift */,
+				97738DC24BF21AEB4ACCCF7B /* OpenCodePluginInstaller.swift */,
 				CFE80B315E75852FC6FB9487 /* QuestionNoticeSender.swift */,
 				12C9FECD0358EC968A877043 /* QuestionRelayCoordinator.swift */,
 				4C77F1225166AE837C6FEEE7 /* WatchRuntime+OpenCodeQuestions.swift */,
@@ -367,6 +373,8 @@
 				31DBD3069D96D292DC184EDD /* PreferencesStore.swift in Sources */,
 				C13AF58296A206B4C6CB98D7 /* OpenCodeEventFrames.swift in Sources */,
 				26997208C8E3082769BE45F2 /* OpenCodeQuestionSource.swift in Sources */,
+				2AB51F102FB8206FEF36F1B1 /* OpenCodePrivateFiles.swift in Sources */,
+				604B346E35D59DE1830C0A39 /* OpenCodePluginInstaller.swift in Sources */,
 				4A547D34E748E74CA1E5E7F0 /* QuestionNoticeSender.swift in Sources */,
 				8E4E13B32E0259DCDFD42AAC /* QuestionRelayCoordinator.swift in Sources */,
 				FDA8F52147E7338E922F9CA6 /* WatchRuntime+OpenCodeQuestions.swift in Sources */,
