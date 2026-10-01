@@ -6,6 +6,9 @@ import AgrypnosCore
 #endif
 
 extension WatchRuntime {
+    var openCodeIntegrationCanBeRemoved: Bool {
+        preferences.openCodePluginEnabled || (try? makeOpenCodeInstaller().hasInstallationArtifacts()) == true
+    }
     func makeOpenCodeInstaller() throws -> OpenCodePluginInstaller {
         if let openCodePluginInstaller { return try openCodePluginInstaller() }
         guard let resource = Bundle.main.url(forResource: "agrypnos-opencode", withExtension: "js") else {
@@ -59,6 +62,7 @@ extension WatchRuntime {
                 switch error as? OpenCodePluginSetupError {
                 case .unsafePath: reason = "OpenCode: setup refused an unsafe path, symlink, or file owner."
                 case .foreignFile: reason = "OpenCode: an existing Agrypnos plugin or receipt was edited. Keep it or restore it before setup."
+                case .configurationChanged: reason = "OpenCode: configuration changed during setup. Your save was kept; try Enable again."
                 case .unsupportedConfiguration: reason = "OpenCode: tui.json must contain a JSON object with a plugin array. Your file was kept."
                 default: reason = "OpenCode: couldn't write setup files or start the local connection. Check config permissions."
                 }

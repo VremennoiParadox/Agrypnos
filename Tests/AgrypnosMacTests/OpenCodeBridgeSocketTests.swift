@@ -70,6 +70,28 @@ final class OpenCodeBridgeSocketTests: XCTestCase {
         XCTAssertThrowsError(try bridge.start())
         XCTAssertEqual(try String(contentsOf: config.socketURL), "foreign")
     }
+    func testFloodWhileMainActorIsBusyClosesWithBoundedOrderedDeliveries() async throws {
+        let config = fixture()
+        defer { try? FileManager.default.removeItem(at: config.socketURL.deletingLastPathComponent()) }
+        let closed = expectation(description: "overloaded peer closed")
+        var messages: [OpenCodeBridgeMessage] = []
+        let bridge = OpenCodeBridgeSocket(configuration: config, receive: { _, message in messages.append(message) },
+            disconnected: { _ in closed.fulfill() })
+        try bridge.start(); defer { bridge.stop() }
+        let client = try connect(config.socketURL); defer { close(client) }
+        let hello = try OpenCodeBridgeMessage.hello(protocolVersion: 1, token: config.token, instanceID: UUID(),
+            generation: config.generation, hostVersion: "1.18.32", directory: "/project", projectLabel: nil).encodedFrame()
+        let resolved = try OpenCodeBridgeMessage.resolved(sessionID: "same", requestID: "que_abc").encodedFrame()
+        var frames = hello
+        for _ in 0..<200 { frames.append(resolved) }
+        frames.withUnsafeBytes { _ = Darwin.write(client, $0.baseAddress!, $0.count) }
+        // The worker must enforce its cap even while the UI executor cannot drain callbacks.
+        usleep(100_000)
+        await fulfillment(of: [closed], timeout: 2)
+        for _ in 0..<100 { await Task.yield() }
+        XCTAssertLessThanOrEqual(messages.count, 64)
+        if let first = messages.first { guard case .hello = first else { return XCTFail("hello must precede events") } }
+    }
     private func fixture() -> OpenCodeBridgeConfiguration {
         OpenCodeBridgeConfiguration(socketURL: URL(fileURLWithPath: "/private/tmp/ag-ipc-" + UUID().uuidString + "/s.sock"),
             token: String(repeating: "a", count: 64), generation: UUID())

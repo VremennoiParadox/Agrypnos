@@ -95,7 +95,7 @@ extension PopoverController {
         let active = runtime.preferences.openCodePluginEnabled && runtime.preferences.forwardAgentQuestions
         openCodeEnableButton?.isEnabled = !runtime.openCodeSetupInProgress && !active
         openCodeDisableButton?.isEnabled = !runtime.openCodeSetupInProgress && active
-        openCodeRemoveButton?.isEnabled = !runtime.openCodeSetupInProgress && runtime.preferences.openCodePluginEnabled
+        openCodeRemoveButton?.isEnabled = !runtime.openCodeSetupInProgress && runtime.openCodeIntegrationCanBeRemoved
     }
 
     func commitQuestionUserFields() {

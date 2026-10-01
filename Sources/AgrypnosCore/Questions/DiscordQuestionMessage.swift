@@ -39,6 +39,20 @@ public enum DiscordQuestionMessage {
             body: ["content": content, "allowed_mentions": noMentions])
     }
 
+    public static func canRender(batch: QuestionBatch, botToken: String, channelID: String) -> Bool {
+        guard batch.isValid, initial(batch: batch, botToken: botToken, channelID: channelID) != nil else { return false }
+        let selections = Dictionary(uniqueKeysWithValues: batch.questions.map { ($0.id, Set($0.options.map(\.id))) })
+        let states: [QuestionState] = [.pending, .submitting, .delivered(.unconfirmed), .local, .expired, .invalid]
+        for page in 0..<(batch.questions.count * 2) {
+            for state in states {
+                let view = QuestionView(handle: UUID(), batch: batch, selections: selections,
+                    page: page, state: state, generation: 0, controls: [])
+                if requests(view: view, botToken: botToken, channelID: channelID).isEmpty { return false }
+            }
+        }
+        return true
+    }
+
     public static func initial(batch: QuestionBatch, botToken: String, channelID: String) -> NotifOutboundRequest? {
         request(method: "POST", botToken: botToken, channelID: channelID, messageID: nil,
             body: ["content": batch.panelText(at: 0) + "\n\nPreparing controls…", "allowed_mentions": noMentions])

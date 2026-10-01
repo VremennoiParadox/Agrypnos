@@ -97,6 +97,9 @@ final class QuestionRelayCoordinator {
               currentSettings.includedKinds.contains(batch.key.provider),
               (currentSettings.telegram?.isComplete == true || currentSettings.discord?.isComplete == true)
         else { return false }
+        // Validate every destination page before publishing controls for any of them.
+        if let discord = currentSettings.discord, discord.isComplete,
+           !DiscordQuestionMessage.canRender(batch: batch, botToken: discord.token, channelID: discord.channelID) { return false }
         let previousDeadline = registry.pendingDeadlines[batch.key]
         if previousDeadline == nil, uptime() >= batch.deadlineUptime { return false }
         let handle = UUID()
@@ -306,13 +309,17 @@ final class QuestionRelayCoordinator {
     private func editMessages(handle: UUID) {
         guard let record = records[handle] else { return }
         if let target = currentSettings?.telegram, let reference = record.telegramRef,
-           let view = registry.view(handle: handle, reference: reference),
-           let request = TelegramQuestionMessage.edit(view: view, botToken: target.token, reference: reference) {
+           let view = registry.view(handle: handle, reference: reference) {
+            guard let request = TelegramQuestionMessage.edit(view: view, botToken: target.token, reference: reference) else {
+                endLocally(handle); return
+            }
             queueEdit(request, reference: reference, handle: handle)
         }
         if let target = currentSettings?.discord, let reference = record.discordRef,
-           let view = registry.view(handle: handle, reference: reference),
-           let request = DiscordQuestionMessage.edit(view: view, botToken: target.token, reference: reference) {
+           let view = registry.view(handle: handle, reference: reference) {
+            guard let request = DiscordQuestionMessage.edit(view: view, botToken: target.token, reference: reference) else {
+                endLocally(handle); return
+            }
             queueEdit(request, reference: reference, handle: handle)
         }
     }

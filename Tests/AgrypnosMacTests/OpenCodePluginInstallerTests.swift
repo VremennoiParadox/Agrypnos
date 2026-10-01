@@ -90,6 +90,22 @@ final class OpenCodePluginInstallerTests: XCTestCase {
             pluginData: Data("fixture".utf8)).install())
     }
 
+    func testConcurrentConfigSaveIsKeptAndInstallationRollsBack() throws {
+        let root = try fixture(); defer { try? FileManager.default.removeItem(at: root) }
+        let config = root.appendingPathComponent("config/tui.json")
+        try Data(#"{"theme":"original"}"#.utf8).write(to: config)
+        let concurrent = Data(#"{"theme":"saved-concurrently","unrelated":{"keep":true}}"#.utf8)
+        var installer = OpenCodePluginInstaller(configRoot: root.appendingPathComponent("config"),
+            bridgeRoot: root.appendingPathComponent("bridge"), pluginData: Data("fixture".utf8))
+        installer.write = { data, url in
+            try OpenCodePrivateFiles.write(data, to: url)
+            if url.lastPathComponent == "agrypnos-opencode.js" { try concurrent.write(to: config) }
+        }
+        XCTAssertThrowsError(try installer.install())
+        XCTAssertEqual(try Data(contentsOf: config), concurrent)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: installer.pluginURL.path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: root.appendingPathComponent("bridge/installation.json").path))
+    }
     private func fixture() throws -> URL {
         let root = URL(fileURLWithPath: "/private/tmp/agrypnos-installer-" + UUID().uuidString)
         try FileManager.default.createDirectory(at: root.appendingPathComponent("config"), withIntermediateDirectories: true)

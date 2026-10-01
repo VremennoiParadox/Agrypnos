@@ -119,6 +119,23 @@ final class OpenCodePluginQuestionSourceTests: XCTestCase {
     private func answer(_ batch: QuestionBatch) -> QuestionAnswer {
         QuestionAnswer(key: batch.key, selections: [.init(questionID: "q0", optionIDs: ["o1"])])
     }
+    func testExpiredDisconnectedInstancesDoNotConsumeNewQuestionCapacity() {
+        let configuration = config()
+        var now = 0.0, received = 0
+        let source = OpenCodePluginQuestionSource(configuration: configuration, uptime: { now }, receive: { _, _, _ in
+            received += 1; return true
+        }, resolved: { _ in })
+        for _ in 0..<33 {
+            let id = OpenCodeBridgeConnectionID()
+            source.ingest(hello(configuration), from: id)
+            source.ingest(.asked(original: original), from: id)
+            source.disconnected(id)
+            now += 601
+        }
+        XCTAssertEqual(received, 33)
+        XCTAssertEqual(source.connectedCount, 0)
+        source.stop()
+    }
     private func config() -> OpenCodeBridgeConfiguration {
         .init(socketURL: URL(fileURLWithPath: "/private/tmp/ag-source-" + UUID().uuidString + "/s.sock"), token: String(repeating: "a", count: 64), generation: UUID())
     }

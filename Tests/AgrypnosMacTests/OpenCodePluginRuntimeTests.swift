@@ -27,6 +27,19 @@ final class OpenCodePluginRuntimeTests: XCTestCase {
         XCTAssertNil(inactive["token"])
         XCTAssertTrue(FileManager.default.fileExists(atPath: fixture.config.appendingPathComponent("agrypnos-opencode.js").path))
     }
+    func testInstalledIntegrationCanBeRemovedWhileManualSourceIsSelected() async throws {
+        let fixture = Fixture(); defer { fixture.cleanup() }
+        let runtime = fixture.runtime
+        let enabled = await runtime.enableOpenCodeForwarding()
+        XCTAssertTrue(enabled)
+        // Saving manual settings selects this source while retaining the owned installation.
+        runtime.engine.preferences.openCodePluginEnabled = false
+        runtime.stopQuestionSources()
+        XCTAssertTrue(runtime.openCodeIntegrationCanBeRemoved)
+        let removed = await runtime.removeOpenCodeForwarding()
+        XCTAssertTrue(removed)
+        XCTAssertFalse(runtime.openCodeIntegrationCanBeRemoved)
+    }
     func testDisableDuringInstallCancelsEnableAndDoubleClickInstallsOnce() async throws {
         let fixture = Fixture(); defer { fixture.cleanup() }
         let started = expectation(description: "install started")

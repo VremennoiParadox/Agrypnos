@@ -11,12 +11,13 @@ const source = await readFile(new URL('../../Apps/Agrypnos/Resources/agrypnos-op
 const { createOpenCodeBridge, RETRY_SECONDS } = await import('data:text/javascript;base64,' + source.toString('base64'))
 const question = { id: 'que_abc', sessionID: 'session', questions: [{ question: 'Choose', options: [{ label: 'A' }, { label: 'B' }], custom: false }] }
 
-async function fixture(t, delivery = true) {
+async function fixture(t, delivery = true, holdSnapshot = false) {
   const root = await mkdtemp('/private/tmp/ag-js-')
   await chmod(root, 0o700)
   const generation = randomUUID(), token = 'a'.repeat(64), socketPath = root + '/s.sock'
   const frames = [], handlers = new Map()
-  let peer, count = 0, pending = [question], resolveReply
+  let peer, count = 0, pending = [question], resolveReply, releaseSnapshot, snapshotHeld = holdSnapshot
+  const initialSnapshot = holdSnapshot ? new Promise(r => releaseSnapshot = r) : undefined
   const server = createServer(socket => {
     peer = socket
     let buffer = ''
@@ -35,7 +36,10 @@ async function fixture(t, delivery = true) {
   const api = { app: { version: '1.18.32' }, state: { path: { directory: '/project' } },
     event: { on(type, handler) { handlers.set(type, handler); return () => handlers.delete(type) } },
     lifecycle: { onDispose() {} }, client: { question: {
-      async list() { return { data: pending, response: { status: 200 } } },
+      async list() {
+        if (snapshotHeld) { snapshotHeld = false; await initialSnapshot; return { data: [], response: { status: 200 } } }
+        return { data: pending, response: { status: 200 } }
+      },
       async reply(input) { count++; assert.deepEqual(input.answers, [['B']]);
         handlers.get('question.replied')?.({ properties: { requestID: question.id, sessionID: question.sessionID } })
         pending = []
@@ -45,11 +49,12 @@ async function fixture(t, delivery = true) {
     } } }
   const bridge = createOpenCodeBridge(api, { manifestPath })
   const waitFor = async predicate => { for (let i = 0; i < 100; i++) { if (predicate()) return; await delay(10) } assert.fail('timed out') }
-  await waitFor(() => frames.some(f => f.type === 'snapshot'))
+  await waitFor(() => frames.some(f => f.type === (holdSnapshot ? 'hello' : 'snapshot')))
+  if (holdSnapshot) await delay(20)
   t.after(async () => { bridge.dispose(); peer?.destroy(); await new Promise(r => server.close(r)); await rm(root, { recursive: true, force: true }) })
   const ask = () => handlers.get('question.asked')({ properties: structuredClone(question) })
   const reply = () => peer.write(JSON.stringify({ type: 'reply', attemptID: randomUUID(), sessionID: 'session', requestID: 'que_abc', answers: [['B']] }) + '\n')
-  return { frames, api, handlers, ask, reply, waitFor, bridge, manifestPath, generation, token, socketPath, count: () => count, resolve: () => resolveReply?.(), peer: () => peer }
+  return { frames, api, handlers, ask, reply, waitFor, bridge, manifestPath, generation, token, socketPath, count: () => count, resolve: () => resolveReply?.(), releaseSnapshot: () => releaseSnapshot?.(), peer: () => peer }
 }
 
 test('native result alone accepts; duplicate replies never call twice', async t => {
@@ -113,4 +118,16 @@ test('wrong native identity and undeclared labels never reach the API', async t 
   await f.waitFor(() => f.frames.filter(m => m.type === 'result').length === 2)
   assert.equal(f.count(), 0)
   assert.ok(f.frames.filter(m => m.type === 'result').every(m => m.delivery === 'rejected'))
+})
+
+for (const resolved of [false, true]) test(`startup snapshot preserves newer ${resolved ? 'resolution' : 'question'}`, async t => {
+  const f = await fixture(t, true, true)
+  f.ask(); await f.waitFor(() => f.frames.some(m => m.type === 'asked'))
+  if (resolved) f.handlers.get('question.replied')({ properties: { requestID: 'que_abc', sessionID: 'session' } })
+  f.releaseSnapshot(); await f.waitFor(() => f.frames.some(m => m.type === 'snapshot'))
+  const snapshot = f.frames.find(m => m.type === 'snapshot')
+  assert.deepEqual(snapshot.originals.map(q => q.id), resolved ? [] : ['que_abc'])
+  f.reply(); await f.waitFor(() => f.frames.some(m => m.type === 'result'))
+  assert.equal(f.count(), resolved ? 0 : 1)
+  assert.equal(f.frames.find(m => m.type === 'result').delivery, resolved ? 'rejected' : 'accepted')
 })

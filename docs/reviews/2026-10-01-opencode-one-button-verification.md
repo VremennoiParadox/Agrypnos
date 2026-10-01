@@ -30,7 +30,7 @@ codesign --verify --deep --strict /private/tmp/agrypnos-one-button-debug/Build/P
 codesign --verify --deep --strict /private/tmp/agrypnos-one-button-release/Build/Products/Release/Agrypnos.app
 ```
 
-Swift module caches were redirected to private temporary paths. Socket/native tests require permission for temporary local sockets. Bundle resources were compared byte-for-byte with source. Final automated verification: **761 Swift tests, 0 failures; 9 JavaScript tests, 0 failures**. Debug and Release builds succeeded; both exact bundles passed signature verification and resource byte comparison. Relevant tracked/new files are at most 600 lines and `git diff --check` passed. Feature commit: `33c2006`, installer `4d8eb02`, IPC `bc1c778`; native feasibility `5a26ef7`. Build paths are the commands above; fresh review disposition follows below.
+Swift module caches were redirected to private temporary paths. Socket/native tests require permission for temporary local sockets. Bundle resources were compared byte-for-byte with source. Final automated verification: **766 Swift tests, 0 failures; 11 JavaScript tests, 0 failures**. Debug and Release builds succeeded; both exact bundles passed signature verification and resource byte comparison. Relevant tracked/new files are at most 600 lines and `git diff --check` passed. Feature commit: `33c2006`, installer `4d8eb02`, IPC `bc1c778`; native feasibility `5a26ef7`. Build paths are the commands above; fresh review disposition follows below.
 
 ## Live evidence remains separate
 
@@ -47,3 +47,40 @@ Swift module caches were redirected to private temporary paths. Socket/native te
 | Headless or desktop OpenCode; other provider question forwarding | Unverified/unavailable; full-provider release remains gated |
 
 The built app is concrete and reviewable. Live validation requires the user's existing bot and a one-time global installation; implementation authorization has not been treated as permission to send real bot messages or change those live files.
+
+## Final review and fix pass
+
+A fresh reviewer examined the whole branch (`e615e00..47b1094`) and reported six Important findings, no Critical. All six entered one fix pass; each reproducer failed before its implementation fix, then passed. The 42 affected Swift tests and all 11 plugin tests passed; the full Swift suite passed 766/766, including the real native production smoke. No second review was performed.
+
+| Finding | Corrected behavior / regression |
+|---|---|
+| Startup snapshot predates a fresh question | Native events during the list operation amend its result; a newly observed question remains answerable without renewing unknown baseline deadlines. `startup snapshot preserves newer question` |
+| Disconnected instances exhaust 32 records | Expired disconnected payloads no longer consume new capacity; bounded seen identities still prevent replay. `testExpiredDisconnectedInstancesDoNotConsumeNewQuestionCapacity` |
+| Concurrent unrelated config save lost | Changed bytes abort installation before replacement; rollback removes only unchanged artifacts from this invocation and preserves the concurrent save. `testConcurrentConfigSaveIsKeptAndInstallationRollsBack` |
+| Manual fallback disables plugin removal | Removal availability follows installed artifacts independently of the selected source. `testInstalledIntegrationCanBeRemovedWhileManualSourceIsSelected` |
+| Later Discord page cannot render | Every page/state is preflighted before any destination is offered; subsequent edit rendering failure explicitly ends locally. `testUnrenderableLaterDiscordPanelStaysLocalBeforeOfferingControls` |
+| Socket floods main-actor tasks | Per peer: one ordered callback outstanding, at most 64 messages/256 KiB retained; overload closes the peer. Its connection slot stays occupied until disconnect acknowledgment, bounding reconnect churn too. `testFloodWhileMainActorIsBusyClosesWithBoundedOrderedDeliveries` |
+
+Configuration checks detect concurrent saves observed before replacement; they do not establish mutual exclusion with an unrelated editor that does not share a file lock. Real bot and Mac acceptance categories above remain unperformed.
+
+## Execution decisions (chronological)
+
+- Continue in the existing codex/agent-question-relay checkout — the handoff retains this branch and inline work, and no new branch/worktree was chosen — cost if wrong: probe/evidence commits need moving to another branch; no production work before feasibility PASS.
+- Stop Tasks 2–6 on the missing public reply/list contract — the plan explicitly gates product work on native PASS; substituting private access or a new listener would change the design — cost if wrong: a supported alternative may have been overlooked and must be proved before resuming.
+- Record the failed gate without task-done or a fabricated green native test — the script's completion contract requires passing evidence, which this run does not have — cost if wrong: ledger automation will not mark the probe task complete; the tracked report preserves the conditional-stop outcome.
+- Use the existing Scripts/ directory for the probe rather than the plan's lowercase scripts/ — macOS resolves both to one directory, but Git staging uses the existing capitalized spelling — cost if wrong: plan examples need their path capitalization corrected on case-sensitive systems. Probe staged in a follow-up commit after noticing it was absent from the first commit.
+- Uphold non-execution of Tasks 2–6 set aside by the reviewer — Task 1 PASS is their explicit prerequisite — cost if wrong: implementation waits for proof of an overlooked public transport.
+- Leave historic HTTP code and new live bot/Mac/energy acceptance outside this probe review — no product files changed and evidence categories remain separate — cost if wrong: historic defects or new live integration failures remain unassessed by this review.
+- Install the TUI-only module at configRoot/agrypnos-opencode.js and register in tui.json, outside the server-scanned plugins directory — prevents the server loader interpreting a TUI module as a server plugin — cost if wrong: revise installed path. Plain JSON global config is patched; tui.jsonc is left byte-for-byte intact; unsupported tui.json fails visibly.
+- Use a unique socket filename per generation and refuse all existing socket paths — avoids unlinking a live listener or foreign symlink; stale files are inert in the private directory — cost if wrong: abandoned sockets may need manual cleanup.
+- Replace the stale server-hook interface with the proved default {id,tui} entry and public api.event/onDispose/SDK v2 contracts — Task 1 PASS is authoritative — cost if wrong: plugin stops loading and remains local.
+- Commit the source/resource and runtime/UI together after their separate RED→GREEN checks — Xcode membership and shared Swift test compilation otherwise name not-yet-existing files — cost if wrong: less granular task commit history.
+- Keep real bot delivery, physical local-answer races, global installation, Mac optical/sleep and energy proof unclaimed — isolated native automation is not the user's live environment — cost if wrong: live integration defects remain for the acceptance run.
+- Keep Claude/Cursor/Codex question sources unavailable and full-provider release gated — this milestone authorizes OpenCode 1.18.32 only — cost if wrong: broader provider coverage remains unavailable.
+- Keep compromised same-user credential theft outside the local-token boundary — the plugin intentionally runs as the same user and has no bot secrets — cost if wrong: a malicious same-user process could impersonate a local peer.
+- Keep shell-only custom XDG discovery as a documented limitation — the GUI has no supported way to infer an unrelated shell environment — cost if wrong: affected users need matching app environment or the manual connection.
+- Keep the branch local and launch its verified Release build — the user's current request is to try the app, not merge or publish — cost if wrong: commits remain unpublished pending an integration decision.
+
+## Deferred minors
+
+- Probe CLI usage prints lowercase scripts/ instead of tracked Scripts/; incorrect on case-sensitive filesystems.

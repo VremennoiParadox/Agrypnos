@@ -17,15 +17,16 @@ final class OpenCodeBridgeSocket {
     init(configuration: OpenCodeBridgeConfiguration,
          receive: @escaping (OpenCodeBridgeConnectionID, OpenCodeBridgeMessage) -> Void,
          disconnected: @escaping (OpenCodeBridgeConnectionID) -> Void) {
-        worker = OpenCodeSocketWorker(configuration: configuration, receive: { id, message in
-            Task { @MainActor in receive(id, message) }
-        }, disconnected: { id in Task { @MainActor in disconnected(id) } })
+        worker = OpenCodeSocketWorker(configuration: configuration, receive: { id, message, completed in
+            Task { @MainActor in receive(id, message); completed() }
+        }, disconnected: { id, completed in Task { @MainActor in disconnected(id); completed() } })
     }
     func start() throws { try worker.start() }
     func send(_ message: OpenCodeBridgeMessage, to id: OpenCodeBridgeConnectionID) async -> Bool {
         guard let frame = try? message.encodedFrame() else { return false }
+        let worker = worker
         return await withCheckedContinuation { continuation in
-            worker.queue.async { continuation.resume(returning: self.worker.enqueue(frame, to: id)) }
+            worker.queue.async { continuation.resume(returning: worker.enqueue(frame, to: id)) }
         }
     }
     func stop() { worker.stop() }
@@ -41,19 +42,23 @@ private final class OpenCodeSocketWorker {
         var input: DispatchSourceRead?
         var output: DispatchSourceWrite?
         var pending = Data()
+        var deliveries: [(OpenCodeBridgeMessage, Int)] = []
+        var deliveryBytes = 0
+        var delivering = false
+        var closed = false
         init(_ fd: Int32) { self.fd = fd }
     }
     let queue = DispatchQueue(label: "Agrypnos.OpenCode.IPC")
     private let configuration: OpenCodeBridgeConfiguration
-    private let receive: (OpenCodeBridgeConnectionID, OpenCodeBridgeMessage) -> Void
-    private let disconnected: (OpenCodeBridgeConnectionID) -> Void
+    private let receive: (OpenCodeBridgeConnectionID, OpenCodeBridgeMessage, @escaping () -> Void) -> Void
+    private let disconnected: (OpenCodeBridgeConnectionID, @escaping () -> Void) -> Void
     private var listener: DispatchSourceRead?
     private var clients: [OpenCodeBridgeConnectionID: Client] = [:]
     private var bound = false
 
     init(configuration: OpenCodeBridgeConfiguration,
-         receive: @escaping (OpenCodeBridgeConnectionID, OpenCodeBridgeMessage) -> Void,
-         disconnected: @escaping (OpenCodeBridgeConnectionID) -> Void) {
+         receive: @escaping (OpenCodeBridgeConnectionID, OpenCodeBridgeMessage, @escaping () -> Void) -> Void,
+         disconnected: @escaping (OpenCodeBridgeConnectionID, @escaping () -> Void) -> Void) {
         self.configuration = configuration; self.receive = receive; self.disconnected = disconnected
     }
     func start() throws {
@@ -114,13 +119,13 @@ private final class OpenCodeSocketWorker {
     }
     private func read(_ client: Client) {
         var buffer = [UInt8](repeating: 0, count: 8192)
-        while clients[client.id] != nil {
+        while !client.closed {
             let count = Darwin.read(client.fd, &buffer, buffer.count)
             if count < 0, errno == EAGAIN { return }
             guard count > 0 else { disconnect(client.id); return }
             do {
                 for message in try client.decoder.append(Data(buffer.prefix(count))) {
-                    guard clients[client.id] != nil else { return }
+                    guard !client.closed else { return }
                     if !client.authenticated {
                         guard case let .hello(version, token, _, generation, host, _, _) = message,
                               version == 1, token == configuration.token,
@@ -128,17 +133,22 @@ private final class OpenCodeSocketWorker {
                         client.authenticated = true
                         _ = enqueue(try OpenCodeBridgeMessage.ready(generation: generation).encodedFrame(), to: client.id)
                     } else if case .hello = message { disconnect(client.id); return }
-                    receive(client.id, message)
+                    let bytes = try message.encodedFrame().count
+                    guard client.deliveries.count < 64, client.deliveryBytes + bytes <= 262144 else {
+                        disconnect(client.id); return
+                    }
+                    client.deliveries.append((message, bytes)); client.deliveryBytes += bytes
+                    deliverNext(client)
                 }
             } catch { disconnect(client.id); return }
         }
     }
     func enqueue(_ data: Data, to id: OpenCodeBridgeConnectionID) -> Bool {
-        guard let client = clients[id], client.authenticated else { return false }
+        guard let client = clients[id], !client.closed, client.authenticated else { return false }
         guard client.pending.count + data.count <= 262144 else { disconnect(id); return false }
         client.pending.append(data)
         flush(client)
-        return clients[id] != nil
+        return !client.closed
     }
     private func flush(_ client: Client) {
         while !client.pending.isEmpty {
@@ -156,10 +166,34 @@ private final class OpenCodeSocketWorker {
         }
         client.output?.cancel(); client.output = nil
     }
+    private func deliverNext(_ client: Client) {
+        guard !client.delivering else { return }
+        if client.closed {
+            client.delivering = true
+            // Retain this slot until the UI acknowledges disconnect, bounding reconnect churn too.
+            disconnected(client.id) { [weak self] in
+                self?.queue.async { self?.clients.removeValue(forKey: client.id) }
+            }
+            return
+        }
+        guard let (message, bytes) = client.deliveries.first else { return }
+        client.delivering = true
+        receive(client.id, message) { [weak self] in
+            self?.queue.async {
+                client.delivering = false
+                if !client.closed {
+                    client.deliveries.removeFirst(); client.deliveryBytes -= bytes
+                }
+                self?.deliverNext(client)
+            }
+        }
+    }
     private func disconnect(_ id: OpenCodeBridgeConnectionID) {
-        guard let client = clients.removeValue(forKey: id) else { return }
+        guard let client = clients[id], !client.closed else { return }
+        client.closed = true
         client.output?.cancel(); client.input?.cancel()
-        disconnected(id)
+        client.deliveries.removeAll(); client.deliveryBytes = 0
+        deliverNext(client)
     }
     func stop() {
         queue.sync {

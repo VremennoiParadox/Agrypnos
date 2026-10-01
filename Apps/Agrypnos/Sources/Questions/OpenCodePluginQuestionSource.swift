@@ -56,6 +56,12 @@ final class OpenCodePluginQuestionSource {
     }
     func ingest(_ message: OpenCodeBridgeMessage, from id: OpenCodeBridgeConnectionID) {
         guard !stopped else { return }
+        // Keep reconnect payloads only through their original deadline; departed processes
+        // must not permanently consume the bounded native-question capacity.
+        for (key, record) in records where clients[record.owner] == nil && record.attempt == nil
+            && uptime() >= record.batch.deadlineUptime {
+            records.removeValue(forKey: key)
+        }
         if case let .hello(version, token, instance, generation, host, _, label) = message {
             guard version == 1, token == configuration.token, generation == configuration.generation,
                   host == "1.18.32", clients[id] == nil, clients.count < 32 else { return }

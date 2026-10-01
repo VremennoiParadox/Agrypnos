@@ -49,7 +49,7 @@ export function createOpenCodeBridge(api, { manifestPath = join(homedir(), "Libr
   const instanceID = randomUUID(), directory = api.state.path.directory
   const records = new Map(), unsubscribers = []
   let socket, manifest, ready = false, disposed = false, retry, changed, watcher, retryIndex = 0
-  let buffered = Buffer.alloc(0), connectionEpoch = 0
+  let buffered = Buffer.alloc(0), connectionEpoch = 0, snapshotChanges
   const current = (peer, epoch) => !disposed && peer === socket && epoch === connectionEpoch
   const send = message => {
     if (!ready || !socket || socket.destroyed) return false
@@ -68,7 +68,7 @@ export function createOpenCodeBridge(api, { manifestPath = join(homedir(), "Libr
     try { next = readManifest(manifestPath) } catch { next = null }
     if (JSON.stringify(next) === JSON.stringify(manifest)) return
     connectionEpoch++; ready = false; socket?.destroy(); socket = undefined
-    clearTimeout(retry); retry = undefined; records.clear(); retryIndex = 0; manifest = next
+    clearTimeout(retry); retry = undefined; records.clear(); snapshotChanges = undefined; retryIndex = 0; manifest = next
     if (manifest) connect()
   }
   function connect() {
@@ -116,16 +116,28 @@ export function createOpenCodeBridge(api, { manifestPath = join(homedir(), "Libr
       ready = false; socket = undefined; schedule()
     })
   }
+  function snapshotEvent(key, original) {
+    if (!snapshotChanges) return
+    snapshotChanges.set(key, original)
+    if (snapshotChanges.size > 64) socket?.destroy()
+  }
   async function snapshot(peer, epoch) {
+    const changes = new Map(); snapshotChanges = changes
     try {
       const response = await api.client.question.list({ directory })
       if (!current(peer, epoch) || !ready) return
       if (response.response?.status !== 200 || !Array.isArray(response.data) || response.data.length > 32) { peer.destroy(); return }
-      const pending = response.data.filter(validQuestion)
-      const present = new Set(pending.map(identity))
-      for (const key of records.keys()) if (!present.has(key)) records.delete(key)
-      send({ type: "snapshot", originals: pending })
+      const pending = new Map(response.data.filter(validQuestion).map(q => [identity(q), q]))
+      // The list can predate events received while it was awaiting the native transport.
+      for (const [key, original] of changes) {
+        if (original) pending.set(key, original)
+        else pending.delete(key)
+      }
+      if (pending.size > 32) { peer.destroy(); return }
+      for (const key of records.keys()) if (!pending.has(key)) records.delete(key)
+      send({ type: "snapshot", originals: [...pending.values()] })
     } catch { if (current(peer, epoch)) peer.destroy() }
+    finally { if (snapshotChanges === changes) snapshotChanges = undefined }
   }
   async function reply(message, peer, epoch) {
     const key = message.sessionID + "|" + message.requestID, record = records.get(key)
@@ -154,12 +166,15 @@ export function createOpenCodeBridge(api, { manifestPath = join(homedir(), "Libr
     if (records.has(key) || records.size >= 32) return
     const original = structuredClone(properties)
     if (Buffer.byteLength(JSON.stringify({ type: "asked", original }) + "\n") > LIMIT) return
+    snapshotEvent(key, original)
     records.set(key, { original, deadline: performance.now() + 600000, attempted: false })
     send({ type: "asked", original })
   }))
   for (const type of ["question.replied", "question.rejected"]) {
     unsubscribers.push(api.event.on(type, ({ properties }) => {
-      records.delete(properties.sessionID + "|" + properties.requestID)
+      const key = properties.sessionID + "|" + properties.requestID
+      snapshotEvent(key, null)
+      records.delete(key)
       send({ type: "resolved", sessionID: properties.sessionID, requestID: properties.requestID })
     }))
   }

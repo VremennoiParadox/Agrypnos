@@ -39,6 +39,7 @@ struct OpenCodePluginInstaller {
         var changed: [(URL, Data?, Data)] = []
         do {
             for (url, old, new) in [(pluginURL, oldPlugin, pluginData), (configURL, oldConfig, config), (receiptURL, oldReceipt, receipt)] {
+                guard try OpenCodePrivateFiles.read(url) == old else { throw OpenCodePluginSetupError.configurationChanged }
                 if old == new { continue }
                 try write(new, url)
                 changed.append((url, old, new))
@@ -52,6 +53,11 @@ struct OpenCodePluginInstaller {
             throw error
         }
         return pluginURL
+    }
+
+    func hasInstallationArtifacts() throws -> Bool {
+        if try OpenCodePrivateFiles.read(receiptURL) != nil { return true }
+        return try OpenCodePrivateFiles.read(pluginURL) != nil
     }
 
     func isInstalled() throws -> Bool {
@@ -78,7 +84,10 @@ struct OpenCodePluginInstaller {
         let oldConfig = try OpenCodePrivateFiles.read(configURL)
         let config = try registration(oldConfig, adding: false)
         // Deregister first. A failed removal leaves forwarding disabled and the owned file recoverable.
+        guard try OpenCodePrivateFiles.read(configURL) == oldConfig else { throw OpenCodePluginSetupError.configurationChanged }
         if oldConfig != config { try write(config, configURL) }
+        guard try OpenCodePrivateFiles.read(pluginURL) == plugin,
+              try OpenCodePrivateFiles.read(receiptURL) == receipt else { throw OpenCodePluginSetupError.configurationChanged }
         try OpenCodePrivateFiles.remove(pluginURL)
         try OpenCodePrivateFiles.remove(receiptURL)
     }

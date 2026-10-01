@@ -4,6 +4,21 @@ import AgrypnosCore
 
 @MainActor
 final class QuestionRelayCoordinatorTests: XCTestCase {
+    func testUnrenderableLaterDiscordPanelStaysLocalBeforeOfferingControls() async {
+        let fixture = QuestionRelayFixture()
+        fixture.use(.discord)
+        let later = AgentQuestion(id: "later", prompt: String(repeating: "[]()", count: 300),
+            options: [QuestionOption(id: "a", label: "Alpha")])
+        fixture.batch = QuestionBatch(key: fixture.batch.key, questions: fixture.batch.questions + [later],
+            receivedUptime: 0, deadlineUptime: 600)
+        var registry = QuestionRegistry()
+        XCTAssertTrue(registry.insert(fixture.batch, handle: UUID()))
+        XCTAssertFalse(fixture.receive())
+        await fixture.yieldTasks()
+        XCTAssertTrue(fixture.requests.isEmpty)
+        XCTAssertTrue(fixture.relay.pendingDeadlines.isEmpty)
+        XCTAssertTrue(fixture.events.isEmpty)
+    }
     func testCancellationCoalescesOverAnInFlightFailedEditOnBothBots() async throws {
         for destination in [QuestionDestination.telegram, .discord] {
             let fixture = QuestionRelayFixture()

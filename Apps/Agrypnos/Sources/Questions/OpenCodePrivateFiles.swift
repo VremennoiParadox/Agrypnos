@@ -2,7 +2,7 @@ import Foundation
 import Darwin
 
 enum OpenCodePluginSetupError: Error {
-    case unsafePath, foreignFile, writeFailed, unsupportedConfiguration
+    case unsafePath, foreignFile, writeFailed, unsupportedConfiguration, configurationChanged
 }
 
 // Descriptor-relative operations refuse symlinks, including each parent component.
