@@ -173,6 +173,8 @@ extension PopoverController {
         addQuestionRelayCard(questionRelayCard, contentW: contentW, ci: ci, cw: cw, swW: swW, swH: swH)
         openCodePluginCard = PopoverForm.card(in: document, slot: notif.pluginConnection!, pad: pad, width: contentW)
         addOpenCodePluginCard(openCodePluginCard, ci: ci, cw: cw)
+        claudeHookCard = PopoverForm.card(in: document, slot: notif.claudeHook!, pad: pad, width: contentW)
+        addClaudeHookCard(claudeHookCard, ci: ci, cw: cw)
         openCodeQuestionsCard = PopoverForm.card(in: document, slot: notif.openCodeQuestions!, pad: pad, width: contentW)
         addOpenCodeQuestionsCard(openCodeQuestionsCard, ci: ci, cw: cw)
 

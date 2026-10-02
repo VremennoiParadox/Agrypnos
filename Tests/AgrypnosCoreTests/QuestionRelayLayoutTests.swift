@@ -25,12 +25,14 @@ final class QuestionRelayLayoutTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(forwarding.height, QuestionSetupChrome.statusY + QuestionSetupChrome.statusHeight + 12)
         XCTAssertGreaterThanOrEqual(connection.height, QuestionSetupChrome.connectionButtonsY + 24 + 12)
         XCTAssertEqual(layout.pluginConnection?.y, forwarding.maxY + 10)
-        XCTAssertEqual(connection.y, layout.pluginConnection!.maxY + 10)
+        XCTAssertEqual(layout.claudeHook?.y, layout.pluginConnection!.maxY + 10)
+        XCTAssertEqual(connection.y, layout.claudeHook!.maxY + 10)
         XCTAssertEqual(layout.notifSetup?.y, connection.maxY + 10)
         XCTAssertEqual(layout.contentHeight, layout.notifClear!.maxY + 16)
         for section in [PopoverSection.watch, .power, .agents, .general] {
             XCTAssertNil(PopoverStackLayout.make(section: section).questionRelay)
             XCTAssertNil(PopoverStackLayout.make(section: section).openCodeQuestions)
+            XCTAssertNil(PopoverStackLayout.make(section: section).claudeHook)
         }
     }
 }

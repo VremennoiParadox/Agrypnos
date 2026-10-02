@@ -134,6 +134,17 @@ final class BotGuideCopyTests: XCTestCase {
             ]
         )
     }
+
+    func testClaudeHookSetupNamesTrustAndKeepsBrainrotHonesty() {
+        let text = BotGuide.allText
+        XCTAssertTrue(text.contains("Enable Claude Code forwarding"))
+        XCTAssertTrue(text.lowercased().contains("trust the folder"))
+        XCTAssertTrue(text.contains("PreToolUse"))
+        XCTAssertTrue(text.contains("AskUserQuestion"))
+        XCTAssertTrue(text.contains("UserPromptSubmit"))
+        XCTAssertTrue(text.contains("brainrot") || text.contains("other hooks"))
+        XCTAssertTrue(text.contains("Enable OpenCode forwarding"))
+    }
 }
 
 extension BotGuide {

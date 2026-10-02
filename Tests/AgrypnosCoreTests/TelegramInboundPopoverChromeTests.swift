@@ -13,12 +13,13 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
                 .notifTelegramInbound,
                 .questionRelay,
                 .pluginConnection,
+                .claudeHook,
                 .openCodeQuestions,
                 .notifSetup,
                 .notifClear,
             ]
         )
-        XCTAssertEqual(PopoverSection.notif.cards.count, 10)
+        XCTAssertEqual(PopoverSection.notif.cards.count, 11)
         XCTAssertFalse(PopoverSection.watch.cards.contains(.notifTelegramInbound))
         XCTAssertFalse(PopoverSection.power.cards.contains(.notifTelegramInbound))
         XCTAssertFalse(PopoverSection.agents.cards.contains(.notifTelegramInbound))
@@ -91,7 +92,7 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
         )
         XCTAssertEqual(
             layout.notifSetup?.y,
-            layout.pluginConnection!.maxY + PopoverStackLayout.cardGap
+            layout.claudeHook!.maxY + PopoverStackLayout.cardGap
         )
         XCTAssertEqual(
             layout.notifTelegramInbound!.height,
@@ -115,12 +116,13 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
                 layout.notifTelegramInbound,
                 layout.questionRelay,
                 layout.pluginConnection,
+                layout.claudeHook,
                 layout.openCodeQuestions,
                 layout.notifSetup,
                 layout.notifClear
             )
         )
-        XCTAssertEqual(layout.stackedCards.count, 9)
+        XCTAssertEqual(layout.stackedCards.count, 10)
         XCTAssertNil(layout.watch)
         XCTAssertEqual(layout.contentHeight, layout.notifClear!.maxY + PopoverStackLayout.pad)
         XCTAssertEqual(

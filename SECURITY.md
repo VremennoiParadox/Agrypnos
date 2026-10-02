@@ -37,8 +37,9 @@ When Discord inbound is on, Agrypnos may receive updates on **your** Discord bot
 
 ## Opt-in OpenCode question forwarding (test build)
 
-Forward agent questions defaults off. Only OpenCode 1.18.32 is enabled in
-this test build. One-button setup requires OpenCode selected in Agents and
+Forward agent questions defaults off. OpenCode 1.18.32 remains enabled in
+this test build. Claude Code question forwarding is the hook path below.
+One-button setup requires OpenCode selected in Agents and
 an enabled, complete inbound bot destination with an explicit answering-user ID.
 It installs an owned global terminal plugin and registers it in `tui.json`,
 preserving other entries and leaving `tui.jsonc` untouched. Modified or foreign
@@ -75,6 +76,18 @@ Clearing secrets deletes the saved file. Sleep, shutdown and setup changes
 invalidate old phone controls. Forwarding never arms the watch or overrides
 manual/safety off. The existing confirmed-lid sleep path may be used after
 an unanswered ten-minute watch end; a bot notification is best effort.
+
+## Opt-in Claude Code question forwarding (test build)
+
+Enable Claude Code forwarding merges a command hook into
+`~/.claude/settings.json`. It never replaces the file and never deletes
+other hook events. The command is this app with `--claude-question-hook`.
+The helper talks to the running menu-bar app on a Unix socket under
+`~/Library/Application Support/Agrypnos/claude-question-hook/` (directory
+0700, socket 0600, same-UID peer). It does not spawn a second Claude, open a
+listen port, or set a Discord Interactions Endpoint URL. If Agrypnos is not
+running, the helper returns empty JSON within two seconds and does not select
+an answer. No new sudoers grant. The Discord webhook stays outbound-only.
 
 ## What we will not do
 

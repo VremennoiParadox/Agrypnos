@@ -96,6 +96,10 @@ extension PopoverController {
         openCodeEnableButton?.isEnabled = !runtime.openCodeSetupInProgress && !active
         openCodeDisableButton?.isEnabled = !runtime.openCodeSetupInProgress && active
         openCodeRemoveButton?.isEnabled = !runtime.openCodeSetupInProgress && runtime.openCodeIntegrationCanBeRemoved
+        claudeHookStatus?.stringValue = runtime.claudeQuestionCaption
+        let claudeOn = runtime.preferences.claudeQuestionHookEnabled && runtime.preferences.forwardAgentQuestions
+        claudeEnableButton?.isEnabled = !claudeOn
+        claudeDisableButton?.isEnabled = runtime.preferences.claudeQuestionHookEnabled
     }
 
     func commitQuestionUserFields() {

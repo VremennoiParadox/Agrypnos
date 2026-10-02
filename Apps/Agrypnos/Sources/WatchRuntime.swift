@@ -31,6 +31,9 @@ final class WatchRuntime {
     var openCodeSetupRevision: UInt64 = 0
     var openCodeSetupInProgress = false
     var openCodeSetupFailure: String?
+    var claudeSetupFailure: String?
+    var claudeSettingsURLOverride: URL?
+    var claudeHookSocketURLOverride: URL?
     var openCodeQuestionSource: OpenCodeQuestionSource?
     var openCodeSourceSettings: OpenCodeQuestionSettings?
     var openCodeRelaySettings: QuestionRelaySettings?

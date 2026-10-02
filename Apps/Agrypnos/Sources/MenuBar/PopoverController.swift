@@ -83,6 +83,10 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var openCodeDisableButton: NSButton!
     var openCodeRemoveButton: NSButton!
     var openCodeManualButton: NSButton!
+    var claudeHookCard: CardView!
+    var claudeEnableButton: NSButton!
+    var claudeDisableButton: NSButton!
+    var claudeHookStatus: NSTextField!
     var showManualOpenCodeConnection = false
     var openCodeQuestionsCard: CardView!
     var forwardQuestionsSwitch: NSSwitch!

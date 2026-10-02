@@ -107,6 +107,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public let notifTelegramInbound: PopoverSlot?
     public let questionRelay: PopoverSlot?
     public let pluginConnection: PopoverSlot?
+    public let claudeHook: PopoverSlot?
     public let openCodeQuestions: PopoverSlot?
     public let notifSetup: PopoverSlot?
     public let notifClear: PopoverSlot?
@@ -143,6 +144,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
         case .notifTelegramInbound: return notifTelegramInbound
         case .questionRelay: return questionRelay
         case .pluginConnection: return pluginConnection
+        case .claudeHook: return claudeHook
         case .openCodeQuestions: return openCodeQuestions
         case .notifSetup: return notifSetup
         case .notifClear: return notifClear
@@ -253,6 +255,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
             case .notifTelegramInbound: return notifTelegramInboundHeight
             case .questionRelay: return QuestionSetupChrome.relayCardHeight
             case .pluginConnection: return QuestionSetupChrome.pluginCardHeight
+            case .claudeHook: return QuestionSetupChrome.claudeCardHeight
             case .openCodeQuestions: return QuestionSetupChrome.connectionCardHeight
             case .notifSetup: return loginCardHeight
             case .notifClear: return loginCardHeight
@@ -317,6 +320,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
             notifTelegramInbound: placed[.notifTelegramInbound],
             questionRelay: placed[.questionRelay],
             pluginConnection: placed[.pluginConnection],
+            claudeHook: placed[.claudeHook],
             openCodeQuestions: placed[.openCodeQuestions],
             notifSetup: placed[.notifSetup],
             notifClear: placed[.notifClear],

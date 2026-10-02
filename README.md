@@ -263,8 +263,8 @@ When you first turn inbound on, or quit and relaunch, Agrypnos quietly skips any
 ## OpenCode question forwarding (test build)
 
 This branch connects **OpenCode 1.18.32** native structured questions to your
-existing Telegram/Discord bot. Live bot/Mac verification is pending. Claude
-Code, Cursor and Codex question forwarding remain unavailable. Ordinary
+existing Telegram/Discord bot. Live bot/Mac verification is pending. Cursor
+and Codex question forwarding remain unavailable. Ordinary
 prose questions, free text and permission/plan approvals stay on the Mac.
 
 1. Configure your own Telegram or Discord bot using the steps above, and
@@ -339,6 +339,25 @@ plugin and Swift socket source, continuing the original isolated conversation
 once. New live bot, Mac optical and energy checks remain pending; the earlier
 human-confirmed manual HTTP/Telegram flow is separate evidence. See the
 [one-button verification record](docs/reviews/2026-10-01-opencode-one-button-verification.md).
+
+## Claude Code question forwarding (test build)
+
+One click merges a `PreToolUse` hook matching `AskUserQuestion` into
+`~/.claude/settings.json`. It does not replace that file. Existing
+`UserPromptSubmit` / `Stop` / `StopFailure` hooks (including
+`~/.brainrot/brainrot-state.sh` on this Mac) stay. Interactive Claude Code
+sessions hold hooks until you trust the folder.
+
+1. Configure your own Telegram or Discord bot, turn its inbound switch on, and
+   save your answering user ID under Notif → Forward agent questions.
+2. Select **Claude Code** in Agents. Click **Enable Claude Code forwarding**.
+3. In an already-trusted project, ask Claude Code a structured choice in the
+   session you already started. Answer on your bot. That same session should
+   continue with the chosen label.
+
+Live AskUserQuestion round-trip on Claude Code 2.1.183 is not proven until
+you run that check. Cursor and Codex question forwarding remain unavailable.
+Disable removes only the Agrypnos `--claude-question-hook` entry.
 
 ## Settings
 

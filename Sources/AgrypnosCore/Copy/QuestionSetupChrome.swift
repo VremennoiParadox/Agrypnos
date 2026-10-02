@@ -1,6 +1,6 @@
 public enum QuestionSetupChrome {
     public static let title = "Forward agent questions"
-    public static let help = "Structured OpenCode choices on your bot. Free text and approvals stay on Mac. Other providers are unavailable in this test build."
+    public static let help = "Structured OpenCode and Claude Code choices on your bot. Free text and approvals stay on Mac. Cursor and Codex are unavailable in this test build."
     public static let policy = "While armed, questions hold the watch for 10 minutes. Busy or unknown activity delays auto-off. Forwarding never arms it."
     public static let helpY = 40
     public static let telegramUserY = 112
@@ -10,6 +10,9 @@ public enum QuestionSetupChrome {
     public static let statusHeight = 56
     public static let relayCardHeight = 316
     public static let pluginCardHeight = 176
+    public static let claudeEnableTitle = "Enable Claude Code forwarding"
+    public static let claudeHelp = "Adds a PreToolUse AskUserQuestion hook to your Claude settings. Interactive sessions hold hooks until you trust the folder."
+    public static let claudeCardHeight = 148
     public static let enableTitle = "Enable OpenCode forwarding"
     public static let pluginHelp = "One-time setup for OpenCode 1.18.32 terminals. Restart OpenCode once, then use your normal chats."
     public static let connectionTitle = "Manual server connection"
