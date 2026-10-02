@@ -25,21 +25,28 @@ extension WatchRuntime {
 
     func syncQuestionSources() {
         guard !openCodeSetupInProgress else { return }
+        syncOpenCodeQuestionSources()
+        syncClaudeQuestionHook()
+    }
+
+    func syncOpenCodeQuestionSources() {
         let relay = questionRelaySettings()
         let settings = readNotifSecrets().openCodeQuestions
         guard !questionSourcesSuspended, !questionSourcesTerminated, relay.enabled,
               relay.includedKinds.contains(.openCode),
-              relay.telegram?.isComplete == true || relay.discord?.isComplete == true else { stopQuestionSources(); return }
+              relay.telegram?.isComplete == true || relay.discord?.isComplete == true else {
+            stopOpenCodeQuestionSources(); return
+        }
         if preferences.openCodePluginEnabled { syncOpenCodePlugin(relay: relay); return }
-        guard let settings else { stopQuestionSources(); return }
+        guard let settings else { stopOpenCodeQuestionSources(); return }
         guard let configuration = try? OpenCodeQuestionConfiguration(settings) else {
-            stopQuestionSources()
+            stopOpenCodeQuestionSources()
             openCodeQuestionState = .unavailable("Use http://127.0.0.1:PORT and an absolute project directory.")
             return
         }
         if openCodeSourceSettings == settings, openCodeRelaySettings == relay,
            openCodeQuestionSource != nil { return }
-        stopQuestionSources()
+        stopOpenCodeQuestionSources()
         questionRelay.refreshSettings()
         openCodeSourceSettings = settings
         openCodeRelaySettings = relay
@@ -64,7 +71,7 @@ extension WatchRuntime {
         source.start()
     }
 
-    func stopQuestionSources() {
+    func stopOpenCodeQuestionSources() {
         openCodeSetupRevision &+= 1
         stopOpenCodePlugin()
         let source = openCodeQuestionSource
@@ -73,6 +80,11 @@ extension WatchRuntime {
         openCodeRelaySettings = nil
         source?.stop()
         openCodeQuestionState = .stopped
+    }
+
+    func stopQuestionSources() {
+        stopOpenCodeQuestionSources()
+        stopClaudeQuestionHook()
     }
 
     @discardableResult

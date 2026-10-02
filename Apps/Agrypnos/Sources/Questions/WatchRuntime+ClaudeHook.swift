@@ -82,6 +82,7 @@ extension WatchRuntime {
                 let stripped = try ClaudeHookSettingsMerge.disable(settingsJSON: existing)
                 try writeClaudeSettings(stripped, to: url)
             }
+            stopClaudeQuestionHook()
             engine.preferences.claudeQuestionHookEnabled = false
             claudeSetupFailure = nil
             store.save(engine.preferences)
@@ -91,5 +92,30 @@ extension WatchRuntime {
         } catch {
             _ = claudeSetupFailed("Claude Code: couldn't update ~/.claude/settings.json. Existing hooks were left as they were.")
         }
+    }
+    func stopClaudeQuestionHook() {
+        claudeQuestionHookSource?.stop()
+        claudeQuestionHookSource = nil
+    }
+    func syncClaudeQuestionHook() {
+        let relay = questionRelaySettings()
+        let want = !questionSourcesSuspended && !questionSourcesTerminated
+            && relay.enabled
+            && preferences.claudeQuestionHookEnabled
+            && relay.includedKinds.contains(.claudeCode)
+            && (relay.telegram?.isComplete == true || relay.discord?.isComplete == true)
+        if !want {
+            stopClaudeQuestionHook()
+            return
+        }
+        if claudeQuestionHookSource != nil { return }
+        let source = ClaudeQuestionHookSource(
+            socketURL: claudeHookSocketURLOverride ?? ClaudeAskUserQuestionPayload.defaultSocketURL(),
+            uptime: { [weak self] in self?.questionUptime() ?? 0 },
+            receive: { [weak self] batch, submit, local in
+                self?.questionRelay.receive(batch, submit: submit, returnLocal: local) ?? false
+            })
+        do { try source.start(); claudeQuestionHookSource = source }
+        catch { claudeSetupFailure = "Claude Code: couldn't listen for the question hook." }
     }
 }

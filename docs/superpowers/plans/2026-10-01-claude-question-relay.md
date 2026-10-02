@@ -1106,7 +1106,7 @@ EOF
 
 Do not start a second Telegram poller or Discord Gateway. Do not call OpenCode HTTP or the TUI plugin from this source.
 
-- [ ] **Step 1: Write the failing Mac test for receive wiring**
+- [x] **Step 1: Write the failing Mac test for receive wiring**
 
 Add to `ClaudeHookRuntimeTests.swift`:
 
@@ -1158,13 +1158,13 @@ Add to `ClaudeHookRuntimeTests.swift`:
 
 `ClaudeQuestionHookSource` receive type: `@MainActor (QuestionBatch, @escaping @MainActor (QuestionAnswer) async -> QuestionDelivery, @escaping @MainActor () async -> Void) -> Bool`. Production `WatchRuntime.syncClaudeQuestionHook` passes `{ [weak self] batch, submit, local in self?.questionRelay.receive(batch, submit: submit, returnLocal: local) ?? false }`.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `swift test --filter ClaudeHookRuntimeTests.testHookStdinReachesReceiveAsClaudeCodeAndSubmitReturnsReturnedToHook`
 
 Expected: FAIL (`ClaudeQuestionHookSource` not found, or `claudeQuestionHookSource` nil because Task 4 enable did not start a listener)
 
-- [ ] **Step 3: Implement the listener and split sync**
+- [x] **Step 3: Implement the listener and split sync**
 
 Add `var claudeQuestionHookSource: ClaudeQuestionHookSource?` on `WatchRuntime`.
 
@@ -1391,7 +1391,7 @@ When OpenCode is not selected, `stopOpenCodeQuestionSources()` runs. That must n
 
 Do not extend `DiscordQuestionMessage.canRender` unless a test shows a Claude batch cannot publish in `.pending`. Initial publish uses `.pending`; `.returnedToHook` footer already exists on `QuestionMessageText.render`.
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 Run: `swift test --filter ClaudeAskUserQuestionPayloadTests`
 
@@ -1403,7 +1403,7 @@ Run: `bash Scripts/verify-linux.sh` (Linux: Core tests + file sizes)
 
 Expected: PASS. `syncQuestionSources` still starts OpenCode when OpenCode is selected; it also starts the Claude listener when `claudeQuestionHookEnabled` and `.claudeCode` are on.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add Apps/Agrypnos/Sources/Questions/ClaudeQuestionHookSource.swift \

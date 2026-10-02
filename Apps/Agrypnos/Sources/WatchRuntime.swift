@@ -34,6 +34,7 @@ final class WatchRuntime {
     var claudeSetupFailure: String?
     var claudeSettingsURLOverride: URL?
     var claudeHookSocketURLOverride: URL?
+    var claudeQuestionHookSource: ClaudeQuestionHookSource?
     var openCodeQuestionSource: OpenCodeQuestionSource?
     var openCodeSourceSettings: OpenCodeQuestionSettings?
     var openCodeRelaySettings: QuestionRelaySettings?
