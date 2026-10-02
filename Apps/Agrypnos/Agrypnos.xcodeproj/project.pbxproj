@@ -59,6 +59,7 @@
 		9C1C9D3FC7BC392A39D5340F /* agrypnos-opencode.js in Resources */ = {isa = PBXBuildFile; fileRef = 6D0C96811CCA0F6FFA86CAF4 /* agrypnos-opencode.js */; };
 		56FD26ABA3AFE6E48EEF6D15 /* WatchRuntime+OpenCodePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 982D31868CD5F2C529068373 /* WatchRuntime+OpenCodePlugin.swift */; };
 		46D5598EDF13B42854107506 /* PopoverController+OpenCodePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1205EFF36DB8A2299EDE014 /* PopoverController+OpenCodePlugin.swift */; };
+		D5B02F18C3E95A2B0F7D4C61 /* ClaudeQuestionHookProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4A91E07B2D84F1A9E6C3B50 /* ClaudeQuestionHookProcess.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -116,6 +117,7 @@
 		6D0C96811CCA0F6FFA86CAF4 /* agrypnos-opencode.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "agrypnos-opencode.js"; sourceTree = "<group>"; };
 		982D31868CD5F2C529068373 /* WatchRuntime+OpenCodePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+OpenCodePlugin.swift"; sourceTree = "<group>"; };
 		A1205EFF36DB8A2299EDE014 /* PopoverController+OpenCodePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+OpenCodePlugin.swift"; sourceTree = "<group>"; };
+		C4A91E07B2D84F1A9E6C3B50 /* ClaudeQuestionHookProcess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeQuestionHookProcess.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -236,6 +238,7 @@
 				1B758FA4AA59BA763C06F474 /* OpenCodeEventFrames.swift */,
 				1039890FF19ADB62E5C568F9 /* OpenCodeQuestionSource.swift */,
 				982D31868CD5F2C529068373 /* WatchRuntime+OpenCodePlugin.swift */,
+				C4A91E07B2D84F1A9E6C3B50 /* ClaudeQuestionHookProcess.swift */,
 				5362DD1B51F4A0ADBBF495E0 /* OpenCodePluginQuestionSource.swift */,
 				43A0E7328788AD4D4AA3312B /* OpenCodeBridgeSocket.swift */,
 				70151CD50AC2A5B8DEFBEE80 /* OpenCodePrivateFiles.swift */,
@@ -391,6 +394,7 @@
 				26997208C8E3082769BE45F2 /* OpenCodeQuestionSource.swift in Sources */,
 				46D5598EDF13B42854107506 /* PopoverController+OpenCodePlugin.swift in Sources */,
 				56FD26ABA3AFE6E48EEF6D15 /* WatchRuntime+OpenCodePlugin.swift in Sources */,
+				D5B02F18C3E95A2B0F7D4C61 /* ClaudeQuestionHookProcess.swift in Sources */,
 				C5D5B6F1510F4A16AB416D16 /* OpenCodePluginQuestionSource.swift in Sources */,
 				AD94AA2A12A83EA1A023A453 /* OpenCodeBridgeSocket.swift in Sources */,
 				2AB51F102FB8206FEF36F1B1 /* OpenCodePrivateFiles.swift in Sources */,

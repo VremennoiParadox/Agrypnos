@@ -92,4 +92,20 @@ public enum ClaudeAskUserQuestionPayload {
         guard batch.isValid else { throw Error.invalidRequest }
         return (batch, questions)
     }
+
+    public static func helperStdout(stdin: Data, exchange: (Data) throws -> Data) -> Data {
+        do {
+            _ = try decode(stdin, receivedUptime: 0)
+            let reply = try exchange(stdin)
+            return isSufficientAskUserQuestionOutput(reply) ? reply : nativeFallback
+        } catch {
+            return nativeFallback
+        }
+    }
+
+    public static func defaultSocketURL() -> URL {
+        FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Application Support/Agrypnos/claude-question-hook", isDirectory: true)
+            .appendingPathComponent("hook.sock")
+    }
 }

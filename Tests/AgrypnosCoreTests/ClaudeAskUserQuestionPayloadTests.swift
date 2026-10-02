@@ -77,4 +77,42 @@ final class ClaudeAskUserQuestionPayloadTests: XCTestCase {
         let updated = try XCTUnwrap(specific["updatedInput"] as? [String: Any])
         XCTAssertEqual(updated["answers"] as? [String: String], ["Which colors?": "Red, Blue"])
     }
+
+    func testHelperStdoutWritesAnswersFromExchange() throws {
+        let batch = try ClaudeAskUserQuestionPayload.decode(fixture, receivedUptime: 0)
+        let answer = QuestionAnswer(key: batch.key, selections: [
+            QuestionSelection(questionID: "Which framework?", optionIDs: ["Vue"])
+        ])
+        let expected = try ClaudeAskUserQuestionPayload.stdout(original: fixture, answer: answer)
+        let out = ClaudeAskUserQuestionPayload.helperStdout(stdin: fixture) { stdin in
+            XCTAssertEqual(stdin, fixture)
+            return expected
+        }
+        XCTAssertEqual(out, expected)
+        XCTAssertTrue(ClaudeAskUserQuestionPayload.isSufficientAskUserQuestionOutput(out))
+    }
+
+    func testHelperStdoutFallsBackWhenAgrypnosUnavailable() {
+        let out = ClaudeAskUserQuestionPayload.helperStdout(stdin: fixture) { _ in
+            throw ClaudeAskUserQuestionPayload.Error.invalidRequest
+        }
+        XCTAssertEqual(out, ClaudeAskUserQuestionPayload.nativeFallback)
+        XCTAssertFalse(ClaudeAskUserQuestionPayload.isSufficientAskUserQuestionOutput(out))
+    }
+
+    func testHelperStdoutRejectsAllowAloneFromExchange() {
+        let allowAlone = Data(#"""
+        {"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow"}}
+        """#.utf8)
+        let out = ClaudeAskUserQuestionPayload.helperStdout(stdin: fixture) { _ in allowAlone }
+        XCTAssertEqual(out, ClaudeAskUserQuestionPayload.nativeFallback)
+    }
+
+    func testHelperStdoutFallsBackOnUnparseableStdin() {
+        let out = ClaudeAskUserQuestionPayload.helperStdout(stdin: Data("not-json".utf8)) { _ in
+            XCTFail("must not contact Agrypnos")
+            return Data()
+        }
+        XCTAssertEqual(out, ClaudeAskUserQuestionPayload.nativeFallback)
+    }
 }
