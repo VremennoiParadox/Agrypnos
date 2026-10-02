@@ -60,10 +60,6 @@ final class PopoverSectionTests: XCTestCase {
                 .notifDiscordInbound,
                 .notifTelegram,
                 .notifTelegramInbound,
-                .questionRelay,
-                .pluginConnection,
-                .claudeHook,
-                .openCodeQuestions,
                 .notifSetup,
                 .notifClear,
             ]
@@ -158,6 +154,7 @@ final class PopoverSectionLayoutTests: XCTestCase {
                 + PopoverStackLayout.titleRowHeight
                 + PopoverCopyLayout.helpHeightPoints
                 + AgentKind.allCases.count * PopoverStackLayout.switchRowHeight
+                + PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset
         )
         XCTAssertEqual(PopoverStackLayout.includeSwitchY(index: 0), PopoverStackLayout.prefControlY)
@@ -166,7 +163,7 @@ final class PopoverSectionLayoutTests: XCTestCase {
             PopoverStackLayout.prefControlY + 3 * PopoverStackLayout.switchRowHeight
         )
         XCTAssertEqual(
-            PopoverStackLayout.includeSwitchY(index: 3) + PopoverStackLayout.switchRowHeight
+            PopoverStackLayout.includeForwardingButtonY + PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset,
             layout.agentInclude!.height
         )
@@ -195,7 +192,7 @@ final class PopoverSectionLayoutTests: XCTestCase {
     func testNotifSectionShowsEnableDiscordTelegramInboundSetupAndClear() {
         let layout = PopoverStackLayout.make(section: .notif)
         XCTAssertEqual(layout.section, .notif)
-        XCTAssertEqual(layout.stackedCards.count, 10)
+        XCTAssertEqual(layout.stackedCards.count, 7)
         XCTAssertEqual(layout.notifEnable?.y, PopoverStackLayout.firstCardY)
         XCTAssertNil(layout.watch)
         XCTAssertNil(layout.duration)
@@ -264,7 +261,7 @@ final class PopoverSectionLayoutTests: XCTestCase {
         let agents = PopoverStackLayout.make(section: .agents).contentHeight
         let general = PopoverStackLayout.make(section: .general).contentHeight
         XCTAssertGreaterThan(agents, watch)
-        XCTAssertLessThan(agents, power)
+        XCTAssertNotEqual(agents, power)
         XCTAssertLessThan(watch, power)
         XCTAssertLessThan(general, power)
     }

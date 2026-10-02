@@ -31,10 +31,21 @@ public struct PopoverSectionResize: Equatable, Sendable {
         animated: Bool,
         currentHeight: Int? = nil,
         panelPowerMode: PanelPowerMode = .default,
+        showQuestionForwarding: Bool = false,
         showManualOpenCodeConnection: Bool = false
     ) -> PopoverSectionResize {
-        let fromLayout = PopoverStackLayout.make(section: from, panelPowerMode: panelPowerMode, showManualOpenCodeConnection: showManualOpenCodeConnection)
-        let toLayout = PopoverStackLayout.make(section: to, panelPowerMode: panelPowerMode, showManualOpenCodeConnection: showManualOpenCodeConnection)
+        let fromLayout = PopoverStackLayout.make(
+            section: from,
+            panelPowerMode: panelPowerMode,
+            showQuestionForwarding: from == .agents && showQuestionForwarding,
+            showManualOpenCodeConnection: showManualOpenCodeConnection
+        )
+        let toLayout = PopoverStackLayout.make(
+            section: to,
+            panelPowerMode: panelPowerMode,
+            showQuestionForwarding: to == .agents && showQuestionForwarding,
+            showManualOpenCodeConnection: showManualOpenCodeConnection
+        )
         let fromHeight = fromLayout.popoverHeight
         let toHeight = toLayout.popoverHeight
         let fromContentHeight = fromLayout.contentHeight
@@ -54,8 +65,8 @@ public struct PopoverSectionResize: Equatable, Sendable {
             timing: animatesHeight ? .easeInEaseOut : .none,
             allowsImplicitAnimation: animatesHeight,
             hidesOutgoingImmediately: true,
-            incomingCards: to.cards,
-            outgoingCards: from.cards,
+            incomingCards: to.cards(showQuestionForwarding: to == .agents && showQuestionForwarding),
+            outgoingCards: from.cards(showQuestionForwarding: from == .agents && showQuestionForwarding),
             documentHeightDuringMotion: toContentHeight
         )
     }

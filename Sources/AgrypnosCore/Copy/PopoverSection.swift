@@ -20,6 +20,7 @@ public enum PopoverCard: Equatable, Hashable, Sendable {
     case pluginConnection
     case claudeHook
     case openCodeQuestions
+    case questionForwardingBack
     case notifSetup
     case notifClear
 }
@@ -45,14 +46,20 @@ public enum PopoverSection: Int, CaseIterable, Sendable {
 
     public static var titles: [String] { allCases.map(\.title) }
 
-    public var cards: [PopoverCard] {
+    public var cards: [PopoverCard] { cards() }
+
+    public func cards(showQuestionForwarding: Bool = false) -> [PopoverCard] {
         switch self {
         case .watch: return [.watch, .duration, .lastWatchEnd]
         case .power: return [.panelPower, .hygiene, .battery, .ramp, .thermal]
-        case .agents: return [.agentInclude, .settle, .terminalBusy]
+        case .agents:
+            if showQuestionForwarding {
+                return [.questionForwardingBack, .questionRelay, .pluginConnection, .claudeHook, .openCodeQuestions]
+            }
+            return [.agentInclude, .settle, .terminalBusy]
         case .notif: return [
             .notifEnable, .notifDiscord, .notifDiscordInbound, .notifTelegram, .notifTelegramInbound,
-            .questionRelay, .pluginConnection, .claudeHook, .openCodeQuestions, .notifSetup, .notifClear,
+            .notifSetup, .notifClear,
         ]
         case .general: return [.login]
         }

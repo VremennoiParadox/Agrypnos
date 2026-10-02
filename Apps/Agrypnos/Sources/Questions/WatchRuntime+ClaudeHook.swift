@@ -35,9 +35,21 @@ extension WatchRuntime {
     private func writeClaudeSettings(_ data: Data, to url: URL) throws {
         let directory = url.deletingLastPathComponent()
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let temp = directory.appendingPathComponent(url.lastPathComponent + ".tmp")
+        let temp = directory.appendingPathComponent(".\(url.lastPathComponent).tmp")
+        if FileManager.default.fileExists(atPath: temp.path) {
+            try FileManager.default.removeItem(at: temp)
+        }
         try data.write(to: temp, options: .atomic)
-        _ = try FileManager.default.replaceItemAt(url, withItemAt: temp)
+        do {
+            if FileManager.default.fileExists(atPath: url.path) {
+                _ = try FileManager.default.replaceItemAt(url, withItemAt: temp)
+            } else {
+                try FileManager.default.moveItem(at: temp, to: url)
+            }
+        } catch {
+            try? FileManager.default.removeItem(at: temp)
+            throw error
+        }
     }
     func enableClaudeQuestionHook() async -> Bool {
         if let reason = claudeSetupPrerequisite { return claudeSetupFailed(reason) }
@@ -64,15 +76,20 @@ extension WatchRuntime {
     }
     func disableClaudeQuestionHook() {
         let url = claudeSettingsURLOverride ?? claudeSettingsURL
-        if let existing = try? Data(contentsOf: url),
-           let stripped = try? ClaudeHookSettingsMerge.disable(settingsJSON: existing) {
-            try? writeClaudeSettings(stripped, to: url)
+        do {
+            if FileManager.default.fileExists(atPath: url.path) {
+                let existing = try Data(contentsOf: url)
+                let stripped = try ClaudeHookSettingsMerge.disable(settingsJSON: existing)
+                try writeClaudeSettings(stripped, to: url)
+            }
+            engine.preferences.claudeQuestionHookEnabled = false
+            claudeSetupFailure = nil
+            store.save(engine.preferences)
+            questionRelay.refreshSettings()
+            syncQuestionSources()
+            delegate?.watchRuntimeDidChange(self)
+        } catch {
+            _ = claudeSetupFailed("Claude Code: couldn't update ~/.claude/settings.json. Existing hooks were left as they were.")
         }
-        engine.preferences.claudeQuestionHookEnabled = false
-        claudeSetupFailure = nil
-        store.save(engine.preferences)
-        questionRelay.refreshSettings()
-        syncQuestionSources()
-        delegate?.watchRuntimeDidChange(self)
     }
 }

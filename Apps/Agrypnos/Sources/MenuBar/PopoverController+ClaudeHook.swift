@@ -12,7 +12,7 @@ extension PopoverController {
         claudeDisableButton = setupClaudeButton("Disable", action: #selector(disableClaudeHook), in: card, x: ci, y: 116)
         claudeDisableButton.setAccessibilityLabel("Disable Claude Code forwarding")
         claudeEnableButton.setAccessibilityHelp(QuestionSetupChrome.claudeHelp)
-        claudeHookStatus = PopoverForm.help("", in: card, y: 144, x: ci, width: cw, lines: 2)
+        claudeHookStatus = PopoverForm.help("", in: card, y: CGFloat(QuestionSetupChrome.claudeStatusY), x: ci, width: cw, lines: 2)
     }
     private func setupClaudeButton(_ title: String, action: Selector, in card: CardView, x: CGFloat, y: CGFloat) -> NSButton {
         let button = NSButton(title: title, target: self, action: action)

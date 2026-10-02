@@ -95,9 +95,9 @@ final class PopoverSectionResizeTests: XCTestCase {
     func testMidEaseUsesLiveWindowHeightWithoutKeepingOutgoing() {
         let watch = PopoverStackLayout.make(section: .watch)
         let agents = PopoverStackLayout.make(section: .agents)
-        let power = PopoverStackLayout.make(section: .power)
+        let leftover = PopoverStackLayout.maxVisibleHeight
         XCTAssertLessThan(watch.popoverHeight, agents.popoverHeight)
-        XCTAssertLessThan(agents.popoverHeight, power.popoverHeight)
+        XCTAssertNotEqual(agents.popoverHeight, leftover)
 
         let rest = PopoverSectionResize.make(from: .watch, to: .agents, animated: true)
         XCTAssertTrue(rest.hidesOutgoingImmediately)
@@ -107,15 +107,14 @@ final class PopoverSectionResizeTests: XCTestCase {
             from: .watch,
             to: .agents,
             animated: true,
-            currentHeight: power.popoverHeight
+            currentHeight: leftover
         )
         XCTAssertTrue(midEase.animatesHeight)
         XCTAssertEqual(midEase.fromHeight, watch.popoverHeight)
         XCTAssertEqual(midEase.toHeight, agents.popoverHeight)
         XCTAssertTrue(midEase.hidesOutgoingImmediately)
         XCTAssertEqual(midEase.documentHeightDuringMotion, agents.contentHeight)
-        XCTAssertLessThan(midEase.toHeight, power.popoverHeight)
-        XCTAssertNotEqual(midEase.toHeight, power.popoverHeight)
+        XCTAssertNotEqual(midEase.toHeight, leftover)
 
         let alreadyThere = PopoverSectionResize.make(
             from: .watch,
@@ -129,16 +128,17 @@ final class PopoverSectionResizeTests: XCTestCase {
         XCTAssertEqual(alreadyThere.documentHeightDuringMotion, agents.contentHeight)
     }
 
-    func testNotifDocumentKeepsFullContentHeightNotThe720Clip() {
+    func testNotifDocumentMatchesContentHeight() {
         let notif = PopoverStackLayout.make(section: .notif)
-        XCTAssertTrue(notif.needsScroll)
-        XCTAssertEqual(notif.popoverHeight, PopoverStackLayout.maxVisibleHeight)
-        XCTAssertGreaterThan(notif.contentHeight, notif.popoverHeight)
+        XCTAssertEqual(
+            notif.popoverHeight,
+            min(notif.contentHeight, PopoverStackLayout.maxVisibleHeight)
+        )
+        XCTAssertEqual(notif.needsScroll, notif.contentHeight > notif.popoverHeight)
 
         let motion = PopoverSectionResize.make(from: .watch, to: .notif, animated: true)
         XCTAssertTrue(motion.hidesOutgoingImmediately)
         XCTAssertEqual(motion.documentHeightDuringMotion, notif.contentHeight)
-        XCTAssertGreaterThan(motion.documentHeightDuringMotion, motion.toHeight)
         XCTAssertEqual(motion.toHeight, notif.popoverHeight)
     }
 

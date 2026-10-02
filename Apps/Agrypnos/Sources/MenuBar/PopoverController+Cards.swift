@@ -112,6 +112,24 @@ extension PopoverController {
             toggle.state = AgentIncludeChrome.defaultIncluded.contains(kind) ? .on : .off
             return toggle
         }
+        questionForwardingButton = NSButton(
+            title: QuestionSetupChrome.title,
+            target: self,
+            action: #selector(showQuestionForwardingSettings)
+        )
+        questionForwardingButton.bezelStyle = .rounded
+        questionForwardingButton.controlSize = .small
+        questionForwardingButton.sizeToFit()
+        questionForwardingButton.setAccessibilityLabel(QuestionSetupChrome.title)
+        questionForwardingButton.setAccessibilityHelp(QuestionSetupChrome.help)
+        let buttonW = min(max(questionForwardingButton.frame.width + 8, 120), cw)
+        questionForwardingButton.frame = NSRect(
+            x: ci,
+            y: CGFloat(PopoverStackLayout.includeForwardingButtonY),
+            width: buttonW,
+            height: max(questionForwardingButton.frame.height, 21)
+        )
+        card.addSubview(questionForwardingButton)
     }
 
     func addSettleCard(_ card: CardView, contentW: CGFloat, ci: CGFloat, cw: CGFloat) {

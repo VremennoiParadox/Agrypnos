@@ -5,6 +5,39 @@ import AgrypnosCore
 #endif
 
 extension PopoverController {
+    func addQuestionForwardingBackCard(_ card: CardView, ci: CGFloat, cw: CGFloat) {
+        questionForwardingBackButton = NSButton(
+            title: AgrypnosCopy.agentInclude,
+            target: self,
+            action: #selector(hideQuestionForwardingSettings)
+        )
+        questionForwardingBackButton.bezelStyle = .rounded
+        questionForwardingBackButton.controlSize = .regular
+        questionForwardingBackButton.setAccessibilityLabel(AgrypnosCopy.agentInclude)
+        questionForwardingBackButton.sizeToFit()
+        let width = min(max(questionForwardingBackButton.frame.width + 8, 120), cw)
+        let height = max(questionForwardingBackButton.frame.height, 24)
+        let y = (CGFloat(PopoverStackLayout.loginCardHeight) - height) / 2
+        questionForwardingBackButton.frame = NSRect(x: ci, y: y, width: width, height: height)
+        card.addSubview(questionForwardingBackButton)
+    }
+
+    @objc func showQuestionForwardingSettings() {
+        stopRecordingIfNeeded()
+        showQuestionForwarding = true
+        applySection(.agents)
+        loadQuestionFields()
+        refresh()
+    }
+
+    @objc func hideQuestionForwardingSettings() {
+        stopRecordingIfNeeded()
+        commitQuestionUserFields()
+        showQuestionForwarding = false
+        applySection(.agents)
+        refresh()
+    }
+
     func addQuestionRelayCard(_ card: CardView, contentW: CGFloat, ci: CGFloat, cw: CGFloat,
                               swW: CGFloat, swH: CGFloat) {
         forwardQuestionsSwitch = PopoverForm.switchRow(in: card, y: ci,

@@ -15,12 +15,15 @@ extension PopoverController {
             animated: popover.isShown && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
             currentHeight: Int((popoverRoot.window?.frame.height ?? popover.contentSize.height).rounded()),
             panelPowerMode: runtime?.preferences.panelPowerMode ?? .default,
+            showQuestionForwarding: showQuestionForwarding,
             showManualOpenCodeConnection: showManualOpenCodeConnection
         )
+        if section != .agents { showQuestionForwarding = false }
         currentSection = section
         let layout = PopoverStackLayout.make(
             section: section,
             panelPowerMode: runtime?.preferences.panelPowerMode ?? .default,
+            showQuestionForwarding: section == .agents && showQuestionForwarding,
             showManualOpenCodeConnection: showManualOpenCodeConnection
         )
         let pad = CGFloat(PopoverStackLayout.pad)
@@ -105,6 +108,7 @@ extension PopoverController {
         PopoverForm.apply(notifDiscordInboundCard, slot: layout.notifDiscordInbound, pad: pad, width: width)
         PopoverForm.apply(notifTelegramCard, slot: layout.notifTelegram, pad: pad, width: width)
         PopoverForm.apply(notifTelegramInboundCard, slot: layout.notifTelegramInbound, pad: pad, width: width)
+        PopoverForm.apply(questionForwardingBackCard, slot: layout.questionForwardingBack, pad: pad, width: width)
         PopoverForm.apply(questionRelayCard, slot: layout.questionRelay, pad: pad, width: width)
         PopoverForm.apply(openCodePluginCard, slot: layout.pluginConnection, pad: pad, width: width)
         PopoverForm.apply(claudeHookCard, slot: layout.claudeHook, pad: pad, width: width)

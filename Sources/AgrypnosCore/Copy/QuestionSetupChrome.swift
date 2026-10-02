@@ -12,7 +12,8 @@ public enum QuestionSetupChrome {
     public static let pluginCardHeight = 176
     public static let claudeEnableTitle = "Enable Claude Code forwarding"
     public static let claudeHelp = "Adds a PreToolUse AskUserQuestion hook to your Claude settings. Interactive sessions hold hooks until you trust the folder."
-    public static let claudeCardHeight = 148
+    public static let claudeStatusY = 144
+    public static let claudeCardHeight = claudeStatusY + 32 + 12
     public static let enableTitle = "Enable OpenCode forwarding"
     public static let pluginHelp = "One-time setup for OpenCode 1.18.32 terminals. Restart OpenCode once, then use your normal chats."
     public static let connectionTitle = "Manual server connection"

@@ -64,6 +64,10 @@ public struct PopoverStackLayout: Equatable, Sendable {
         prefControlY + index * switchRowHeight
     }
 
+    public static var includeForwardingButtonY: Int {
+        includeSwitchY(index: AgentKind.allCases.count)
+    }
+
     public static var notifEnableHelpY: Int { prefTitleY + titleRowHeight }
     public static var notifEnableSwitchY: Int {
         notifEnableHelpY + PopoverCopyLayout.notifEnableHelpHeightPoints
@@ -109,18 +113,20 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public let pluginConnection: PopoverSlot?
     public let claudeHook: PopoverSlot?
     public let openCodeQuestions: PopoverSlot?
+    public let questionForwardingBack: PopoverSlot?
     public let notifSetup: PopoverSlot?
     public let notifClear: PopoverSlot?
     public let shortcutY: Int?
     public let hotkeyHint: PopoverSlot?
     public let quitY: Int?
+    public let showQuestionForwarding: Bool
     public let contentHeight: Int
     public let popoverHeight: Int
 
     public var needsScroll: Bool { contentHeight > popoverHeight }
 
     public var stackedCards: [PopoverSlot] {
-        section.cards.compactMap { slot($0) }
+        section.cards(showQuestionForwarding: showQuestionForwarding).compactMap { slot($0) }
     }
 
     public func slot(_ card: PopoverCard) -> PopoverSlot? {
@@ -146,6 +152,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
         case .pluginConnection: return pluginConnection
         case .claudeHook: return claudeHook
         case .openCodeQuestions: return openCodeQuestions
+        case .questionForwardingBack: return questionForwardingBack
         case .notifSetup: return notifSetup
         case .notifClear: return notifClear
         }
@@ -154,6 +161,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static func make(
         section: PopoverSection = .default,
         panelPowerMode: PanelPowerMode = .default,
+        showQuestionForwarding: Bool = false,
         showManualOpenCodeConnection: Bool = false
     ) -> PopoverStackLayout {
         let watchHeight = inset + 28 + PopoverCopyLayout.captionHeightPoints + inset
@@ -168,6 +176,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
             + titleRowHeight
             + PopoverCopyLayout.helpHeightPoints
             + AgentKind.allCases.count * switchRowHeight
+            + switchRowHeight
             + inset
         let settleHeight =
             inset
@@ -257,6 +266,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
             case .pluginConnection: return QuestionSetupChrome.pluginCardHeight
             case .claudeHook: return QuestionSetupChrome.claudeCardHeight
             case .openCodeQuestions: return QuestionSetupChrome.connectionCardHeight
+            case .questionForwardingBack: return loginCardHeight
             case .notifSetup: return loginCardHeight
             case .notifClear: return loginCardHeight
             }
@@ -270,7 +280,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
         }
 
         var placed: [PopoverCard: PopoverSlot] = [:]
-        for card in section.cards {
+        for card in section.cards(showQuestionForwarding: showQuestionForwarding) {
             if card == .openCodeQuestions, !showManualOpenCodeConnection { continue }
             if card == .ramp, !PanelPowerChrome.showsLidOpenRamp(panelPowerMode) {
                 continue
@@ -291,7 +301,8 @@ public struct PopoverStackLayout: Equatable, Sendable {
             hotkeyHint = hint
             quitY = hint.maxY + 10
             contentHeight = quitY! + quitReserve
-        } else if let last = section.cards.last.flatMap({ placed[$0] }) {
+        } else if let last = section.cards(showQuestionForwarding: showQuestionForwarding)
+            .compactMap({ placed[$0] }).last {
             contentHeight = last.maxY + pad
         } else {
             contentHeight = firstCardY + pad
@@ -322,11 +333,13 @@ public struct PopoverStackLayout: Equatable, Sendable {
             pluginConnection: placed[.pluginConnection],
             claudeHook: placed[.claudeHook],
             openCodeQuestions: placed[.openCodeQuestions],
+            questionForwardingBack: placed[.questionForwardingBack],
             notifSetup: placed[.notifSetup],
             notifClear: placed[.notifClear],
             shortcutY: shortcutY,
             hotkeyHint: hotkeyHint,
             quitY: quitY,
+            showQuestionForwarding: showQuestionForwarding,
             contentHeight: contentHeight,
             popoverHeight: popoverHeight
         )
