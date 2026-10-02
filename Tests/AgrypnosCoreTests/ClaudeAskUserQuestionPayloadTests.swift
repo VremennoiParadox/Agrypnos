@@ -34,4 +34,47 @@ final class ClaudeAskUserQuestionPayloadTests: XCTestCase {
         """#.utf8)
         XCTAssertThrowsError(try ClaudeAskUserQuestionPayload.decode(bash, receivedUptime: 1))
     }
+
+    func testStdoutAllowEchoesQuestionsAndMapsLabels() throws {
+        let batch = try ClaudeAskUserQuestionPayload.decode(fixture, receivedUptime: 1000)
+        let answer = QuestionAnswer(key: batch.key, selections: [
+            QuestionSelection(questionID: "Which framework?", optionIDs: ["Vue"])
+        ])
+        let body = try ClaudeAskUserQuestionPayload.stdout(original: fixture, answer: answer)
+        XCTAssertTrue(ClaudeAskUserQuestionPayload.isSufficientAskUserQuestionOutput(body))
+        let root = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Any])
+        let specific = try XCTUnwrap(root["hookSpecificOutput"] as? [String: Any])
+        XCTAssertEqual(specific["hookEventName"] as? String, "PreToolUse")
+        XCTAssertEqual(specific["permissionDecision"] as? String, "allow")
+        let updated = try XCTUnwrap(specific["updatedInput"] as? [String: Any])
+        let questions = try XCTUnwrap(updated["questions"] as? [[String: Any]])
+        XCTAssertEqual(questions.first?["question"] as? String, "Which framework?")
+        XCTAssertEqual(questions.first?["header"] as? String, "Framework")
+        XCTAssertEqual(updated["answers"] as? [String: String], ["Which framework?": "Vue"])
+    }
+
+    func testAllowAloneIsNotSufficient() throws {
+        let allowAlone = Data(#"""
+        {"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow"}}
+        """#.utf8)
+        XCTAssertFalse(ClaudeAskUserQuestionPayload.isSufficientAskUserQuestionOutput(allowAlone))
+        XCTAssertFalse(ClaudeAskUserQuestionPayload.isSufficientAskUserQuestionOutput(
+            ClaudeAskUserQuestionPayload.nativeFallback))
+    }
+
+    func testMultiSelectJoinsLabelsWithComma() throws {
+        let multi = Data(#"""
+        {"session_id":"sess_test","cwd":"/Users/test/project","hook_event_name":"PreToolUse","tool_name":"AskUserQuestion","tool_use_id":"toolu_02","tool_input":{"questions":[{"question":"Which colors?","header":"Colors","options":[{"label":"Red","description":"Warm"},{"label":"Blue","description":"Cool"}],"multiSelect":true}]}}
+        """#.utf8)
+        let batch = try ClaudeAskUserQuestionPayload.decode(multi, receivedUptime: 10)
+        XCTAssertTrue(batch.questions[0].multiple)
+        let answer = QuestionAnswer(key: batch.key, selections: [
+            QuestionSelection(questionID: "Which colors?", optionIDs: ["Red", "Blue"])
+        ])
+        let body = try ClaudeAskUserQuestionPayload.stdout(original: multi, answer: answer)
+        let root = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Any])
+        let specific = try XCTUnwrap(root["hookSpecificOutput"] as? [String: Any])
+        let updated = try XCTUnwrap(specific["updatedInput"] as? [String: Any])
+        XCTAssertEqual(updated["answers"] as? [String: String], ["Which colors?": "Red, Blue"])
+    }
 }

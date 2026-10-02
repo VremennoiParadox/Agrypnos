@@ -13,6 +13,46 @@ public enum ClaudeAskUserQuestionPayload {
         return request.batch
     }
 
+    public static func stdout(original: Data, answer: QuestionAnswer) throws -> Data {
+        let parsed = try request(original)
+        guard answer.key == parsed.batch.key,
+              answer.selections.count == parsed.batch.questions.count else { throw Error.invalidAnswer }
+        var answers: [String: String] = [:]
+        for (question, selection) in zip(parsed.batch.questions, answer.selections) {
+            guard selection.questionID == question.id,
+                  !selection.optionIDs.isEmpty,
+                  Set(selection.optionIDs).count == selection.optionIDs.count,
+                  question.multiple || selection.optionIDs.count == 1 else { throw Error.invalidAnswer }
+            let selected = Set(selection.optionIDs)
+            guard selected.isSubset(of: Set(question.options.map(\.id))) else { throw Error.invalidAnswer }
+            let labels = question.options.filter { selected.contains($0.id) }.map(\.label)
+            answers[question.prompt] = labels.joined(separator: ", ")
+        }
+        let updated: [String: Any] = ["questions": parsed.originalQuestions, "answers": answers]
+        let specific: [String: Any] = [
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow",
+            "updatedInput": updated
+        ]
+        let data = try JSONSerialization.data(withJSONObject: ["hookSpecificOutput": specific])
+        guard isSufficientAskUserQuestionOutput(data) else { throw Error.invalidAnswer }
+        return data
+    }
+
+    public static func isSufficientAskUserQuestionOutput(_ data: Data) -> Bool {
+        guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let specific = root["hookSpecificOutput"] as? [String: Any],
+              specific["hookEventName"] as? String == "PreToolUse",
+              specific["permissionDecision"] as? String == "allow",
+              let updated = specific["updatedInput"] as? [String: Any],
+              let questions = updated["questions"] as? [Any], !questions.isEmpty,
+              let answers = updated["answers"] as? [String: String],
+              !answers.isEmpty,
+              answers.values.allSatisfy({ !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty })
+        else { return false }
+        return true
+    }
+
     static func request(_ data: Data, receivedUptime: TimeInterval = 0) throws -> (batch: QuestionBatch, originalQuestions: Any) {
         guard data.count <= 256 * 1024 else { throw Error.invalidRequest }
         guard let root = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
