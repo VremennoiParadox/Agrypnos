@@ -269,17 +269,21 @@ prose questions, free text and permission/plan approvals stay on the Mac.
 
 1. Configure your own Telegram or Discord bot using the steps above, and
    enable its **inbound** switch. Idle-after-wait POST is independent.
-2. Save your **answering user ID** under Notif → Forward agent questions.
+2. Question forwarding for OpenCode and Claude Code is under
+   **Agents → Which tools count as busy → Forward agent questions**.
+   That opens the controls in the same popover. Notif does not have those cards.
+   Codex question forwarding is not there. Save your **answering user ID** there.
    For Telegram, temporarily turn inbound off, message your bot, then use
    `getUpdates` and copy `message.from.id`; this is your user ID, not the bot
    or chat ID. Turn inbound back on. For Discord, enable Developer Mode,
    right-click your own profile and choose **Copy User ID**. Only this user
    may answer questions, even in a shared chat/channel.
-3. Include **OpenCode** in Agents. In Notif, click **Enable OpenCode forwarding**.
+3. Include **OpenCode** in Agents. Open **Forward agent questions**, then click
+   **Enable OpenCode forwarding**.
    Setup installs and registers a global terminal plugin without changing
    your other OpenCode settings. It enables forwarding without arming the watch.
 4. **Restart OpenCode once to load forwarding**, then use your normal terminal
-   chats in any project. Wait for a real connected terminal count in Notif.
+   chats in any project. Wait for a real connected terminal count in that Agents pane.
    No server address, project directory, port or password is needed.
    This test build supports OpenCode **1.18.32** interactive terminals;
    headless and desktop clients have not been verified.
@@ -349,8 +353,11 @@ One click merges a `PreToolUse` hook matching `AskUserQuestion` into
 sessions hold hooks until you trust the folder.
 
 1. Configure your own Telegram or Discord bot, turn its inbound switch on, and
-   save your answering user ID under Notif → Forward agent questions.
-2. Select **Claude Code** in Agents. Click **Enable Claude Code forwarding**.
+   save your answering user ID under Agents → Which tools count as busy → Forward agent questions.
+   That opens the controls in the same popover. Notif does not have those cards.
+   Codex question forwarding is not there.
+2. Select **Claude Code** in Agents. Open **Forward agent questions**, then click
+   **Enable Claude Code forwarding**.
 3. In an already-trusted project, ask Claude Code a structured choice in the
    session you already started. Answer on your bot. That same session should
    continue with the chosen label.
@@ -367,7 +374,7 @@ Everything is in the popover, one section at a time.
 |---|---|
 | **Watch** | Keep the watch, How long (`∞`, `1h`, `3h`, custom minutes, **Agents**), and the last watch end |
 | **Power** | Dim panel or Sleep panel, brightness floor, keyboard backlight off, low-battery auto-off, brightness return time, thermal auto-off |
-| **Agents** | Idle wait (2–15 min), which tools count as busy (at least one), count terminal sessions as busy |
+| **Agents** | Idle wait (2–15 min), which tools count as busy (at least one), Forward agent questions (OpenCode and Claude Code), count terminal sessions as busy |
 | **Notif** | Idle message switch, Discord webhook, Telegram token and chat id, Telegram inbound, Discord inbound (token and channel), clear secrets, setup instructions |
 | **General** | Global shortcut (default `⌥⌘A`, remappable), launch at login, quit |
 

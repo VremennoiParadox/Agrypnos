@@ -54,16 +54,16 @@ public enum BotGuide {
 
     static func questionSetup(telegram: Bool) -> BotGuideSection {
         BotGuideSection(title: "OpenCode questions (test build)",
-            note: "Only OpenCode 1.18.32 is connected in this build. Free text and approvals stay on Mac.",
+            note: "Question forwarding for OpenCode and Claude Code is under Agents → Which tools count as busy → Forward agent questions. That opens the controls in the same popover. Notif does not have those cards. Codex question forwarding is not there. Only OpenCode 1.18.32 is connected in this build. Free text and approvals stay on Mac.",
             numbered: true, steps: [
                 BotGuideStep("Save your answering user ID", telegram
-                    ? "With Telegram inbound off, send your bot a message and use getUpdates as above. Copy message.from.id (your user, not the bot or chat). Paste it into Notif → Forward agent questions → Telegram. Then turn Telegram inbound on. Only that user can answer."
-                    : "Enable Discord Developer Mode, right-click your own profile → Copy User ID. Paste it into Notif → Forward agent questions → Discord. Turn Discord inbound on. The existing bot token and channel are used; the webhook does not handle answers."),
+                    ? "With Telegram inbound off, send your bot a message and use getUpdates as above. Copy message.from.id (your user, not the bot or chat). Paste it into Agents → Which tools count as busy → Forward agent questions → Telegram. Then turn Telegram inbound on. Only that user can answer."
+                    : "Enable Discord Developer Mode, right-click your own profile → Copy User ID. Paste it into Agents → Which tools count as busy → Forward agent questions → Discord. Turn Discord inbound on. The existing bot token and channel are used; the webhook does not handle answers."),
                 BotGuideStep("Enable OpenCode forwarding",
-                    "Select OpenCode in Agents, then click Enable OpenCode forwarding in Notif. Agrypnos installs and registers its global terminal plugin. Restart OpenCode once to load forwarding, then use your normal chats. No port or project-directory setup is needed.",
+                    "Select OpenCode in Agents. Open Agents → Which tools count as busy → Forward agent questions, then click Enable OpenCode forwarding. Agrypnos installs and registers its global terminal plugin. Restart OpenCode once to load forwarding, then use your normal chats. No port or project-directory setup is needed.",
                     link: BotGuideLink(title: "OpenCode plugins", url: "https://opencode.ai/docs/plugins/")),
                 BotGuideStep("Enable Claude Code forwarding",
-                    "Select Claude Code in Agents, then click Enable Claude Code forwarding in Notif. Agrypnos merges a PreToolUse AskUserQuestion hook into ~/.claude/settings.json and keeps your other hooks, including UserPromptSubmit / Stop / StopFailure. Interactive sessions hold hooks until you trust the folder. Ask a structured choice in that same Claude Code session and answer on your bot."),
+                    "Select Claude Code in Agents. Open Agents → Which tools count as busy → Forward agent questions, then click Enable Claude Code forwarding. Agrypnos merges a PreToolUse AskUserQuestion hook into ~/.claude/settings.json and keeps your other hooks, including UserPromptSubmit / Stop / StopFailure. Interactive sessions hold hooks until you trust the folder. Ask a structured choice in that same Claude Code session and answer on your bot."),
                 BotGuideStep("Answer a new question",
                     "Check for a connected terminal count. Start a new structured choice question in that same chat. Select every answer on your bot, review, then Send answers. Answer on Mac leaves it local without rejecting the question."),
                 BotGuideStep("Disable, remove, or use a server",

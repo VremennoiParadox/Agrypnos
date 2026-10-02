@@ -144,6 +144,13 @@ final class BotGuideCopyTests: XCTestCase {
         XCTAssertTrue(text.contains("UserPromptSubmit"))
         XCTAssertTrue(text.contains("brainrot") || text.contains("other hooks"))
         XCTAssertTrue(text.contains("Enable OpenCode forwarding"))
+        XCTAssertTrue(text.contains("Agents → Which tools count as busy → Forward agent questions"))
+        XCTAssertTrue(text.contains("That opens the controls in the same popover."))
+        XCTAssertTrue(text.contains("Notif does not have those cards."))
+        XCTAssertTrue(text.contains("Codex question forwarding is not there."))
+        XCTAssertFalse(text.contains("Enable OpenCode forwarding in Notif"))
+        XCTAssertFalse(text.contains("Enable Claude Code forwarding in Notif"))
+        XCTAssertFalse(text.contains("Notif → Forward agent questions"))
     }
 }
 
