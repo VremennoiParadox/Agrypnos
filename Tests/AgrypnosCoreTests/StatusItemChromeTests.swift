@@ -74,7 +74,7 @@ final class StatusItemChromeTests: XCTestCase {
 
         _ = engine.userSetEngaged(true, now: t0)
         XCTAssertEqual(engine.timerEnd, t0.addingTimeInterval(3_600))
-        XCTAssertNil(engine.statusItemRemainingSeconds(now: t0.addingTimeInterval(60)))
+        XCTAssertEqual(engine.statusItemRemainingSeconds(now: t0.addingTimeInterval(60)), 3540)
         chrome = StatusItemChrome.make(
             state: engine.statusItemState,
             remainingSeconds: 3_540

@@ -27,6 +27,8 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var applyingDurationChrome = false
     var minutesField: NSTextField!
     var durationHint: NSTextField!
+    var countdownLabel: NSTextField!
+    var countdownTimer: Timer?
     var keyboardSwitch: NSSwitch!
     var floorSwitch: NSSwitch!
     var floorPercentSlider: NSSlider!
@@ -148,7 +150,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
                 )
             )
         )
-        durationHint?.stringValue = hintCopy(for: runtime)
+        refreshCountdown()
         keyboardSwitch?.state = runtime.preferences.keyboardBacklightOff ? .on : .off
         floorSwitch?.state = runtime.preferences.applyBrightnessFloor ? .on : .off
         let floorRange = UserPreferences.brightnessFloorPercentRange
@@ -206,6 +208,12 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         refresh()
         NSApp.activate(ignoringOtherApps: true)
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        countdownTimer?.invalidate()
+        let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.refreshCountdown() }
+        }
+        countdownTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
         let window = popover.contentViewController?.view.window
         window?.makeKey()
         // Watch's Minutes field is the first NSTextField; AppKit focuses it on
@@ -219,6 +227,8 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     }
 
     func close() {
+        countdownTimer?.invalidate()
+        countdownTimer = nil
         commitMinutesIfChanged(onLeaveWatch: true)
         if currentSection == .notif {
             commitNotifFields()
@@ -266,11 +276,24 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         )
     }
 
+    func refreshCountdown() {
+        guard let runtime else { return }
+        durationHint?.stringValue = hintCopy(for: runtime)
+        let timed = runtime.preferences.duration.minutes != nil
+        durationHint?.frame.size.height = timed ? 32 : PopoverMetrics.durationHintHeight
+        let remaining = runtime.engine.statusItemRemainingSeconds(now: Date())
+            ?? (runtime.engine.holdingForIdlePost ? 0 : nil)
+        let text = AgrypnosCopy.durationCountdown(option: runtime.preferences.duration,
+                                                  engaged: runtime.engaged, remainingSeconds: remaining)
+        countdownLabel?.stringValue = text ?? ""
+        countdownLabel?.isHidden = text == nil
+    }
+
     private func hintCopy(for runtime: WatchRuntime) -> String {
         AgrypnosCopy.durationHint(
             option: runtime.preferences.duration,
             engaged: runtime.engaged,
-            remainingSeconds: nil,
+            remainingSeconds: runtime.engine.statusItemRemainingSeconds(now: Date()),
             thermalAutoOff: runtime.preferences.thermalAutoOff
         )
     }

@@ -17,6 +17,7 @@ public struct TelegramWatchStatus: Equatable, Sendable {
     public var liveBatteryPercent: Int?
     public var liveBatteryDischarging: Bool?
     public var panelPowerMode: PanelPowerMode
+    public var remainingSeconds: Int?
 
     public init(
         engaged: Bool,
@@ -32,7 +33,8 @@ public struct TelegramWatchStatus: Equatable, Sendable {
         userForcedThisSession: Bool,
         liveBatteryPercent: Int? = nil,
         liveBatteryDischarging: Bool? = nil,
-        panelPowerMode: PanelPowerMode = .floor
+        panelPowerMode: PanelPowerMode = .floor,
+        remainingSeconds: Int? = nil
     ) {
         self.engaged = engaged
         self.duration = duration
@@ -48,6 +50,7 @@ public struct TelegramWatchStatus: Equatable, Sendable {
         self.liveBatteryPercent = liveBatteryPercent
         self.liveBatteryDischarging = liveBatteryDischarging
         self.panelPowerMode = panelPowerMode
+        self.remainingSeconds = remainingSeconds
     }
 }
 
@@ -66,6 +69,9 @@ public enum TelegramWatchStatusCopy: Sendable {
                 ? "Lid is confirmed closed."
                 : "Lid is open or unconfirmed.",
         ]
+        if status.engaged, status.duration.minutes != nil, let seconds = status.remainingSeconds {
+            lines.append("Time left \(AgrypnosCopy.countdown(seconds: seconds)).")
+        }
         lines.append(status.panelPowerMode.statusLine)
         if status.duration == .untilAgentsSettle {
             lines.append(contentsOf: agentLines(status))
@@ -163,7 +169,8 @@ extension WatchEngine {
             userForcedThisSession: userForcedThisSession,
             liveBatteryPercent: livePercent,
             liveBatteryDischarging: liveDischarging,
-            panelPowerMode: preferences.panelPowerMode
+            panelPowerMode: preferences.panelPowerMode,
+            remainingSeconds: statusItemRemainingSeconds(now: now)
         )
     }
 }

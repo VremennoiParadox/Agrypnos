@@ -40,6 +40,8 @@ extension WatchRuntime {
     /// Quit must clear actual kernel-held SleepDisabled even if the engine already disengaged for POST.
     func prepareForTermination() {
         guard ownsWakeHold else { return }
+        deadlineTimer?.invalidate()
+        deadlineTimer = nil
         stopObservingMacSleepWake()
         inboundPoller.stop()
         discordGateway.stop()
@@ -77,7 +79,7 @@ extension WatchRuntime {
                 _ = setKernel(false)
             }
             if readKernel() == .held {
-                let rawClosed = readLid()
+                let rawClosed = readLid() == true
                 if LidCloseConfirm.shouldCaptureBeforeClosedHygiene(rawClosed: rawClosed) {
                     recaptureOpenLidHygiene()
                 }
@@ -90,6 +92,7 @@ extension WatchRuntime {
                     recaptureOpenLidHygiene()
                 }
                 startLidPulse()
+                syncDeadlineTimer()
                 notify(AgrypnosCopy.leftoverNotify(for: engine.preferences.panelPowerMode))
             }
         }

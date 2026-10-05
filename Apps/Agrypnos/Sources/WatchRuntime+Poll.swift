@@ -175,6 +175,7 @@ extension WatchRuntime {
             kernelSleepDisabled: kernel,
             observeAgents: observeAgents
         )
+        syncDeadlineTimer()
         diagnostics.tick(engine: engine, settle: engine.engaged ? engine.settle : previousSettle, busy: agents.anyBusy(included: engine.preferences.includedAgentKinds),
                          now: now, kernel: kernel, observed: observeAgents)
         for command in commands {
@@ -182,13 +183,14 @@ extension WatchRuntime {
                 WatchDiagnostics.event("watch end reason=\(reason) lidConfirmed=\(engine.lastDisengageLidClosed)")
             }
         }
-        if commands.contains(where: Self.isPostIdleAfterWait) {
+        if commands.contains(where: Self.isOutboundPost) {
             WatchDiagnostics.event("idle POST decision enabled=\(engine.preferences.notifEnabled)")
             let token = idleOutbound.beginPost()
             let enabled = engine.preferences.notifEnabled
+            let reason: DisengageReason = commands.contains(.postTimerExpiredNotif) ? .timerExpired : .agentsSettled
             idlePostTask?.cancel()
             idlePostTask = Task { @MainActor in
-                await self.postIdle(enabled)
+                await self.postIdle(enabled, reason)
                 guard self.idleOutbound.completePost(token: token) else { return }
                 self.idlePostTask = nil
                 WatchDiagnostics.event("idle POST attempt complete; releasing hold")
@@ -203,24 +205,25 @@ extension WatchRuntime {
     }
 
     func finishTickCommands(_ commands: [WatchCommand]) {
-        var applyCommands = commands.filter { !Self.isPostIdleAfterWait($0) }
+        var applyCommands = commands.filter { !Self.isOutboundPost($0) }
         var released = false
         for command in commands {
             if case .disengage(let reason) = command {
                 if !disarmKernel() {
                     apply(engine.rollbackDisarmFailure(now: Date()))
+                    syncDeadlineTimer()
                     notify("Couldn't verify SleepDisabled was cleared.")
                     store.save(engine.preferences)
                     return
                 }
                 // Recheck after the blocking clear/read, preserving live confirmation during POST.
                 let rawClosed = readLid()
-                if engine.holdingForIdlePost {
-                    _ = engine.observeLid(closed: rawClosed, now: Date())
-                    if !engine.userOffLidCloseConfirmed(rawClosed: rawClosed) {
+                if engine.holdingForIdlePost, reason != .timerExpired {
+                    _ = engine.observeLid(closed: rawClosed == true, now: Date())
+                    if !engine.userOffLidCloseConfirmed(rawClosed: rawClosed == true) {
                         applyCommands.removeAll { $0 == .requestSleep }
                     }
-                } else if !rawClosed {
+                } else if reason == .timerExpired ? rawClosed == false : rawClosed != true {
                     applyCommands.removeAll { $0 == .requestSleep }
                 }
                 engine.completeIdlePostHold()
@@ -240,23 +243,22 @@ extension WatchRuntime {
             dropSavedHygieneWithoutWrite()
         } else {
             restoreHygiene()
-            if engine.preferences.panelPowerMode == .displaySleep, !readLid() {
+            if engine.preferences.panelPowerMode == .displaySleep, readLid() != true {
                 apply([.wakeDisplay])
             }
         }
     }
 
-    static func isPostIdleAfterWait(_ command: WatchCommand) -> Bool {
-        if case .postIdleAfterWaitNotif = command { return true }
-        return false
+    static func isOutboundPost(_ command: WatchCommand) -> Bool {
+        command == .postIdleAfterWaitNotif || command == .postTimerExpiredNotif
     }
 
     /// Popover/hotkey off: sample lid, restore hygiene only if we are not about to sleepnow.
     @discardableResult
     func applyUserOff() -> HygieneApplyResult {
         // Observe only: close-confirm commands must not reassert the hold we just cleared.
-        _ = engine.observeLid(closed: readLid(), now: Date())
-        let confirmed = engine.userOffLidCloseConfirmed(rawClosed: readLid())
+        _ = engine.observeLid(closed: readLid() == true, now: Date())
+        let confirmed = engine.userOffLidCloseConfirmed(rawClosed: readLid() == true)
         if engine.holdingForIdlePost { engine.completeIdlePostHold() }
         let commands = engine.userSetEngaged(false, now: Date(), lidClosed: confirmed)
         let result = apply(commands)

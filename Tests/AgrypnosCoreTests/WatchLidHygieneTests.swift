@@ -178,19 +178,19 @@ final class WatchLidHygieneTests: XCTestCase {
         XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
     }
 
-    func testTimerEndWithLidClosedDoesNotSleepTheMac() {
+    func testTimerEndWithLidClosedRequestsSleep() {
         var prefs = UserPreferences.default
         prefs.duration = .oneHour
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: true)
         XCTAssertTrue(
-            engine.tick(now: t0.addingTimeInterval(3600), safety: .acPower, agents: .idle).isEmpty
+            engine.tick(now: t0.addingTimeInterval(3600), safety: .acPower, agents: .idle).contains(.disengage(.timerExpired))
         )
-        XCTAssertTrue(engine.engaged)
+        XCTAssertFalse(engine.engaged)
         XCTAssertEqual(engine.preferences.duration, .oneHour)
     }
 
-    func testStayArmedAcrossLidOpenAfterTheClock() {
+    func testLidOpenKeepsTimerRunningUntilTheClock() {
         var prefs = UserPreferences.default
         prefs.duration = .oneHour
         var engine = WatchEngine(preferences: prefs)
@@ -202,9 +202,9 @@ final class WatchLidHygieneTests: XCTestCase {
             engine.tick(now: t0.addingTimeInterval(30), safety: .acPower, agents: .idle).isEmpty
         )
         XCTAssertTrue(
-            engine.tick(now: t0.addingTimeInterval(3600), safety: .acPower, agents: .idle).isEmpty
+            engine.tick(now: t0.addingTimeInterval(3600), safety: .acPower, agents: .idle).contains(.disengage(.timerExpired))
         )
-        XCTAssertTrue(engine.engaged)
+        XCTAssertFalse(engine.engaged)
         XCTAssertEqual(engine.preferences.duration, .oneHour)
     }
 

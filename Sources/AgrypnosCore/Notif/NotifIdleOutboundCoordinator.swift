@@ -1,4 +1,4 @@
-/// Quit / re-arm decisions for an in-flight idle-after-wait POST.
+/// Quit / re-arm decisions for an in-flight watch-end POST.
 public struct NotifIdleTerminatePlan: Equatable, Sendable {
     public var cleanupRequired: Bool
     public var clearKernel: Bool

@@ -31,9 +31,9 @@ public enum DisengageReason: String, Equatable, Sendable, CaseIterable, Codable 
     /// How long is a user setting; timer must not flip it. Agents idle turns Keep the watch off after settle.
     public var turnsWatchOff: Bool {
         switch self {
-        case .batteryFloor, .thermal, .lowPowerMode, .agentsSettled, .wakeHoldFailed:
+        case .batteryFloor, .thermal, .lowPowerMode, .agentsSettled, .wakeHoldFailed, .timerExpired:
             return true
-        case .user, .timerExpired:
+        case .user:
             return false
         }
     }
@@ -58,8 +58,6 @@ public enum AutoOffEvaluator: Sendable {
         thermalAutoOff: Bool = true,
         now: Date = Date()
     ) -> DisengageReason? {
-        _ = timerEnd
-        _ = now
         guard engaged else { return nil }
         if safety.thermalSerious, thermalAutoOff { return .thermal }
         if safety.onBatteryDischarging,
@@ -71,6 +69,7 @@ public enum AutoOffEvaluator: Sendable {
         if safety.lowPowerMode, safety.onBatteryDischarging, !userForcedThisSession {
             return .lowPowerMode
         }
+        if let timerEnd, now >= timerEnd { return .timerExpired }
         return nil
     }
 }

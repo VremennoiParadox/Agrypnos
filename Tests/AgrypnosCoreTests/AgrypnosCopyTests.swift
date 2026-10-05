@@ -168,15 +168,15 @@ final class AgrypnosCopyTests: XCTestCase {
         XCTAssertFalse(AgrypnosCopy.indefiniteHint.lowercased().contains("low power"))
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .oneHour, engaged: false, remainingSeconds: nil),
-            AgrypnosCopy.indefiniteHint
+            "Starts when Keep the watch is on.\nSleeps unless the lid is open."
         )
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .threeHours, engaged: false, remainingSeconds: nil),
-            AgrypnosCopy.timedHint
+            "Starts when Keep the watch is on.\nSleeps unless the lid is open."
         )
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .oneHour, engaged: true, remainingSeconds: 125),
-            AgrypnosCopy.indefiniteHint
+            AgrypnosCopy.timedHint
         )
         assertFitsDurationHint(AgrypnosCopy.agentsHint)
         assertFitsDurationHint(

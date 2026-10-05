@@ -1,8 +1,7 @@
 import Foundation
 
 /// Menu-bar extra: glyph plus a non-countdown title.
-/// `remainingSeconds` is the real auto-off clock from Core. Sticky How long
-/// has none today — do not invent digits from `timerEnd`.
+/// The countdown lives in the How long card; the menu bar keeps its quiet title.
 public struct StatusItemChrome: Equatable, Sendable {
     public enum Length: Equatable, Sendable {
         case square

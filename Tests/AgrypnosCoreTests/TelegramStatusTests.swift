@@ -31,7 +31,7 @@ final class TelegramStatusCopyTests: XCTestCase {
         XCTAssertFalse(text.lowercased().contains("remaining"))
     }
 
-    func testTimedHowLongNeverCountsDownEvenWhenTimerEndExists() {
+    func testTimedHowLongCountsDownFromItsLiveDeadline() {
         var engine = WatchEngine(preferences: UserPreferences(duration: .threeHours))
         _ = engine.userSetEngaged(true, now: now)
         XCTAssertNotNil(engine.timerEnd)
@@ -41,8 +41,7 @@ final class TelegramStatusCopyTests: XCTestCase {
         )
         XCTAssertTrue(text.contains("How long is 3h."))
         XCTAssertFalse(text.contains("2h"))
-        XCTAssertFalse(text.lowercased().contains("left"))
-        XCTAssertFalse(text.lowercased().contains("remaining"))
+        XCTAssertTrue(text.contains("Time left 2:59:00."))
     }
 
     func testCustomMinutesNamesTheMode() {
