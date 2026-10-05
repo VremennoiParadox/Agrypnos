@@ -116,6 +116,77 @@ final class TimedWatchRuntimeTests: XCTestCase {
         XCTAssertEqual(fixture.sleepRequests, 0)
     }
 
+    func testTimedDurationEditRenewsPendingTimerPost() async throws {
+        let fixture = RuntimeFixture()
+        let start = arm(fixture)
+        fixture.runtime.engine.preferences.notifEnabled = true
+        expire(fixture, start: start)
+        await fixture.waitForPost()
+        let changedAt = Date()
+        fixture.runtime.setDuration(.threeHours)
+        let renewedDeadline = fixture.runtime.engine.timerEnd
+        fixture.completePost()
+        await fixture.waitForCompletion()
+        let deadline = try XCTUnwrap(renewedDeadline)
+        XCTAssertEqual(deadline.timeIntervalSince(changedAt), 10_800, accuracy: 1)
+        XCTAssertTrue(fixture.runtime.engaged)
+        XCTAssertTrue(fixture.kernelHeld)
+        XCTAssertEqual(fixture.runtime.engine.timerEnd, deadline)
+        XCTAssertEqual(fixture.sleepRequests, 0)
+    }
+
+    func testUntimedDurationEditsRenewPendingTimerPost() async {
+        for option in [DurationOption.indefinite, .untilAgentsSettle] {
+            let fixture = RuntimeFixture()
+            let start = arm(fixture)
+            fixture.runtime.engine.preferences.notifEnabled = true
+            expire(fixture, start: start)
+            await fixture.waitForPost()
+            fixture.runtime.setDuration(option)
+            fixture.completePost()
+            await fixture.waitForCompletion()
+            XCTAssertTrue(fixture.runtime.engaged)
+            XCTAssertTrue(fixture.kernelHeld)
+            XCTAssertEqual(fixture.runtime.preferences.duration, option)
+            XCTAssertNil(fixture.runtime.engine.timerEnd)
+            XCTAssertEqual(fixture.sleepRequests, 0)
+        }
+    }
+
+    func testTelegramArmRenewsPendingTimerPost() async throws {
+        let fixture = RuntimeFixture()
+        let start = arm(fixture)
+        fixture.runtime.engine.preferences.notifEnabled = true
+        expire(fixture, start: start)
+        await fixture.waitForPost()
+        fixture.runtime.applyTelegramArm(token: nil, chatId: nil)
+        let renewedDeadline = fixture.runtime.engine.timerEnd
+        fixture.completePost()
+        await fixture.waitForCompletion()
+        let deadline = try XCTUnwrap(renewedDeadline)
+        XCTAssertTrue(fixture.runtime.engaged)
+        XCTAssertTrue(fixture.kernelHeld)
+        XCTAssertEqual(fixture.runtime.engine.timerEnd, deadline)
+        XCTAssertEqual(fixture.sleepRequests, 0)
+    }
+
+    func testDiscordArmRenewsPendingTimerPost() async throws {
+        let fixture = RuntimeFixture()
+        let start = arm(fixture)
+        fixture.runtime.engine.preferences.notifEnabled = true
+        expire(fixture, start: start)
+        await fixture.waitForPost()
+        XCTAssertEqual(fixture.runtime.applyDiscordArm(), DiscordInboundCopy.armed)
+        let renewedDeadline = fixture.runtime.engine.timerEnd
+        fixture.completePost()
+        await fixture.waitForCompletion()
+        let deadline = try XCTUnwrap(renewedDeadline)
+        XCTAssertTrue(fixture.runtime.engaged)
+        XCTAssertTrue(fixture.kernelHeld)
+        XCTAssertEqual(fixture.runtime.engine.timerEnd, deadline)
+        XCTAssertEqual(fixture.sleepRequests, 0)
+    }
+
     func testNativeDeadlineTracksSelectionAndCancelsForUntimedModes() {
         let fixture = RuntimeFixture()
         _ = arm(fixture)

@@ -97,8 +97,12 @@ final class WatchRuntime {
 
     func setDuration(_ option: DurationOption) {
         let commands = engine.userSetDuration(option, now: Date())
-        syncDeadlineTimer()
         store.save(engine.preferences)
+        if engine.holdingForIdlePost {
+            setEngaged(true)
+            return
+        }
+        syncDeadlineTimer()
         apply(commands)
         delegate?.watchRuntimeDidChange(self)
     }
