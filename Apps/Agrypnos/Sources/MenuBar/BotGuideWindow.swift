@@ -4,49 +4,64 @@ import AppKit
 import AgrypnosCore
 #endif
 
-/// Read-only Bot setup guide. Instructions, links, and screenshots only — no settings.
+/// Read-only setup guide. Instructions, links, and screenshots only — no settings.
 @MainActor
 final class BotGuideWindow: NSObject {
-    private static let size = NSSize(width: 520, height: 640)
-    private static let margin: CGFloat = 24
-    private static var textWidth: CGFloat { size.width - 2 * margin }
+    private static let height: CGFloat = 640
+    private static let textMargin: CGFloat = 24
+    private static var textWidth: CGFloat { CGFloat(BotGuide.windowWidth) - 2 * textMargin }
 
-    private let window = NSWindow(
-        contentRect: NSRect(origin: .zero, size: size),
-        styleMask: [.titled, .closable],
-        backing: .buffered,
-        defer: true
-    )
-    private let tabs = NSSegmentedControl(
-        labels: BotGuideTab.allCases.map(\.title),
-        trackingMode: .selectOne,
-        target: nil,
-        action: nil
-    )
+    private let family: BotGuideFamily
+    private let window: NSWindow
+    private let tabs: NSSegmentedControl
     private let scroll = NSScrollView()
     private let stack = NSStackView()
     private var links: [URL] = []
     private var placed = false
 
-    override init() {
+    convenience override init() {
+        self.init(family: .bots)
+    }
+
+    init(family: BotGuideFamily) {
+        self.family = family
+        window = NSWindow(
+            contentRect: NSRect(
+                origin: .zero,
+                size: NSSize(width: CGFloat(BotGuide.windowWidth), height: Self.height)
+            ),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: true
+        )
+        tabs = NSSegmentedControl(
+            labels: family.tabs.map(\.title),
+            trackingMode: .selectOne,
+            target: nil,
+            action: nil
+        )
         super.init()
-        window.title = BotGuide.windowTitle
+        window.title = family.windowTitle
         window.isReleasedWhenClosed = false
+        tabs.segmentDistribution = .fillEqually
         tabs.target = self
         tabs.action = #selector(tabChanged)
         tabs.selectedSegment = 0
         layout()
-        render(.telegram)
+        if let first = family.tabs.first {
+            render(first)
+        }
     }
 
     func show() {
-        show(.telegram)
+        if let first = family.tabs.first {
+            show(first)
+        }
     }
 
     func show(_ tab: BotGuideTab) {
-        if let index = BotGuideTab.allCases.firstIndex(of: tab) {
-            tabs.selectedSegment = index
-        }
+        guard let index = family.tabs.firstIndex(of: tab) else { return }
+        tabs.selectedSegment = index
         render(tab)
         if !placed {
             window.center()
@@ -61,7 +76,7 @@ final class BotGuideWindow: NSObject {
         stack.orientation = .vertical
         stack.alignment = .leading
         stack.spacing = 8
-        stack.edgeInsets = NSEdgeInsets(top: 8, left: Self.margin, bottom: Self.margin, right: Self.margin)
+        stack.edgeInsets = NSEdgeInsets(top: 8, left: Self.textMargin, bottom: Self.textMargin, right: Self.textMargin)
 
         let document = FlippedView()
         document.addSubview(stack)
@@ -76,7 +91,8 @@ final class BotGuideWindow: NSObject {
         content.addSubview(scroll)
         NSLayoutConstraint.activate([
             tabs.topAnchor.constraint(equalTo: content.topAnchor, constant: 16),
-            tabs.centerXAnchor.constraint(equalTo: content.centerXAnchor),
+            tabs.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: CGFloat(BotGuide.tabMargin)),
+            tabs.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -CGFloat(BotGuide.tabMargin)),
             scroll.topAnchor.constraint(equalTo: tabs.bottomAnchor, constant: 12),
             scroll.leadingAnchor.constraint(equalTo: content.leadingAnchor),
             scroll.trailingAnchor.constraint(equalTo: content.trailingAnchor),
@@ -92,7 +108,9 @@ final class BotGuideWindow: NSObject {
     }
 
     @objc private func tabChanged() {
-        render(BotGuideTab.allCases[max(tabs.selectedSegment, 0)])
+        let index = max(tabs.selectedSegment, 0)
+        guard family.tabs.indices.contains(index) else { return }
+        render(family.tabs[index])
     }
 
     @objc private func linkTapped(_ sender: NSButton) {

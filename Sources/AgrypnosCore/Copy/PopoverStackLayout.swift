@@ -269,8 +269,8 @@ public struct PopoverStackLayout: Equatable, Sendable {
             case .openCodeQuestions: return QuestionSetupChrome.connectionCardHeight
             case .questionForwardingBack: return loginCardHeight
             case .questionNotifications: return loginCardHeight
-            case .codexAlert: return QuestionSetupChrome.claudeCardHeight
-            case .cursorQuestionNote: return loginCardHeight
+            case .codexAlert: return QuestionSetupChrome.codexCardHeight
+            case .cursorQuestionNote: return QuestionSetupChrome.cursorNoteCardHeight
             case .notifSetup: return loginCardHeight
             case .notifClear: return loginCardHeight
             }

@@ -4,7 +4,12 @@ import XCTest
 final class BotGuideCopyTests: XCTestCase {
     func testWindowChromeIsPlain() {
         XCTAssertEqual(BotGuide.windowTitle, "Bot setup")
+        XCTAssertEqual(BotGuide.toolWindowTitle, "Question setup")
+        XCTAssertEqual(BotGuideFamily.bots.windowTitle, "Bot setup")
+        XCTAssertEqual(BotGuideFamily.tools.windowTitle, "Question setup")
         XCTAssertEqual(BotGuideTab.allCases, [.telegram, .discord, .openCode, .claudeCode, .codex, .cursor])
+        XCTAssertEqual(BotGuideFamily.bots.tabs, [.telegram, .discord])
+        XCTAssertEqual(BotGuideFamily.tools.tabs, [.openCode, .claudeCode, .codex, .cursor])
         XCTAssertEqual(BotGuideTab.telegram.title, "Telegram")
         XCTAssertEqual(BotGuideTab.discord.title, "Discord")
         XCTAssertEqual(BotGuideTab.openCode.title, "OpenCode")
@@ -12,6 +17,15 @@ final class BotGuideCopyTests: XCTestCase {
         XCTAssertEqual(BotGuideTab.codex.title, "Codex")
         XCTAssertEqual(BotGuideTab.cursor.title, "Cursor")
         XCTAssertEqual(AgrypnosCopy.notifSetup, "Setup instructions…")
+        XCTAssertFalse(BotGuideFamily.bots.tabs.contains(.openCode))
+        XCTAssertFalse(BotGuideFamily.bots.tabs.contains(.claudeCode))
+        XCTAssertFalse(BotGuideFamily.bots.tabs.contains(.codex))
+        XCTAssertFalse(BotGuideFamily.bots.tabs.contains(.cursor))
+        XCTAssertFalse(BotGuideFamily.tools.tabs.contains(.telegram))
+        XCTAssertFalse(BotGuideFamily.tools.tabs.contains(.discord))
+        let tabBudget = BotGuide.windowWidth - 2 * BotGuide.tabMargin
+        let estimated = BotGuideFamily.tools.tabs.reduce(0) { $0 + $1.title.count * 8 + 24 }
+        XCTAssertLessThanOrEqual(estimated, tabBudget)
     }
 
     func testTelegramWalksBotFatherTokenChatIdAndInbound() {

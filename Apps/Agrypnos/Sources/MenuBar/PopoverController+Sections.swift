@@ -37,6 +37,7 @@ extension PopoverController {
             width: contentW,
             height: CGFloat(layout.sectionSwitcher.height)
         )
+        let preservedOrigin = popoverScroll.contentView.bounds.origin
 
         // Cards swap now, outside the height ease, so two sections never double-paint
         // and NSAnimationContext cannot interpolate their frames.
@@ -47,7 +48,7 @@ extension PopoverController {
             self.applyGeneralChrome(layout, pad: pad, contentW: contentW)
             self.popoverDocument.frame.size.height = CGFloat(motion.documentHeightDuringMotion)
         }
-        popoverScroll.documentView?.scroll(.zero)
+        applyDocumentScroll(motion.scrollIntent, origin: preservedOrigin)
 
         let popH = CGFloat(layout.popoverHeight)
         if motion.animatesHeight {
@@ -71,10 +72,11 @@ extension PopoverController {
                     self.syncPopoverWindowHeight(layout.popoverHeight, width: width)
                     self.popoverDocument.frame.size.height = CGFloat(layout.contentHeight)
                 }
-                self.popoverScroll.documentView?.scroll(.zero)
+                self.applyDocumentScroll(motion.scrollIntent, origin: preservedOrigin)
             })
         } else {
             syncPopoverWindowHeight(layout.popoverHeight, width: width)
+            applyDocumentScroll(motion.scrollIntent, origin: preservedOrigin)
         }
     }
 
@@ -85,6 +87,19 @@ extension PopoverController {
         popoverRoot.frame.size.height = popH
         popoverScroll.frame = popoverRoot.bounds
         popover.contentSize = NSSize(width: width, height: popH)
+    }
+
+    private func applyDocumentScroll(_ intent: PopoverScrollIntent, origin: NSPoint) {
+        guard let document = popoverScroll.documentView else { return }
+        switch intent {
+        case .resetToTop:
+            document.scroll(.zero)
+        case .preserve:
+            let clipH = popoverScroll.contentView.bounds.height
+            let maxY = max(0, document.frame.height - clipH)
+            let y = min(max(origin.y, 0), maxY)
+            document.scroll(NSPoint(x: 0, y: y))
+        }
     }
 
     private func applyCardSlots(

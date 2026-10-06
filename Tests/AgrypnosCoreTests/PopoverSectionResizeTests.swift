@@ -39,6 +39,7 @@ final class PopoverSectionResizeTests: XCTestCase {
         XCTAssertFalse(same.allowsImplicitAnimation)
         XCTAssertTrue(same.hidesOutgoingImmediately)
         XCTAssertEqual(same.documentHeightDuringMotion, same.toContentHeight)
+        XCTAssertEqual(same.scrollIntent, .preserve)
 
         let initial = PopoverSectionResize.make(from: .power, to: .watch, animated: false)
         XCTAssertFalse(initial.animatesHeight)
@@ -140,6 +141,7 @@ final class PopoverSectionResizeTests: XCTestCase {
         XCTAssertTrue(motion.hidesOutgoingImmediately)
         XCTAssertEqual(motion.documentHeightDuringMotion, notif.contentHeight)
         XCTAssertEqual(motion.toHeight, notif.popoverHeight)
+        XCTAssertEqual(motion.scrollIntent, .resetToTop)
     }
 
     func testIncomingAndOutgoingCardsAreTheSectionCardSets() {

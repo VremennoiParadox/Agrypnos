@@ -63,20 +63,45 @@ extension PopoverController {
         card.addSubview(button)
     }
 
-    @objc func showOpenCodeQuestionSetup() { botGuide.show(.openCode) }
-    @objc func showClaudeQuestionSetup() { botGuide.show(.claudeCode) }
-    @objc func showCodexQuestionSetup() { botGuide.show(.codex) }
+    @objc func showOpenCodeQuestionSetup() { toolGuide.show(.openCode) }
+    @objc func showClaudeQuestionSetup() { toolGuide.show(.claudeCode) }
+    @objc func showCodexQuestionSetup() { toolGuide.show(.codex) }
 
     func addCodexAlertCard(_ card: CardView, ci: CGFloat, cw: CGFloat) {
         addPrefTitle("Codex alerts", in: card, ci: ci, width: cw - 24)
         addQuestionInfoButton(in: card, ci: ci, cw: cw, action: #selector(showCodexQuestionSetup))
-        _ = PopoverForm.help(QuestionSetupChrome.codexHelp, in: card, y: 36, x: ci, width: cw, lines: 4)
-        codexEnableButton = setupCodexButton(QuestionSetupChrome.codexEnableTitle,
-            action: #selector(enableCodexAlerts), in: card, x: ci, y: 88)
-        codexDisableButton = setupCodexButton("Disable", action: #selector(disableCodexAlerts), in: card, x: ci, y: 116)
+        _ = PopoverForm.help(
+            QuestionSetupChrome.codexHelp,
+            in: card,
+            y: CGFloat(QuestionSetupChrome.hookHelpY),
+            x: ci,
+            width: cw,
+            lines: QuestionSetupChrome.codexHelpMaxLines
+        )
+        codexEnableButton = setupCodexButton(
+            QuestionSetupChrome.codexEnableTitle,
+            action: #selector(enableCodexAlerts),
+            in: card,
+            x: ci,
+            y: CGFloat(QuestionSetupChrome.codexEnableY)
+        )
+        codexDisableButton = setupCodexButton(
+            "Disable",
+            action: #selector(disableCodexAlerts),
+            in: card,
+            x: ci,
+            y: CGFloat(QuestionSetupChrome.codexDisableY)
+        )
         codexDisableButton.setAccessibilityLabel("Disable Codex alerts")
         codexEnableButton.setAccessibilityHelp(QuestionSetupChrome.codexHelp)
-        codexAlertStatus = PopoverForm.help("", in: card, y: CGFloat(QuestionSetupChrome.claudeStatusY), x: ci, width: cw, lines: 2)
+        codexAlertStatus = PopoverForm.help(
+            "",
+            in: card,
+            y: CGFloat(QuestionSetupChrome.codexStatusY),
+            x: ci,
+            width: cw,
+            lines: 2
+        )
     }
 
     private func setupCodexButton(_ title: String, action: Selector, in card: CardView, x: CGFloat, y: CGFloat) -> NSButton {
@@ -106,12 +131,16 @@ extension PopoverController {
             QuestionSetupChrome.cursorNote,
             font: .systemFont(ofSize: 12),
             color: .secondaryLabelColor,
-            lines: 2
+            lines: QuestionSetupChrome.cursorNoteMaxLines
         )
-        let height = max(note.intrinsicContentSize.height, 22)
-        let y = (CGFloat(PopoverStackLayout.loginCardHeight) - height) / 2
-        note.frame = NSRect(x: ci, y: y, width: cw, height: height)
+        let inset = CGFloat(PopoverStackLayout.inset)
         note.preferredMaxLayoutWidth = cw
+        note.frame = NSRect(
+            x: ci,
+            y: inset,
+            width: cw,
+            height: CGFloat(QuestionSetupChrome.cursorNoteCardHeight) - inset * 2
+        )
         card.addSubview(note)
     }
 

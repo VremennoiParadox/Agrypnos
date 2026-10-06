@@ -46,9 +46,31 @@ public enum BotGuideTab: CaseIterable, Equatable, Sendable {
     }
 }
 
+public enum BotGuideFamily: Equatable, Sendable {
+    case bots
+    case tools
+
+    public var windowTitle: String {
+        switch self {
+        case .bots: return BotGuide.windowTitle
+        case .tools: return BotGuide.toolWindowTitle
+        }
+    }
+
+    public var tabs: [BotGuideTab] {
+        switch self {
+        case .bots: return [.telegram, .discord]
+        case .tools: return [.openCode, .claudeCode, .codex, .cursor]
+        }
+    }
+}
+
 /// Read-only Bot setup window copy (Notif → Setup instructions…).
 public enum BotGuide {
     public static let windowTitle = "Bot setup"
+    public static let toolWindowTitle = "Question setup"
+    public static let windowWidth = 520
+    public static let tabMargin = 16
 
     public static func sections(for tab: BotGuideTab) -> [BotGuideSection] {
         switch tab {

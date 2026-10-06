@@ -1,6 +1,13 @@
 /// Section-switch size. AppKit animates `NSPopover.contentSize` from this plan.
 /// Ease-in-out, not a bounce spring. Cards keep their own frames — no stretch.
 /// Only the destination section is visible; never keep outgoing cards to fill glass.
+public enum PopoverScrollIntent: Equatable, Sendable {
+    /// Section switches jump to the top of the new page.
+    case resetToTop
+    /// Same-section height changes (Question notifications) keep the current origin.
+    case preserve
+}
+
 public struct PopoverSectionResize: Equatable, Sendable {
     public enum Timing: Equatable, Sendable {
         case none
@@ -24,6 +31,7 @@ public struct PopoverSectionResize: Equatable, Sendable {
     public let incomingCards: [PopoverCard]
     public let outgoingCards: [PopoverCard]
     public let documentHeightDuringMotion: Int
+    public let scrollIntent: PopoverScrollIntent
 
     public static func make(
         from: PopoverSection,
@@ -67,7 +75,8 @@ public struct PopoverSectionResize: Equatable, Sendable {
             hidesOutgoingImmediately: true,
             incomingCards: to.cards(showQuestionNotifications: to == .notif && showQuestionNotifications),
             outgoingCards: from.cards(showQuestionNotifications: from == .notif && showQuestionNotifications),
-            documentHeightDuringMotion: toContentHeight
+            documentHeightDuringMotion: toContentHeight,
+            scrollIntent: from == to ? .preserve : .resetToTop
         )
     }
 }

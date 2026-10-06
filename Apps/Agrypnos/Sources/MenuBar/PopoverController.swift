@@ -109,7 +109,8 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var notifSetupCard: CardView!
     var notifClearCard: CardView!
     var notifClearButton: NSButton!
-    lazy var botGuide = BotGuideWindow()
+    lazy var botGuide = BotGuideWindow(family: .bots)
+    lazy var toolGuide = BotGuideWindow(family: .tools)
     var loginCard: CardView!
     var shortcutLabel: NSTextField!
     var quitButton: NSButton!

@@ -19,6 +19,23 @@ public enum QuestionSetupChrome {
     public static let claudeHelp = "Adds a PreToolUse AskUserQuestion hook to your Claude settings. Interactive sessions hold hooks until you trust the folder."
     public static let claudeStatusY = 144
     public static let claudeCardHeight = claudeStatusY + 32 + 12
+    public static let hookHelpY = 36
+    public static let hookButtonRowHeight = 28
+    public static let hookStatusHeight = 32
+    public static var codexHelpMaxLines: Int {
+        max(CopyWrap.lineCount(codexHelp, columns: PopoverCopyLayout.innerColumns), 1)
+    }
+    public static var codexHelpHeight: Int { codexHelpMaxLines * PopoverCopyLayout.lineHeightPoints }
+    public static var codexEnableY: Int { hookHelpY + codexHelpHeight }
+    public static var codexDisableY: Int { codexEnableY + hookButtonRowHeight }
+    public static var codexStatusY: Int { codexDisableY + hookButtonRowHeight }
+    public static var codexCardHeight: Int { codexStatusY + hookStatusHeight + 12 }
+    public static var cursorNoteMaxLines: Int {
+        max(CopyWrap.lineCount(cursorNote, columns: PopoverCopyLayout.innerColumns), 1)
+    }
+    public static var cursorNoteCardHeight: Int {
+        12 + cursorNoteMaxLines * PopoverCopyLayout.lineHeightPoints + 12
+    }
     public static let enableTitle = "Enable OpenCode forwarding"
     public static let pluginHelp = "One-time setup for OpenCode 1.18.32 terminals. Restart OpenCode once, then use your normal chats."
     public static let connectionTitle = "Manual server connection"

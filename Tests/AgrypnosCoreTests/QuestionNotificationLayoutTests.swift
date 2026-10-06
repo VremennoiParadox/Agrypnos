@@ -42,4 +42,95 @@ final class QuestionNotificationLayoutTests: XCTestCase {
                 + PopoverStackLayout.inset
         )
     }
+
+    func testDisclosureKeepsScrollInsteadOfJumpingToTop() {
+        let open = PopoverSectionResize.make(
+            from: .notif,
+            to: .notif,
+            animated: true,
+            currentHeight: 400,
+            showQuestionNotifications: true
+        )
+        XCTAssertEqual(open.scrollIntent, .preserve)
+        XCTAssertEqual(open.timing, .easeInEaseOut)
+        XCTAssertEqual(open.durationSeconds, 0.25)
+
+        let close = PopoverSectionResize.make(
+            from: .notif,
+            to: .notif,
+            animated: true,
+            currentHeight: PopoverStackLayout.make(
+                section: .notif,
+                showQuestionNotifications: true
+            ).popoverHeight,
+            showQuestionNotifications: false
+        )
+        XCTAssertEqual(close.scrollIntent, .preserve)
+
+        let reduce = PopoverSectionResize.make(
+            from: .notif,
+            to: .notif,
+            animated: false,
+            showQuestionNotifications: true
+        )
+        XCTAssertEqual(reduce.scrollIntent, .preserve)
+        XCTAssertEqual(reduce.timing, .none)
+
+        XCTAssertEqual(
+            PopoverSectionResize.make(from: .watch, to: .notif, animated: true).scrollIntent,
+            .resetToTop
+        )
+        XCTAssertEqual(
+            PopoverSectionResize.make(from: .notif, to: .agents, animated: true).scrollIntent,
+            .resetToTop
+        )
+    }
+
+    func testCodexAlertAndCursorNoteHugTheirCopy() {
+        let helpLines = CopyWrap.lineCount(
+            QuestionSetupChrome.codexHelp,
+            columns: PopoverCopyLayout.innerColumns
+        )
+        XCTAssertGreaterThan(helpLines, 2)
+        let helpHeight = helpLines * PopoverCopyLayout.lineHeightPoints
+        let enableY = QuestionSetupChrome.hookHelpY + helpHeight
+        let disableY = enableY + QuestionSetupChrome.hookButtonRowHeight
+        let statusY = disableY + QuestionSetupChrome.hookButtonRowHeight
+        let codexNeeded = statusY + QuestionSetupChrome.hookStatusHeight + PopoverStackLayout.inset
+        XCTAssertGreaterThanOrEqual(QuestionSetupChrome.codexEnableY, enableY)
+        XCTAssertGreaterThanOrEqual(QuestionSetupChrome.codexDisableY, disableY)
+        XCTAssertGreaterThanOrEqual(QuestionSetupChrome.codexStatusY, statusY)
+        XCTAssertGreaterThanOrEqual(QuestionSetupChrome.codexCardHeight, codexNeeded)
+
+        let noteLines = CopyWrap.lineCount(
+            QuestionSetupChrome.cursorNote,
+            columns: PopoverCopyLayout.innerColumns
+        )
+        XCTAssertGreaterThan(noteLines, 2)
+        let noteNeeded =
+            PopoverStackLayout.inset
+            + noteLines * PopoverCopyLayout.lineHeightPoints
+            + PopoverStackLayout.inset
+        XCTAssertGreaterThanOrEqual(QuestionSetupChrome.cursorNoteCardHeight, noteNeeded)
+
+        let layout = PopoverStackLayout.make(section: .notif, showQuestionNotifications: true)
+        XCTAssertEqual(layout.codexAlert?.height, QuestionSetupChrome.codexCardHeight)
+        XCTAssertEqual(layout.cursorQuestionNote?.height, QuestionSetupChrome.cursorNoteCardHeight)
+        XCTAssertEqual(QuestionSetupChrome.codexCardHeight, 232)
+        XCTAssertEqual(QuestionSetupChrome.cursorNoteCardHeight, 72)
+        XCTAssertGreaterThan(layout.codexAlert!.height, QuestionSetupChrome.claudeCardHeight)
+        XCTAssertGreaterThan(layout.cursorQuestionNote!.height, PopoverStackLayout.loginCardHeight)
+        XCTAssertEqual(layout.cursorQuestionNote?.y, layout.codexAlert!.maxY + PopoverStackLayout.cardGap)
+        XCTAssertEqual(layout.popoverHeight, min(layout.contentHeight, PopoverStackLayout.maxVisibleHeight))
+        XCTAssertEqual(layout.needsScroll, layout.contentHeight > layout.popoverHeight)
+
+        let closed = PopoverStackLayout.make(section: .notif)
+        XCTAssertEqual(closed.contentHeight, 1054)
+        XCTAssertEqual(layout.contentHeight, 2088)
+        XCTAssertGreaterThan(layout.contentHeight, closed.contentHeight)
+        XCTAssertEqual(closed.popoverHeight, PopoverStackLayout.maxVisibleHeight)
+        XCTAssertEqual(layout.popoverHeight, PopoverStackLayout.maxVisibleHeight)
+        XCTAssertTrue(closed.needsScroll)
+        XCTAssertTrue(layout.needsScroll)
+    }
 }

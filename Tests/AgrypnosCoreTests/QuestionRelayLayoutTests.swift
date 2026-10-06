@@ -123,6 +123,7 @@ final class QuestionRelayLayoutTests: XCTestCase {
         XCTAssertTrue(motion.hidesOutgoingImmediately)
         XCTAssertEqual(motion.documentHeightDuringMotion, open.contentHeight)
         XCTAssertEqual(motion.toHeight, open.popoverHeight)
+        XCTAssertEqual(motion.scrollIntent, .preserve)
         let back = PopoverSectionResize.make(
             from: .notif,
             to: .notif,
