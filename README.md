@@ -68,7 +68,7 @@ macOS asks for your password once. To remove the rule later, run `./Scripts/ungr
 
 1. Click the eye in the menu bar. The popover opens on **Watch**.
 2. Under **How long**, pick **Agents**.
-3. Turn on **Keep the watch**. The menu bar now says **Agents.**
+3. Turn on **Keep the watch**. The menu-bar eye turns **purple**. The icon stays the same size in every mode: gray when off, blue for ∞, gold for timed watches, and purple for Agents.
 4. Start your agent and close the lid.
 
 Agrypnos waits until the lid has really closed (a single flicker of the lid sensor doesn't count), then turns the keyboard backlight off and dims the panel. When your agents have been idle for the idle wait (2 minutes by default), the watch turns off and the Mac is free to sleep.

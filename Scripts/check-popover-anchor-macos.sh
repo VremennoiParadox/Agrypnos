@@ -10,4 +10,5 @@ while IFS= read -r -d '' source; do
 done < <(find Sources/AgrypnosCore Apps/Agrypnos/Sources -name '*.swift' \
   ! -name AppMain.swift ! -name AppDelegate.swift -print0)
 swiftc -parse-as-library "${sources[@]}" Scripts/check-popover-anchor-macos.swift -o "$CHECK_DIR/anchor-check"
-"$CHECK_DIR/anchor-check"
+"$CHECK_DIR/anchor-check" | tee "$CHECK_DIR/output"
+rg -q "^Animated popover window checks passed$" "$CHECK_DIR/output"

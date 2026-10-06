@@ -18,7 +18,7 @@ public enum StatusItemState: Equatable, Sendable {
     }
 
     /// Remaining-time digits only if this returns a date Core will actually turn the watch off.
-    /// Only timed modes expose the deadline; the menu-bar title stays unchanged.
+    /// Only timed modes expose the deadline; the menu-bar item stays an icon only.
     public static func autoOffEndClock(
         engaged: Bool,
         duration: DurationOption,

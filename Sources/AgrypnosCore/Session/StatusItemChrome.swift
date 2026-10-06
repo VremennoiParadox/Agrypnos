@@ -1,7 +1,7 @@
 import Foundation
 
-/// Menu-bar extra: glyph plus a non-countdown title.
-/// The countdown lives in the How long card; the menu bar keeps its quiet title.
+/// Fixed-size menu-bar glyph. Live state remains available to accessibility;
+/// the countdown lives in the How long card.
 public struct StatusItemChrome: Equatable, Sendable {
     public enum Length: Equatable, Sendable {
         case square
@@ -17,11 +17,12 @@ public struct StatusItemChrome: Equatable, Sendable {
     public let length: Length
     public let imagePosition: ImagePosition
 
-    public var accessibilityTitle: String {
-        title.isEmpty ? AgrypnosCopy.appName : "\(AgrypnosCopy.appName), \(title)"
-    }
+    public let accessibilityTitle: String
 
-    public init(title: String, length: Length, imagePosition: ImagePosition) {
+    public init(title: String, length: Length, imagePosition: ImagePosition,
+                accessibilityTitle: String? = nil) {
+        self.accessibilityTitle = accessibilityTitle
+            ?? (title.isEmpty ? AgrypnosCopy.appName : "\(AgrypnosCopy.appName), \(title)")
         self.title = title
         self.length = length
         self.imagePosition = imagePosition
@@ -32,18 +33,13 @@ public struct StatusItemChrome: Equatable, Sendable {
         remainingSeconds: Int?
     ) -> StatusItemChrome {
         _ = remainingSeconds
-        let title = AgrypnosCopy.statusItemTitle(state)
-        if title.isEmpty {
-            return StatusItemChrome(
-                title: "",
-                length: .square,
-                imagePosition: .imageOnly
-            )
-        }
+        let stateTitle = AgrypnosCopy.statusItemTitle(state)
         return StatusItemChrome(
-            title: title,
-            length: .variable,
-            imagePosition: .imageLeading
+            title: "",
+            length: .square,
+            imagePosition: .imageOnly,
+            accessibilityTitle: stateTitle.isEmpty
+                ? AgrypnosCopy.appName : "\(AgrypnosCopy.appName), \(stateTitle)"
         )
     }
 }

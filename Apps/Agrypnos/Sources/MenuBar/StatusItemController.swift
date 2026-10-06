@@ -32,6 +32,7 @@ final class StatusItemController: NSObject {
         item.isVisible = true
         super.init()
         if let button = item.button {
+            button.wantsLayer = true
             button.image = offGlyph
             button.imagePosition = .imageOnly
             button.imageScaling = .scaleProportionallyDown
@@ -79,6 +80,10 @@ final class StatusItemController: NSObject {
                 pulse(button)
             }
             apply(chrome, to: button)
+            if !on { button.contentTintColor = .secondaryLabelColor }
+            else if runtime.preferences.duration == .indefinite { button.contentTintColor = .systemBlue }
+            else if runtime.preferences.duration == .untilAgentsSettle { button.contentTintColor = .systemPurple }
+            else { button.contentTintColor = AgrypnosPalette.gold }
         }
         item.button?.toolTip = tooltip
         popover.refresh()
@@ -104,7 +109,6 @@ final class StatusItemController: NSObject {
     }
 
     private func pulse(_ button: NSButton) {
-        button.wantsLayer = true
         let animation = CABasicAnimation(keyPath: "opacity")
         animation.fromValue = 0.35
         animation.toValue = 1

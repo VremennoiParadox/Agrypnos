@@ -17,7 +17,6 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     let popover = NSPopover()
     weak var runtime: WatchRuntime?
     private var clickMonitor: Any?
-    private weak var positioningView: NSView?
 
     var watchSwitch: NSSwitch!
     var caption: NSTextField!
@@ -126,7 +125,6 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     }
 
     func refresh() {
-        refreshPositioningRect()
         guard let runtime else { return }
         let on = runtime.engaged
         watchSwitch?.state = on ? .on : .off
@@ -209,14 +207,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         applySection(.watch)
         refresh()
         NSApp.activate(ignoringOtherApps: true)
-        positioningView = button
-        button.postsFrameChangedNotifications = true
-        button.postsBoundsChangedNotifications = true
-        for name in [NSView.frameDidChangeNotification, NSView.boundsDidChangeNotification] {
-            NotificationCenter.default.addObserver(self, selector: #selector(positioningViewChanged(_:)),
-                                                   name: name, object: button)
-        }
-        popover.show(relativeTo: positioningRect(for: button), of: button, preferredEdge: .minY)
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         countdownTimer?.invalidate()
         let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.refreshCountdown() }
@@ -236,10 +227,6 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     }
 
     func close() {
-        for name in [NSView.frameDidChangeNotification, NSView.boundsDidChangeNotification] {
-            NotificationCenter.default.removeObserver(self, name: name, object: positioningView)
-        }
-        positioningView = nil
         countdownTimer?.invalidate()
         countdownTimer = nil
         commitMinutesIfChanged(onLeaveWatch: true)
@@ -253,27 +240,6 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
             NSEvent.removeMonitor(clickMonitor)
             self.clickMonitor = nil
         }
-    }
-
-    @objc private func positioningViewChanged(_ notification: Notification) {
-        refreshPositioningRect()
-    }
-
-    private func refreshPositioningRect() {
-        guard popover.isShown, let view = positioningView else { return }
-        let rect = positioningRect(for: view)
-        if popover.positioningRect != rect { popover.positioningRect = rect }
-    }
-
-    private func positioningRect(for view: NSView) -> NSRect {
-        // The status title changes the button width; its old bounds are not an eye anchor.
-        if let button = view as? NSButton,
-           let rect = button.cell?.imageRect(forBounds: button.bounds),
-           !rect.isEmpty, button.bounds.contains(rect) {
-            return NSRect(x: rect.minX, y: view.bounds.minY,
-                          width: rect.width, height: view.bounds.height)
-        }
-        return view.bounds
     }
 
     func applyDuration(_ chrome: DurationPickerChrome) {
