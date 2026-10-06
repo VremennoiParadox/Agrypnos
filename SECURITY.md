@@ -89,6 +89,21 @@ listen port, or set a Discord Interactions Endpoint URL. If Agrypnos is not
 running, the helper returns empty JSON within two seconds and does not select
 an answer. No new sudoers grant. The Discord webhook stays outbound-only.
 
+## Opt-in Codex waiting alert (test build)
+
+Enable Codex alerts merges a command hook into `~/.codex/hooks.json`. It is a
+local command. It never replaces the file and never deletes other hook events
+(`UserPromptSubmit` and `Stop` stay). The command is this app with
+`--codex-alert-hook`. The helper talks to the running menu-bar app on a Unix
+socket under `~/Library/Application Support/Agrypnos/codex-alert-hook/`
+(directory 0700, socket 0600, same-UID peer). It prints nothing, exits 0, and
+does not answer the question. If Agrypnos is not running, the helper still
+exits 0 with empty stdout. It does not open a listen port or set a Discord
+Interactions Endpoint URL. Question text is not written to
+`notif-secrets.json`. Destinations are the saved Discord webhook and Telegram
+token + chat id. The idle-after-wait opt-in is not required. No new sudoers
+grant.
+
 ## What we will not do
 
 - Telemetry, analytics, or stealth network

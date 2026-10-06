@@ -136,7 +136,7 @@ There are two separate pieces:
 - **Idle message.** When **Agents** mode has seen work and then stayed idle through the wait, Agrypnos sends one message to your Discord webhook, your Telegram bot, or both. It doesn't send one when you turn the watch off, when a timer or battery limit ends it, or when it never saw any work.
 - **Commands.** Send `/arm`, `/disarm`, `/status`, or `/help` to your own Telegram or Discord bot, and Agrypnos acts on them while the Mac is awake.
 
-The app has the same steps as below, with screenshots. Click **Setup instructions…** at the bottom of **Notif**.
+The app has the same steps as below, with screenshots. Click **Setup instructions…**, the first card in **Notif**.
 
 ### Commands
 
@@ -260,30 +260,46 @@ When you first turn inbound on, or quit and relaunch, Agrypnos quietly skips any
 
 </details>
 
+## Question notifications (BETA)
+
+Question notifications live in **Notif**, under Telegram inbound. The row is
+marked **BETA**. **Setup instructions…** is the first Notif card. The info
+button on each tool card opens that same guide.
+
+OpenCode and Claude Code forward the question after their Enable button.
+OpenCode needs one restart. Claude needs the folder trusted. Claude forwarding
+is not Mac-proven.
+
+Codex Enable adds a hook and does not answer. Trust it with `/hooks` in the
+Codex CLI. The bot message is `Codex is waiting on you.` or `Codex is waiting
+for an approval.` Not checked in the ChatGPT app yet. Codex alerts use your
+saved Discord webhook or Telegram token and chat id. They do not require the
+idle-after-wait switch.
+
+Cursor has no question forwarding and no waiting alert. The question stays in
+Cursor.
+
 ## OpenCode question forwarding (test build)
 
 This branch connects **OpenCode 1.18.32** native structured questions to your
-existing Telegram/Discord bot. Live bot/Mac verification is pending. Cursor
-and Codex question forwarding remain unavailable. Ordinary
+existing Telegram/Discord bot. Live bot/Mac verification is pending. Ordinary
 prose questions, free text and permission/plan approvals stay on the Mac.
 
 1. Configure your own Telegram or Discord bot using the steps above, and
    enable its **inbound** switch. Idle-after-wait POST is independent.
-2. Question forwarding for OpenCode and Claude Code is under
-   **Agents → Which tools count as busy → Forward agent questions**.
-   That opens the controls in the same popover. Notif does not have those cards.
-   Codex question forwarding is not there. Save your **answering user ID** there.
+2. Open **Notif → Question notifications** (BETA, under Telegram inbound).
+   Save your **answering user ID** there.
    For Telegram, temporarily turn inbound off, message your bot, then use
    `getUpdates` and copy `message.from.id`; this is your user ID, not the bot
    or chat ID. Turn inbound back on. For Discord, enable Developer Mode,
    right-click your own profile and choose **Copy User ID**. Only this user
    may answer questions, even in a shared chat/channel.
-3. Include **OpenCode** in Agents. Open **Forward agent questions**, then click
+3. Include **OpenCode** in Agents. In Question notifications, click
    **Enable OpenCode forwarding**.
    Setup installs and registers a global terminal plugin without changing
    your other OpenCode settings. It enables forwarding without arming the watch.
 4. **Restart OpenCode once to load forwarding**, then use your normal terminal
-   chats in any project. Wait for a real connected terminal count in that Agents pane.
+   chats in any project. Wait for a real connected terminal count in that Notif card.
    No server address, project directory, port or password is needed.
    This test build supports OpenCode **1.18.32** interactive terminals;
    headless and desktop clients have not been verified.
@@ -353,18 +369,33 @@ One click merges a `PreToolUse` hook matching `AskUserQuestion` into
 sessions hold hooks until you trust the folder.
 
 1. Configure your own Telegram or Discord bot, turn its inbound switch on, and
-   save your answering user ID under Agents → Which tools count as busy → Forward agent questions.
-   That opens the controls in the same popover. Notif does not have those cards.
-   Codex question forwarding is not there.
-2. Select **Claude Code** in Agents. Open **Forward agent questions**, then click
+   save your answering user ID under **Notif → Question notifications**.
+2. Select **Claude Code** in Agents. In Question notifications, click
    **Enable Claude Code forwarding**.
 3. In an already-trusted project, ask Claude Code a structured choice in the
    session you already started. Answer on your bot. That same session should
    continue with the chosen label.
 
 Live AskUserQuestion round-trip on Claude Code 2.1.183 is not proven until
-you run that check. Cursor and Codex question forwarding remain unavailable.
-Disable removes only the Agrypnos `--claude-question-hook` entry.
+you run that check. Disable removes only the Agrypnos `--claude-question-hook`
+entry.
+
+## Codex waiting alert (test build)
+
+One click merges a `PreToolUse` / `PermissionRequest` command hook into
+`~/.codex/hooks.json`. It does not replace that file. Existing
+`UserPromptSubmit` and `Stop` hooks stay. The hook prints nothing, exits 0,
+and does not answer. Trust the new hook with `/hooks` in the Codex CLI.
+
+1. Save a Discord webhook URL, or a Telegram token and chat id, in Notif.
+   The idle-after-wait switch is not required.
+2. Open **Notif → Question notifications** and click **Enable Codex alerts**.
+3. In Codex, run `/hooks` and trust the Agrypnos command.
+
+The bot message is `Codex is waiting on you.` or `Codex is waiting for an
+approval.` Optional question text is included unless it is marked secret.
+Not checked in the ChatGPT app yet. If Agrypnos is not running, Codex still
+shows its own picker. Cursor has no waiting alert.
 
 ## Settings
 
@@ -374,8 +405,8 @@ Everything is in the popover, one section at a time.
 |---|---|
 | **Watch** | Keep the watch, How long (`∞`, `1h`, `3h`, custom minutes, **Agents**), and the last watch end |
 | **Power** | Dim panel or Sleep panel, brightness floor, keyboard backlight off, low-battery auto-off, brightness return time, thermal auto-off |
-| **Agents** | Idle wait (2–15 min), which tools count as busy (at least one), Forward agent questions (OpenCode and Claude Code), count terminal sessions as busy |
-| **Notif** | Idle message switch, Discord webhook, Telegram token and chat id, Telegram inbound, Discord inbound (token and channel), clear secrets, setup instructions |
+| **Agents** | Idle wait (2–15 min), which tools count as busy (at least one), count terminal sessions as busy |
+| **Notif** | Setup instructions, idle message switch, Discord webhook, Telegram token and chat id, Telegram inbound, Question notifications (BETA), Discord inbound (token and channel), clear secrets |
 | **General** | Global shortcut (default `⌥⌘A`, remappable), launch at login, quit |
 
 ## What it won't do
