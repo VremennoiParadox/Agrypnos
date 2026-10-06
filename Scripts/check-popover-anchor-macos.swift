@@ -112,7 +112,33 @@ struct PopoverAnchorCheck {
                     else if duration == .indefinite { expected = .systemBlue }
                     else if duration == .untilAgentsSettle { expected = .systemPurple }
                     else { expected = AgrypnosPalette.gold }
-                    if button.contentTintColor != expected { failures.append("Wrong mode color") }
+                    button.effectiveAppearance.performAsCurrentDrawingAppearance {
+                        if let image = button.image,
+                           let data = image.tiffRepresentation,
+                           let bitmap = NSBitmapImageRep(data: data),
+                           let expectedRGB = expected.usingColorSpace(bitmap.colorSpace) {
+                            var opaque = 0
+                            var matching = 0
+                            var transparent = 0
+                            for y in 0..<bitmap.pixelsHigh {
+                                for x in 0..<bitmap.pixelsWide {
+                                    guard let pixel = bitmap.colorAt(x: x, y: y) else { continue }
+                                    if pixel.alphaComponent < 0.01 { transparent += 1 }
+                                    if pixel.alphaComponent > 0.2 {
+                                        opaque += 1
+                                        if abs(pixel.redComponent - expectedRGB.redComponent) < 0.05,
+                                           abs(pixel.greenComponent - expectedRGB.greenComponent) < 0.05,
+                                           abs(pixel.blueComponent - expectedRGB.blueComponent) < 0.05 {
+                                            matching += 1
+                                        }
+                                    }
+                                }
+                            }
+                            if image.isTemplate || opaque == 0 || matching != opaque || transparent == 0 {
+                                failures.append("Wrong rendered icon color: \(duration.segmentTitle) \(on) (\(matching)/\(opaque) colored pixels)")
+                            }
+                        } else { failures.append("Icon could not be rendered") }
+                    }
                     for _ in 0..<30 {
                         let frame = controller.popoverRoot.window!.frame
                         let eye = button.window!.convertToScreen(

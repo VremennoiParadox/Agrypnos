@@ -58,7 +58,7 @@ enum AgrypnosGlyph {
 }
 
 enum GlyphFactory {
-    static func image(_ glyph: AgrypnosGlyph) -> NSImage {
+    static func image(_ glyph: AgrypnosGlyph, color: NSColor? = nil) -> NSImage {
         let config = NSImage.SymbolConfiguration(pointSize: 16, weight: .medium).applying(.init(scale: .medium))
         let name: String
         switch glyph {
@@ -79,13 +79,18 @@ enum GlyphFactory {
         let composed = NSImage(size: size, flipped: false) { _ in
             base.draw(in: rect)
             if glyph == .armed {
+                NSColor.black.setFill()
                 let d = max(base.size.height * 0.24, 3.5)
                 NSBezierPath(ovalIn: NSRect(x: rect.maxX - d, y: rect.maxY - d,
                                            width: d, height: d)).fill()
             }
+            if let color {
+                color.setFill()
+                NSRect(origin: .zero, size: size).fill(using: .sourceIn)
+            }
             return true
         }
-        composed.isTemplate = true
+        composed.isTemplate = color == nil
         return composed
     }
 }
