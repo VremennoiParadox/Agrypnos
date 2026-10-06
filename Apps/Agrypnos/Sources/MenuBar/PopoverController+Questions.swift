@@ -47,8 +47,29 @@ extension PopoverController {
         refresh()
     }
 
+    func addQuestionInfoButton(in card: CardView, ci: CGFloat, cw: CGFloat, action: Selector) {
+        let image = NSImage(systemSymbolName: "info.circle", accessibilityDescription: "Setup instructions")
+        let button = NSButton(image: image ?? NSImage(), target: self, action: action)
+        button.bezelStyle = .smallSquare
+        button.isBordered = false
+        button.imagePosition = .imageOnly
+        button.setAccessibilityLabel("Setup instructions")
+        button.frame = NSRect(
+            x: ci + cw - 20,
+            y: CGFloat(PopoverStackLayout.prefTitleY),
+            width: 20,
+            height: 18
+        )
+        card.addSubview(button)
+    }
+
+    @objc func showOpenCodeQuestionSetup() { botGuide.show(.openCode) }
+    @objc func showClaudeQuestionSetup() { botGuide.show(.claudeCode) }
+    @objc func showCodexQuestionSetup() { botGuide.show(.codex) }
+
     func addCodexAlertCard(_ card: CardView, ci: CGFloat, cw: CGFloat) {
-        addPrefTitle("Codex alerts", in: card, ci: ci, width: cw)
+        addPrefTitle("Codex alerts", in: card, ci: ci, width: cw - 24)
+        addQuestionInfoButton(in: card, ci: ci, cw: cw, action: #selector(showCodexQuestionSetup))
         _ = PopoverForm.help(QuestionSetupChrome.codexHelp, in: card, y: 36, x: ci, width: cw, lines: 4)
     }
 

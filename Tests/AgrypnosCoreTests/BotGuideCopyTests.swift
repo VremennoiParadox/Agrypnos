@@ -4,9 +4,13 @@ import XCTest
 final class BotGuideCopyTests: XCTestCase {
     func testWindowChromeIsPlain() {
         XCTAssertEqual(BotGuide.windowTitle, "Bot setup")
-        XCTAssertEqual(BotGuideTab.allCases, [.telegram, .discord])
+        XCTAssertEqual(BotGuideTab.allCases, [.telegram, .discord, .openCode, .claudeCode, .codex, .cursor])
         XCTAssertEqual(BotGuideTab.telegram.title, "Telegram")
         XCTAssertEqual(BotGuideTab.discord.title, "Discord")
+        XCTAssertEqual(BotGuideTab.openCode.title, "OpenCode")
+        XCTAssertEqual(BotGuideTab.claudeCode.title, "Claude Code")
+        XCTAssertEqual(BotGuideTab.codex.title, "Codex")
+        XCTAssertEqual(BotGuideTab.cursor.title, "Cursor")
         XCTAssertEqual(AgrypnosCopy.notifSetup, "Setup instructions…")
     }
 
@@ -43,7 +47,7 @@ final class BotGuideCopyTests: XCTestCase {
     }
 
     func testCommandsCoverLidGatedDisarmAsleepMissedAndBattery() {
-        for tab in BotGuideTab.allCases {
+        for tab in [BotGuideTab.telegram, .discord] {
             let text = BotGuide.text(for: tab)
             let lower = text.lowercased()
             for command in ["/arm", "/disarm", "/status", "/help"] {
@@ -76,8 +80,6 @@ final class BotGuideCopyTests: XCTestCase {
             "job finished",
             "still thinking",
             "agent finished",
-            "mac-proven",
-            "mac proven",
             "finish eta",
             "task text",
             "remaining",
@@ -96,13 +98,20 @@ final class BotGuideCopyTests: XCTestCase {
         XCTAssertTrue(blob.contains("does not run a shared bot"))
         XCTAssertFalse(BotGuide.allText.contains("discord.com/api/webhooks/"))
         XCTAssertNil(BotGuide.allText.range(of: #"\d{6,}:[A-Za-z0-9_-]{20,}"#, options: .regularExpression))
+        for tab in [BotGuideTab.telegram, .discord] {
+            let lower = BotGuide.text(for: tab).lowercased()
+            XCTAssertFalse(lower.contains("mac-proven"), "\(tab) must not claim Mac-proven")
+            XCTAssertFalse(lower.contains("mac proven"), "\(tab) must not claim Mac proven")
+        }
+        XCTAssertTrue(BotGuide.text(for: .claudeCode).contains("not Mac-proven yet"))
     }
 
     func testEveryStepIsFilledAndImagesAndLinksAreWellFormed() {
         var images: [String] = []
         for tab in BotGuideTab.allCases {
             let sections = BotGuide.sections(for: tab)
-            XCTAssertGreaterThanOrEqual(sections.count, 3)
+            let minimum = (tab == .telegram || tab == .discord) ? 3 : 1
+            XCTAssertGreaterThanOrEqual(sections.count, minimum)
             for section in sections {
                 XCTAssertFalse(section.title.isEmpty)
                 XCTAssertFalse(section.steps.isEmpty)
@@ -144,13 +153,26 @@ final class BotGuideCopyTests: XCTestCase {
         XCTAssertTrue(text.contains("UserPromptSubmit"))
         XCTAssertTrue(text.contains("brainrot") || text.contains("other hooks"))
         XCTAssertTrue(text.contains("Enable OpenCode forwarding"))
-        XCTAssertTrue(text.contains("Agents → Which tools count as busy → Forward agent questions"))
-        XCTAssertTrue(text.contains("That opens the controls in the same popover."))
-        XCTAssertTrue(text.contains("Notif does not have those cards."))
-        XCTAssertTrue(text.contains("Codex question forwarding is not there."))
-        XCTAssertFalse(text.contains("Enable OpenCode forwarding in Notif"))
-        XCTAssertFalse(text.contains("Enable Claude Code forwarding in Notif"))
+        XCTAssertTrue(text.contains("Question notifications"))
+        XCTAssertTrue(text.contains("Enable Codex alerts"))
+        XCTAssertFalse(text.contains("Agents → Which tools count as busy → Forward agent questions"))
+        XCTAssertFalse(text.contains("Notif does not have those cards."))
+        XCTAssertFalse(text.contains("Codex question forwarding is not there."))
         XCTAssertFalse(text.contains("Notif → Forward agent questions"))
+    }
+
+    func testToolTabsAreInstructionsOnly() {
+        for tab in [BotGuideTab.openCode, .claudeCode, .codex, .cursor] {
+            let text = BotGuide.text(for: tab)
+            XCTAssertFalse(text.isEmpty)
+            XCTAssertFalse(text.localizedCaseInsensitiveContains("agent stopped"))
+            XCTAssertFalse(text.localizedCaseInsensitiveContains("job finished"))
+        }
+        XCTAssertTrue(BotGuide.text(for: .cursor).contains("Cursor cannot forward a question"))
+        XCTAssertTrue(BotGuide.text(for: .codex).contains("/hooks"))
+        XCTAssertTrue(BotGuide.text(for: .codex).contains("does not answer"))
+        XCTAssertTrue(BotGuide.text(for: .openCode).contains("Restart OpenCode once"))
+        XCTAssertTrue(BotGuide.text(for: .claudeCode).contains("AskUserQuestion"))
     }
 }
 

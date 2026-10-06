@@ -40,6 +40,14 @@ final class BotGuideWindow: NSObject {
     }
 
     func show() {
+        show(.telegram)
+    }
+
+    func show(_ tab: BotGuideTab) {
+        if let index = BotGuideTab.allCases.firstIndex(of: tab) {
+            tabs.selectedSegment = index
+        }
+        render(tab)
         if !placed {
             window.center()
             placed = true

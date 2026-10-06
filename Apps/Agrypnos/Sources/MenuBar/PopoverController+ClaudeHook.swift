@@ -5,7 +5,8 @@ import AgrypnosCore
 
 extension PopoverController {
     func addClaudeHookCard(_ card: CardView, ci: CGFloat, cw: CGFloat) {
-        addPrefTitle("Claude Code forwarding", in: card, ci: ci, width: cw)
+        addPrefTitle("Claude Code forwarding", in: card, ci: ci, width: cw - 24)
+        addQuestionInfoButton(in: card, ci: ci, cw: cw, action: #selector(showClaudeQuestionSetup))
         _ = PopoverForm.help(QuestionSetupChrome.claudeHelp, in: card, y: 36, x: ci, width: cw, lines: 3)
         claudeEnableButton = setupClaudeButton(QuestionSetupChrome.claudeEnableTitle,
             action: #selector(enableClaudeHook), in: card, x: ci, y: 88)

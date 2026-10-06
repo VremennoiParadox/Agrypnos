@@ -5,7 +5,8 @@ import AgrypnosCore
 
 extension PopoverController {
     func addOpenCodePluginCard(_ card: CardView, ci: CGFloat, cw: CGFloat) {
-        addPrefTitle("OpenCode forwarding", in: card, ci: ci, width: cw)
+        addPrefTitle("OpenCode forwarding", in: card, ci: ci, width: cw - 24)
+        addQuestionInfoButton(in: card, ci: ci, cw: cw, action: #selector(showOpenCodeQuestionSetup))
         _ = PopoverForm.help(QuestionSetupChrome.pluginHelp, in: card, y: 36, x: ci, width: cw, lines: 3)
         openCodeEnableButton = setupButton(QuestionSetupChrome.enableTitle, action: #selector(enableOpenCodePlugin), in: card, x: ci, y: 88)
         openCodeDisableButton = setupButton("Disable", action: #selector(disableOpenCodePlugin), in: card, x: ci, y: 116)
