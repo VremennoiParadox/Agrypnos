@@ -64,10 +64,6 @@ public struct PopoverStackLayout: Equatable, Sendable {
         prefControlY + index * switchRowHeight
     }
 
-    public static var includeForwardingButtonY: Int {
-        includeSwitchY(index: AgentKind.allCases.count)
-    }
-
     public static var notifEnableHelpY: Int { prefTitleY + titleRowHeight }
     public static var notifEnableSwitchY: Int {
         notifEnableHelpY + PopoverCopyLayout.notifEnableHelpHeightPoints
@@ -114,19 +110,22 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public let claudeHook: PopoverSlot?
     public let openCodeQuestions: PopoverSlot?
     public let questionForwardingBack: PopoverSlot?
+    public let questionNotifications: PopoverSlot?
+    public let codexAlert: PopoverSlot?
+    public let cursorQuestionNote: PopoverSlot?
     public let notifSetup: PopoverSlot?
     public let notifClear: PopoverSlot?
     public let shortcutY: Int?
     public let hotkeyHint: PopoverSlot?
     public let quitY: Int?
-    public let showQuestionForwarding: Bool
+    public let showQuestionNotifications: Bool
     public let contentHeight: Int
     public let popoverHeight: Int
 
     public var needsScroll: Bool { contentHeight > popoverHeight }
 
     public var stackedCards: [PopoverSlot] {
-        section.cards(showQuestionForwarding: showQuestionForwarding).compactMap { slot($0) }
+        section.cards(showQuestionNotifications: showQuestionNotifications).compactMap { slot($0) }
     }
 
     public func slot(_ card: PopoverCard) -> PopoverSlot? {
@@ -153,6 +152,9 @@ public struct PopoverStackLayout: Equatable, Sendable {
         case .claudeHook: return claudeHook
         case .openCodeQuestions: return openCodeQuestions
         case .questionForwardingBack: return questionForwardingBack
+        case .questionNotifications: return questionNotifications
+        case .codexAlert: return codexAlert
+        case .cursorQuestionNote: return cursorQuestionNote
         case .notifSetup: return notifSetup
         case .notifClear: return notifClear
         }
@@ -161,7 +163,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static func make(
         section: PopoverSection = .default,
         panelPowerMode: PanelPowerMode = .default,
-        showQuestionForwarding: Bool = false,
+        showQuestionNotifications: Bool = false,
         showManualOpenCodeConnection: Bool = false
     ) -> PopoverStackLayout {
         let watchHeight = inset + 28 + PopoverCopyLayout.captionHeightPoints + inset
@@ -176,7 +178,6 @@ public struct PopoverStackLayout: Equatable, Sendable {
             + titleRowHeight
             + PopoverCopyLayout.helpHeightPoints
             + AgentKind.allCases.count * switchRowHeight
-            + switchRowHeight
             + inset
         let settleHeight =
             inset
@@ -267,6 +268,9 @@ public struct PopoverStackLayout: Equatable, Sendable {
             case .claudeHook: return QuestionSetupChrome.claudeCardHeight
             case .openCodeQuestions: return QuestionSetupChrome.connectionCardHeight
             case .questionForwardingBack: return loginCardHeight
+            case .questionNotifications: return loginCardHeight
+            case .codexAlert: return QuestionSetupChrome.claudeCardHeight
+            case .cursorQuestionNote: return loginCardHeight
             case .notifSetup: return loginCardHeight
             case .notifClear: return loginCardHeight
             }
@@ -280,12 +284,14 @@ public struct PopoverStackLayout: Equatable, Sendable {
         }
 
         var placed: [PopoverCard: PopoverSlot] = [:]
-        for card in section.cards(showQuestionForwarding: showQuestionForwarding) {
-            if card == .openCodeQuestions, !showManualOpenCodeConnection { continue }
+        for card in section.cards(showQuestionNotifications: showQuestionNotifications) {
             if card == .ramp, !PanelPowerChrome.showsLidOpenRamp(panelPowerMode) {
                 continue
             }
             placed[card] = place(height(for: card))
+            if card == .pluginConnection, showManualOpenCodeConnection {
+                placed[.openCodeQuestions] = place(height(for: .openCodeQuestions))
+            }
         }
 
         var shortcutY: Int?
@@ -301,7 +307,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
             hotkeyHint = hint
             quitY = hint.maxY + 10
             contentHeight = quitY! + quitReserve
-        } else if let last = section.cards(showQuestionForwarding: showQuestionForwarding)
+        } else if let last = section.cards(showQuestionNotifications: showQuestionNotifications)
             .compactMap({ placed[$0] }).last {
             contentHeight = last.maxY + pad
         } else {
@@ -334,12 +340,15 @@ public struct PopoverStackLayout: Equatable, Sendable {
             claudeHook: placed[.claudeHook],
             openCodeQuestions: placed[.openCodeQuestions],
             questionForwardingBack: placed[.questionForwardingBack],
+            questionNotifications: placed[.questionNotifications],
+            codexAlert: placed[.codexAlert],
+            cursorQuestionNote: placed[.cursorQuestionNote],
             notifSetup: placed[.notifSetup],
             notifClear: placed[.notifClear],
             shortcutY: shortcutY,
             hotkeyHint: hotkeyHint,
             quitY: quitY,
-            showQuestionForwarding: showQuestionForwarding,
+            showQuestionNotifications: showQuestionNotifications,
             contentHeight: contentHeight,
             popoverHeight: popoverHeight
         )

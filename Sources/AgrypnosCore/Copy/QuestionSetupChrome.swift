@@ -1,4 +1,9 @@
 public enum QuestionSetupChrome {
+    public static let disclosureTitle = "Question notifications"
+    public static let beta = "BETA"
+    public static let cursorNote = "Cursor cannot forward a question or send a waiting alert. The question stays in Cursor."
+    public static let codexEnableTitle = "Enable Codex alerts"
+    public static let codexHelp = "Adds a hook that tells your bot when Codex is waiting on you or waiting for an approval. It does not answer the question. Trust the new hook with /hooks in the Codex CLI. Not checked in the ChatGPT app yet."
     public static let title = "Forward agent questions"
     public static let help = "Structured OpenCode and Claude Code choices on your bot. Free text and approvals stay on Mac. Cursor and Codex are unavailable in this test build."
     public static let policy = "While armed, questions hold the watch for 10 minutes. Busy or unknown activity delays auto-off. Forwarding never arms it."

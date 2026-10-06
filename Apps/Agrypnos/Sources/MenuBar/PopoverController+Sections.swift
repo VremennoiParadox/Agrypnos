@@ -15,15 +15,15 @@ extension PopoverController {
             animated: popover.isShown && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
             currentHeight: Int((popoverRoot.window?.frame.height ?? popover.contentSize.height).rounded()),
             panelPowerMode: runtime?.preferences.panelPowerMode ?? .default,
-            showQuestionForwarding: showQuestionForwarding,
+            showQuestionNotifications: showQuestionNotifications,
             showManualOpenCodeConnection: showManualOpenCodeConnection
         )
-        if section != .agents { showQuestionForwarding = false }
+        if section != .notif { showQuestionNotifications = false }
         currentSection = section
         let layout = PopoverStackLayout.make(
             section: section,
             panelPowerMode: runtime?.preferences.panelPowerMode ?? .default,
-            showQuestionForwarding: section == .agents && showQuestionForwarding,
+            showQuestionNotifications: section == .notif && showQuestionNotifications,
             showManualOpenCodeConnection: showManualOpenCodeConnection
         )
         let pad = CGFloat(PopoverStackLayout.pad)
@@ -108,10 +108,12 @@ extension PopoverController {
         PopoverForm.apply(notifDiscordInboundCard, slot: layout.notifDiscordInbound, pad: pad, width: width)
         PopoverForm.apply(notifTelegramCard, slot: layout.notifTelegram, pad: pad, width: width)
         PopoverForm.apply(notifTelegramInboundCard, slot: layout.notifTelegramInbound, pad: pad, width: width)
-        PopoverForm.apply(questionForwardingBackCard, slot: layout.questionForwardingBack, pad: pad, width: width)
+        PopoverForm.apply(questionNotificationsCard, slot: layout.questionNotifications, pad: pad, width: width)
         PopoverForm.apply(questionRelayCard, slot: layout.questionRelay, pad: pad, width: width)
         PopoverForm.apply(openCodePluginCard, slot: layout.pluginConnection, pad: pad, width: width)
         PopoverForm.apply(claudeHookCard, slot: layout.claudeHook, pad: pad, width: width)
+        PopoverForm.apply(codexAlertCard, slot: layout.codexAlert, pad: pad, width: width)
+        PopoverForm.apply(cursorQuestionNoteCard, slot: layout.cursorQuestionNote, pad: pad, width: width)
         PopoverForm.apply(openCodeQuestionsCard, slot: layout.openCodeQuestions, pad: pad, width: width)
         PopoverForm.apply(notifSetupCard, slot: layout.notifSetup, pad: pad, width: width)
         PopoverForm.apply(notifClearCard, slot: layout.notifClear, pad: pad, width: width)

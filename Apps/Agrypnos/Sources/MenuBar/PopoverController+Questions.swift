@@ -5,37 +5,65 @@ import AgrypnosCore
 #endif
 
 extension PopoverController {
-    func addQuestionForwardingBackCard(_ card: CardView, ci: CGFloat, cw: CGFloat) {
-        questionForwardingBackButton = NSButton(
-            title: AgrypnosCopy.agentInclude,
+    func addQuestionNotificationsCard(_ card: CardView, ci: CGFloat, cw: CGFloat) {
+        questionNotificationsButton = NSButton(
+            title: QuestionSetupChrome.disclosureTitle,
             target: self,
-            action: #selector(hideQuestionForwardingSettings)
+            action: #selector(toggleQuestionNotifications)
         )
-        questionForwardingBackButton.bezelStyle = .rounded
-        questionForwardingBackButton.controlSize = .regular
-        questionForwardingBackButton.setAccessibilityLabel(AgrypnosCopy.agentInclude)
-        questionForwardingBackButton.sizeToFit()
-        let width = min(max(questionForwardingBackButton.frame.width + 8, 120), cw)
-        let height = max(questionForwardingBackButton.frame.height, 24)
+        questionNotificationsButton.bezelStyle = .rounded
+        questionNotificationsButton.controlSize = .regular
+        questionNotificationsButton.setAccessibilityLabel(QuestionSetupChrome.disclosureTitle)
+        questionNotificationsButton.sizeToFit()
+        let height = max(questionNotificationsButton.frame.height, 24)
+        let width = min(max(questionNotificationsButton.frame.width + 8, 120), cw - 56)
         let y = (CGFloat(PopoverStackLayout.loginCardHeight) - height) / 2
-        questionForwardingBackButton.frame = NSRect(x: ci, y: y, width: width, height: height)
-        card.addSubview(questionForwardingBackButton)
+        questionNotificationsButton.frame = NSRect(x: ci, y: y, width: width, height: height)
+        card.addSubview(questionNotificationsButton)
+
+        let beta = LabelFactory.make(
+            QuestionSetupChrome.beta,
+            font: .systemFont(ofSize: 11, weight: .semibold),
+            color: .systemOrange
+        )
+        beta.sizeToFit()
+        let betaY = y + (height - beta.frame.height) / 2
+        beta.frame.origin = NSPoint(x: questionNotificationsButton.frame.maxX + 8, y: betaY)
+        beta.setAccessibilityLabel(QuestionSetupChrome.beta)
+        card.addSubview(beta)
+        questionNotificationsBeta = beta
     }
 
-    @objc func showQuestionForwardingSettings() {
+    @objc func toggleQuestionNotifications() {
         stopRecordingIfNeeded()
-        showQuestionForwarding = true
-        applySection(.agents)
-        loadQuestionFields()
+        if showQuestionNotifications {
+            commitQuestionUserFields()
+        }
+        showQuestionNotifications.toggle()
+        applySection(.notif)
+        if showQuestionNotifications {
+            loadQuestionFields()
+        }
         refresh()
     }
 
-    @objc func hideQuestionForwardingSettings() {
-        stopRecordingIfNeeded()
-        commitQuestionUserFields()
-        showQuestionForwarding = false
-        applySection(.agents)
-        refresh()
+    func addCodexAlertCard(_ card: CardView, ci: CGFloat, cw: CGFloat) {
+        addPrefTitle("Codex alerts", in: card, ci: ci, width: cw)
+        _ = PopoverForm.help(QuestionSetupChrome.codexHelp, in: card, y: 36, x: ci, width: cw, lines: 4)
+    }
+
+    func addCursorQuestionNoteCard(_ card: CardView, ci: CGFloat, cw: CGFloat) {
+        let note = LabelFactory.wrapping(
+            QuestionSetupChrome.cursorNote,
+            font: .systemFont(ofSize: 12),
+            color: .secondaryLabelColor,
+            lines: 2
+        )
+        let height = max(note.intrinsicContentSize.height, 22)
+        let y = (CGFloat(PopoverStackLayout.loginCardHeight) - height) / 2
+        note.frame = NSRect(x: ci, y: y, width: cw, height: height)
+        note.preferredMaxLayoutWidth = cw
+        card.addSubview(note)
     }
 
     func addQuestionRelayCard(_ card: CardView, contentW: CGFloat, ci: CGFloat, cw: CGFloat,

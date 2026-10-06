@@ -11,50 +11,33 @@ final class QuestionRelayLayoutTests: XCTestCase {
         XCTAssertFalse(AgrypnosCopy.agentInclude.lowercased().contains("extra"))
         let tools = PopoverStackLayout.make(section: .agents)
         XCTAssertEqual(
-            PopoverStackLayout.includeForwardingButtonY,
-            PopoverStackLayout.includeSwitchY(index: AgentKind.allCases.count)
-        )
-        XCTAssertEqual(
             tools.agentInclude!.height,
             PopoverStackLayout.inset
                 + PopoverStackLayout.titleRowHeight
                 + PopoverCopyLayout.helpHeightPoints
                 + AgentKind.allCases.count * PopoverStackLayout.switchRowHeight
-                + PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset
-        )
-        XCTAssertEqual(
-            PopoverStackLayout.includeForwardingButtonY + PopoverStackLayout.switchRowHeight
-                + PopoverStackLayout.inset,
-            tools.agentInclude!.height
         )
     }
 
-    func testQuestionCardsMoveToAgentsButtonAndLeaveNotif() throws {
-        XCTAssertEqual(
-            PopoverSection.notif.cards,
-            [
-                .notifSetup,
-                .notifEnable, .notifDiscord, .notifDiscordInbound, .notifTelegram, .notifTelegramInbound,
-                .notifClear,
-            ]
-        )
-        XCTAssertEqual(
-            PopoverSection.agents.cards(showQuestionForwarding: true),
-            [.questionForwardingBack, .questionRelay, .pluginConnection, .claudeHook, .openCodeQuestions]
-        )
+    func testQuestionCardsStayOffAgentsAndClosedNotifHidesThem() throws {
         XCTAssertEqual(PopoverSection.agents.cards, [.agentInclude, .settle, .terminalBusy])
-        XCTAssertFalse(PopoverSection.agents.cards(showQuestionForwarding: true).contains(.agentInclude))
-
+        XCTAssertEqual(
+            PopoverSection.agents.cards(showQuestionNotifications: true),
+            [.agentInclude, .settle, .terminalBusy]
+        )
         let notif = PopoverStackLayout.make(section: .notif, showManualOpenCodeConnection: true)
+        XCTAssertNotNil(notif.questionNotifications)
         XCTAssertNil(notif.questionRelay)
         XCTAssertNil(notif.pluginConnection)
         XCTAssertNil(notif.claudeHook)
         XCTAssertNil(notif.openCodeQuestions)
+        XCTAssertNil(notif.codexAlert)
+        XCTAssertNil(notif.cursorQuestionNote)
         XCTAssertNil(notif.questionForwardingBack)
         XCTAssertEqual(notif.notifSetup?.y, PopoverStackLayout.firstCardY)
         XCTAssertEqual(notif.notifEnable?.y, notif.notifSetup!.maxY + PopoverStackLayout.cardGap)
-        XCTAssertEqual(notif.stackedCards.count, 7)
+        XCTAssertEqual(notif.stackedCards.count, 8)
         XCTAssertEqual(notif.contentHeight, notif.notifClear!.maxY + PopoverStackLayout.pad)
 
         let tools = PopoverStackLayout.make(section: .agents)
@@ -68,28 +51,26 @@ final class QuestionRelayLayoutTests: XCTestCase {
         XCTAssertNil(tools.questionForwardingBack)
 
         let layout = PopoverStackLayout.make(
-            section: .agents,
-            showQuestionForwarding: true,
+            section: .notif,
+            showQuestionNotifications: true,
             showManualOpenCodeConnection: true
         )
-        let back = try XCTUnwrap(layout.questionForwardingBack)
         let forwarding = try XCTUnwrap(layout.questionRelay)
         let connection = try XCTUnwrap(layout.openCodeQuestions)
-        XCTAssertEqual(back.y, PopoverStackLayout.firstCardY)
-        XCTAssertEqual(back.height, PopoverStackLayout.loginCardHeight)
-        XCTAssertEqual(forwarding.y, back.maxY + PopoverStackLayout.cardGap)
+        XCTAssertEqual(layout.questionNotifications?.y, layout.notifTelegramInbound!.maxY + PopoverStackLayout.cardGap)
+        XCTAssertEqual(forwarding.y, layout.questionNotifications!.maxY + PopoverStackLayout.cardGap)
         XCTAssertGreaterThanOrEqual(forwarding.height, QuestionSetupChrome.statusY + QuestionSetupChrome.statusHeight + 12)
-        XCTAssertEqual(layout.pluginConnection?.y, forwarding.maxY + 10)
-        XCTAssertEqual(layout.claudeHook?.y, layout.pluginConnection!.maxY + 10)
-        XCTAssertGreaterThanOrEqual(layout.claudeHook!.height, QuestionSetupChrome.claudeStatusY + 32 + 12)
-        XCTAssertEqual(connection.y, layout.claudeHook!.maxY + 10)
+        XCTAssertEqual(layout.pluginConnection?.y, forwarding.maxY + PopoverStackLayout.cardGap)
+        XCTAssertEqual(connection.y, layout.pluginConnection!.maxY + PopoverStackLayout.cardGap)
         XCTAssertGreaterThanOrEqual(connection.height, QuestionSetupChrome.connectionButtonsY + 24 + 12)
-        XCTAssertEqual(layout.contentHeight, connection.maxY + PopoverStackLayout.pad)
+        XCTAssertEqual(layout.claudeHook?.y, connection.maxY + PopoverStackLayout.cardGap)
+        XCTAssertGreaterThanOrEqual(layout.claudeHook!.height, QuestionSetupChrome.claudeStatusY + 32 + 12)
+        XCTAssertEqual(layout.codexAlert?.y, layout.claudeHook!.maxY + PopoverStackLayout.cardGap)
+        XCTAssertEqual(layout.cursorQuestionNote?.y, layout.codexAlert!.maxY + PopoverStackLayout.cardGap)
+        XCTAssertEqual(layout.contentHeight, layout.notifClear!.maxY + PopoverStackLayout.pad)
+        XCTAssertNil(layout.questionForwardingBack)
         XCTAssertNil(layout.agentInclude)
-        XCTAssertNil(layout.settle)
-        XCTAssertNil(layout.terminalBusy)
-        XCTAssertNil(layout.notifSetup)
-        for section in [PopoverSection.watch, .power, .notif, .general] {
+        for section in [PopoverSection.watch, .power, .agents, .general] {
             XCTAssertNil(PopoverStackLayout.make(section: section).questionRelay)
             XCTAssertNil(PopoverStackLayout.make(section: section).openCodeQuestions)
             XCTAssertNil(PopoverStackLayout.make(section: section).claudeHook)
@@ -97,11 +78,11 @@ final class QuestionRelayLayoutTests: XCTestCase {
         }
     }
 
-    func testOneButtonLayoutKeepsManualFormCollapsedInAgents() {
-        let compact = PopoverStackLayout.make(section: .agents, showQuestionForwarding: true)
+    func testOneButtonLayoutKeepsManualFormCollapsedUntilOpened() {
+        let compact = PopoverStackLayout.make(section: .notif, showQuestionNotifications: true)
         let manual = PopoverStackLayout.make(
-            section: .agents,
-            showQuestionForwarding: true,
+            section: .notif,
+            showQuestionNotifications: true,
             showManualOpenCodeConnection: true
         )
         XCTAssertNotNil(compact.pluginConnection)
@@ -113,58 +94,59 @@ final class QuestionRelayLayoutTests: XCTestCase {
         XCTAssertNil(PopoverStackLayout.make(section: .notif).pluginConnection)
     }
 
-    func testAgentsQuestionPaneAnimatesHeightLikeSectionSwitch() {
-        let tools = PopoverStackLayout.make(section: .agents)
-        let questions = PopoverStackLayout.make(section: .agents, showQuestionForwarding: true)
-        XCTAssertNotEqual(tools.popoverHeight, questions.popoverHeight)
+    func testQuestionDisclosureAnimatesHeightLikeSectionSwitch() {
+        let closed = PopoverStackLayout.make(section: .notif)
+        let open = PopoverStackLayout.make(section: .notif, showQuestionNotifications: true)
+        XCTAssertGreaterThan(open.contentHeight, closed.contentHeight)
         let reduce = PopoverSectionResize.make(
-            from: .agents,
-            to: .agents,
+            from: .notif,
+            to: .notif,
             animated: false,
-            currentHeight: tools.popoverHeight,
-            showQuestionForwarding: true
+            currentHeight: closed.popoverHeight,
+            showQuestionNotifications: true
         )
         XCTAssertFalse(reduce.animatesHeight)
         XCTAssertEqual(reduce.durationSeconds, 0)
         XCTAssertEqual(reduce.timing, .none)
+        XCTAssertEqual(reduce.documentHeightDuringMotion, open.contentHeight)
         let motion = PopoverSectionResize.make(
-            from: .agents,
-            to: .agents,
+            from: .notif,
+            to: .notif,
             animated: true,
-            currentHeight: tools.popoverHeight,
-            showQuestionForwarding: true
+            currentHeight: min(400, closed.popoverHeight - 1),
+            showQuestionNotifications: true
         )
         XCTAssertTrue(motion.animatesHeight)
         XCTAssertEqual(motion.durationSeconds, PopoverSectionResize.standardDurationSeconds)
         XCTAssertEqual(motion.durationSeconds, 0.25)
         XCTAssertEqual(motion.timing, .easeInEaseOut)
         XCTAssertTrue(motion.hidesOutgoingImmediately)
-        XCTAssertEqual(motion.documentHeightDuringMotion, questions.contentHeight)
-        XCTAssertEqual(motion.toHeight, questions.popoverHeight)
+        XCTAssertEqual(motion.documentHeightDuringMotion, open.contentHeight)
+        XCTAssertEqual(motion.toHeight, open.popoverHeight)
         let back = PopoverSectionResize.make(
-            from: .agents,
-            to: .agents,
+            from: .notif,
+            to: .notif,
             animated: true,
-            currentHeight: questions.popoverHeight,
-            showQuestionForwarding: false
+            currentHeight: open.popoverHeight,
+            showQuestionNotifications: false
         )
-        XCTAssertTrue(back.animatesHeight)
-        XCTAssertEqual(back.timing, .easeInEaseOut)
         XCTAssertTrue(back.hidesOutgoingImmediately)
-        XCTAssertEqual(back.documentHeightDuringMotion, tools.contentHeight)
+        XCTAssertEqual(back.documentHeightDuringMotion, closed.contentHeight)
+        XCTAssertEqual(back.toHeight, closed.popoverHeight)
+        XCTAssertEqual(back.timing, back.animatesHeight ? PopoverSectionResize.Timing.easeInEaseOut : .none)
     }
 
     func testManualDisclosureKeepsDocumentLargeEnoughForEveryControl() {
         let layout = PopoverStackLayout.make(
-            section: .agents,
-            showQuestionForwarding: true,
+            section: .notif,
+            showQuestionNotifications: true,
             showManualOpenCodeConnection: true
         )
         let resize = PopoverSectionResize.make(
-            from: .agents,
-            to: .agents,
+            from: .notif,
+            to: .notif,
             animated: false,
-            showQuestionForwarding: true,
+            showQuestionNotifications: true,
             showManualOpenCodeConnection: true
         )
         XCTAssertEqual(resize.documentHeightDuringMotion, layout.contentHeight)

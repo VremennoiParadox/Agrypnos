@@ -21,6 +21,9 @@ public enum PopoverCard: Equatable, Hashable, Sendable {
     case claudeHook
     case openCodeQuestions
     case questionForwardingBack
+    case questionNotifications
+    case codexAlert
+    case cursorQuestionNote
     case notifSetup
     case notifClear
 }
@@ -48,20 +51,23 @@ public enum PopoverSection: Int, CaseIterable, Sendable {
 
     public var cards: [PopoverCard] { cards() }
 
-    public func cards(showQuestionForwarding: Bool = false) -> [PopoverCard] {
+    public func cards(showQuestionNotifications: Bool = false) -> [PopoverCard] {
         switch self {
         case .watch: return [.watch, .duration, .lastWatchEnd]
         case .power: return [.panelPower, .hygiene, .battery, .ramp, .thermal]
         case .agents:
-            if showQuestionForwarding {
-                return [.questionForwardingBack, .questionRelay, .pluginConnection, .claudeHook, .openCodeQuestions]
-            }
             return [.agentInclude, .settle, .terminalBusy]
-        case .notif: return [
-            .notifSetup,
-            .notifEnable, .notifDiscord, .notifDiscordInbound, .notifTelegram, .notifTelegramInbound,
-            .notifClear,
-        ]
+        case .notif:
+            var cards: [PopoverCard] = [
+                .notifSetup,
+                .notifEnable, .notifDiscord, .notifDiscordInbound, .notifTelegram, .notifTelegramInbound,
+                .questionNotifications,
+            ]
+            if showQuestionNotifications {
+                cards += [.questionRelay, .pluginConnection, .claudeHook, .codexAlert, .cursorQuestionNote]
+            }
+            cards.append(.notifClear)
+            return cards
         case .general: return [.login]
         }
     }

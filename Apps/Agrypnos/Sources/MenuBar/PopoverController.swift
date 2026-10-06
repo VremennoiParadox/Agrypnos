@@ -87,11 +87,13 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var claudeEnableButton: NSButton!
     var claudeDisableButton: NSButton!
     var claudeHookStatus: NSTextField!
+    var codexAlertCard: CardView!
+    var cursorQuestionNoteCard: CardView!
     var showManualOpenCodeConnection = false
-    var showQuestionForwarding = false
-    var questionForwardingButton: NSButton!
-    var questionForwardingBackCard: CardView!
-    var questionForwardingBackButton: NSButton!
+    var showQuestionNotifications = false
+    var questionNotificationsCard: CardView!
+    var questionNotificationsButton: NSButton!
+    var questionNotificationsBeta: NSTextField!
     var openCodeQuestionsCard: CardView!
     var forwardQuestionsSwitch: NSSwitch!
     var telegramQuestionUser: SecretRevealRow!
@@ -226,7 +228,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     }
 
     func open(relativeTo button: NSView) {
-        showQuestionForwarding = false
+        showQuestionNotifications = false
         applySection(.watch)
         refresh()
         NSApp.activate(ignoringOtherApps: true)
@@ -247,8 +249,6 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         commitMinutesIfChanged(onLeaveWatch: true)
         if currentSection == .notif {
             commitNotifFields()
-        }
-        if showQuestionForwarding {
             commitQuestionUserFields()
         }
         recorder.stop()
@@ -333,8 +333,6 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         }
         if currentSection == .notif, section != .notif {
             commitNotifFields()
-        }
-        if currentSection == .agents, showQuestionForwarding, section != .agents {
             commitQuestionUserFields()
         }
         stopRecordingIfNeeded()

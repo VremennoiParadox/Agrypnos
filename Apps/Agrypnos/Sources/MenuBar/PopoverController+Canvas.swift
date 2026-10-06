@@ -169,22 +169,28 @@ extension PopoverController {
             swH: swH
         )
 
-        let forwarding = PopoverStackLayout.make(
-            section: .agents,
-            showQuestionForwarding: true,
+        let questions = PopoverStackLayout.make(
+            section: .notif,
+            showQuestionNotifications: true,
             showManualOpenCodeConnection: true
         )
-        questionForwardingBackCard = PopoverForm.card(
-            in: document, slot: forwarding.questionForwardingBack!, pad: pad, width: contentW
+        questionNotificationsCard = PopoverForm.card(
+            in: document, slot: questions.questionNotifications!, pad: pad, width: contentW
         )
-        addQuestionForwardingBackCard(questionForwardingBackCard, ci: ci, cw: cw)
-        questionRelayCard = PopoverForm.card(in: document, slot: forwarding.questionRelay!, pad: pad, width: contentW)
+        addQuestionNotificationsCard(questionNotificationsCard, ci: ci, cw: cw)
+        questionRelayCard = PopoverForm.card(in: document, slot: questions.questionRelay!, pad: pad, width: contentW)
         addQuestionRelayCard(questionRelayCard, contentW: contentW, ci: ci, cw: cw, swW: swW, swH: swH)
-        openCodePluginCard = PopoverForm.card(in: document, slot: forwarding.pluginConnection!, pad: pad, width: contentW)
+        openCodePluginCard = PopoverForm.card(in: document, slot: questions.pluginConnection!, pad: pad, width: contentW)
         addOpenCodePluginCard(openCodePluginCard, ci: ci, cw: cw)
-        claudeHookCard = PopoverForm.card(in: document, slot: forwarding.claudeHook!, pad: pad, width: contentW)
+        claudeHookCard = PopoverForm.card(in: document, slot: questions.claudeHook!, pad: pad, width: contentW)
         addClaudeHookCard(claudeHookCard, ci: ci, cw: cw)
-        openCodeQuestionsCard = PopoverForm.card(in: document, slot: forwarding.openCodeQuestions!, pad: pad, width: contentW)
+        codexAlertCard = PopoverForm.card(in: document, slot: questions.codexAlert!, pad: pad, width: contentW)
+        addCodexAlertCard(codexAlertCard, ci: ci, cw: cw)
+        cursorQuestionNoteCard = PopoverForm.card(
+            in: document, slot: questions.cursorQuestionNote!, pad: pad, width: contentW
+        )
+        addCursorQuestionNoteCard(cursorQuestionNoteCard, ci: ci, cw: cw)
+        openCodeQuestionsCard = PopoverForm.card(in: document, slot: questions.openCodeQuestions!, pad: pad, width: contentW)
         addOpenCodeQuestionsCard(openCodeQuestionsCard, ci: ci, cw: cw)
 
         notifSetupCard = PopoverForm.card(in: document, slot: notif.notifSetup!, pad: pad, width: contentW)

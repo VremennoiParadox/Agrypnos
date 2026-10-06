@@ -12,10 +12,11 @@ final class NotifPopoverChromeTests: XCTestCase {
                 .notifDiscordInbound,
                 .notifTelegram,
                 .notifTelegramInbound,
+                .questionNotifications,
                 .notifClear,
             ]
         )
-        XCTAssertFalse(PopoverSection.notif.cards.isEmpty)
+        XCTAssertEqual(PopoverSection.notif.cards.count, 8)
         XCTAssertEqual(PopoverSection.notif.cards.first, .notifSetup)
         XCTAssertEqual(PopoverSection.notif.cards.last, .notifClear)
         XCTAssertFalse(PopoverSection.watch.cards.contains(.notifEnable))
@@ -326,6 +327,7 @@ final class NotifPopoverChromeTests: XCTestCase {
                 layout.notifDiscordInbound,
                 layout.notifTelegram,
                 layout.notifTelegramInbound,
+                layout.questionNotifications,
                 layout.notifClear
             )
         )
@@ -341,7 +343,11 @@ final class NotifPopoverChromeTests: XCTestCase {
             layout.notifTelegramInbound?.y,
             layout.notifTelegram!.maxY + PopoverStackLayout.cardGap
         )
-        XCTAssertEqual(layout.notifClear?.y, layout.notifTelegramInbound!.maxY + PopoverStackLayout.cardGap)
+        XCTAssertEqual(
+            layout.questionNotifications?.y,
+            layout.notifTelegramInbound!.maxY + PopoverStackLayout.cardGap
+        )
+        XCTAssertEqual(layout.notifClear?.y, layout.questionNotifications!.maxY + PopoverStackLayout.cardGap)
         XCTAssertEqual(layout.contentHeight, layout.notifClear!.maxY + PopoverStackLayout.pad)
         XCTAssertNil(layout.watch)
         XCTAssertNil(layout.settle)
