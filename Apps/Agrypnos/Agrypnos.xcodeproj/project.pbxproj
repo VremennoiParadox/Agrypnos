@@ -17,7 +17,9 @@
 		EE4DE2012E8891D5E35D9C27 /* PopoverChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = F94178055CD17CB0C1E4EBE4 /* PopoverChrome.swift */; };
 		87299C24812BC138E73D77BC /* PopoverController+Canvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50D9BE7A9730D85A15B6E96E /* PopoverController+Canvas.swift */; };
 		83E9538CE09AAA2166595788 /* PopoverController+Cards.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9704B117A23E378C79A3883 /* PopoverController+Cards.swift */; };
+		51A4F14CFF7974BBC248E4FB /* PopoverController+ClaudeHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052BE85C746568D8A215D1DF /* PopoverController+ClaudeHook.swift */; };
 		3E342BC9083A87088493456F /* PopoverController+Notif.swift in Sources */ = {isa = PBXBuildFile; fileRef = D36BE0786C01BFCA5770EAE1 /* PopoverController+Notif.swift */; };
+		B3BF8385D303AB9F8B3915EC /* PopoverController+OpenCodePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2D724306EE431110D4B6552 /* PopoverController+OpenCodePlugin.swift */; };
 		D26100AA275DD2C7CC545A83 /* PopoverController+Questions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8B9236115BA41F196506414 /* PopoverController+Questions.swift */; };
 		946833446CCD0F60CEC3EABD /* PopoverController+Sections.swift in Sources */ = {isa = PBXBuildFile; fileRef = D48DE8BD25DF8F38E91DBE39 /* PopoverController+Sections.swift */; };
 		40DF44DBC43DE8B05319E1F5 /* PopoverController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 329EC7D50E7C6B456084BE11 /* PopoverController.swift */; };
@@ -36,10 +38,20 @@
 		2AECF1A258D31B94B7028546 /* PowerHygieneCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D443A71D05E57A14624F2175 /* PowerHygieneCoordinator.swift */; };
 		CE82BC78031023E280DBD432 /* SleepDisabledController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A325704A38E6F231B4A961F1 /* SleepDisabledController.swift */; };
 		31DBD3069D96D292DC184EDD /* PreferencesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 986AF8E920E5E71D993DED12 /* PreferencesStore.swift */; };
+		B0C0CFCEE86F8D71B86ADB21 /* ClaudeQuestionHookProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A5DD98D5B5F27BDFB13BEC /* ClaudeQuestionHookProcess.swift */; };
+		04C7778A0C73432F88195BEB /* ClaudeQuestionHookSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDC5D2452EB7A687AEBD102F /* ClaudeQuestionHookSource.swift */; };
+		EC07AB0FC4B919E42C1A6E55 /* CodexAlertHookProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66360EE08998F484E04F9FCF /* CodexAlertHookProcess.swift */; };
+		DC9A7A9AB93F0083BE28150F /* OpenCodeBridgeSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DC474EA636B5349E22D92E4 /* OpenCodeBridgeSocket.swift */; };
 		C13AF58296A206B4C6CB98D7 /* OpenCodeEventFrames.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B758FA4AA59BA763C06F474 /* OpenCodeEventFrames.swift */; };
+		D62103D186BB34D00D643A04 /* OpenCodePluginInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E311482565640C0F477A20C /* OpenCodePluginInstaller.swift */; };
+		230D18B8311BC41365F49726 /* OpenCodePluginQuestionSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BD93DE23DBB038F87577B05 /* OpenCodePluginQuestionSource.swift */; };
+		7924D04765B767DBABA8CBD3 /* OpenCodePrivateFiles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78BB415D96548BD2FF5D530E /* OpenCodePrivateFiles.swift */; };
 		26997208C8E3082769BE45F2 /* OpenCodeQuestionSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1039890FF19ADB62E5C568F9 /* OpenCodeQuestionSource.swift */; };
 		4A547D34E748E74CA1E5E7F0 /* QuestionNoticeSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFE80B315E75852FC6FB9487 /* QuestionNoticeSender.swift */; };
 		8E4E13B32E0259DCDFD42AAC /* QuestionRelayCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12C9FECD0358EC968A877043 /* QuestionRelayCoordinator.swift */; };
+		99CEFA89943C6E67547AC8E7 /* WatchRuntime+ClaudeHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF6C502C88EC052010B4657 /* WatchRuntime+ClaudeHook.swift */; };
+		759A152DDBA730E1113AEC52 /* WatchRuntime+CodexAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113A610CC2130EB7A024A3D1 /* WatchRuntime+CodexAlert.swift */; };
+		9220E026EB9DE21D9BBD49D6 /* WatchRuntime+OpenCodePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0A96843193090A533D8ACD /* WatchRuntime+OpenCodePlugin.swift */; };
 		FDA8F52147E7338E922F9CA6 /* WatchRuntime+OpenCodeQuestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C77F1225166AE837C6FEEE7 /* WatchRuntime+OpenCodeQuestions.swift */; };
 		DC26D17267A407DFB2705C3E /* WatchRuntime+Questions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C325B421A7E2C074D618543 /* WatchRuntime+Questions.swift */; };
 		436DA0943AEB42FDD30C5580 /* GrantAndNotify.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD7C3F5A1565378FE3CC9B8A /* GrantAndNotify.swift */; };
@@ -52,17 +64,6 @@
 		095E19E7CB28F7EE95D82908 /* AgrypnosCore in Frameworks */ = {isa = PBXBuildFile; productRef = C81CD5F22406E4B780AC870D /* AgrypnosCore */; };
 		6B8001DABC00C7B45D3BFA0C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8B40A3F1CAC9ADB66B78DD5C /* Assets.xcassets */; };
 		BBE0CDF003CDB2E92B81738B /* grant.sh in Resources */ = {isa = PBXBuildFile; fileRef = 9A657A8A538B844742E8496C /* grant.sh */; };
-		604B346E35D59DE1830C0A39 /* OpenCodePluginInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97738DC24BF21AEB4ACCCF7B /* OpenCodePluginInstaller.swift */; };
-		2AB51F102FB8206FEF36F1B1 /* OpenCodePrivateFiles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70151CD50AC2A5B8DEFBEE80 /* OpenCodePrivateFiles.swift */; };
-		AD94AA2A12A83EA1A023A453 /* OpenCodeBridgeSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43A0E7328788AD4D4AA3312B /* OpenCodeBridgeSocket.swift */; };
-		C5D5B6F1510F4A16AB416D16 /* OpenCodePluginQuestionSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5362DD1B51F4A0ADBBF495E0 /* OpenCodePluginQuestionSource.swift */; };
-		9C1C9D3FC7BC392A39D5340F /* agrypnos-opencode.js in Resources */ = {isa = PBXBuildFile; fileRef = 6D0C96811CCA0F6FFA86CAF4 /* agrypnos-opencode.js */; };
-		56FD26ABA3AFE6E48EEF6D15 /* WatchRuntime+OpenCodePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 982D31868CD5F2C529068373 /* WatchRuntime+OpenCodePlugin.swift */; };
-		46D5598EDF13B42854107506 /* PopoverController+OpenCodePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1205EFF36DB8A2299EDE014 /* PopoverController+OpenCodePlugin.swift */; };
-		F7D2413AE50B7C4D219F6E83 /* WatchRuntime+ClaudeHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6C13029D4FA6B3C108E5D72 /* WatchRuntime+ClaudeHook.swift */; };
-		3B16857E294FB08165D3A2C7 /* PopoverController+ClaudeHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A05746D183EAF7054C291B6 /* PopoverController+ClaudeHook.swift */; };
-		D5B02F18C3E95A2B0F7D4C61 /* ClaudeQuestionHookProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4A91E07B2D84F1A9E6C3B50 /* ClaudeQuestionHookProcess.swift */; };
-		19F4635C072D9E6F43B180A5 /* ClaudeQuestionHookSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08E3524BF61C8D5E32A07F94 /* ClaudeQuestionHookSource.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -77,7 +78,9 @@
 		F94178055CD17CB0C1E4EBE4 /* PopoverChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverChrome.swift; sourceTree = "<group>"; };
 		50D9BE7A9730D85A15B6E96E /* PopoverController+Canvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Canvas.swift"; sourceTree = "<group>"; };
 		C9704B117A23E378C79A3883 /* PopoverController+Cards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Cards.swift"; sourceTree = "<group>"; };
+		052BE85C746568D8A215D1DF /* PopoverController+ClaudeHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+ClaudeHook.swift"; sourceTree = "<group>"; };
 		D36BE0786C01BFCA5770EAE1 /* PopoverController+Notif.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Notif.swift"; sourceTree = "<group>"; };
+		E2D724306EE431110D4B6552 /* PopoverController+OpenCodePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+OpenCodePlugin.swift"; sourceTree = "<group>"; };
 		D8B9236115BA41F196506414 /* PopoverController+Questions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Questions.swift"; sourceTree = "<group>"; };
 		D48DE8BD25DF8F38E91DBE39 /* PopoverController+Sections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Sections.swift"; sourceTree = "<group>"; };
 		329EC7D50E7C6B456084BE11 /* PopoverController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverController.swift; sourceTree = "<group>"; };
@@ -96,10 +99,20 @@
 		D443A71D05E57A14624F2175 /* PowerHygieneCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerHygieneCoordinator.swift; sourceTree = "<group>"; };
 		A325704A38E6F231B4A961F1 /* SleepDisabledController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepDisabledController.swift; sourceTree = "<group>"; };
 		986AF8E920E5E71D993DED12 /* PreferencesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesStore.swift; sourceTree = "<group>"; };
+		A3A5DD98D5B5F27BDFB13BEC /* ClaudeQuestionHookProcess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeQuestionHookProcess.swift; sourceTree = "<group>"; };
+		FDC5D2452EB7A687AEBD102F /* ClaudeQuestionHookSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeQuestionHookSource.swift; sourceTree = "<group>"; };
+		66360EE08998F484E04F9FCF /* CodexAlertHookProcess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexAlertHookProcess.swift; sourceTree = "<group>"; };
+		0DC474EA636B5349E22D92E4 /* OpenCodeBridgeSocket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenCodeBridgeSocket.swift; sourceTree = "<group>"; };
 		1B758FA4AA59BA763C06F474 /* OpenCodeEventFrames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenCodeEventFrames.swift; sourceTree = "<group>"; };
+		7E311482565640C0F477A20C /* OpenCodePluginInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenCodePluginInstaller.swift; sourceTree = "<group>"; };
+		0BD93DE23DBB038F87577B05 /* OpenCodePluginQuestionSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenCodePluginQuestionSource.swift; sourceTree = "<group>"; };
+		78BB415D96548BD2FF5D530E /* OpenCodePrivateFiles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenCodePrivateFiles.swift; sourceTree = "<group>"; };
 		1039890FF19ADB62E5C568F9 /* OpenCodeQuestionSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenCodeQuestionSource.swift; sourceTree = "<group>"; };
 		CFE80B315E75852FC6FB9487 /* QuestionNoticeSender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionNoticeSender.swift; sourceTree = "<group>"; };
 		12C9FECD0358EC968A877043 /* QuestionRelayCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionRelayCoordinator.swift; sourceTree = "<group>"; };
+		BFF6C502C88EC052010B4657 /* WatchRuntime+ClaudeHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+ClaudeHook.swift"; sourceTree = "<group>"; };
+		113A610CC2130EB7A024A3D1 /* WatchRuntime+CodexAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+CodexAlert.swift"; sourceTree = "<group>"; };
+		2B0A96843193090A533D8ACD /* WatchRuntime+OpenCodePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+OpenCodePlugin.swift"; sourceTree = "<group>"; };
 		4C77F1225166AE837C6FEEE7 /* WatchRuntime+OpenCodeQuestions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+OpenCodeQuestions.swift"; sourceTree = "<group>"; };
 		1C325B421A7E2C074D618543 /* WatchRuntime+Questions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+Questions.swift"; sourceTree = "<group>"; };
 		BD7C3F5A1565378FE3CC9B8A /* GrantAndNotify.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrantAndNotify.swift; sourceTree = "<group>"; };
@@ -113,17 +126,6 @@
 		0111024D5CF6358695630612 /* Agrypnos.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Agrypnos.entitlements; sourceTree = "<group>"; };
 		8B40A3F1CAC9ADB66B78DD5C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		9A657A8A538B844742E8496C /* grant.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = grant.sh; sourceTree = "<group>"; };
-		97738DC24BF21AEB4ACCCF7B /* OpenCodePluginInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OpenCodePluginInstaller.swift"; sourceTree = "<group>"; };
-		70151CD50AC2A5B8DEFBEE80 /* OpenCodePrivateFiles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OpenCodePrivateFiles.swift"; sourceTree = "<group>"; };
-		43A0E7328788AD4D4AA3312B /* OpenCodeBridgeSocket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OpenCodeBridgeSocket.swift"; sourceTree = "<group>"; };
-		5362DD1B51F4A0ADBBF495E0 /* OpenCodePluginQuestionSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OpenCodePluginQuestionSource.swift"; sourceTree = "<group>"; };
-		6D0C96811CCA0F6FFA86CAF4 /* agrypnos-opencode.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "agrypnos-opencode.js"; sourceTree = "<group>"; };
-		982D31868CD5F2C529068373 /* WatchRuntime+OpenCodePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+OpenCodePlugin.swift"; sourceTree = "<group>"; };
-		A1205EFF36DB8A2299EDE014 /* PopoverController+OpenCodePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+OpenCodePlugin.swift"; sourceTree = "<group>"; };
-		E6C13029D4FA6B3C108E5D72 /* WatchRuntime+ClaudeHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+ClaudeHook.swift"; sourceTree = "<group>"; };
-		2A05746D183EAF7054C291B6 /* PopoverController+ClaudeHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+ClaudeHook.swift"; sourceTree = "<group>"; };
-		C4A91E07B2D84F1A9E6C3B50 /* ClaudeQuestionHookProcess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeQuestionHookProcess.swift; sourceTree = "<group>"; };
-		08E3524BF61C8D5E32A07F94 /* ClaudeQuestionHookSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeQuestionHookSource.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -193,10 +195,10 @@
 				F94178055CD17CB0C1E4EBE4 /* PopoverChrome.swift */,
 				50D9BE7A9730D85A15B6E96E /* PopoverController+Canvas.swift */,
 				C9704B117A23E378C79A3883 /* PopoverController+Cards.swift */,
+				052BE85C746568D8A215D1DF /* PopoverController+ClaudeHook.swift */,
 				D36BE0786C01BFCA5770EAE1 /* PopoverController+Notif.swift */,
+				E2D724306EE431110D4B6552 /* PopoverController+OpenCodePlugin.swift */,
 				D8B9236115BA41F196506414 /* PopoverController+Questions.swift */,
-				A1205EFF36DB8A2299EDE014 /* PopoverController+OpenCodePlugin.swift */,
-				2A05746D183EAF7054C291B6 /* PopoverController+ClaudeHook.swift */,
 				D48DE8BD25DF8F38E91DBE39 /* PopoverController+Sections.swift */,
 				329EC7D50E7C6B456084BE11 /* PopoverController.swift */,
 				6E6799E8B24D782B3151D901 /* PopoverForm.swift */,
@@ -242,18 +244,20 @@
 		3E9E73735ACBC1559FC30155 /* Questions */ = {
 			isa = PBXGroup;
 			children = (
+				A3A5DD98D5B5F27BDFB13BEC /* ClaudeQuestionHookProcess.swift */,
+				FDC5D2452EB7A687AEBD102F /* ClaudeQuestionHookSource.swift */,
+				66360EE08998F484E04F9FCF /* CodexAlertHookProcess.swift */,
+				0DC474EA636B5349E22D92E4 /* OpenCodeBridgeSocket.swift */,
 				1B758FA4AA59BA763C06F474 /* OpenCodeEventFrames.swift */,
+				7E311482565640C0F477A20C /* OpenCodePluginInstaller.swift */,
+				0BD93DE23DBB038F87577B05 /* OpenCodePluginQuestionSource.swift */,
+				78BB415D96548BD2FF5D530E /* OpenCodePrivateFiles.swift */,
 				1039890FF19ADB62E5C568F9 /* OpenCodeQuestionSource.swift */,
-				982D31868CD5F2C529068373 /* WatchRuntime+OpenCodePlugin.swift */,
-				E6C13029D4FA6B3C108E5D72 /* WatchRuntime+ClaudeHook.swift */,
-				C4A91E07B2D84F1A9E6C3B50 /* ClaudeQuestionHookProcess.swift */,
-				08E3524BF61C8D5E32A07F94 /* ClaudeQuestionHookSource.swift */,
-				5362DD1B51F4A0ADBBF495E0 /* OpenCodePluginQuestionSource.swift */,
-				43A0E7328788AD4D4AA3312B /* OpenCodeBridgeSocket.swift */,
-				70151CD50AC2A5B8DEFBEE80 /* OpenCodePrivateFiles.swift */,
-				97738DC24BF21AEB4ACCCF7B /* OpenCodePluginInstaller.swift */,
 				CFE80B315E75852FC6FB9487 /* QuestionNoticeSender.swift */,
 				12C9FECD0358EC968A877043 /* QuestionRelayCoordinator.swift */,
+				BFF6C502C88EC052010B4657 /* WatchRuntime+ClaudeHook.swift */,
+				113A610CC2130EB7A024A3D1 /* WatchRuntime+CodexAlert.swift */,
+				2B0A96843193090A533D8ACD /* WatchRuntime+OpenCodePlugin.swift */,
 				4C77F1225166AE837C6FEEE7 /* WatchRuntime+OpenCodeQuestions.swift */,
 				1C325B421A7E2C074D618543 /* WatchRuntime+Questions.swift */,
 			);
@@ -276,7 +280,6 @@
 				38ED30322495D02C679CFD76 /* Info.plist */,
 				0111024D5CF6358695630612 /* Agrypnos.entitlements */,
 				9A657A8A538B844742E8496C /* grant.sh */,
-				6D0C96811CCA0F6FFA86CAF4 /* agrypnos-opencode.js */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -359,7 +362,6 @@
 			files = (
 				6B8001DABC00C7B45D3BFA0C /* Assets.xcassets in Resources */,
 				BBE0CDF003CDB2E92B81738B /* grant.sh in Resources */,
-				9C1C9D3FC7BC392A39D5340F /* agrypnos-opencode.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -380,7 +382,9 @@
 				EE4DE2012E8891D5E35D9C27 /* PopoverChrome.swift in Sources */,
 				87299C24812BC138E73D77BC /* PopoverController+Canvas.swift in Sources */,
 				83E9538CE09AAA2166595788 /* PopoverController+Cards.swift in Sources */,
+				51A4F14CFF7974BBC248E4FB /* PopoverController+ClaudeHook.swift in Sources */,
 				3E342BC9083A87088493456F /* PopoverController+Notif.swift in Sources */,
+				B3BF8385D303AB9F8B3915EC /* PopoverController+OpenCodePlugin.swift in Sources */,
 				D26100AA275DD2C7CC545A83 /* PopoverController+Questions.swift in Sources */,
 				946833446CCD0F60CEC3EABD /* PopoverController+Sections.swift in Sources */,
 				40DF44DBC43DE8B05319E1F5 /* PopoverController.swift in Sources */,
@@ -399,20 +403,20 @@
 				2AECF1A258D31B94B7028546 /* PowerHygieneCoordinator.swift in Sources */,
 				CE82BC78031023E280DBD432 /* SleepDisabledController.swift in Sources */,
 				31DBD3069D96D292DC184EDD /* PreferencesStore.swift in Sources */,
+				B0C0CFCEE86F8D71B86ADB21 /* ClaudeQuestionHookProcess.swift in Sources */,
+				04C7778A0C73432F88195BEB /* ClaudeQuestionHookSource.swift in Sources */,
+				EC07AB0FC4B919E42C1A6E55 /* CodexAlertHookProcess.swift in Sources */,
+				DC9A7A9AB93F0083BE28150F /* OpenCodeBridgeSocket.swift in Sources */,
 				C13AF58296A206B4C6CB98D7 /* OpenCodeEventFrames.swift in Sources */,
+				D62103D186BB34D00D643A04 /* OpenCodePluginInstaller.swift in Sources */,
+				230D18B8311BC41365F49726 /* OpenCodePluginQuestionSource.swift in Sources */,
+				7924D04765B767DBABA8CBD3 /* OpenCodePrivateFiles.swift in Sources */,
 				26997208C8E3082769BE45F2 /* OpenCodeQuestionSource.swift in Sources */,
-				46D5598EDF13B42854107506 /* PopoverController+OpenCodePlugin.swift in Sources */,
-				3B16857E294FB08165D3A2C7 /* PopoverController+ClaudeHook.swift in Sources */,
-				56FD26ABA3AFE6E48EEF6D15 /* WatchRuntime+OpenCodePlugin.swift in Sources */,
-				F7D2413AE50B7C4D219F6E83 /* WatchRuntime+ClaudeHook.swift in Sources */,
-				D5B02F18C3E95A2B0F7D4C61 /* ClaudeQuestionHookProcess.swift in Sources */,
-				19F4635C072D9E6F43B180A5 /* ClaudeQuestionHookSource.swift in Sources */,
-				C5D5B6F1510F4A16AB416D16 /* OpenCodePluginQuestionSource.swift in Sources */,
-				AD94AA2A12A83EA1A023A453 /* OpenCodeBridgeSocket.swift in Sources */,
-				2AB51F102FB8206FEF36F1B1 /* OpenCodePrivateFiles.swift in Sources */,
-				604B346E35D59DE1830C0A39 /* OpenCodePluginInstaller.swift in Sources */,
 				4A547D34E748E74CA1E5E7F0 /* QuestionNoticeSender.swift in Sources */,
 				8E4E13B32E0259DCDFD42AAC /* QuestionRelayCoordinator.swift in Sources */,
+				99CEFA89943C6E67547AC8E7 /* WatchRuntime+ClaudeHook.swift in Sources */,
+				759A152DDBA730E1113AEC52 /* WatchRuntime+CodexAlert.swift in Sources */,
+				9220E026EB9DE21D9BBD49D6 /* WatchRuntime+OpenCodePlugin.swift in Sources */,
 				FDA8F52147E7338E922F9CA6 /* WatchRuntime+OpenCodeQuestions.swift in Sources */,
 				DC26D17267A407DFB2705C3E /* WatchRuntime+Questions.swift in Sources */,
 				436DA0943AEB42FDD30C5580 /* GrantAndNotify.swift in Sources */,

@@ -10,6 +10,7 @@ enum AgrypnosApp {
     @MainActor
     static func main() {
         if ClaudeQuestionHookProcess.runIfRequested() { return }
+        if CodexAlertHookProcess.runIfRequested() { return }
         let app = NSApplication.shared
         let delegate = AppDelegate()
         AppHolder.shared.delegate = delegate

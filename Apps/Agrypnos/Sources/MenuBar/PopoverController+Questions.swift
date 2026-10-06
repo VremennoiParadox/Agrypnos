@@ -71,6 +71,34 @@ extension PopoverController {
         addPrefTitle("Codex alerts", in: card, ci: ci, width: cw - 24)
         addQuestionInfoButton(in: card, ci: ci, cw: cw, action: #selector(showCodexQuestionSetup))
         _ = PopoverForm.help(QuestionSetupChrome.codexHelp, in: card, y: 36, x: ci, width: cw, lines: 4)
+        codexEnableButton = setupCodexButton(QuestionSetupChrome.codexEnableTitle,
+            action: #selector(enableCodexAlerts), in: card, x: ci, y: 88)
+        codexDisableButton = setupCodexButton("Disable", action: #selector(disableCodexAlerts), in: card, x: ci, y: 116)
+        codexDisableButton.setAccessibilityLabel("Disable Codex alerts")
+        codexEnableButton.setAccessibilityHelp(QuestionSetupChrome.codexHelp)
+        codexAlertStatus = PopoverForm.help("", in: card, y: CGFloat(QuestionSetupChrome.claudeStatusY), x: ci, width: cw, lines: 2)
+    }
+
+    private func setupCodexButton(_ title: String, action: Selector, in card: CardView, x: CGFloat, y: CGFloat) -> NSButton {
+        let button = NSButton(title: title, target: self, action: action)
+        button.bezelStyle = .rounded
+        button.controlSize = .small
+        button.sizeToFit()
+        button.frame.origin = NSPoint(x: x, y: y)
+        card.addSubview(button)
+        return button
+    }
+
+    @objc func enableCodexAlerts() {
+        stopRecordingIfNeeded()
+        commitNotifFields()
+        _ = runtime?.enableCodexAlerts()
+        refresh()
+    }
+
+    @objc func disableCodexAlerts() {
+        runtime?.disableCodexAlerts()
+        refresh()
     }
 
     func addCursorQuestionNoteCard(_ card: CardView, ci: CGFloat, cw: CGFloat) {
@@ -182,6 +210,10 @@ extension PopoverController {
         let claudeOn = runtime.preferences.claudeQuestionHookEnabled && runtime.preferences.forwardAgentQuestions
         claudeEnableButton?.isEnabled = !claudeOn
         claudeDisableButton?.isEnabled = runtime.preferences.claudeQuestionHookEnabled
+        let codexOn = runtime.preferences.codexAlertEnabled
+        codexEnableButton?.isEnabled = !codexOn
+        codexDisableButton?.isEnabled = codexOn
+        codexAlertStatus?.stringValue = runtime.codexAlertCaption
     }
 
     func commitQuestionUserFields() {

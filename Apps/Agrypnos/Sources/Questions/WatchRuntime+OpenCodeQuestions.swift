@@ -27,6 +27,7 @@ extension WatchRuntime {
         guard !openCodeSetupInProgress else { return }
         syncOpenCodeQuestionSources()
         syncClaudeQuestionHook()
+        syncCodexAlerts()
     }
 
     func syncOpenCodeQuestionSources() {
@@ -85,6 +86,7 @@ extension WatchRuntime {
     func stopQuestionSources() {
         stopOpenCodeQuestionSources()
         stopClaudeQuestionHook()
+        stopCodexAlerts()
     }
 
     @discardableResult
