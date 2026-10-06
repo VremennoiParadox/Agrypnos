@@ -34,8 +34,9 @@ final class QuestionRelayLayoutTests: XCTestCase {
         XCTAssertEqual(
             PopoverSection.notif.cards,
             [
+                .notifSetup,
                 .notifEnable, .notifDiscord, .notifDiscordInbound, .notifTelegram, .notifTelegramInbound,
-                .notifSetup, .notifClear,
+                .notifClear,
             ]
         )
         XCTAssertEqual(
@@ -51,7 +52,8 @@ final class QuestionRelayLayoutTests: XCTestCase {
         XCTAssertNil(notif.claudeHook)
         XCTAssertNil(notif.openCodeQuestions)
         XCTAssertNil(notif.questionForwardingBack)
-        XCTAssertEqual(notif.notifSetup?.y, notif.notifTelegramInbound!.maxY + PopoverStackLayout.cardGap)
+        XCTAssertEqual(notif.notifSetup?.y, PopoverStackLayout.firstCardY)
+        XCTAssertEqual(notif.notifEnable?.y, notif.notifSetup!.maxY + PopoverStackLayout.cardGap)
         XCTAssertEqual(notif.stackedCards.count, 7)
         XCTAssertEqual(notif.contentHeight, notif.notifClear!.maxY + PopoverStackLayout.pad)
 

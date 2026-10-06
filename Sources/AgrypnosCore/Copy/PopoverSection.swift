@@ -58,8 +58,9 @@ public enum PopoverSection: Int, CaseIterable, Sendable {
             }
             return [.agentInclude, .settle, .terminalBusy]
         case .notif: return [
+            .notifSetup,
             .notifEnable, .notifDiscord, .notifDiscordInbound, .notifTelegram, .notifTelegramInbound,
-            .notifSetup, .notifClear,
+            .notifClear,
         ]
         case .general: return [.login]
         }

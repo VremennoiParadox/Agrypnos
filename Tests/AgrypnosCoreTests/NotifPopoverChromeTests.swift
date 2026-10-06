@@ -6,17 +6,17 @@ final class NotifPopoverChromeTests: XCTestCase {
         XCTAssertEqual(
             PopoverSection.notif.cards,
             [
+                .notifSetup,
                 .notifEnable,
                 .notifDiscord,
                 .notifDiscordInbound,
                 .notifTelegram,
                 .notifTelegramInbound,
-                .notifSetup,
                 .notifClear,
             ]
         )
         XCTAssertFalse(PopoverSection.notif.cards.isEmpty)
-        XCTAssertEqual(PopoverSection.notif.cards.first, .notifEnable)
+        XCTAssertEqual(PopoverSection.notif.cards.first, .notifSetup)
         XCTAssertEqual(PopoverSection.notif.cards.last, .notifClear)
         XCTAssertFalse(PopoverSection.watch.cards.contains(.notifEnable))
         XCTAssertFalse(PopoverSection.power.cards.contains(.notifSetup))
@@ -320,16 +320,17 @@ final class NotifPopoverChromeTests: XCTestCase {
         XCTAssertEqual(
             layout.stackedCards.map(\.y),
             compactYs(
+                layout.notifSetup,
                 layout.notifEnable,
                 layout.notifDiscord,
                 layout.notifDiscordInbound,
                 layout.notifTelegram,
                 layout.notifTelegramInbound,
-                layout.notifSetup,
                 layout.notifClear
             )
         )
-        XCTAssertEqual(layout.notifEnable?.y, PopoverStackLayout.firstCardY)
+        XCTAssertEqual(layout.notifSetup?.y, PopoverStackLayout.firstCardY)
+        XCTAssertEqual(layout.notifEnable?.y, layout.notifSetup!.maxY + PopoverStackLayout.cardGap)
         XCTAssertEqual(layout.notifDiscord?.y, layout.notifEnable!.maxY + PopoverStackLayout.cardGap)
         XCTAssertEqual(
             layout.notifDiscordInbound?.y,
@@ -340,11 +341,7 @@ final class NotifPopoverChromeTests: XCTestCase {
             layout.notifTelegramInbound?.y,
             layout.notifTelegram!.maxY + PopoverStackLayout.cardGap
         )
-        XCTAssertEqual(
-            layout.notifSetup?.y,
-            layout.notifTelegramInbound!.maxY + PopoverStackLayout.cardGap
-        )
-        XCTAssertEqual(layout.notifClear?.y, layout.notifSetup!.maxY + PopoverStackLayout.cardGap)
+        XCTAssertEqual(layout.notifClear?.y, layout.notifTelegramInbound!.maxY + PopoverStackLayout.cardGap)
         XCTAssertEqual(layout.contentHeight, layout.notifClear!.maxY + PopoverStackLayout.pad)
         XCTAssertNil(layout.watch)
         XCTAssertNil(layout.settle)

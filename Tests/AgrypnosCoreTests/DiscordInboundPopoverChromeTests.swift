@@ -6,12 +6,12 @@ final class DiscordInboundPopoverChromeTests: XCTestCase {
         XCTAssertEqual(
             PopoverSection.notif.cards,
             [
+                .notifSetup,
                 .notifEnable,
                 .notifDiscord,
                 .notifDiscordInbound,
                 .notifTelegram,
                 .notifTelegramInbound,
-                .notifSetup,
                 .notifClear,
             ]
         )
@@ -120,12 +120,12 @@ final class DiscordInboundPopoverChromeTests: XCTestCase {
         XCTAssertEqual(
             layout.stackedCards.map(\.y),
             compactYs(
+                layout.notifSetup,
                 layout.notifEnable,
                 layout.notifDiscord,
                 layout.notifDiscordInbound,
                 layout.notifTelegram,
                 layout.notifTelegramInbound,
-                layout.notifSetup,
                 layout.notifClear
             )
         )

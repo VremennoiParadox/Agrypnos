@@ -55,12 +55,12 @@ final class PopoverSectionTests: XCTestCase {
         XCTAssertEqual(
             PopoverSection.notif.cards,
             [
+                .notifSetup,
                 .notifEnable,
                 .notifDiscord,
                 .notifDiscordInbound,
                 .notifTelegram,
                 .notifTelegramInbound,
-                .notifSetup,
                 .notifClear,
             ]
         )
