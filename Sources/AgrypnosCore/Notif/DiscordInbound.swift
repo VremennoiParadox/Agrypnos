@@ -228,7 +228,7 @@ public enum DiscordInboundCopy: Sendable {
     public static let help = """
     /arm — turn Keep the watch on.
     /disarm — turn Keep the watch off. Always clears Keep the watch. Puts the Mac to sleep only when the lid is closed (confirmed). Never sleeps the Mac when the lid is open.
-    /status — watch facts Agrypnos already knows: Keep the watch, How long, lid, Agents, last end, and safety prefs. Includes live battery when known. Not a remaining-time countdown.
+    /status — watch facts Agrypnos already knows: Keep the watch, How long, lid, Agents, last end, and safety prefs. Includes live battery when known. Includes time left while a timed watch is on.
     /help — this list.
     If the bot does not reply, the Mac is likely asleep or Agrypnos is not receiving updates.
     """

@@ -104,8 +104,8 @@ final class LastWatchEndTests: XCTestCase {
         XCTAssertEqual(manual.preferences.lastWatchEnd, LastWatchEnd(endedAt: t0.addingTimeInterval(1), reason: .user))
 
         let timer = record(.oneHour, safety: .acPower, wait: 3600)
-        XCTAssertNil(timer.preferences.lastWatchEnd)
-        XCTAssertTrue(timer.engaged)
+        XCTAssertEqual(timer.preferences.lastWatchEnd?.reason, .timerExpired)
+        XCTAssertFalse(timer.engaged)
 
         let battery = record(.indefinite, safety: SafetyInputs(batteryPercent: 12, onBatteryDischarging: true, thermalSerious: false, lowPowerMode: false), wait: 1)
         XCTAssertEqual(battery.preferences.lastWatchEnd?.reason, .batteryFloor)

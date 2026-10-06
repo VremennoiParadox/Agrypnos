@@ -1,8 +1,7 @@
 import Foundation
 
 /// Menu-bar extra while armed: a non-countdown status.
-/// Sticky How long is remembered only. Agents idle-after-wait turns Keep the watch
-/// off; that is not a remaining-time clock.
+/// Timed watches use a real deadline; Agents settle is not a countdown.
 public enum StatusItemState: Equatable, Sendable {
     case off
     case armed
@@ -19,17 +18,16 @@ public enum StatusItemState: Equatable, Sendable {
     }
 
     /// Remaining-time digits only if this returns a date Core will actually turn the watch off.
-    /// Sticky How long is remembered only; do not read `timerEnd` as that clock.
+    /// Only timed modes expose the deadline; the menu-bar item stays an icon only.
     public static func autoOffEndClock(
         engaged: Bool,
         duration: DurationOption,
         timerEnd: Date?
     ) -> Date? {
         guard engaged else { return nil }
-        _ = timerEnd
         switch duration {
-        case .indefinite, .oneHour, .threeHours, .custom, .untilAgentsSettle:
-            return nil
+        case .oneHour, .threeHours, .custom: return timerEnd
+        case .indefinite, .untilAgentsSettle: return nil
         }
     }
 
@@ -46,7 +44,9 @@ public enum StatusItemState: Equatable, Sendable {
         ) else {
             return nil
         }
-        return max(0, Int(end.timeIntervalSince(now).rounded()))
+        let seconds = max(0, end.timeIntervalSince(now).rounded(.up))
+        // Custom minutes can exceed Int's seconds range; keep rendering bounded.
+        return seconds >= Double(Int.max) ? Int.max : Int(seconds)
     }
 }
 

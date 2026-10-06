@@ -18,7 +18,7 @@ final class StatusItemChromeTests: XCTestCase {
         assertNoCountdownFiction(chrome.accessibilityTitle)
     }
 
-    func testArmedHowLongShowsArmedWithGlyphAndNoCountdown() {
+    func testArmedHowLongKeepsFixedIconWithAccessibleState() {
         for duration in [DurationOption.indefinite, .oneHour, .threeHours, .customMinutes(33)] {
             let state = StatusItemState.from(engaged: true, duration: duration)
             let chrome = StatusItemChrome.make(
@@ -26,26 +26,24 @@ final class StatusItemChromeTests: XCTestCase {
                 remainingSeconds: 3_540
             )
             XCTAssertEqual(state, .armed)
-            XCTAssertEqual(chrome.title, "Armed.")
-            XCTAssertEqual(chrome.title, AgrypnosCopy.statusItemArmed)
+            XCTAssertEqual(chrome.title, "")
             XCTAssertEqual(chrome.accessibilityTitle, "Agrypnos, Armed.")
-            XCTAssertEqual(chrome.length, .variable)
-            XCTAssertEqual(chrome.imagePosition, .imageLeading)
+            XCTAssertEqual(chrome.length, .square)
+            XCTAssertEqual(chrome.imagePosition, .imageOnly)
             assertNoCountdownFiction(chrome.title)
             assertNoCountdownFiction(chrome.accessibilityTitle)
         }
     }
 
-    func testAgentsHowLongShowsAgentsWithGlyphAndNoCountdown() {
+    func testAgentsHowLongKeepsFixedIconWithAccessibleState() {
         let chrome = StatusItemChrome.make(
             state: .agents,
             remainingSeconds: 120
         )
-        XCTAssertEqual(chrome.title, "Agents.")
-        XCTAssertEqual(chrome.title, AgrypnosCopy.statusItemAgents)
+        XCTAssertEqual(chrome.title, "")
         XCTAssertEqual(chrome.accessibilityTitle, "Agrypnos, Agents.")
-        XCTAssertEqual(chrome.length, .variable)
-        XCTAssertEqual(chrome.imagePosition, .imageLeading)
+        XCTAssertEqual(chrome.length, .square)
+        XCTAssertEqual(chrome.imagePosition, .imageOnly)
         assertNoCountdownFiction(chrome.title)
         assertNoCountdownFiction(chrome.accessibilityTitle)
     }
@@ -53,7 +51,7 @@ final class StatusItemChromeTests: XCTestCase {
     func testNilRemainingSecondsDoesNotInventDigits() {
         for state in [StatusItemState.off, .armed, .agents] {
             let chrome = StatusItemChrome.make(state: state, remainingSeconds: nil)
-            XCTAssertEqual(chrome.title, AgrypnosCopy.statusItemTitle(state))
+            XCTAssertEqual(chrome.title, "")
             assertNoCountdownFiction(chrome.title)
             assertNoCountdownFiction(chrome.accessibilityTitle)
         }
@@ -74,14 +72,14 @@ final class StatusItemChromeTests: XCTestCase {
 
         _ = engine.userSetEngaged(true, now: t0)
         XCTAssertEqual(engine.timerEnd, t0.addingTimeInterval(3_600))
-        XCTAssertNil(engine.statusItemRemainingSeconds(now: t0.addingTimeInterval(60)))
+        XCTAssertEqual(engine.statusItemRemainingSeconds(now: t0.addingTimeInterval(60)), 3540)
         chrome = StatusItemChrome.make(
             state: engine.statusItemState,
             remainingSeconds: 3_540
         )
-        XCTAssertEqual(chrome.title, "Armed.")
-        XCTAssertEqual(chrome.length, .variable)
-        XCTAssertEqual(chrome.imagePosition, .imageLeading)
+        XCTAssertEqual(chrome.title, "")
+        XCTAssertEqual(chrome.length, .square)
+        XCTAssertEqual(chrome.imagePosition, .imageOnly)
         assertNoCountdownFiction(chrome.title)
 
         _ = engine.userSetDuration(.untilAgentsSettle, now: t0)
@@ -89,7 +87,7 @@ final class StatusItemChromeTests: XCTestCase {
             state: engine.statusItemState,
             remainingSeconds: engine.statusItemRemainingSeconds(now: t0)
         )
-        XCTAssertEqual(chrome.title, "Agents.")
+        XCTAssertEqual(chrome.title, "")
         assertNoCountdownFiction(chrome.title)
 
         _ = engine.userSetEngaged(false, now: t0.addingTimeInterval(1))

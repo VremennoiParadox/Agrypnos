@@ -259,11 +259,14 @@ final class NotifWatchEngineTests: XCTestCase {
         prefs.duration = .oneHour
         var timed = WatchEngine(preferences: prefs)
         _ = timed.userSetEngaged(true, now: t0)
-        XCTAssertTrue(
-            timed.tick(now: t0.addingTimeInterval(3600), safety: .acPower, agents: .idle).isEmpty
+        XCTAssertEqual(
+            timed.tick(now: t0.addingTimeInterval(3600), safety: .acPower, agents: .idle),
+            [.disengage(.timerExpired), .postTimerExpiredNotif, .requestSleep]
         )
-        XCTAssertTrue(timed.engaged)
-        XCTAssertNil(timed.preferences.lastWatchEnd)
+        XCTAssertFalse(timed.engaged)
+        XCTAssertTrue(timed.holdingForIdlePost)
+        timed.completeIdlePostHold()
+        XCTAssertEqual(timed.preferences.lastWatchEnd?.reason, .timerExpired)
 
         prefs.duration = .indefinite
         var battery = WatchEngine(preferences: prefs)
@@ -453,7 +456,7 @@ final class NotifCopyTests: XCTestCase {
         )
         XCTAssertEqual(
             AgrypnosCopy.notifEnabledHelp,
-            "POST to your Discord webhook and/or message your Telegram bot after Agents stay idle through the wait. Off by default."
+            "POST to your Discord webhook and/or message your Telegram bot when the timer ends or Agents stay idle through the wait. Off by default."
         )
         XCTAssertTrue(AgrypnosCopy.notifDiscordHelp.lowercased().contains("your webhook"))
         XCTAssertTrue(AgrypnosCopy.notifTelegramHelp.lowercased().contains("your telegram bot"))

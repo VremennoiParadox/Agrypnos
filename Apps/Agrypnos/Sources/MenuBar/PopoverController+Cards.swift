@@ -286,6 +286,10 @@ extension PopoverController {
         durationHint.frame = NSRect(x: ci, y: 68, width: cw, height: PopoverMetrics.durationHintHeight)
         durationHint.preferredMaxLayoutWidth = cw
         card.addSubview(durationHint)
+        countdownLabel = LabelFactory.make("", font: .monospacedDigitSystemFont(ofSize: 13, weight: .medium), color: .labelColor)
+        countdownLabel.frame = NSRect(x: ci, y: 104, width: cw, height: 20)
+        countdownLabel.setAccessibilityLabel("Watch timer")
+        card.addSubview(countdownLabel)
     }
 
     func addLastWatchEndCard(_ card: CardView, ci: CGFloat, cw: CGFloat) {

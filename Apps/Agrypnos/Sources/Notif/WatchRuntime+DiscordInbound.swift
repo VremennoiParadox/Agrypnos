@@ -201,10 +201,10 @@ extension WatchRuntime {
     }
 
     func applyDiscordArm() -> String {
-        if TelegramInboundIntent.arm.shouldSetEngaged(currentlyEngaged: engaged) == true {
+        if TelegramInboundIntent.arm.shouldSetEngaged(currentlyEngaged: engine.engaged) == true {
             setEngaged(true)
         }
-        return engaged ? DiscordInboundCopy.armed : TelegramInboundCopy.armFailed
+        return engine.engaged ? DiscordInboundCopy.armed : TelegramInboundCopy.armFailed
     }
 
     func applyDiscordDisarm() -> String {

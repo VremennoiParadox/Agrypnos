@@ -64,40 +64,18 @@ final class StatusItemStateTests: XCTestCase {
         XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
     }
 
-    func testTimedClockDoesNotBecomeDigitsBecauseStickyTimersDoNotAutoOff() {
-        var prefs = UserPreferences.default
-        prefs.duration = .oneHour
-        var engine = WatchEngine(preferences: prefs)
+    func testTimedClockCountsDownWhileStatusItemTitleStaysArmed() {
+        var engine = WatchEngine(preferences: UserPreferences(duration: .oneHour))
         _ = engine.userSetEngaged(true, now: t0)
-        XCTAssertEqual(engine.timerEnd, t0.addingTimeInterval(3600))
-        XCTAssertEqual(engine.statusItemState, .armed)
-        XCTAssertNil(
-            StatusItemState.autoOffEndClock(
-                engaged: true,
-                duration: .oneHour,
-                timerEnd: engine.timerEnd
-            )
-        )
-        XCTAssertNil(
-            engine.statusItemRemainingSeconds(now: t0.addingTimeInterval(60))
-        )
-        XCTAssertNil(
-            StatusItemState.remainingSeconds(
-                engaged: true,
-                duration: .oneHour,
-                timerEnd: engine.timerEnd,
-                now: t0.addingTimeInterval(3_540)
-            )
-        )
-        let title = AgrypnosCopy.statusItemTitle(engine.statusItemState)
-        XCTAssertEqual(title, "Armed.")
-        assertNoCountdownFiction(title)
-        XCTAssertFalse(title.contains("1h"))
-        XCTAssertFalse(title.lowercased().contains("left"))
+        XCTAssertEqual(StatusItemState.autoOffEndClock(engaged: true, duration: .oneHour, timerEnd: engine.timerEnd), t0.addingTimeInterval(3600))
+        XCTAssertEqual(engine.statusItemRemainingSeconds(now: t0.addingTimeInterval(60)), 3540)
+        XCTAssertEqual(engine.statusItemRemainingSeconds(now: t0.addingTimeInterval(3540)), 60)
+        XCTAssertEqual(AgrypnosCopy.statusItemTitle(engine.statusItemState), "Armed.")
+        assertNoCountdownFiction(AgrypnosCopy.statusItemTitle(engine.statusItemState))
     }
 
-    func testCustomAndIndefiniteHaveNoAutoOffEndClock() {
-        for duration in [DurationOption.indefinite, .threeHours, .customMinutes(33)] {
+    func testIndefiniteHasNoAutoOffEndClock() {
+        for duration in [DurationOption.indefinite] {
             let fakeEnd = t0.addingTimeInterval(1_980)
             XCTAssertNil(
                 StatusItemState.autoOffEndClock(

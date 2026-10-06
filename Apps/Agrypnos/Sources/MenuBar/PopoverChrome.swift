@@ -58,7 +58,7 @@ enum AgrypnosGlyph {
 }
 
 enum GlyphFactory {
-    static func image(_ glyph: AgrypnosGlyph) -> NSImage {
+    static func image(_ glyph: AgrypnosGlyph, color: NSColor? = nil) -> NSImage {
         let config = NSImage.SymbolConfiguration(pointSize: 16, weight: .medium).applying(.init(scale: .medium))
         let name: String
         switch glyph {
@@ -69,19 +69,28 @@ enum GlyphFactory {
         let base = NSImage(systemSymbolName: name, accessibilityDescription: "Agrypnos")?
             .withSymbolConfiguration(config)
             ?? NSImage()
-        guard glyph == .armed else {
-            base.isTemplate = true
-            return base
+        // SF symbols have different intrinsic heights. A shared canvas keeps
+        // the status-bar host window from changing height with the watch state.
+        let size = NSImage(systemSymbolName: "eye.slash", accessibilityDescription: nil)?
+            .withSymbolConfiguration(config)?.size ?? base.size
+        let rect = NSRect(x: (size.width - base.size.width) / 2,
+                          y: (size.height - base.size.height) / 2,
+                          width: base.size.width, height: base.size.height)
+        let composed = NSImage(size: size, flipped: false) { _ in
+            base.draw(in: rect)
+            if glyph == .armed {
+                NSColor.black.setFill()
+                let d = max(base.size.height * 0.24, 3.5)
+                NSBezierPath(ovalIn: NSRect(x: rect.maxX - d, y: rect.maxY - d,
+                                           width: d, height: d)).fill()
+            }
+            if let color {
+                color.setFill()
+                NSRect(origin: .zero, size: size).fill(using: .sourceIn)
+            }
+            return true
         }
-        let size = base.size
-        guard size.width > 0 else { base.isTemplate = true; return base }
-        let composed = NSImage(size: size)
-        composed.lockFocus()
-        base.draw(in: NSRect(origin: .zero, size: size))
-        let d = max(size.height * 0.24, 3.5)
-        NSBezierPath(ovalIn: NSRect(x: size.width - d, y: size.height - d, width: d, height: d)).fill()
-        composed.unlockFocus()
-        composed.isTemplate = true
+        composed.isTemplate = color == nil
         return composed
     }
 }
