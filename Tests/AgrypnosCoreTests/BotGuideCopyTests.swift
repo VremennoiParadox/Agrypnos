@@ -30,7 +30,7 @@ final class BotGuideCopyTests: XCTestCase {
 
     func testTelegramWalksBotFatherTokenChatIdAndInbound() {
         let text = BotGuide.text(for: .telegram)
-        for needle in ["BotFather", "/newbot", "Token", "getUpdates", "\"chat\":{\"id\":", "Chat id", "Empty result", "Telegram inbound", "Idle-after-wait POST"] {
+        for needle in ["BotFather", "/newbot", "Token", "getUpdates", "\"chat\":{\"id\":", "Chat id", "Empty result", "Telegram inbound", "Watch-end POST"] {
             XCTAssertTrue(text.contains(needle), "Telegram guide misses \(needle)")
         }
         let links = BotGuide.sections(for: .telegram).flatMap(\.steps).compactMap(\.link)

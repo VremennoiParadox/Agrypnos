@@ -30,15 +30,16 @@
 
 You start a long agent run, close the laptop, and walk away. macOS goes to sleep and the run dies with it.
 
-The usual keep-awake tricks don't help here. Power assertions (what `caffeinate` uses) stop working the moment the lid closes. The one switch that does hold is `pmset disablesleep`, and it's easy to forget to turn off again. Agrypnos flips it for you, turns the screen down while the lid is shut, and flips it back once your agents have been idle for a while or you turn it off.
+The usual keep-awake tricks don't help here. Power assertions (what `caffeinate` uses) stop working the moment the lid closes. The one switch that does hold is `pmset disablesleep`, and it's easy to forget to turn off again. Agrypnos flips it for you, turns the screen down while the lid is shut, and flips it back once your timer ends, your agents have been idle for a while, or you turn it off.
 
 ## What you get
 
 - Turn on **Keep the watch** from the menu bar or with `⌥⌘A`. Nothing changes on screen until you close the lid.
 - On lid close, the keyboard backlight goes off and the panel dims to a floor you choose. If you prefer, the panel sleeps instead.
+- Set How long to **1h**, **3h**, or custom minutes for a countdown that starts when you turn the watch on.
 - Set How long to **Agents** and the watch ends by itself once your agents have been idle for a few minutes.
 - Low battery and thermal pressure end the watch too, and a reboot always clears it.
-- If you want, *your* Telegram or Discord bot gets a message when the agents go idle, and takes `/arm`, `/disarm`, and `/status` from your phone.
+- If you want, *your* Telegram or Discord bot gets a message when the timer ends or the agents go idle, and takes `/arm`, `/disarm`, and `/status` from your phone.
 - No analytics, no accounts, no shared bot. The only privileged piece is a two-command sudoers rule, spelled out in [SECURITY.md](SECURITY.md).
 
 ## Install
@@ -67,7 +68,7 @@ macOS asks for your password once. To remove the rule later, run `./Scripts/ungr
 
 1. Click the eye in the menu bar. The popover opens on **Watch**.
 2. Under **How long**, pick **Agents**.
-3. Turn on **Keep the watch**. The menu bar now says **Agents.**
+3. Turn on **Keep the watch**. The menu-bar eye turns **purple**. The icon stays the same size in every mode: gray when off, blue for ∞, gold for timed watches, and purple for Agents.
 4. Start your agent and close the lid.
 
 Agrypnos waits until the lid has really closed (a single flicker of the lid sensor doesn't count), then turns the keyboard backlight off and dims the panel. When your agents have been idle for the idle wait (2 minutes by default), the watch turns off and the Mac is free to sleep.
@@ -75,7 +76,7 @@ Agrypnos waits until the lid has really closed (a single flicker of the lid sens
 Want it on until you say stop? Pick `∞` instead and turn it off yourself.
 
 > [!NOTE]
-> `1h`, `3h`, and custom minutes are remembered with the watch, but they don't turn it off on their own. Only **Agents** ends the watch by itself. Battery and thermal limits still apply to every option.
+> `1h`, `3h`, and custom minutes start a countdown when Keep the watch turns on. Time left appears in the same How long card. Opening the lid keeps the timer running. Changing the duration while on starts a fresh interval. At expiry the watch turns off and the Mac sleeps unless the lid is known open; if the lid reading is unavailable, Agrypnos requests sleep. The selected duration stays saved. Battery and thermal limits still apply.
 
 ## How it works
 
@@ -114,6 +115,7 @@ Agrypnos can't tell whether a model is "thinking". It only sees processes and fi
 
 ### When the watch turns itself off
 
+- **Timer ended.** For **1h**, **3h**, or custom minutes. Opening the lid does not stop the timer; expiry sleeps the Mac unless the lid is known open.
 - **Agents went idle.** Only when How long is **Agents**.
 - **Low battery.** On battery, at the level you set (15% by default, 5–100%).
 - **Thermal pressure.** When macOS reports serious or critical thermal state. You can turn this off in **Power**.
@@ -133,7 +135,7 @@ This part is optional and off by default. It lives in the **Notif** section. You
 
 There are two separate pieces:
 
-- **Idle message.** When **Agents** mode has seen work and then stayed idle through the wait, Agrypnos sends one message to your Discord webhook, your Telegram bot, or both. It doesn't send one when you turn the watch off, when a timer or battery limit ends it, or when it never saw any work.
+- **Watch-end message.** With **Watch-end POST** on, timer expiry sends “Agrypnos: your watch timer ended.” **Agents** mode sends its existing idle-after-wait message only after seeing local busy signals this arm. Both use your Discord webhook, your Telegram bot, or both. Manual off and safety limits do not send an outbound message; an Agents watch that never saw work does not either.
 - **Commands.** Send `/arm`, `/disarm`, `/status`, or `/help` to your own Telegram or Discord bot, and Agrypnos acts on them while the Mac is awake.
 
 The app has the same steps as below, with screenshots. Click **Setup instructions…**, the first card in **Notif**.
@@ -168,7 +170,7 @@ If the bot doesn't answer, the Mac is probably asleep. Nothing relays commands w
 
    If you see `"result":[]`, the bot hasn't seen a message yet. Message it again and reload. A private chat id is a positive number. A group id is usually negative.
 5. Paste the number into **Notif → Telegram → Chat id**.
-6. Turn on **Idle-after-wait POST** for the idle message, **Telegram inbound** for commands, or both.
+6. Turn on **Watch-end POST** for the idle message, **Telegram inbound** for commands, or both.
 
 Commands only count from the chat id you saved. If that's a group, anyone in the group can send them.
 
@@ -186,7 +188,7 @@ A webhook can only post into your channel. It can't receive commands. For those,
 
    <img src="Apps/Agrypnos/Resources/Assets.xcassets/guide-discord-webhook-copy.imageset/guide-discord-webhook-copy.png" width="520" alt="Discord webhook with the Copy Webhook URL button">
 
-3. Paste it into **Notif → Discord webhook URL** and turn on **Idle-after-wait POST**.
+3. Paste it into **Notif → Discord webhook URL** and turn on **Watch-end POST**.
 
 The URL looks like `https://discord.com/api/webhooks/…`. Anyone who has it can post to your channel, so keep it out of screenshots and issues.
 
@@ -235,13 +237,15 @@ Use any mix. Leave a field empty to skip that channel.
 
 <br>
 
-1. Turn on **Idle-after-wait POST** and save at least one channel.
+1. Turn on **Watch-end POST** and save at least one channel.
 2. In **Watch**, set How long to **Agents** and turn on Keep the watch.
 3. Start an agent from one of the checked tools, so Agrypnos sees it working.
 4. Let it finish, then wait out the idle wait (2 minutes by default).
 5. You should get exactly one message, and Keep the watch turns off.
 
-Nothing arrived? Check that the switch is on, the secrets are right, How long is **Agents**, and the agent was one of the tools checked under **Agents**.
+To test timer messages, select **1 custom minute**, turn on Keep the watch, and leave the lid open. After a minute the watch turns off and you get the timer message; the open Mac stays awake. `/status` includes the actual time left while a timed watch is on.
+
+Nothing arrived? Check that Watch-end POST is on and the secrets are right. For the Agents test, check that How long is **Agents** and the agent was one of the tools checked under **Agents**.
 
 </details>
 
@@ -250,7 +254,7 @@ Nothing arrived? Check that the switch is on, the secrets are right, How long is
 
 <br>
 
-- Switch off **Idle-after-wait POST**, **Telegram inbound**, or **Discord inbound** to stop that piece.
+- Switch off **Watch-end POST**, **Telegram inbound**, or **Discord inbound** to stop that piece.
 - **Clear secrets** in **Notif** deletes every saved token, URL, and id from this Mac.
 - To kill a bot for good: `/revoke` or `/deletebot` in BotFather, **Bot → Reset Token** in the Discord Developer Portal, or delete the webhook under **Server Settings → Integrations → Webhooks**.
 

@@ -29,15 +29,15 @@ final class WatchEngineTests: XCTestCase {
         XCTAssertFalse(engine.engaged)
     }
 
-    func testTimedWatchStaysOnAfterTheClock() {
+    func testTimedWatchTurnsOffAfterTheClock() {
         var prefs = UserPreferences.default
         prefs.duration = .oneHour
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0)
         XCTAssertTrue(
-            engine.tick(now: t0.addingTimeInterval(3600), safety: .acPower, agents: .idle).isEmpty
+            engine.tick(now: t0.addingTimeInterval(3600), safety: .acPower, agents: .idle).contains(.disengage(.timerExpired))
         )
-        XCTAssertTrue(engine.engaged)
+        XCTAssertFalse(engine.engaged)
         XCTAssertEqual(engine.preferences.duration, .oneHour)
     }
 

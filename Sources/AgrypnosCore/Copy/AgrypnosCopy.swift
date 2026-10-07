@@ -33,7 +33,7 @@ public enum AgrypnosCopy: Sendable {
     public static let agentsHint =
         "Watch turns off after local busy signals stay idle through the wait (battery / thermal still apply)."
     public static let timedHint =
-        "Stays on until you turn it off (battery / thermal still apply)."
+        "Watch ends when the timer ends.\nSleeps unless the lid is open."
     // User-armed watches do not auto-off on Low Power Mode, so it is not listed here.
     public static let indefiniteHint =
         "Stays on until you turn it off (battery / thermal still apply)."
@@ -94,14 +94,29 @@ public enum AgrypnosCopy: Sendable {
         remainingSeconds: Int?,
         thermalAutoOff: Bool = true
     ) -> String {
-        _ = engaged
         _ = remainingSeconds
         switch option {
         case .untilAgentsSettle:
             return agentsHint(thermalAutoOff: thermalAutoOff)
-        case .oneHour, .threeHours, .custom, .indefinite:
+        case .oneHour, .threeHours, .custom:
+            return engaged ? timedHint : "Starts when Keep the watch is on.\nSleeps unless the lid is open."
+        case .indefinite:
             return indefiniteHint(thermalAutoOff: thermalAutoOff)
         }
+    }
+
+    public static func countdown(seconds: Int) -> String {
+        let seconds = max(0, seconds)
+        return "\(seconds / 3600):" + String(format: "%02d:%02d", (seconds / 60) % 60, seconds % 60)
+    }
+
+    public static func durationCountdown(option: DurationOption, engaged: Bool, remainingSeconds: Int?) -> String? {
+        guard let minutes = option.minutes else { return nil }
+        if !engaged {
+            return "Timer \(minutes / 60):" + String(format: "%02d:00", minutes % 60)
+        }
+        guard let remainingSeconds else { return nil }
+        return "Time left \(countdown(seconds: remainingSeconds))"
     }
 
     public static func notification(for reason: DisengageReason) -> String {
@@ -168,9 +183,9 @@ public enum AgrypnosCopy: Sendable {
         }
     }
 
-    public static let notifEnabled = "Idle-after-wait POST"
+    public static let notifEnabled = "Watch-end POST"
     public static let notifEnabledHelp =
-        "POST to your Discord webhook and/or message your Telegram bot after Agents stay idle through the wait. Off by default."
+        "POST to your Discord webhook and/or message your Telegram bot when the timer ends or Agents stay idle through the wait. Off by default."
     public static let notifDiscord = "Discord webhook URL"
     public static let notifDiscordHelp = "POST to your webhook. Leave empty to skip Discord."
     public static let notifTelegramToken = "Telegram bot token"

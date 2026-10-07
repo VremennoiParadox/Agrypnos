@@ -43,6 +43,8 @@ extension WatchRuntime {
         stopQuestionSources()
         guard ownsWakeHold else { return }
         clearQuestionWatch()
+        deadlineTimer?.invalidate()
+        deadlineTimer = nil
         stopObservingMacSleepWake()
         inboundPoller.stop()
         discordGateway.stop()
@@ -80,7 +82,7 @@ extension WatchRuntime {
                 _ = setKernel(false)
             }
             if readKernel() == .held {
-                let rawClosed = readLid()
+                let rawClosed = readLid() == true
                 if LidCloseConfirm.shouldCaptureBeforeClosedHygiene(rawClosed: rawClosed) {
                     recaptureOpenLidHygiene()
                 }
@@ -93,6 +95,7 @@ extension WatchRuntime {
                     recaptureOpenLidHygiene()
                 }
                 startLidPulse()
+                syncDeadlineTimer()
                 notify(AgrypnosCopy.leftoverNotify(for: engine.preferences.panelPowerMode))
             }
         }

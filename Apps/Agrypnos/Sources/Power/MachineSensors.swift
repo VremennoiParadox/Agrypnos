@@ -8,20 +8,23 @@ import AgrypnosCore
 enum LidStateReader {
     /// One AppleClamshellState read. Floor/hygiene goes through LidCloseConfirm —
     /// a single raw value is not lid close.
-    static func isClosed() -> Bool {
+    static func isClosed() -> Bool { closedState() == true }
+
+    /// Preserve an unavailable sensor for the timer-only sleep fallback.
+    static func closedState() -> Bool? {
         let service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IOPMrootDomain"))
-        guard service != 0 else { return false }
+        guard service != 0 else { return nil }
         defer { IOObjectRelease(service) }
         guard let unmanaged = IORegistryEntryCreateCFProperty(
             service,
             "AppleClamshellState" as CFString,
             kCFAllocatorDefault,
             0
-        ) else { return false }
+        ) else { return nil }
         let value = unmanaged.takeRetainedValue()
         if let flag = value as? Bool { return flag }
         if let number = value as? NSNumber { return number.boolValue }
-        return false
+        return nil
     }
 }
 

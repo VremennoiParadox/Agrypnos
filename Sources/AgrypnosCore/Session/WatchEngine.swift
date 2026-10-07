@@ -18,12 +18,13 @@ public struct WatchEngine: Equatable, Sendable {
     }
     /// Raw closed, not yet stable. 4 Hz pulse only while this is true.
     public var lidClosePending: Bool { lidConfirm.isPendingClose }
-    /// One idle-after-wait POST per genuine user arm. Survives disarm-failure rollback.
+    /// One outbound POST per genuine user arm. Survives disarm-failure rollback.
     public private(set) var postedThisUserArm: Bool
-    /// Kernel still held after idle-after-wait disengage. Do not paint ended.
+    /// Kernel still held during the bounded watch-end POST. Do not paint ended.
     public private(set) var holdingForIdlePost: Bool
     public private(set) var lastDisengageLidClosed: Bool
     var lastWatchEndRollback: LastWatchEnd?
+    private var timerEndRollback: Date?
     var pendingLastWatchEnd: LastWatchEnd?
     private var lidConfirm: LidCloseConfirm
 
@@ -40,6 +41,7 @@ public struct WatchEngine: Equatable, Sendable {
         self.postedThisUserArm = false
         self.holdingForIdlePost = false
         self.lastWatchEndRollback = nil
+        self.timerEndRollback = nil
         self.lastDisengageLidClosed = false
         self.pendingLastWatchEnd = nil
         self.lidConfirm = LidCloseConfirm()
@@ -69,12 +71,14 @@ public struct WatchEngine: Equatable, Sendable {
         lastWatchEndRollback = nil
         leftoverAdopted = false
         self.lidClosed = lastDisengageLidClosed
+        let deadline = timerEndRollback
         let commands = engage(now: now, forcedByUser: true, resetPostedThisUserArm: false)
+        timerEnd = deadline
         preferences.lastWatchEnd = restored
         return commands
     }
 
-    /// Kernel clear succeeded after idle-after-wait POST. Last-end honesty may show now.
+    /// Kernel clear succeeded after the watch-end POST. Last-end honesty may show now.
     public mutating func completeIdlePostHold() {
         guard holdingForIdlePost else { return }
         holdingForIdlePost = false
@@ -308,18 +312,18 @@ public struct WatchEngine: Equatable, Sendable {
     mutating func disengage(_ reason: DisengageReason, at now: Date) -> [WatchCommand] {
         let wasEngaged = engaged
         // Capture before reset: settled already requires sawBusy; keep that honesty.
-        let postIdleAfterWait = !postedThisUserArm && NotifIdlePostPolicy.shouldPost(
-            enabled: preferences.notifEnabled,
-            reason: reason,
-            sawBusy: settle.sawBusy
+        let postWatchEnd = wasEngaged && !postedThisUserArm && (
+            NotifIdlePostPolicy.shouldPost(enabled: preferences.notifEnabled, reason: reason, sawBusy: settle.sawBusy)
+            || (preferences.notifEnabled && reason == .timerExpired)
         )
         let wasHygieneApplied = lidHygieneApplied
         let wasLidClosed = lidClosed
         lastDisengageLidClosed = wasLidClosed
         if wasEngaged {
             lastWatchEndRollback = preferences.lastWatchEnd
+            timerEndRollback = timerEnd
             let end = LastWatchEnd(endedAt: now, reason: reason)
-            if postIdleAfterWait {
+            if postWatchEnd {
                 pendingLastWatchEnd = end
             } else {
                 preferences.lastWatchEnd = end
@@ -331,16 +335,16 @@ public struct WatchEngine: Equatable, Sendable {
         userForcedThisSession = false
         leftoverAdopted = false
         lidHygieneApplied = false
-        if !postIdleAfterWait {
+        if !postWatchEnd {
             lidConfirm.reset()
             lidClosed = false
         }
         settle.reset()
         var commands: [WatchCommand] = [.disengage(reason)]
-        if postIdleAfterWait {
+        if postWatchEnd {
             postedThisUserArm = true
             holdingForIdlePost = true
-            commands.append(.postIdleAfterWaitNotif)
+            commands.append(reason == .timerExpired ? .postTimerExpiredNotif : .postIdleAfterWaitNotif)
         } else {
             holdingForIdlePost = false
             pendingLastWatchEnd = nil
@@ -354,7 +358,8 @@ public struct WatchEngine: Equatable, Sendable {
             commands.append(wake)
         }
         // One sleep story: inbound `/disarm` and popover/hotkey user-off share this gate.
-        if TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: wasLidClosed) {
+        // Timer expiry always offers sleep; the adapter skips a known-open lid.
+        if reason == .timerExpired || TelegramInboundDisarm.shouldRequestSleep(lidCloseConfirmed: wasLidClosed) {
             commands.append(.requestSleep)
         }
         return commands

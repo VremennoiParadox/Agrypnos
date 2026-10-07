@@ -147,10 +147,10 @@ extension WatchRuntime {
     }
 
     func applyTelegramArm(token: String?, chatId: String?) {
-        if TelegramInboundIntent.arm.shouldSetEngaged(currentlyEngaged: engaged) == true {
+        if TelegramInboundIntent.arm.shouldSetEngaged(currentlyEngaged: engine.engaged) == true {
             setEngaged(true)
         }
-        let text = engaged ? TelegramInboundCopy.armed : TelegramInboundCopy.armFailed
+        let text = engine.engaged ? TelegramInboundCopy.armed : TelegramInboundCopy.armFailed
         sendTelegramInboundReply(text, token: token, chatId: chatId)
     }
 

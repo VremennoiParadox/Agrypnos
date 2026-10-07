@@ -15,6 +15,8 @@ public enum WatchCommand: Equatable, Sendable {
     case requestSleep
     /// One-shot outbound after Agents idle-after-wait. Mac reads secrets and POSTs.
     case postIdleAfterWaitNotif
+    /// One-shot outbound when a timed watch reaches its deadline.
+    case postTimerExpiredNotif
 }
 
 public enum WatchMode: Equatable, Sendable {

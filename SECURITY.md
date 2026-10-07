@@ -15,7 +15,7 @@ Agrypnos asks for one privileged trick: lid-close keep-awake via `pmset disables
 - `visudo -c` on the snippet before install.
 - Reboot clears `SleepDisabled`. The app does not re-arm at login.
 - A crash or force quit clears it too. At launch the app starts a small `/bin/sh` helper that waits on a pipe from the app. When the app process ends for any reason, the pipe closes and the helper runs `sudo -n /usr/bin/pmset -a disablesleep 0` (the existing grant, nothing new), then exits.
-- Confirmed lid-closed inbound `/disarm` and popover/hotkey user-off (I2 — unlocked for Core, not Mac-proven) may call `pmset sleepnow`. Same user-level path as safety auto-off. Not a new sudoers grant. Lid-open or unconfirmed must not sleep the Mac.
+- Confirmed lid-closed inbound `/disarm` and popover/hotkey user-off (I2 — unlocked for Core, not Mac-proven) may call `pmset sleepnow`. Same user-level path as safety auto-off. Not a new sudoers grant. Lid-open or unconfirmed user-off/inbound disarm must not sleep the Mac. Timer expiry uses the same user-level `pmset sleepnow` path after verified kernel release, but sleeps unless the lid is known open; an unavailable lid reading requests sleep. This timer-only fallback does not apply to hygiene or manual/inbound off.
 
 Remove with `Scripts/ungrant.sh` or `sudo rm /etc/sudoers.d/agrypnos-disablesleep`.
 
@@ -25,7 +25,7 @@ Agent heuristics look at process names and mtimes of known session paths under y
 
 ## Opt-in outbound (Notif)
 
-When Notif outbound is enabled, Agrypnos may POST **once** to **your** Discord incoming webhook and/or **your** Telegram bot after Agents mode has seen local busy this arm and then stayed quiet through the idle wait. Default **off**. Empty fields skip that channel. Secrets (webhook URL, Telegram bot token, chat id) live in `~/Library/Application Support/Agrypnos/notif-secrets.json` (mode 0600), not Keychain and not plaintext prefs. Discord inbound bot token and channel id live in that same file when set — they are not an outbound channel. Values saved in an older Keychain build are not imported; paste them again. This is not telemetry. Agrypnos does not run a shared bot.
+When Notif outbound is enabled, Agrypnos may POST **once** to **your** Discord incoming webhook and/or **your** Telegram bot when a timed watch expires, or after Agents mode has seen local busy this arm and then stayed quiet through the idle wait. Timer messages report the expired watch timer; Agents messages report idle-after-wait. Default **off**. Empty fields skip that channel. Secrets (webhook URL, Telegram bot token, chat id) live in `~/Library/Application Support/Agrypnos/notif-secrets.json` (mode 0600), not Keychain and not plaintext prefs. Discord inbound bot token and channel id live in that same file when set — they are not an outbound channel. Values saved in an older Keychain build are not imported; paste them again. This is not telemetry. Agrypnos does not run a shared bot.
 
 ## Telegram inbound (your bot)
 

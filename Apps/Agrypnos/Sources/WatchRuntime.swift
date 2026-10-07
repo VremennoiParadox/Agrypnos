@@ -13,11 +13,11 @@ protocol WatchRuntimeDelegate: AnyObject {
 @MainActor
 final class WatchRuntime {
     let store: PreferencesStore
-    let readLid: () -> Bool
+    let readLid: () -> Bool?
     let readKernel: () -> SleepDisabledState
     let setKernel: (Bool) -> ToggleResult
     let runCommand: (String, [String]) -> (exit: Int32, out: String, err: String)
-    let postIdle: (Bool) async -> Void
+    let postIdle: (Bool, DisengageReason) async -> Void
     let notify: (String) -> Void
     let postQuestionNotice: @MainActor (String) async -> Void
     let readNotifSecrets: () -> NotifSecrets
@@ -54,6 +54,7 @@ final class WatchRuntime {
     var evaluatingQuestionTick = false
     var engine: WatchEngine
     var pollTimer: Timer?
+    var deadlineTimer: Timer?
     var savedBrightness: Double?
     var savedKeyboard: Double?
     var hygieneDevices = HygieneDevices()
@@ -90,13 +91,13 @@ final class WatchRuntime {
 
     init(
         store: PreferencesStore = PreferencesStore(),
-        readLid: @escaping () -> Bool = LidStateReader.isClosed,
+        readLid: @escaping () -> Bool? = LidStateReader.closedState,
         readKernel: @escaping () -> SleepDisabledState = SleepDisabledController.read,
         setKernel: @escaping (Bool) -> ToggleResult = SleepDisabledController.set,
         runCommand: @escaping (String, [String]) -> (exit: Int32, out: String, err: String) = {
             ProcessRunner.run($0, $1)
         },
-        postIdle: @escaping (Bool) async -> Void = { await NotifIdlePoster.postIfNeeded(enabled: $0) },
+        postIdle: @escaping (Bool, DisengageReason) async -> Void = { await NotifIdlePoster.postIfNeeded(enabled: $0, reason: $1) },
         notify: @escaping (String) -> Void = UserNotify.post,
         postQuestionNotice: @escaping @MainActor (String) async -> Void = { await QuestionNoticeSender.send($0) },
         readNotifSecrets: @escaping () -> NotifSecrets = NotifSecretsStore.load,
@@ -140,6 +141,11 @@ final class WatchRuntime {
     func setDuration(_ option: DurationOption) {
         let commands = engine.userSetDuration(option, now: Date())
         store.save(engine.preferences)
+        if engine.holdingForIdlePost {
+            setEngaged(true)
+            return
+        }
+        syncDeadlineTimer()
         apply(commands)
         delegate?.watchRuntimeDidChange(self)
     }
@@ -363,7 +369,7 @@ final class WatchRuntime {
             idlePostTask?.cancel()
             idlePostTask = nil
             idleOutbound.noteUserArm()
-            let rawClosed = readLid()
+            let rawClosed = readLid() == true
             if LidCloseConfirm.shouldCaptureBeforeClosedHygiene(rawClosed: rawClosed) {
                 recaptureOpenLidHygiene()
             }
@@ -376,6 +382,7 @@ final class WatchRuntime {
                 recaptureOpenLidHygiene()
             }
             startLidPulse()
+            syncDeadlineTimer()
             delegate?.watchRuntimeDidChange(self)
             return HygieneApplyResult()
         }
@@ -395,6 +402,7 @@ final class WatchRuntime {
         idleOutbound.cancelInFlight()
         let sleepResult = applyUserOff()
         clearQuestionWatch()
+        syncDeadlineTimer()
         store.save(engine.preferences)
         syncLidPulse()
         delegate?.watchRuntimeDidChange(self)
@@ -407,6 +415,7 @@ final class WatchRuntime {
             if case .assertSleepDisabled = command {
                 guard armKernel(allowInstall: false) else {
                     engine.endForWakeHoldFailure(now: Date())
+                    syncDeadlineTimer()
                     idlePostTask?.cancel()
                     idlePostTask = nil
                     idleOutbound.cancelInFlight()
@@ -422,7 +431,8 @@ final class WatchRuntime {
             commands,
             preferences: engine.preferences,
             armed: engine.engaged,
-            lidCloseConfirmed: engine.lidCloseConfirmed && readLid(),
+            lidCloseConfirmed: engine.lidCloseConfirmed && readLid() == true,
+            timerExpired: commands.contains(.disengage(.timerExpired)),
             effects: &hygieneEffects,
             savedBrightness: &savedBrightness,
             savedKeyboard: &savedKeyboard,
@@ -506,5 +516,23 @@ final class WatchRuntime {
         agentSnapshotCache.invalidate()
         probeGeneration &+= 1
         probeInFlight = false
+    }
+
+    func syncDeadlineTimer() {
+        guard engine.engaged, let end = engine.timerEnd, end > Date() else {
+            deadlineTimer?.invalidate()
+            deadlineTimer = nil
+            return
+        }
+        if deadlineTimer?.isValid == true, deadlineTimer?.fireDate == end { return }
+        deadlineTimer?.invalidate()
+        let timer = Timer(fire: end, interval: 0, repeats: false) { [weak self] _ in
+            Task { @MainActor in
+                guard let self, self.engine.engaged, self.engine.timerEnd == end else { return }
+                self.poll()
+            }
+        }
+        deadlineTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
     }
 }

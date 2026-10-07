@@ -16,15 +16,23 @@ enum NotifIdlePoster {
         return URLSession(configuration: config)
     }()
 
-    static func postIfNeeded(enabled: Bool) async {
+    static func postIfNeeded(enabled: Bool, reason: DisengageReason) async {
         guard enabled else { return }
-        let secrets = NotifSecretsStore.load()
+        let requests = requests(secrets: NotifSecretsStore.load(), reason: reason)
+        await withTaskGroup(of: Void.self) { group in
+            for request in requests {
+                group.addTask { await fire(request) }
+            }
+        }
+    }
+
+    static func requests(secrets: NotifSecrets, reason: DisengageReason) -> [NotifOutboundRequest] {
         let channels = NotifIdlePostPolicy.destinations(
             discordWebhookURL: secrets.discordWebhookURL,
             telegramBotToken: secrets.telegramBotToken,
             telegramChatId: secrets.telegramChatId
         )
-        let body = AgrypnosCopy.notifIdleBody
+        let body = reason == .timerExpired ? "Agrypnos: your watch timer ended." : AgrypnosCopy.notifIdleBody
         var requests: [NotifOutboundRequest] = []
         if channels.contains(.discord),
            let url = secrets.discordWebhookURL,
@@ -46,11 +54,7 @@ enum NotifIdlePoster {
                 UserNotify.post(AgrypnosCopy.notifTelegramPostFailed)
             }
         }
-        await withTaskGroup(of: Void.self) { group in
-            for request in requests {
-                group.addTask { await fire(request) }
-            }
-        }
+        return requests
     }
 
     static func fire(_ request: NotifOutboundRequest) async {

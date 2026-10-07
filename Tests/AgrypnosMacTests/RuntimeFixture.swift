@@ -5,6 +5,8 @@ import AgrypnosCore
 @MainActor
 final class RuntimeFixture {
     var lidClosed = true
+    var lidUnknown = false
+    var postReasons: [DisengageReason] = []
     var kernelHeld = true
     var kernelWriteHook: ((Bool) -> Void)?
     var kernelUnknown = false
@@ -23,7 +25,7 @@ final class RuntimeFixture {
         defaults = UserDefaults(suiteName: "agrypnos-test-" + UUID().uuidString)!
         runtime = WatchRuntime(
             store: PreferencesStore(defaults: defaults),
-            readLid: { [unowned self] in self.lidClosed },
+            readLid: { [unowned self] in self.lidUnknown ? nil : self.lidClosed },
             readKernel: { [unowned self] in self.kernelUnknown ? .unknown : (self.kernelHeld ? .held : .clear) },
             setKernel: { [unowned self] held in
                 guard self.kernelWriteSucceeds else { return .failed("fixture failure") }
@@ -33,7 +35,8 @@ final class RuntimeFixture {
                 if args == ["displaysleepnow"] { self.panelSleepRequests += 1 }
                 return (0, "", "")
             },
-            postIdle: { [unowned self] _ in
+            postIdle: { [unowned self] _, reason in
+                self.postReasons.append(reason)
                 await withCheckedContinuation { self.postContinuation = $0 }
             },
             notify: { [unowned self] in self.messages.append($0) },

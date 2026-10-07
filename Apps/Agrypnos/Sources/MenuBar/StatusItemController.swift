@@ -12,10 +12,9 @@ final class StatusItemController: NSObject {
     private let item: NSStatusItem
     private let runtime: WatchRuntime
     private let popover: PopoverController
-    private let offGlyph = GlyphFactory.image(.off)
-    private let onGlyph = GlyphFactory.image(.on)
-    private let armedGlyph = GlyphFactory.image(.armed)
-    private let busyGlyph = GlyphFactory.image(.busy)
+    private var displayedGlyph = AgrypnosGlyph.off
+    private var displayedColor = NSColor.secondaryLabelColor
+    private var displayedAppearance: NSAppearance.Name?
 
     init(runtime: WatchRuntime, popover: PopoverController) {
         self.runtime = runtime
@@ -32,7 +31,9 @@ final class StatusItemController: NSObject {
         item.isVisible = true
         super.init()
         if let button = item.button {
-            button.image = offGlyph
+            button.wantsLayer = true
+            button.image = GlyphFactory.image(.off, color: displayedColor)
+            displayedAppearance = button.effectiveAppearance.name
             button.imagePosition = .imageOnly
             button.imageScaling = .scaleProportionallyDown
             button.setAccessibilityTitle(AgrypnosCopy.appName)
@@ -50,10 +51,10 @@ final class StatusItemController: NSObject {
     func refresh() {
         let on = runtime.engaged
         let battery = runtime.lastBatteryReading
-        var glyph = offGlyph
+        var glyph = AgrypnosGlyph.off
         var tooltip = AgrypnosCopy.menuTooltipOff
         if on {
-            glyph = (battery?.onBatteryDischarging ?? false) ? armedGlyph : onGlyph
+            glyph = (battery?.onBatteryDischarging ?? false) ? .armed : .on
             tooltip = AgrypnosCopy.menuTooltip(
                 engaged: true,
                 leftover: runtime.adoptedLeftover,
@@ -66,7 +67,7 @@ final class StatusItemController: NSObject {
                let last = runtime.engine.settle.lastBusyAt,
                Date().timeIntervalSince(last) < runtime.preferences.agentSettleGrace
             {
-                glyph = busyGlyph
+                glyph = .busy
             }
         }
         let chrome = StatusItemChrome.make(
@@ -74,8 +75,17 @@ final class StatusItemController: NSObject {
             remainingSeconds: runtime.engine.statusItemRemainingSeconds(now: Date())
         )
         if let button = item.button {
-            if button.image !== glyph {
-                button.image = glyph
+            let color: NSColor
+            if !on { color = .secondaryLabelColor }
+            else if runtime.preferences.duration == .indefinite { color = .systemBlue }
+            else if runtime.preferences.duration == .untilAgentsSettle { color = .systemPurple }
+            else { color = AgrypnosPalette.gold }
+            let appearance = button.effectiveAppearance.name
+            if glyph != displayedGlyph || color != displayedColor || appearance != displayedAppearance {
+                button.image = GlyphFactory.image(glyph, color: color)
+                displayedGlyph = glyph
+                displayedColor = color
+                displayedAppearance = appearance
                 pulse(button)
             }
             apply(chrome, to: button)
@@ -104,7 +114,6 @@ final class StatusItemController: NSObject {
     }
 
     private func pulse(_ button: NSButton) {
-        button.wantsLayer = true
         let animation = CABasicAnimation(keyPath: "opacity")
         animation.fromValue = 0.35
         animation.toValue = 1

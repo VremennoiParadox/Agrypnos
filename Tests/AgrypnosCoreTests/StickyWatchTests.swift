@@ -26,7 +26,7 @@ final class StickyWatchTests: XCTestCase {
         )
     }
 
-    func testTimerEndKeepsTheWatchOnAndLeavesDurationAlone() {
+    func testTimerEndTurnsTheWatchOffAndLeavesDurationAlone() {
         var prefs = UserPreferences.default
         prefs.duration = .customMinutes(33)
         var engine = WatchEngine(preferences: prefs)
@@ -36,10 +36,10 @@ final class StickyWatchTests: XCTestCase {
             safety: .acPower,
             agents: .idle
         )
-        XCTAssertTrue(commands.isEmpty)
-        XCTAssertTrue(engine.engaged)
+        XCTAssertTrue(commands.contains(.disengage(.timerExpired)))
+        XCTAssertFalse(engine.engaged)
         XCTAssertEqual(engine.preferences.duration, .custom(minutes: 33))
-        XCTAssertNil(engine.preferences.lastWatchEnd)
+        XCTAssertEqual(engine.preferences.lastWatchEnd?.reason, .timerExpired)
     }
 
     func testLidCloseOpenDoesNotDisengageOrChangeDuration() {
@@ -170,8 +170,8 @@ final class StickyWatchTests: XCTestCase {
         XCTAssertEqual(engine.preferences.duration, .oneHour)
     }
 
-    func testTimerDoesNotTurnTheWatchOffAndAgentsIdleDoes() {
-        XCTAssertFalse(DisengageReason.timerExpired.turnsWatchOff)
+    func testTimerAndAgentsIdleTurnTheWatchOff() {
+        XCTAssertTrue(DisengageReason.timerExpired.turnsWatchOff)
         XCTAssertTrue(DisengageReason.agentsSettled.turnsWatchOff)
         XCTAssertFalse(DisengageReason.user.turnsWatchOff)
         XCTAssertTrue(DisengageReason.batteryFloor.turnsWatchOff)

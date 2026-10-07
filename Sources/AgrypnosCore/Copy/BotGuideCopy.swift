@@ -169,8 +169,8 @@ public enum BotGuide {
         numbered: true,
         steps: [
             BotGuideStep(
-                "Get a message when Agents go idle",
-                "Switch on Idle-after-wait POST. Agrypnos messages your Telegram bot once after Agents stay idle through the wait."
+                "Get a message when the watch ends",
+                "Switch on Watch-end POST. Agrypnos messages your Telegram bot when the timer ends or Agents stay idle through the wait."
             ),
             BotGuideStep(
                 "Send commands from Telegram",
@@ -197,7 +197,7 @@ public enum BotGuide {
             ),
             BotGuideStep(
                 "Turn it on",
-                "Switch on Idle-after-wait POST. Agrypnos posts to your webhook once after Agents stay idle through the wait."
+                "Switch on Watch-end POST. Agrypnos posts to your webhook when the timer ends or Agents stay idle through the wait."
             ),
             BotGuideStep("Test it", idleAfterWait),
         ]
