@@ -19,8 +19,7 @@ extension WatchRuntime {
             if count > 0 { return "OpenCode 1.18.32: connected (\(count) terminal\(count == 1 ? "" : "s"))." }
             return "OpenCode: installed, waiting. Restart OpenCode once to load forwarding."
         }
-        if readNotifSecrets().openCodeQuestions == nil { return "OpenCode: save a server connection below." }
-        return openCodeQuestionState.caption
+        return "OpenCode: forwarding is not installed."
     }
 
     func syncQuestionSources() {
@@ -32,55 +31,19 @@ extension WatchRuntime {
 
     func syncOpenCodeQuestionSources() {
         let relay = questionRelaySettings()
-        let settings = readNotifSecrets().openCodeQuestions
         guard !questionSourcesSuspended, !questionSourcesTerminated, relay.enabled,
+              preferences.openCodePluginEnabled,
               relay.includedKinds.contains(.openCode),
               relay.telegram?.isComplete == true || relay.discord?.isComplete == true else {
             stopOpenCodeQuestionSources(); return
         }
-        if preferences.openCodePluginEnabled { syncOpenCodePlugin(relay: relay); return }
-        guard let settings else { stopOpenCodeQuestionSources(); return }
-        guard let configuration = try? OpenCodeQuestionConfiguration(settings) else {
-            stopOpenCodeQuestionSources()
-            openCodeQuestionState = .unavailable("Use http://127.0.0.1:PORT and an absolute project directory.")
-            return
-        }
-        if openCodeSourceSettings == settings, openCodeRelaySettings == relay,
-           openCodeQuestionSource != nil { return }
-        stopOpenCodeQuestionSources()
-        questionRelay.refreshSettings()
-        openCodeSourceSettings = settings
-        openCodeRelaySettings = relay
-        let source = OpenCodeQuestionSource(configuration: configuration,
-            exchange: openCodeQuestionExchange, streamSession: openCodeQuestionStreamSession,
-            uptime: { [weak self] in self?.questionUptime() ?? 0 },
-            receive: { [weak self] batch in
-                guard let self, let source = self.openCodeQuestionSource else { return false }
-                return self.questionRelay.receive(batch, submit: { [weak source] answer in
-                    guard let source else { return .rejected }
-                    return await source.submit(key: batch.key, answer: answer)
-                }, returnLocal: { [weak source] in source?.returnToLocal(key: batch.key) })
-            }, resolved: { [weak self] key in
-                self?.questionRelay.cancel(key: key)
-                // An answer made locally after remote expiry also clears its deferred end.
-                self?.questionRelayDidChange(.cleared(key))
-            }, stateChanged: { [weak self] state in
-                self?.openCodeQuestionState = state
-                if let self { self.delegate?.watchRuntimeDidChange(self) }
-            })
-        openCodeQuestionSource = source
-        source.start()
+        syncOpenCodePlugin(relay: relay)
     }
 
     func stopOpenCodeQuestionSources() {
         openCodeSetupRevision &+= 1
         stopOpenCodePlugin()
-        let source = openCodeQuestionSource
-        openCodeQuestionSource = nil
-        openCodeSourceSettings = nil
         openCodeRelaySettings = nil
-        source?.stop()
-        openCodeQuestionState = .stopped
     }
 
     func stopQuestionSources() {
@@ -89,19 +52,4 @@ extension WatchRuntime {
         stopCodexAlerts()
     }
 
-    @discardableResult
-    func setOpenCodeQuestionSettings(_ settings: OpenCodeQuestionSettings?) -> Bool {
-        if let settings, (try? OpenCodeQuestionConfiguration(settings)) == nil { return false }
-        let wasPlugin = preferences.openCodePluginEnabled
-        if settings != nil { engine.preferences.openCodePluginEnabled = false }
-        guard readNotifSecrets().openCodeQuestions != settings || wasPlugin else { return true }
-        guard NotifSecretsStore.setOpenCodeQuestions(settings) else {
-            engine.preferences.openCodePluginEnabled = wasPlugin; return false
-        }
-        openCodeSetupFailure = nil
-        store.save(engine.preferences)
-        clearQuestionWatch()
-        delegate?.watchRuntimeDidChange(self)
-        return true
-    }
 }

@@ -22,8 +22,6 @@ final class WatchRuntime {
     let postQuestionNotice: @MainActor (String) async -> Void
     let readNotifSecrets: () -> NotifSecrets
     let questionTransport: QuestionRelayCoordinator.Transport
-    let openCodeQuestionExchange: OpenCodeQuestionSource.Exchange?
-    let openCodeQuestionStreamSession: URLSession?
     let openCodePluginInstaller: (() throws -> OpenCodePluginInstaller)?
     var openCodePluginSource: OpenCodePluginQuestionSource?
     var openCodePluginSocketRoot: URL?
@@ -35,10 +33,13 @@ final class WatchRuntime {
     var claudeSettingsURLOverride: URL?
     var claudeHookSocketURLOverride: URL?
     var claudeQuestionHookSource: ClaudeQuestionHookSource?
-    var openCodeQuestionSource: OpenCodeQuestionSource?
-    var openCodeSourceSettings: OpenCodeQuestionSettings?
+    var codexHooksURLOverride: URL?
+    var codexSocketURLOverride: URL?
+    var codexSetupFailure: String?
+    var codexAlertSource: CodexAlertHookSource?
+    var codexPostedSentences: [String] = []
+    var codexSuppressNetwork = false
     var openCodeRelaySettings: QuestionRelaySettings?
-    var openCodeQuestionState: OpenCodeQuestionConnectionState = .stopped
     var questionSourcesSuspended = false
     var questionSourcesTerminated = false
     var questionUptime: () -> TimeInterval = { ProcessInfo.processInfo.systemUptime }
@@ -100,8 +101,6 @@ final class WatchRuntime {
         postQuestionNotice: @escaping @MainActor (String) async -> Void = { await QuestionNoticeSender.send($0) },
         readNotifSecrets: @escaping () -> NotifSecrets = NotifSecretsStore.load,
         questionTransport: @escaping QuestionRelayCoordinator.Transport = { await TelegramInboundHTTP.exchangeQuestion($0) },
-        openCodeQuestionExchange: OpenCodeQuestionSource.Exchange? = nil,
-        openCodeQuestionStreamSession: URLSession? = nil,
         openCodePluginInstaller: (() throws -> OpenCodePluginInstaller)? = nil
     ) {
         self.store = store
@@ -114,8 +113,6 @@ final class WatchRuntime {
         self.postQuestionNotice = postQuestionNotice
         self.readNotifSecrets = readNotifSecrets
         self.questionTransport = questionTransport
-        self.openCodeQuestionExchange = openCodeQuestionExchange
-        self.openCodeQuestionStreamSession = openCodeQuestionStreamSession
         self.openCodePluginInstaller = openCodePluginInstaller
         engine = WatchEngine(preferences: store.load())
     }

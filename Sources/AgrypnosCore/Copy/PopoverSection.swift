@@ -19,7 +19,6 @@ public enum PopoverCard: Equatable, Hashable, Sendable {
     case questionRelay
     case pluginConnection
     case claudeHook
-    case openCodeQuestions
     case questionForwardingBack
     case questionNotifications
     case codexAlert

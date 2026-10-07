@@ -10,9 +10,11 @@ Question relay work on `codex/agent-question-relay`: before modifying or
 reviewing it, read [the OpenCode milestone](docs/superpowers/plans/2026-10-01-opencode-relay-milestone.md)
 and [the native-question design](docs/superpowers/specs/2026-09-29-native-agent-questions-design.md).
 The human authorized finishing OpenCode first for their test on 2026-10-01.
-Only the OpenCode 1.18.32 native source may be wired in this test build;
-Claude/Cursor/Codex remain unavailable. Full four-provider release remains
-gated. Separate automated evidence from live user/bot/Mac proof.
+OpenCode question forwarding is Mac-checked for OpenCode 1.18.32.
+Claude Code forwarding is wired and stays BETA until a same-session Mac check.
+Codex waiting alerts are wired and stay BETA until a ChatGPT-app check. They do not answer the question.
+Cursor has no question forwarding and no waiting alert.
+Full four-provider release remains gated. Separate automated evidence from live user/bot/Mac proof.
 
 For any coding, architecture, tests, or review on this repo, use **Grok 4.6 Extra High, non-fast**. Do not switch to a fast variant to save time. Do not silently downgrade.
 

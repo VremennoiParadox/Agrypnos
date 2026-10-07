@@ -24,9 +24,13 @@ enum QuestionNoticeSender {
            let request = DiscordQuestionMessage.notice(text, botToken: token, channelID: channelID) {
             requests.append(request)
         }
+        await deliver(requests)
+    }
+
+    static func deliver(_ requests: [NotifOutboundRequest]) async {
         await withTaskGroup(of: Void.self) { group in
             for request in requests {
-                group.addTask { _ = await TelegramInboundHTTP.exchangeQuestion(request) }
+                group.addTask { await NotifIdlePoster.fire(request) }
             }
         }
     }

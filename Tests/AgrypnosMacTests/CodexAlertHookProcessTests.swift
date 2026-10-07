@@ -57,7 +57,7 @@ final class CodexAlertHookProcessTests: XCTestCase {
         XCTAssertTrue(text.contains("Stop"))
         XCTAssertEqual(
             runtime.codexAlertCaption,
-            "Added the hook. In Codex, run /hooks and trust it. Until then, no alert is sent."
+            QuestionSetupChrome.codexTrustStatus
         )
         runtime.disableCodexAlerts()
         XCTAssertFalse(runtime.preferences.codexAlertEnabled)

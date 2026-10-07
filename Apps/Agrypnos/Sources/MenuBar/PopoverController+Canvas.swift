@@ -171,8 +171,7 @@ extension PopoverController {
 
         let questions = PopoverStackLayout.make(
             section: .notif,
-            showQuestionNotifications: true,
-            showManualOpenCodeConnection: true
+            showQuestionNotifications: true
         )
         questionNotificationsCard = PopoverForm.card(
             in: document, slot: questions.questionNotifications!, pad: pad, width: contentW
@@ -190,8 +189,6 @@ extension PopoverController {
             in: document, slot: questions.cursorQuestionNote!, pad: pad, width: contentW
         )
         addCursorQuestionNoteCard(cursorQuestionNoteCard, ci: ci, cw: cw)
-        openCodeQuestionsCard = PopoverForm.card(in: document, slot: questions.openCodeQuestions!, pad: pad, width: contentW)
-        addOpenCodeQuestionsCard(openCodeQuestionsCard, ci: ci, cw: cw)
 
         notifSetupCard = PopoverForm.card(in: document, slot: notif.notifSetup!, pad: pad, width: contentW)
         addNotifSetupCard(notifSetupCard, ci: ci, cw: cw)

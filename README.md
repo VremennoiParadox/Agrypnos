@@ -270,9 +270,10 @@ OpenCode and Claude Code forward the question after their Enable button.
 OpenCode needs one restart. Claude needs the folder trusted. Claude forwarding
 is not Mac-proven.
 
-Codex Enable adds a hook and does not answer. Trust it with `/hooks` in the
-Codex CLI. The bot message is `Codex is waiting on you.` or `Codex is waiting
-for an approval.` Not checked in the ChatGPT app yet. Codex alerts use your
+Codex Enable adds a hook and does not answer. There is no `codex hooks`
+shell command, and the ChatGPT app has no documented trust screen. The bot
+message is `Codex is waiting on you.` or `Codex is waiting for an approval.`
+Not proven in the ChatGPT app yet. Codex alerts use your
 saved Discord webhook or Telegram token and chat id. They do not require the
 idle-after-wait switch.
 
@@ -385,12 +386,13 @@ entry.
 One click merges a `PreToolUse` / `PermissionRequest` command hook into
 `~/.codex/hooks.json`. It does not replace that file. Existing
 `UserPromptSubmit` and `Stop` hooks stay. The hook prints nothing, exits 0,
-and does not answer. Trust the new hook with `/hooks` in the Codex CLI.
+and does not answer. There is no `codex hooks` shell command.
 
 1. Save a Discord webhook URL, or a Telegram token and chat id, in Notif.
    The idle-after-wait switch is not required.
 2. Open **Notif → Question notifications** and click **Enable Codex alerts**.
-3. In Codex, run `/hooks` and trust the Agrypnos command.
+3. Use Codex as you already do. Until that session runs the new hook, no
+   alert is sent. The ChatGPT app has no documented trust screen.
 
 The bot message is `Codex is waiting on you.` or `Codex is waiting for an
 approval.` Optional question text is included unless it is marked secret.

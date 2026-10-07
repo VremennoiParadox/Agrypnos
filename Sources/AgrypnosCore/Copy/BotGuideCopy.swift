@@ -86,7 +86,7 @@ public enum BotGuide {
         )
         case .codex: return toolNote(
             "Codex",
-            "Enable Codex alerts in Question notifications. Agrypnos adds a hook to ~/.codex/hooks.json and keeps your other hooks. In the Codex CLI, run /hooks and trust the new hook. Until you do, no alert is sent. The alert says Codex is waiting on you, or waiting for an approval. It does not answer the question. Not checked in the ChatGPT app yet."
+            "Enable Codex alerts in Question notifications. Agrypnos adds a hook to ~/.codex/hooks.json and keeps your other hooks. There is no codex hooks shell command, and the ChatGPT app has no documented trust screen. Until Codex runs the hook, no alert is sent. The alert says Codex is waiting on you, or waiting for an approval. It does not answer the question."
         )
         case .cursor: return toolNote(
             "Cursor",
@@ -117,13 +117,13 @@ public enum BotGuide {
                 BotGuideStep("Enable Claude Code forwarding",
                     "Open Notif → Question notifications, then click Enable Claude Code forwarding. Agrypnos merges a PreToolUse AskUserQuestion hook into ~/.claude/settings.json and keeps your other hooks, including UserPromptSubmit / Stop / StopFailure. Interactive sessions hold hooks until you trust the folder. Ask a structured choice in that same Claude Code session and answer on your bot."),
                 BotGuideStep("Enable Codex alerts",
-                    "Open Notif → Question notifications, then click Enable Codex alerts. Agrypnos adds a hook to ~/.codex/hooks.json and keeps your other hooks. In the Codex CLI, run /hooks and trust the new hook. Until you do, no alert is sent. The alert says Codex is waiting on you, or waiting for an approval. It does not answer the question."),
+                    "Open Notif → Question notifications, then click Enable Codex alerts. Agrypnos adds a hook to ~/.codex/hooks.json and keeps your other hooks. There is no codex hooks shell command. Until Codex runs the hook, no alert is sent. The alert says Codex is waiting on you, or waiting for an approval. It does not answer the question."),
                 BotGuideStep("Cursor",
                     "Cursor cannot forward a question or send a waiting alert. The question stays in Cursor. There is no setup."),
                 BotGuideStep("Answer a new question",
                     "Check for a connected terminal count. Start a new structured choice question in that same chat. Select every answer on your bot, review, then Send answers. Answer on Mac leaves it local without rejecting the question."),
-                BotGuideStep("Disable, remove, or use a server",
-                    "Disable OpenCode forwarding keeps the plugin installed but inactive. Remove OpenCode integration removes only unchanged Agrypnos-owned files and its registration. Manual server connection… is an explicit fallback for an already running loopback server; save its port, absolute directory and optional credentials to switch modes."),
+                BotGuideStep("Disable or remove",
+                    "Disable OpenCode forwarding keeps the plugin installed but inactive. Remove OpenCode integration removes only unchanged Agrypnos-owned files and its registration."),
                 BotGuideStep("Watch and expiry",
                     "Forwarding never arms Keep the watch. While already armed, a question holds it for up to 10 minutes; other busy or unknown agent activity delays auto-off. Manual off and safety still win. App restart and sleep invalidate phone controls and leave existing pending questions local; new questions can forward when connected again. Screen lock alone does not cancel forwarding."),
             ])

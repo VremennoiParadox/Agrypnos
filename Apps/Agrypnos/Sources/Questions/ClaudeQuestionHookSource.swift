@@ -18,40 +18,15 @@ final class ClaudeQuestionHookSource {
         self.socketURL = socketURL; self.uptime = uptime; self.receive = receive
     }
     func start() throws {
-        close(try OpenCodePrivateFiles.directory(socketURL.deletingLastPathComponent(), privateOnly: true))
-        var info = stat()
-        if lstat(socketURL.path, &info) == 0 {
-            guard (info.st_mode & S_IFMT) == S_IFSOCK, info.st_uid == getuid() else {
-                throw ClaudeAskUserQuestionPayload.Error.invalidRequest
-            }
-            unlink(socketURL.path)
-        }
-        var address = sockaddr_un()
-        let path = Array(socketURL.path.utf8) + [0]
-        guard path.count <= MemoryLayout.size(ofValue: address.sun_path) else {
-            throw ClaudeAskUserQuestionPayload.Error.invalidRequest
-        }
-        address.sun_family = sa_family_t(AF_UNIX)
-        address.sun_len = UInt8(MemoryLayout<sockaddr_un>.size)
-        withUnsafeMutableBytes(of: &address.sun_path) { $0.copyBytes(from: path) }
-        let fd = socket(AF_UNIX, SOCK_STREAM, 0)
-        guard fd >= 0 else { throw ClaudeAskUserQuestionPayload.Error.invalidRequest }
-        var ok = false
-        defer { if !ok { close(fd); if bound { unlink(socketURL.path); bound = false } } }
-        let bindOK = withUnsafePointer(to: &address) {
-            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
-                bind(fd, $0, socklen_t(MemoryLayout<sockaddr_un>.size))
-            }
-        }
-        guard bindOK == 0 else { throw ClaudeAskUserQuestionPayload.Error.invalidRequest }
+        let fd: Int32
+        do { fd = try LocalHookSocket.listen(url: socketURL) }
+        catch { throw ClaudeAskUserQuestionPayload.Error.invalidRequest }
         bound = true
-        guard chmod(socketURL.path, 0o600) == 0, listen(fd, 8) == 0 else {
-            throw ClaudeAskUserQuestionPayload.Error.invalidRequest
-        }
         let source = DispatchSource.makeReadSource(fileDescriptor: fd, queue: .main)
         source.setEventHandler { [weak self] in self?.accept(fd) }
         source.setCancelHandler { close(fd) }
-        listener = source; source.resume(); ok = true
+        listener = source
+        source.resume()
     }
     private func accept(_ listenerFD: Int32) {
         let client = Darwin.accept(listenerFD, nil, nil)

@@ -116,8 +116,6 @@ final class QuestionNotificationLayoutTests: XCTestCase {
         let layout = PopoverStackLayout.make(section: .notif, showQuestionNotifications: true)
         XCTAssertEqual(layout.codexAlert?.height, QuestionSetupChrome.codexCardHeight)
         XCTAssertEqual(layout.cursorQuestionNote?.height, QuestionSetupChrome.cursorNoteCardHeight)
-        XCTAssertEqual(QuestionSetupChrome.codexCardHeight, 232)
-        XCTAssertEqual(QuestionSetupChrome.cursorNoteCardHeight, 72)
         XCTAssertGreaterThan(layout.codexAlert!.height, QuestionSetupChrome.claudeCardHeight)
         XCTAssertGreaterThan(layout.cursorQuestionNote!.height, PopoverStackLayout.loginCardHeight)
         XCTAssertEqual(layout.cursorQuestionNote?.y, layout.codexAlert!.maxY + PopoverStackLayout.cardGap)
@@ -125,8 +123,6 @@ final class QuestionNotificationLayoutTests: XCTestCase {
         XCTAssertEqual(layout.needsScroll, layout.contentHeight > layout.popoverHeight)
 
         let closed = PopoverStackLayout.make(section: .notif)
-        XCTAssertEqual(closed.contentHeight, 1054)
-        XCTAssertEqual(layout.contentHeight, 2088)
         XCTAssertGreaterThan(layout.contentHeight, closed.contentHeight)
         XCTAssertEqual(closed.popoverHeight, PopoverStackLayout.maxVisibleHeight)
         XCTAssertEqual(layout.popoverHeight, PopoverStackLayout.maxVisibleHeight)

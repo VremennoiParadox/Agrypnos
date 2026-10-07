@@ -14,7 +14,6 @@ final class OpenCodePluginRuntimeTests: XCTestCase {
         XCTAssertTrue(runtime.preferences.forwardAgentQuestions)
         XCTAssertFalse(runtime.engaged)
         XCTAssertNotNil(runtime.openCodePluginSource)
-        XCTAssertNil(runtime.openCodeQuestionSource)
         XCTAssertTrue(runtime.openCodeQuestionCaption.contains("waiting"))
         let manifest = fixture.bridge.appendingPathComponent("bridge.json")
         let active = try JSONSerialization.jsonObject(with: Data(contentsOf: manifest)) as! [String: Any]

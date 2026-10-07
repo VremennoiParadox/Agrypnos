@@ -3,9 +3,10 @@ public enum QuestionSetupChrome {
     public static let beta = "BETA"
     public static let cursorNote = "Cursor cannot forward a question or send a waiting alert. The question stays in Cursor."
     public static let codexEnableTitle = "Enable Codex alerts"
-    public static let codexHelp = "Adds a hook that tells your bot when Codex is waiting on you or waiting for an approval. It does not answer the question. Trust the new hook with /hooks in the Codex CLI. Not checked in the ChatGPT app yet."
+    public static let codexHelp = "Adds a hook that tells your bot when Codex is waiting on you or waiting for an approval. It does not answer the question. There is no shell command to trust it. Not proven in the ChatGPT app yet."
+    public static let codexTrustStatus = "Added the hook. Codex has to run it before an alert is sent. That step is not proven in the ChatGPT app yet."
     public static let title = "Forward agent questions"
-    public static let help = "Structured OpenCode and Claude Code choices on your bot. Free text and approvals stay on Mac. Cursor and Codex are unavailable in this test build."
+    public static let help = "Structured OpenCode and Claude Code choices on your bot. Codex sends a waiting alert and does not answer. Cursor stays in Cursor. Free text and approvals stay on Mac."
     public static let policy = "While armed, questions hold the watch for 10 minutes. Busy or unknown activity delays auto-off. Forwarding never arms it."
     public static let helpY = 40
     public static let telegramUserY = 112
@@ -14,7 +15,7 @@ public enum QuestionSetupChrome {
     public static let statusY = 248
     public static let statusHeight = 56
     public static let relayCardHeight = 316
-    public static let pluginCardHeight = 176
+    public static let pluginCardHeight = 156
     public static let claudeEnableTitle = "Enable Claude Code forwarding"
     public static let claudeHelp = "Adds a PreToolUse AskUserQuestion hook to your Claude settings. Interactive sessions hold hooks until you trust the folder."
     public static let claudeStatusY = 144
@@ -38,12 +39,4 @@ public enum QuestionSetupChrome {
     }
     public static let enableTitle = "Enable OpenCode forwarding"
     public static let pluginHelp = "One-time setup for OpenCode 1.18.32 terminals. Restart OpenCode once, then use your normal chats."
-    public static let connectionTitle = "Manual server connection"
-    public static let connectionHelp = "Connect to the server hosting your chat. Requires OpenCode 1.18.32. Setup instructions are below."
-    public static let endpointY = 88
-    public static let directoryY = 116
-    public static let usernameY = 144
-    public static let passwordY = 172
-    public static let connectionButtonsY = 208
-    public static let connectionCardHeight = 294
 }

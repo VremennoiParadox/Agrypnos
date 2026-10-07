@@ -82,7 +82,6 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var openCodeEnableButton: NSButton!
     var openCodeDisableButton: NSButton!
     var openCodeRemoveButton: NSButton!
-    var openCodeManualButton: NSButton!
     var claudeHookCard: CardView!
     var claudeEnableButton: NSButton!
     var claudeDisableButton: NSButton!
@@ -92,19 +91,13 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var codexDisableButton: NSButton!
     var codexAlertStatus: NSTextField!
     var cursorQuestionNoteCard: CardView!
-    var showManualOpenCodeConnection = false
     var showQuestionNotifications = false
     var questionNotificationsCard: CardView!
     var questionNotificationsButton: NSButton!
     var questionNotificationsBeta: NSTextField!
-    var openCodeQuestionsCard: CardView!
     var forwardQuestionsSwitch: NSSwitch!
     var telegramQuestionUser: SecretRevealRow!
     var discordQuestionUser: SecretRevealRow!
-    var openCodeEndpoint: NSTextField!
-    var openCodeDirectory: NSTextField!
-    var openCodeUsername: NSTextField!
-    var openCodePassword: SecretRevealRow!
     var questionConnectionStatus: NSTextField!
     var notifSetupCard: CardView!
     var notifClearCard: CardView!

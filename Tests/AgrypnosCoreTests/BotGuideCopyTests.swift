@@ -183,7 +183,9 @@ final class BotGuideCopyTests: XCTestCase {
             XCTAssertFalse(text.localizedCaseInsensitiveContains("job finished"))
         }
         XCTAssertTrue(BotGuide.text(for: .cursor).contains("Cursor cannot forward a question"))
-        XCTAssertTrue(BotGuide.text(for: .codex).contains("/hooks"))
+        XCTAssertTrue(BotGuide.text(for: .codex).contains("does not answer"))
+        XCTAssertTrue(BotGuide.text(for: .codex).contains("no codex hooks shell command"))
+        XCTAssertFalse(BotGuide.text(for: .codex).contains("run /hooks"))
         XCTAssertTrue(BotGuide.text(for: .codex).contains("does not answer"))
         XCTAssertTrue(BotGuide.text(for: .openCode).contains("Restart OpenCode once"))
         XCTAssertTrue(BotGuide.text(for: .claudeCode).contains("AskUserQuestion"))

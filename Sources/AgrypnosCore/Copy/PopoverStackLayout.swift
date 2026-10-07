@@ -108,7 +108,6 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public let questionRelay: PopoverSlot?
     public let pluginConnection: PopoverSlot?
     public let claudeHook: PopoverSlot?
-    public let openCodeQuestions: PopoverSlot?
     public let questionForwardingBack: PopoverSlot?
     public let questionNotifications: PopoverSlot?
     public let codexAlert: PopoverSlot?
@@ -150,7 +149,6 @@ public struct PopoverStackLayout: Equatable, Sendable {
         case .questionRelay: return questionRelay
         case .pluginConnection: return pluginConnection
         case .claudeHook: return claudeHook
-        case .openCodeQuestions: return openCodeQuestions
         case .questionForwardingBack: return questionForwardingBack
         case .questionNotifications: return questionNotifications
         case .codexAlert: return codexAlert
@@ -163,8 +161,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static func make(
         section: PopoverSection = .default,
         panelPowerMode: PanelPowerMode = .default,
-        showQuestionNotifications: Bool = false,
-        showManualOpenCodeConnection: Bool = false
+        showQuestionNotifications: Bool = false
     ) -> PopoverStackLayout {
         let watchHeight = inset + 28 + PopoverCopyLayout.captionHeightPoints + inset
         let hygieneHeight =
@@ -266,7 +263,6 @@ public struct PopoverStackLayout: Equatable, Sendable {
             case .questionRelay: return QuestionSetupChrome.relayCardHeight
             case .pluginConnection: return QuestionSetupChrome.pluginCardHeight
             case .claudeHook: return QuestionSetupChrome.claudeCardHeight
-            case .openCodeQuestions: return QuestionSetupChrome.connectionCardHeight
             case .questionForwardingBack: return loginCardHeight
             case .questionNotifications: return loginCardHeight
             case .codexAlert: return QuestionSetupChrome.codexCardHeight
@@ -289,9 +285,6 @@ public struct PopoverStackLayout: Equatable, Sendable {
                 continue
             }
             placed[card] = place(height(for: card))
-            if card == .pluginConnection, showManualOpenCodeConnection {
-                placed[.openCodeQuestions] = place(height(for: .openCodeQuestions))
-            }
         }
 
         var shortcutY: Int?
@@ -338,7 +331,6 @@ public struct PopoverStackLayout: Equatable, Sendable {
             questionRelay: placed[.questionRelay],
             pluginConnection: placed[.pluginConnection],
             claudeHook: placed[.claudeHook],
-            openCodeQuestions: placed[.openCodeQuestions],
             questionForwardingBack: placed[.questionForwardingBack],
             questionNotifications: placed[.questionNotifications],
             codexAlert: placed[.codexAlert],

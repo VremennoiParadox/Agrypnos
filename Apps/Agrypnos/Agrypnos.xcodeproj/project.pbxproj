@@ -41,12 +41,13 @@
 		B0C0CFCEE86F8D71B86ADB21 /* ClaudeQuestionHookProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A5DD98D5B5F27BDFB13BEC /* ClaudeQuestionHookProcess.swift */; };
 		04C7778A0C73432F88195BEB /* ClaudeQuestionHookSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDC5D2452EB7A687AEBD102F /* ClaudeQuestionHookSource.swift */; };
 		EC07AB0FC4B919E42C1A6E55 /* CodexAlertHookProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66360EE08998F484E04F9FCF /* CodexAlertHookProcess.swift */; };
+		A1C0DE110001000000000001 /* CodexAlertHookSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE110001000000000002 /* CodexAlertHookSource.swift */; };
+		A1C0DE110001000000000003 /* LocalHookSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE110001000000000004 /* LocalHookSocket.swift */; };
 		DC9A7A9AB93F0083BE28150F /* OpenCodeBridgeSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DC474EA636B5349E22D92E4 /* OpenCodeBridgeSocket.swift */; };
 		C13AF58296A206B4C6CB98D7 /* OpenCodeEventFrames.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B758FA4AA59BA763C06F474 /* OpenCodeEventFrames.swift */; };
 		D62103D186BB34D00D643A04 /* OpenCodePluginInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E311482565640C0F477A20C /* OpenCodePluginInstaller.swift */; };
 		230D18B8311BC41365F49726 /* OpenCodePluginQuestionSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BD93DE23DBB038F87577B05 /* OpenCodePluginQuestionSource.swift */; };
 		7924D04765B767DBABA8CBD3 /* OpenCodePrivateFiles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78BB415D96548BD2FF5D530E /* OpenCodePrivateFiles.swift */; };
-		26997208C8E3082769BE45F2 /* OpenCodeQuestionSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1039890FF19ADB62E5C568F9 /* OpenCodeQuestionSource.swift */; };
 		4A547D34E748E74CA1E5E7F0 /* QuestionNoticeSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFE80B315E75852FC6FB9487 /* QuestionNoticeSender.swift */; };
 		8E4E13B32E0259DCDFD42AAC /* QuestionRelayCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12C9FECD0358EC968A877043 /* QuestionRelayCoordinator.swift */; };
 		99CEFA89943C6E67547AC8E7 /* WatchRuntime+ClaudeHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF6C502C88EC052010B4657 /* WatchRuntime+ClaudeHook.swift */; };
@@ -102,12 +103,13 @@
 		A3A5DD98D5B5F27BDFB13BEC /* ClaudeQuestionHookProcess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeQuestionHookProcess.swift; sourceTree = "<group>"; };
 		FDC5D2452EB7A687AEBD102F /* ClaudeQuestionHookSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeQuestionHookSource.swift; sourceTree = "<group>"; };
 		66360EE08998F484E04F9FCF /* CodexAlertHookProcess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexAlertHookProcess.swift; sourceTree = "<group>"; };
+		A1C0DE110001000000000002 /* CodexAlertHookSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexAlertHookSource.swift; sourceTree = "<group>"; };
+		A1C0DE110001000000000004 /* LocalHookSocket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalHookSocket.swift; sourceTree = "<group>"; };
 		0DC474EA636B5349E22D92E4 /* OpenCodeBridgeSocket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenCodeBridgeSocket.swift; sourceTree = "<group>"; };
 		1B758FA4AA59BA763C06F474 /* OpenCodeEventFrames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenCodeEventFrames.swift; sourceTree = "<group>"; };
 		7E311482565640C0F477A20C /* OpenCodePluginInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenCodePluginInstaller.swift; sourceTree = "<group>"; };
 		0BD93DE23DBB038F87577B05 /* OpenCodePluginQuestionSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenCodePluginQuestionSource.swift; sourceTree = "<group>"; };
 		78BB415D96548BD2FF5D530E /* OpenCodePrivateFiles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenCodePrivateFiles.swift; sourceTree = "<group>"; };
-		1039890FF19ADB62E5C568F9 /* OpenCodeQuestionSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenCodeQuestionSource.swift; sourceTree = "<group>"; };
 		CFE80B315E75852FC6FB9487 /* QuestionNoticeSender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionNoticeSender.swift; sourceTree = "<group>"; };
 		12C9FECD0358EC968A877043 /* QuestionRelayCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionRelayCoordinator.swift; sourceTree = "<group>"; };
 		BFF6C502C88EC052010B4657 /* WatchRuntime+ClaudeHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+ClaudeHook.swift"; sourceTree = "<group>"; };
@@ -247,12 +249,13 @@
 				A3A5DD98D5B5F27BDFB13BEC /* ClaudeQuestionHookProcess.swift */,
 				FDC5D2452EB7A687AEBD102F /* ClaudeQuestionHookSource.swift */,
 				66360EE08998F484E04F9FCF /* CodexAlertHookProcess.swift */,
+				A1C0DE110001000000000002 /* CodexAlertHookSource.swift */,
+				A1C0DE110001000000000004 /* LocalHookSocket.swift */,
 				0DC474EA636B5349E22D92E4 /* OpenCodeBridgeSocket.swift */,
 				1B758FA4AA59BA763C06F474 /* OpenCodeEventFrames.swift */,
 				7E311482565640C0F477A20C /* OpenCodePluginInstaller.swift */,
 				0BD93DE23DBB038F87577B05 /* OpenCodePluginQuestionSource.swift */,
 				78BB415D96548BD2FF5D530E /* OpenCodePrivateFiles.swift */,
-				1039890FF19ADB62E5C568F9 /* OpenCodeQuestionSource.swift */,
 				CFE80B315E75852FC6FB9487 /* QuestionNoticeSender.swift */,
 				12C9FECD0358EC968A877043 /* QuestionRelayCoordinator.swift */,
 				BFF6C502C88EC052010B4657 /* WatchRuntime+ClaudeHook.swift */,
@@ -406,12 +409,13 @@
 				B0C0CFCEE86F8D71B86ADB21 /* ClaudeQuestionHookProcess.swift in Sources */,
 				04C7778A0C73432F88195BEB /* ClaudeQuestionHookSource.swift in Sources */,
 				EC07AB0FC4B919E42C1A6E55 /* CodexAlertHookProcess.swift in Sources */,
+				A1C0DE110001000000000001 /* CodexAlertHookSource.swift in Sources */,
+				A1C0DE110001000000000003 /* LocalHookSocket.swift in Sources */,
 				DC9A7A9AB93F0083BE28150F /* OpenCodeBridgeSocket.swift in Sources */,
 				C13AF58296A206B4C6CB98D7 /* OpenCodeEventFrames.swift in Sources */,
 				D62103D186BB34D00D643A04 /* OpenCodePluginInstaller.swift in Sources */,
 				230D18B8311BC41365F49726 /* OpenCodePluginQuestionSource.swift in Sources */,
 				7924D04765B767DBABA8CBD3 /* OpenCodePrivateFiles.swift in Sources */,
-				26997208C8E3082769BE45F2 /* OpenCodeQuestionSource.swift in Sources */,
 				4A547D34E748E74CA1E5E7F0 /* QuestionNoticeSender.swift in Sources */,
 				8E4E13B32E0259DCDFD42AAC /* QuestionRelayCoordinator.swift in Sources */,
 				99CEFA89943C6E67547AC8E7 /* WatchRuntime+ClaudeHook.swift in Sources */,

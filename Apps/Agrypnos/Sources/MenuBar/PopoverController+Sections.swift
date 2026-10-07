@@ -15,16 +15,14 @@ extension PopoverController {
             animated: popover.isShown && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
             currentHeight: Int((popoverRoot.window?.frame.height ?? popover.contentSize.height).rounded()),
             panelPowerMode: runtime?.preferences.panelPowerMode ?? .default,
-            showQuestionNotifications: showQuestionNotifications,
-            showManualOpenCodeConnection: showManualOpenCodeConnection
+            showQuestionNotifications: showQuestionNotifications
         )
         if section != .notif { showQuestionNotifications = false }
         currentSection = section
         let layout = PopoverStackLayout.make(
             section: section,
             panelPowerMode: runtime?.preferences.panelPowerMode ?? .default,
-            showQuestionNotifications: section == .notif && showQuestionNotifications,
-            showManualOpenCodeConnection: showManualOpenCodeConnection
+            showQuestionNotifications: section == .notif && showQuestionNotifications
         )
         let pad = CGFloat(PopoverStackLayout.pad)
         let width = CGFloat(PopoverStackLayout.width)
@@ -129,7 +127,6 @@ extension PopoverController {
         PopoverForm.apply(claudeHookCard, slot: layout.claudeHook, pad: pad, width: width)
         PopoverForm.apply(codexAlertCard, slot: layout.codexAlert, pad: pad, width: width)
         PopoverForm.apply(cursorQuestionNoteCard, slot: layout.cursorQuestionNote, pad: pad, width: width)
-        PopoverForm.apply(openCodeQuestionsCard, slot: layout.openCodeQuestions, pad: pad, width: width)
         PopoverForm.apply(notifSetupCard, slot: layout.notifSetup, pad: pad, width: width)
         PopoverForm.apply(notifClearCard, slot: layout.notifClear, pad: pad, width: width)
         PopoverForm.apply(loginCard, slot: layout.login, pad: pad, width: width)

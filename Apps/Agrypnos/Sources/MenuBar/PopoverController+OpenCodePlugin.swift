@@ -14,7 +14,6 @@ extension PopoverController {
         openCodeRemoveButton = setupButton("Remove integration", action: #selector(removeOpenCodePlugin), in: card,
             x: ci + openCodeDisableButton.frame.width + 8, y: 116)
         openCodeRemoveButton.setAccessibilityLabel("Remove OpenCode integration")
-        openCodeManualButton = setupButton("Manual server connection…", action: #selector(toggleManualOpenCode), in: card, x: ci, y: 144)
         openCodeEnableButton.setAccessibilityHelp(QuestionSetupChrome.pluginHelp)
     }
     private func setupButton(_ title: String, action: Selector, in card: CardView, x: CGFloat, y: CGFloat) -> NSButton {
@@ -35,10 +34,5 @@ extension PopoverController {
             guard let self, let runtime else { return }
             _ = await runtime.removeOpenCodeForwarding(); refresh()
         }
-    }
-    @objc func toggleManualOpenCode() {
-        showManualOpenCodeConnection.toggle()
-        openCodeManualButton.title = showManualOpenCodeConnection ? "Hide manual connection" : "Manual server connection…"
-        applySection(currentSection)
     }
 }
