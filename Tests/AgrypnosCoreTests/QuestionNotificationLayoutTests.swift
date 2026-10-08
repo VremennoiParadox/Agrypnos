@@ -13,7 +13,7 @@ final class QuestionNotificationLayoutTests: XCTestCase {
             PopoverSection.notif.cards(showQuestionNotifications: false),
             [
                 .notifSetup,
-                .notifEnable, .notifDiscord, .notifDiscordInbound, .notifTelegram, .notifTelegramInbound,
+                .notifEnable, .notifDiscord, .notifTelegram, .notifTelegramInbound,
                 .questionNotifications,
                 .notifClear,
             ]

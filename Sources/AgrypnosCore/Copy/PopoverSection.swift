@@ -59,7 +59,7 @@ public enum PopoverSection: Int, CaseIterable, Sendable {
         case .notif:
             var cards: [PopoverCard] = [
                 .notifSetup,
-                .notifEnable, .notifDiscord, .notifDiscordInbound, .notifTelegram, .notifTelegramInbound,
+                .notifEnable, .notifDiscord, .notifTelegram, .notifTelegramInbound,
                 .questionNotifications,
             ]
             if showQuestionNotifications {

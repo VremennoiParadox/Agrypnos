@@ -9,14 +9,15 @@ final class NotifPopoverChromeTests: XCTestCase {
                 .notifSetup,
                 .notifEnable,
                 .notifDiscord,
-                .notifDiscordInbound,
                 .notifTelegram,
                 .notifTelegramInbound,
                 .questionNotifications,
                 .notifClear,
             ]
         )
-        XCTAssertEqual(PopoverSection.notif.cards.count, 8)
+        XCTAssertEqual(PopoverSection.notif.cards.count, 7)
+        XCTAssertEqual(PopoverSection.notif.cards.filter { $0 == .notifDiscord }.count, 1)
+        XCTAssertFalse(PopoverSection.notif.cards.contains(.notifDiscordInbound))
         XCTAssertEqual(PopoverSection.notif.cards.first, .notifSetup)
         XCTAssertEqual(PopoverSection.notif.cards.last, .notifClear)
         XCTAssertFalse(PopoverSection.watch.cards.contains(.notifEnable))
@@ -105,12 +106,12 @@ final class NotifPopoverChromeTests: XCTestCase {
         XCTAssertTrue(SecretRevealChrome.nextRevealed(false))
         XCTAssertFalse(SecretRevealChrome.nextRevealed(true))
         XCTAssertEqual(
-            AgrypnosCopy.revealAccess(label: AgrypnosCopy.notifDiscord, revealed: false),
-            "Show Discord webhook URL"
+            AgrypnosCopy.revealAccess(label: AgrypnosCopy.notifDiscordInboundToken, revealed: false),
+            "Show Discord bot token"
         )
         XCTAssertEqual(
-            AgrypnosCopy.revealAccess(label: AgrypnosCopy.notifDiscord, revealed: true),
-            "Hide Discord webhook URL"
+            AgrypnosCopy.revealAccess(label: AgrypnosCopy.notifDiscordInboundChannelId, revealed: true),
+            "Hide Discord channel id"
         )
         XCTAssertNotEqual(
             AgrypnosCopy.revealAccess(label: AgrypnosCopy.notifTelegramToken, revealed: false),
@@ -133,9 +134,7 @@ final class NotifPopoverChromeTests: XCTestCase {
         )
         XCTAssertEqual(AgrypnosCopy.notifTelegramChatPlaceholder, "from getUpdates")
         XCTAssertEqual(AgrypnosCopy.notifTelegramTokenPlaceholder, "paste bot token")
-        XCTAssertEqual(AgrypnosCopy.notifDiscordPlaceholder, "paste webhook URL")
         XCTAssertFalse(AgrypnosCopy.notifTelegramChatPlaceholder.contains("123456"))
-        XCTAssertFalse(AgrypnosCopy.notifDiscordPlaceholder.contains("discord.com/api/webhooks/"))
     }
 
     func testClearSecretsCopyDeletesSavedFileNotKeychain() {
@@ -200,9 +199,9 @@ final class NotifPopoverChromeTests: XCTestCase {
                 AgrypnosCopy.notifEnabledHelp,
                 columns: PopoverCopyLayout.innerColumns
             ),
-            4
+            5
         )
-        XCTAssertEqual(PopoverCopyLayout.notifEnableHelpMaxLines, 4)
+        XCTAssertEqual(PopoverCopyLayout.notifEnableHelpMaxLines, 5)
         XCTAssertEqual(
             CopyWrap.lineCount(
                 AgrypnosCopy.notifTelegramHelp,
@@ -213,38 +212,45 @@ final class NotifPopoverChromeTests: XCTestCase {
         XCTAssertEqual(PopoverCopyLayout.notifTelegramHelpMaxLines, 3)
         XCTAssertEqual(
             CopyWrap.lineCount(
-                AgrypnosCopy.notifDiscordInvalid,
-                columns: PopoverCopyLayout.innerColumns
-            ),
-            2
-        )
-        XCTAssertEqual(PopoverCopyLayout.notifDiscordStatusMaxLines, 2)
-        XCTAssertLessThanOrEqual(
-            CopyWrap.lineCount(
                 AgrypnosCopy.notifDiscordHelp,
                 columns: PopoverCopyLayout.innerColumns
             ),
-            PopoverCopyLayout.helpMaxLines
+            7
         )
+        XCTAssertEqual(PopoverCopyLayout.notifDiscordHelpMaxLines, 7)
     }
 
-    func testNotifCopyStaysIdleAfterWaitAndNamesYourWebhook() {
+    func testDiscordCardIsTheBotWithoutAWebhookField() {
+        XCTAssertEqual(AgrypnosCopy.notifDiscord, "Discord")
         XCTAssertEqual(
-            AgrypnosCopy.notifDiscordInvalid,
-            "That is not a Discord webhook URL. Nothing was saved."
+            AgrypnosCopy.notifDiscordHelp,
+            "Messages this channel when Watch-end POST is on, including when Agrypnos asks the Mac to sleep. Commands: /arm, /disarm, /status, /help, when Discord inbound is on. Needs your bot token + channel id. Details in Setup instructions."
         )
+        XCTAssertEqual(
+            AgrypnosCopy.notifEnabledHelp,
+            "Message your Discord bot and/or your Telegram bot when the timer ends, when Agents stay idle through the wait, or when Agrypnos asks the Mac to sleep. Off by default."
+        )
+        XCTAssertEqual(
+            AgrypnosCopy.notifDiscordPostFailed,
+            "Couldn't message your Discord bot."
+        )
+        XCTAssertFalse(AgrypnosCopy.notifDiscordHelp.lowercased().contains("webhook"))
+        XCTAssertFalse(AgrypnosCopy.notifEnabledHelp.lowercased().contains("webhook"))
+        XCTAssertEqual(PopoverSection.notif.cards.filter { $0 == .notifDiscord }.count, 1)
+        XCTAssertFalse(PopoverSection.notif.cards.contains(.notifDiscordInbound))
+    }
+
+    func testNotifCopyStaysIdleAfterWaitAndNamesYourBot() {
         let blob = [
             AgrypnosCopy.notifEnabled,
             AgrypnosCopy.notifEnabledHelp,
             AgrypnosCopy.notifDiscord,
             AgrypnosCopy.notifDiscordHelp,
-            AgrypnosCopy.notifDiscordInvalid,
             AgrypnosCopy.notifTelegram,
             AgrypnosCopy.notifTelegramTokenShort,
             AgrypnosCopy.notifTelegramChatShort,
             AgrypnosCopy.notifTelegramToken,
             AgrypnosCopy.notifTelegramChatId,
-            AgrypnosCopy.notifDiscordPlaceholder,
             AgrypnosCopy.notifTelegramTokenPlaceholder,
             AgrypnosCopy.notifTelegramChatPlaceholder,
             AgrypnosCopy.notifTelegramHelp,
@@ -255,7 +261,7 @@ final class NotifPopoverChromeTests: XCTestCase {
             AgrypnosCopy.notifSetup,
             BotGuide.allText,
             AgrypnosCopy.notifClear,
-            AgrypnosCopy.revealAccess(label: AgrypnosCopy.notifDiscord, revealed: false),
+            AgrypnosCopy.revealAccess(label: AgrypnosCopy.notifDiscordInboundToken, revealed: false),
             AgrypnosCopy.revealAccess(label: AgrypnosCopy.notifTelegramToken, revealed: true),
             AgrypnosCopy.notifSaveFailed,
             AgrypnosCopy.notifDiscordPostFailed,
@@ -264,11 +270,11 @@ final class NotifPopoverChromeTests: XCTestCase {
             AgrypnosCopy.notifTelegramTokenInvalid,
             AgrypnosCopy.notifIdleBody,
         ].joined(separator: "\n").lowercased()
-        XCTAssertTrue(blob.contains("your webhook"))
+        XCTAssertTrue(blob.contains("your discord bot"))
         XCTAssertTrue(blob.contains("your telegram bot"))
         XCTAssertTrue(blob.contains("does not run a shared bot"))
         XCTAssertTrue(blob.contains("idle after the wait") || blob.contains("idle after wait"))
-        XCTAssertTrue(blob.contains("show discord webhook url"))
+        XCTAssertTrue(blob.contains("show discord bot token"))
         XCTAssertTrue(blob.contains("hide telegram bot token"))
         XCTAssertFalse(blob.contains("keychain"))
         for banned in [
@@ -293,7 +299,6 @@ final class NotifPopoverChromeTests: XCTestCase {
                 layout.notifSetup,
                 layout.notifEnable,
                 layout.notifDiscord,
-                layout.notifDiscordInbound,
                 layout.notifTelegram,
                 layout.notifTelegramInbound,
                 layout.questionNotifications,
@@ -303,11 +308,8 @@ final class NotifPopoverChromeTests: XCTestCase {
         XCTAssertEqual(layout.notifSetup?.y, PopoverStackLayout.firstCardY)
         XCTAssertEqual(layout.notifEnable?.y, layout.notifSetup!.maxY + PopoverStackLayout.cardGap)
         XCTAssertEqual(layout.notifDiscord?.y, layout.notifEnable!.maxY + PopoverStackLayout.cardGap)
-        XCTAssertEqual(
-            layout.notifDiscordInbound?.y,
-            layout.notifDiscord!.maxY + PopoverStackLayout.cardGap
-        )
-        XCTAssertEqual(layout.notifTelegram?.y, layout.notifDiscordInbound!.maxY + PopoverStackLayout.cardGap)
+        XCTAssertNil(layout.notifDiscordInbound)
+        XCTAssertEqual(layout.notifTelegram?.y, layout.notifDiscord!.maxY + PopoverStackLayout.cardGap)
         XCTAssertEqual(
             layout.notifTelegramInbound?.y,
             layout.notifTelegram!.maxY + PopoverStackLayout.cardGap
@@ -341,9 +343,12 @@ final class NotifPopoverChromeTests: XCTestCase {
             layout.notifDiscord!.height,
             PopoverStackLayout.inset
                 + PopoverStackLayout.titleRowHeight
-                + PopoverCopyLayout.helpHeightPoints
-                + PopoverStackLayout.secretFieldRowHeight
-                + PopoverCopyLayout.notifDiscordStatusHeightPoints
+                + CopyWrap.lineCount(
+                    AgrypnosCopy.notifDiscordHelp,
+                    columns: PopoverCopyLayout.innerColumns
+                ) * PopoverCopyLayout.lineHeightPoints
+                + 2 * PopoverStackLayout.secretFieldRowHeight
+                + PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset
         )
         XCTAssertEqual(

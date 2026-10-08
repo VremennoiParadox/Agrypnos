@@ -2,28 +2,29 @@ import XCTest
 @testable import AgrypnosCore
 
 final class DiscordInboundPopoverChromeTests: XCTestCase {
-    func testNotifPlacesDiscordInboundAfterWebhookAndBeforeTelegram() {
+    func testNotifPlacesOneDiscordCardBeforeTelegram() {
         XCTAssertEqual(
             PopoverSection.notif.cards,
             [
                 .notifSetup,
                 .notifEnable,
                 .notifDiscord,
-                .notifDiscordInbound,
                 .notifTelegram,
                 .notifTelegramInbound,
                 .questionNotifications,
                 .notifClear,
             ]
         )
-        XCTAssertEqual(PopoverSection.notif.cards.count, 8)
+        XCTAssertEqual(PopoverSection.notif.cards.count, 7)
+        XCTAssertEqual(PopoverSection.notif.cards.filter { $0 == .notifDiscord }.count, 1)
+        XCTAssertFalse(PopoverSection.notif.cards.contains(.notifDiscordInbound))
         XCTAssertFalse(PopoverSection.watch.cards.contains(.notifDiscordInbound))
         XCTAssertFalse(PopoverSection.power.cards.contains(.notifDiscordInbound))
         XCTAssertFalse(PopoverSection.agents.cards.contains(.notifDiscordInbound))
         XCTAssertFalse(PopoverSection.general.cards.contains(.notifDiscordInbound))
     }
 
-    func testInboundDefaultsOffAndStaysSeparateFromWebhookOutbound() {
+    func testInboundDefaultsOffAndStaysSeparateFromWatchEndPOST() {
         XCTAssertFalse(DiscordInboundChrome.defaultEnabled)
         XCTAssertFalse(UserPreferences.default.discordInboundEnabled)
         XCTAssertFalse(UserPreferences().discordInboundEnabled)
@@ -86,29 +87,30 @@ final class DiscordInboundPopoverChromeTests: XCTestCase {
         )
     }
 
-    func testInboundChromeIsToggleTokenChannelAndHelpSeparateFromWebhook() {
+    func testDiscordCardHoldsTokenChannelAndInboundSwitch() {
         let layout = PopoverStackLayout.make(section: .notif)
-        XCTAssertNotNil(layout.notifDiscordInbound)
+        let discordHelpHeight =
+            CopyWrap.lineCount(
+                AgrypnosCopy.notifDiscordHelp,
+                columns: PopoverCopyLayout.innerColumns
+            ) * PopoverCopyLayout.lineHeightPoints
+        XCTAssertNil(layout.notifDiscordInbound)
         XCTAssertEqual(
-            layout.notifDiscordInbound?.y,
+            layout.notifTelegram?.y,
             layout.notifDiscord!.maxY + PopoverStackLayout.cardGap
         )
         XCTAssertEqual(
-            layout.notifTelegram?.y,
-            layout.notifDiscordInbound!.maxY + PopoverStackLayout.cardGap
-        )
-        XCTAssertEqual(
-            layout.notifDiscordInbound!.height,
+            layout.notifDiscord!.height,
             PopoverStackLayout.inset
                 + PopoverStackLayout.titleRowHeight
-                + PopoverCopyLayout.notifDiscordInboundHelpHeightPoints
+                + discordHelpHeight
                 + 2 * PopoverStackLayout.secretFieldRowHeight
                 + PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset
         )
         XCTAssertEqual(
             PopoverStackLayout.notifDiscordInboundTokenY,
-            PopoverStackLayout.prefHelpY + PopoverCopyLayout.notifDiscordInboundHelpHeightPoints
+            PopoverStackLayout.prefHelpY + discordHelpHeight
         )
         XCTAssertEqual(
             PopoverStackLayout.notifDiscordInboundChannelY,
@@ -124,14 +126,13 @@ final class DiscordInboundPopoverChromeTests: XCTestCase {
                 layout.notifSetup,
                 layout.notifEnable,
                 layout.notifDiscord,
-                layout.notifDiscordInbound,
                 layout.notifTelegram,
                 layout.notifTelegramInbound,
                 layout.questionNotifications,
                 layout.notifClear
             )
         )
-        XCTAssertEqual(layout.stackedCards.count, 8)
+        XCTAssertEqual(layout.stackedCards.count, 7)
         XCTAssertNil(layout.watch)
         XCTAssertEqual(layout.contentHeight, layout.notifClear!.maxY + PopoverStackLayout.pad)
         XCTAssertEqual(
@@ -139,24 +140,13 @@ final class DiscordInboundPopoverChromeTests: XCTestCase {
             min(layout.contentHeight, PopoverStackLayout.maxVisibleHeight)
         )
         XCTAssertEqual(layout.needsScroll, layout.contentHeight > layout.popoverHeight)
-        XCTAssertGreaterThan(
-            layout.notifDiscordInbound!.height,
-            layout.notifDiscord!.height
-        )
-    }
-
-    func testWebhookCardStaysOutboundOnly() {
-        XCTAssertEqual(AgrypnosCopy.notifDiscord, "Discord webhook URL")
-        XCTAssertTrue(AgrypnosCopy.notifDiscordHelp.lowercased().contains("your webhook"))
-        XCTAssertFalse(AgrypnosCopy.notifDiscord.lowercased().contains("inbound"))
-        XCTAssertFalse(AgrypnosCopy.notifDiscordHelp.lowercased().contains("inbound"))
-        XCTAssertFalse(AgrypnosCopy.notifDiscordHelp.lowercased().contains("arm"))
-        XCTAssertFalse(AgrypnosCopy.notifDiscordHelp.lowercased().contains("listen port"))
-        XCTAssertFalse(AgrypnosCopy.notifDiscordHelp.lowercased().contains("interactions endpoint"))
         XCTAssertEqual(AgrypnosCopy.notifDiscordInboundTokenShort, "Token")
         XCTAssertEqual(AgrypnosCopy.notifDiscordInboundChannelShort, "Channel")
         XCTAssertEqual(AgrypnosCopy.notifDiscordInboundTokenPlaceholder, "paste bot token")
         XCTAssertEqual(AgrypnosCopy.notifDiscordInboundChannelPlaceholder, "channel id")
+        XCTAssertFalse(AgrypnosCopy.notifDiscordHelp.lowercased().contains("webhook"))
+        XCTAssertFalse(AgrypnosCopy.notifDiscordHelp.lowercased().contains("listen port"))
+        XCTAssertFalse(AgrypnosCopy.notifDiscordHelp.lowercased().contains("interactions endpoint"))
         XCTAssertFalse(AgrypnosCopy.notifDiscordInboundHelp.contains("123456"))
         XCTAssertFalse(AgrypnosCopy.notifDiscordInboundHelp.contains("YOUR_TOKEN"))
         XCTAssertFalse(AgrypnosCopy.notifDiscordInbound.contains("http"))

@@ -44,13 +44,10 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var notifSwitch: NSSwitch!
     var telegramInboundSwitch: NSSwitch!
     var discordInboundSwitch: NSSwitch!
-    var discordSecrets: SecretRevealRow!
-    var discordStatus: NSTextField!
     var discordInboundTokenSecrets: SecretRevealRow!
     var discordInboundChannelSecrets: SecretRevealRow!
     var telegramTokenSecrets: SecretRevealRow!
     var telegramChatSecrets: SecretRevealRow!
-    var discordInvalid = false
     var loginSwitch: NSSwitch!
     var hotkeyHint: NSTextField!
     let recorder = HotkeyRecorderControl()
@@ -76,7 +73,6 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var thermalCard: CardView!
     var notifEnableCard: CardView!
     var notifDiscordCard: CardView!
-    var notifDiscordInboundCard: CardView!
     var notifTelegramCard: CardView!
     var notifTelegramInboundCard: CardView!
     var questionRelayCard: CardView!
@@ -398,25 +394,14 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         stopRecordingIfNeeded()
         NSApp.activate(ignoringOtherApps: true)
         (obj.object as? NSView)?.window?.makeKey()
-        if let field = obj.object as? NSTextField, discordSecrets?.contains(field) == true {
-            discordInvalid = false
-            discordStatus?.stringValue = ""
-        }
         if obj.object as? NSTextField === minutesField {
             refresh()
         }
     }
 
     func controlTextDidChange(_ obj: Notification) {
-        guard let field = obj.object as? NSTextField else { return }
-        if field === minutesField {
-            refresh()
-            return
-        }
-        if discordSecrets?.contains(field) == true {
-            discordInvalid = false
-            discordStatus?.stringValue = ""
-        }
+        guard let field = obj.object as? NSTextField, field === minutesField else { return }
+        refresh()
     }
 
     func control(_ control: NSControl, textShouldEndEditing fieldEditor: NSText) -> Bool {

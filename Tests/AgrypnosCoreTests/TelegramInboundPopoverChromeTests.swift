@@ -9,14 +9,13 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
                 .notifSetup,
                 .notifEnable,
                 .notifDiscord,
-                .notifDiscordInbound,
                 .notifTelegram,
                 .notifTelegramInbound,
                 .questionNotifications,
                 .notifClear,
             ]
         )
-        XCTAssertEqual(PopoverSection.notif.cards.count, 8)
+        XCTAssertEqual(PopoverSection.notif.cards.count, 7)
         XCTAssertFalse(PopoverSection.watch.cards.contains(.notifTelegramInbound))
         XCTAssertFalse(PopoverSection.power.cards.contains(.notifTelegramInbound))
         XCTAssertFalse(PopoverSection.agents.cards.contains(.notifTelegramInbound))
@@ -107,14 +106,13 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
                 layout.notifSetup,
                 layout.notifEnable,
                 layout.notifDiscord,
-                layout.notifDiscordInbound,
                 layout.notifTelegram,
                 layout.notifTelegramInbound,
                 layout.questionNotifications,
                 layout.notifClear
             )
         )
-        XCTAssertEqual(layout.stackedCards.count, 8)
+        XCTAssertEqual(layout.stackedCards.count, 7)
         XCTAssertNil(layout.watch)
         XCTAssertEqual(layout.contentHeight, layout.notifClear!.maxY + PopoverStackLayout.pad)
         XCTAssertEqual(
@@ -160,12 +158,9 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
         }
     }
 
-    func testDiscordStaysOutboundOnlyAndSecretsStayOnTheTelegramCard() {
-        XCTAssertEqual(AgrypnosCopy.notifDiscord, "Discord webhook URL")
-        XCTAssertTrue(AgrypnosCopy.notifDiscordHelp.lowercased().contains("your webhook"))
-        XCTAssertFalse(AgrypnosCopy.notifDiscord.lowercased().contains("inbound"))
-        XCTAssertFalse(AgrypnosCopy.notifDiscordHelp.lowercased().contains("inbound"))
-        XCTAssertFalse(AgrypnosCopy.notifDiscordHelp.lowercased().contains("arm"))
+    func testDiscordIsOneBotCardAndTelegramSecretsStayOnTheTelegramCard() {
+        XCTAssertEqual(AgrypnosCopy.notifDiscord, "Discord")
+        XCTAssertFalse(AgrypnosCopy.notifDiscordHelp.lowercased().contains("webhook"))
         XCTAssertEqual(AgrypnosCopy.notifTelegramTokenShort, "Token")
         XCTAssertEqual(AgrypnosCopy.notifTelegramChatShort, "Chat id")
         XCTAssertFalse(AgrypnosCopy.notifTelegramInboundHelp.contains("123456"))

@@ -36,7 +36,7 @@ final class QuestionRelayLayoutTests: XCTestCase {
         XCTAssertNil(notif.questionForwardingBack)
         XCTAssertEqual(notif.notifSetup?.y, PopoverStackLayout.firstCardY)
         XCTAssertEqual(notif.notifEnable?.y, notif.notifSetup!.maxY + PopoverStackLayout.cardGap)
-        XCTAssertEqual(notif.stackedCards.count, 8)
+        XCTAssertEqual(notif.stackedCards.count, 7)
         XCTAssertEqual(notif.contentHeight, notif.notifClear!.maxY + PopoverStackLayout.pad)
 
         let tools = PopoverStackLayout.make(section: .agents)

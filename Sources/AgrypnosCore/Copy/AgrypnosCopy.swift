@@ -185,15 +185,15 @@ public enum AgrypnosCopy: Sendable {
 
     public static let notifEnabled = "Watch-end POST"
     public static let notifEnabledHelp =
-        "POST to your Discord webhook and/or message your Telegram bot when the timer ends or Agents stay idle through the wait. Off by default."
-    public static let notifDiscord = "Discord webhook URL"
-    public static let notifDiscordHelp = "POST to your webhook. Leave empty to skip Discord."
+        "Message your Discord bot and/or your Telegram bot when the timer ends, when Agents stay idle through the wait, or when Agrypnos asks the Mac to sleep. Off by default."
+    public static let notifDiscord = "Discord"
+    public static let notifDiscordHelp =
+        "Messages this channel when Watch-end POST is on, including when Agrypnos asks the Mac to sleep. Commands: /arm, /disarm, /status, /help, when Discord inbound is on. Needs your bot token + channel id. Details in Setup instructions."
     public static let notifTelegramToken = "Telegram bot token"
     public static let notifTelegramChatId = "Telegram chat id"
     public static let notifTelegram = "Telegram"
     public static let notifTelegramTokenShort = "Token"
     public static let notifTelegramChatShort = "Chat id"
-    public static let notifDiscordPlaceholder = "paste webhook URL"
     public static let notifTelegramTokenPlaceholder = "paste bot token"
     public static let notifTelegramChatPlaceholder = "from getUpdates"
     public static let notifTelegramHelp =
@@ -219,14 +219,12 @@ public enum AgrypnosCopy: Sendable {
         "\(revealed ? "Hide" : "Show") \(label)"
     }
     public static let notifSaveFailed = "Couldn't save that secret."
-    public static let notifDiscordPostFailed = "Couldn't POST to your webhook."
+    public static let notifDiscordPostFailed = "Couldn't message your Discord bot."
     public static let notifTelegramPostFailed = "Couldn't message your Telegram bot."
     public static let notifTelegramChatInvalid =
         "That is not a Telegram chat id. Nothing was saved."
     public static let notifTelegramTokenInvalid =
         "That is not a Telegram bot token. Nothing was saved."
-    public static let notifDiscordInvalid =
-        "That is not a Discord webhook URL. Nothing was saved."
     public static let notifSetup = "Setup instructions…"
     public static let notifIdleBody =
         "Agrypnos: local busy signals went idle after the wait."

@@ -469,9 +469,10 @@ final class NotifCopyTests: XCTestCase {
         )
         XCTAssertEqual(
             AgrypnosCopy.notifEnabledHelp,
-            "POST to your Discord webhook and/or message your Telegram bot when the timer ends or Agents stay idle through the wait. Off by default."
+            "Message your Discord bot and/or your Telegram bot when the timer ends, when Agents stay idle through the wait, or when Agrypnos asks the Mac to sleep. Off by default."
         )
-        XCTAssertTrue(AgrypnosCopy.notifDiscordHelp.lowercased().contains("your webhook"))
+        XCTAssertFalse(AgrypnosCopy.notifDiscordHelp.lowercased().contains("webhook"))
+        XCTAssertFalse(AgrypnosCopy.notifEnabledHelp.lowercased().contains("webhook"))
         XCTAssertTrue(AgrypnosCopy.notifTelegramHelp.lowercased().contains("your telegram bot"))
         XCTAssertTrue(AgrypnosCopy.notifTelegramHelp.lowercased().contains("does not run a shared bot"))
         let blob = [
@@ -479,13 +480,11 @@ final class NotifCopyTests: XCTestCase {
             AgrypnosCopy.notifEnabledHelp,
             AgrypnosCopy.notifDiscord,
             AgrypnosCopy.notifDiscordHelp,
-            AgrypnosCopy.notifDiscordInvalid,
             AgrypnosCopy.notifTelegram,
             AgrypnosCopy.notifTelegramTokenShort,
             AgrypnosCopy.notifTelegramChatShort,
             AgrypnosCopy.notifTelegramToken,
             AgrypnosCopy.notifTelegramChatId,
-            AgrypnosCopy.notifDiscordPlaceholder,
             AgrypnosCopy.notifTelegramTokenPlaceholder,
             AgrypnosCopy.notifTelegramChatPlaceholder,
             AgrypnosCopy.notifTelegramHelp,

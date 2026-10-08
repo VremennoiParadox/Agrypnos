@@ -82,7 +82,7 @@ final class NotifOutboundPostChromeTests: XCTestCase {
         )
         XCTAssertEqual(
             AgrypnosCopy.notifDiscordPostFailed,
-            "Couldn't POST to your webhook."
+            "Couldn't message your Discord bot."
         )
         XCTAssertEqual(
             AgrypnosCopy.notifTelegramChatInvalid,

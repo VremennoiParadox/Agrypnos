@@ -19,17 +19,17 @@ public enum PopoverCopyLayout: Sendable {
     public static let settleHelpHeightPoints = settleHelpMaxLines * lineHeightPoints
     public static let countTerminalSessionsHelpHeightPoints =
         countTerminalSessionsHelpMaxLines * lineHeightPoints
-    /// Notif help wraps at `innerColumns`. Enable 4, Telegram 3, inbound 3, Discord inbound 4.
-    public static let notifEnableHelpMaxLines = 4
+    /// Notif help wraps at `innerColumns`. Enable 5, Telegram 3, inbound 3, Discord inbound 4, Discord 7.
+    public static let notifEnableHelpMaxLines = 5
     public static let notifTelegramHelpMaxLines = 3
     public static let notifTelegramInboundHelpMaxLines = 3
     public static let notifDiscordInboundHelpMaxLines = 4
-    public static let notifDiscordStatusMaxLines = 2
+    public static let notifDiscordHelpMaxLines = 7
     public static let notifEnableHelpHeightPoints = notifEnableHelpMaxLines * lineHeightPoints
     public static let notifTelegramHelpHeightPoints = notifTelegramHelpMaxLines * lineHeightPoints
     public static let notifTelegramInboundHelpHeightPoints = notifTelegramInboundHelpMaxLines * lineHeightPoints
     public static let notifDiscordInboundHelpHeightPoints = notifDiscordInboundHelpMaxLines * lineHeightPoints
-    public static let notifDiscordStatusHeightPoints = notifDiscordStatusMaxLines * lineHeightPoints
+    public static let notifDiscordHelpHeightPoints = notifDiscordHelpMaxLines * lineHeightPoints
     public static let hotkeyHintHeightPoints = hotkeyHintMaxLines * lineHeightPoints
     /// Dim panel caption. Sleep panel help is taller; layout adds it only for B.
     public static let panelPowerCaptionMaxLines = 3
