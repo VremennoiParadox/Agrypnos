@@ -400,7 +400,7 @@ extension WatchRuntime {
                 var live = commands
                 self.removeSleepIfLidOpen(&live, reason: reason)
                 if !self.disarmKernel() {
-                    self.notify("Couldn't verify SleepDisabled was cleared. The watch state is unchanged.")
+                    self.notify("Couldn't verify SleepDisabled was cleared.")
                     self.store.save(self.engine.preferences)
                     self.idlePostTask = nil
                     self.delegate?.watchRuntimeDidChange(self)

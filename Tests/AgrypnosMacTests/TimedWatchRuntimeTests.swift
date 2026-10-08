@@ -60,6 +60,8 @@ final class TimedWatchRuntimeTests: XCTestCase {
         XCTAssertEqual(fixture.sleepRequests, 0)
         XCTAssertEqual(fixture.runtime.engine.timerEnd, start.addingTimeInterval(60))
         XCTAssertNil(fixture.runtime.preferences.lastWatchEnd)
+        XCTAssertTrue(fixture.messages.contains("Couldn't verify SleepDisabled was cleared."))
+        XCTAssertFalse(fixture.messages.contains { $0.contains("The watch state is unchanged.") })
     }
 
     func testUnknownLidAtTimerExpiryRequestsSleep() {
@@ -341,6 +343,25 @@ final class TimedWatchRuntimeTests: XCTestCase {
         fixture.completePost()
         await fixture.waitForCompletion()
         XCTAssertEqual(fixture.sleepRequests, 0)
+    }
+
+    func testUserOffWaitFailedKernelClearDoesNotClaimWatchUnchanged() async {
+        let secrets = NotifSecrets(discordBotToken: "bot", discordChannelId: "123")
+        let fixture = RuntimeFixture()
+        fixture.notifSecrets = secrets
+        armConfirmedClosed(fixture)
+        fixture.runtime.engine.preferences.notifEnabled = true
+        XCTAssertNotNil(fixture.runtime.setEngaged(false))
+        await fixture.waitForPost()
+        XCTAssertFalse(fixture.runtime.engine.engaged)
+        fixture.kernelWriteSucceeds = false
+        fixture.completePost()
+        await fixture.waitForCompletion()
+        XCTAssertFalse(fixture.runtime.engine.engaged)
+        XCTAssertTrue(fixture.kernelHeld)
+        XCTAssertEqual(fixture.sleepRequests, 0)
+        XCTAssertEqual(fixture.messages, ["Couldn't verify SleepDisabled was cleared."])
+        XCTAssertFalse(fixture.messages.contains { $0.contains("The watch state is unchanged.") })
     }
 
     func armConfirmedClosed(_ fixture: RuntimeFixture) {
