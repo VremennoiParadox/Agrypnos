@@ -39,7 +39,7 @@ The usual keep-awake tricks don't help here. Power assertions (what `caffeinate`
 - Set How long to **1h**, **3h**, or custom minutes for a countdown that starts when you turn the watch on.
 - Set How long to **Agents** and the watch ends by itself once your agents have been idle for a few minutes.
 - Low battery and thermal pressure end the watch too, and a reboot always clears it.
-- If you want, *your* Telegram or Discord bot gets a message when the timer ends or the agents go idle, and takes `/arm`, `/disarm`, and `/status` from your phone.
+- If you want, *your* Telegram or Discord bot gets a message when the timer ends or the agents go idle. Discord also messages when Agrypnos asks the Mac to sleep. Either bot takes `/arm`, `/disarm`, and `/status` from your phone.
 - No analytics, no accounts, no shared bot. The only privileged piece is a two-command sudoers rule, spelled out in [SECURITY.md](SECURITY.md).
 
 ## Install
@@ -135,8 +135,8 @@ This part is optional and off by default. It lives in the **Notif** section. You
 
 There are two separate pieces:
 
-- **Watch-end message.** With **Watch-end POST** on, timer expiry sends “Agrypnos: your watch timer ended.” **Agents** mode sends its existing idle-after-wait message only after seeing local busy signals this arm. Both use your Discord webhook, your Telegram bot, or both. Manual off and safety limits do not send an outbound message; an Agents watch that never saw work does not either.
-- **Commands.** Send `/arm`, `/disarm`, `/status`, or `/help` to your own Telegram or Discord bot, and Agrypnos acts on them while the Mac is awake.
+- **Watch-end message.** With **Watch-end POST** on, timer expiry sends “Agrypnos: your watch timer ended.” **Agents** mode sends its existing idle-after-wait message only after seeing local busy signals this arm. Both use your Discord bot channel (bot token + channel id), your Telegram bot, or both. Discord also messages when Agrypnos asks the Mac to sleep (`pmset sleepnow`). Telegram does not message for battery, thermal, Low Power Mode, or turning Keep the watch off. An Agents watch that never saw work does not message either. Discord commands and this Discord sleep message have not been checked on a real Mac yet.
+- **Commands.** Send `/arm`, `/disarm`, `/status`, or `/help` to your own Telegram or Discord bot, and Agrypnos acts on them while the Mac is awake. Discord commands have not been checked on a real Mac yet.
 
 The app has the same steps as below, with screenshots. Click **Setup instructions…**, the first card in **Notif**.
 
@@ -177,39 +177,24 @@ Commands only count from the chat id you saved. If that's a group, anyone in the
 </details>
 
 <details>
-<summary><b>Discord: idle messages through a webhook</b></summary>
+<summary><b>Discord: messages and commands through your own bot</b></summary>
 
 <br>
 
-A webhook can only post into your channel. It can't receive commands. For those, set up the bot below.
-
-1. In your server, go to **Server Settings → Integrations → Webhooks → New Webhook**. You need permission to manage webhooks.
-2. Name it, pick a channel, and click **Copy Webhook URL**.
-
-   <img src="Apps/Agrypnos/Resources/Assets.xcassets/guide-discord-webhook-copy.imageset/guide-discord-webhook-copy.png" width="520" alt="Discord webhook with the Copy Webhook URL button">
-
-3. Paste it into **Notif → Discord webhook URL** and turn on **Watch-end POST**.
-
-The URL looks like `https://discord.com/api/webhooks/…`. Anyone who has it can post to your channel, so keep it out of screenshots and issues.
-
-</details>
-
-<details>
-<summary><b>Discord: commands through your own bot</b></summary>
-
-<br>
-
-This needs a bot token and a channel id. It's a separate thing from the webhook. Discord commands haven't been checked on a real Mac yet (Telegram commands have).
+This one bot messages the channel and receives commands. Discord commands haven't been checked on a real Mac yet (Telegram commands have). The Discord sleep message hasn't been checked on a real Mac yet.
 
 1. Open the [Discord Developer Portal](https://discord.com/developers/applications), click **New Application**, name it, and click **Create**.
-2. Go to **Bot → Reset Token** and copy the token. Paste it into **Notif → Discord inbound → Token**. Never paste it into the webhook field.
+2. Go to **Bot → Reset Token** and copy the token. Paste it into **Notif → Discord → Token**.
 3. Go to **OAuth2** and scroll to **OAuth2 URL Generator**. Tick the scopes `bot` and `applications.commands`, then tick **Send Messages** under Bot Permissions. Open the generated URL, pick your server, and authorize.
 
    <img src="Apps/Agrypnos/Resources/Assets.xcassets/guide-discord-oauth-url.imageset/guide-discord-oauth-url.png" width="520" alt="OAuth2 URL Generator with bot, applications.commands, and Send Messages ticked">
 
 4. In Discord, turn on **User Settings → Advanced → Developer Mode**.
-5. Right-click the channel the bot should listen in and choose **Copy Channel ID**. Paste it into **Notif → Discord inbound → Channel**.
-6. Turn on **Discord inbound**, then type `/help` in that channel.
+5. Right-click the channel the bot should listen in and choose **Copy Channel ID**. Paste it into **Notif → Discord → Channel**.
+6. Turn on **Watch-end POST**. Agrypnos messages this channel when the timer ends, when Agents stay idle through the wait, or when it asks the Mac to sleep.
+7. Turn on **Discord inbound**, then type `/help` in that channel.
+
+An old webhook URL is unused. Paste the bot token and channel id.
 
 Commands only count from that channel, so anyone who can post there can use them. Agrypnos talks to Discord from your Mac over the normal bot connection. It doesn't open a port or use an Interactions Endpoint URL.
 
@@ -222,9 +207,8 @@ Commands only count from that channel, so anyone who can post there can use them
 
 | You created | Paste it into |
 |---|---|
-| Discord webhook URL | **Discord webhook URL** (idle messages only) |
-| Discord bot token | **Discord inbound → Token** |
-| Discord channel id | **Discord inbound → Channel** |
+| Discord bot token | **Discord → Token** |
+| Discord channel id | **Discord → Channel** |
 | Telegram bot token | **Telegram → Token** |
 | Telegram chat id | **Telegram → Chat id** |
 
@@ -255,8 +239,8 @@ Nothing arrived? Check that Watch-end POST is on and the secrets are right. For 
 <br>
 
 - Switch off **Watch-end POST**, **Telegram inbound**, or **Discord inbound** to stop that piece.
-- **Clear secrets** in **Notif** deletes every saved token, URL, and id from this Mac.
-- To kill a bot for good: `/revoke` or `/deletebot` in BotFather, **Bot → Reset Token** in the Discord Developer Portal, or delete the webhook under **Server Settings → Integrations → Webhooks**.
+- **Clear secrets** in **Notif** deletes every saved token and id from this Mac.
+- To kill a bot for good: `/revoke` or `/deletebot` in BotFather, or **Bot → Reset Token** in the Discord Developer Portal.
 
 Secrets live in `~/Library/Application Support/Agrypnos/notif-secrets.json` with mode `0600`. They're not in the Keychain on purpose: an unsigned app asking for your login password looks like exactly the thing you shouldn't trust.
 
@@ -278,7 +262,7 @@ Codex Enable adds a hook and does not answer. There is no `codex hooks`
 shell command, and the ChatGPT app has no documented trust screen. The bot
 message is `Codex is waiting on you.` or `Codex is waiting for an approval.`
 Not proven in the ChatGPT app yet. Codex alerts use your
-saved Discord webhook or Telegram token and chat id. They do not require the
+saved Discord bot token and channel id or Telegram token and chat id. They do not require the
 idle-after-wait switch.
 
 Cursor has no question forwarding and no waiting alert. The question stays in
@@ -392,7 +376,7 @@ One click merges a `PreToolUse` / `PermissionRequest` command hook into
 `UserPromptSubmit` and `Stop` hooks stay. The hook prints nothing, exits 0,
 and does not answer. There is no `codex hooks` shell command.
 
-1. Save a Discord webhook URL, or a Telegram token and chat id, in Notif.
+1. Save a Discord bot token and channel id, or a Telegram token and chat id, in Notif.
    The idle-after-wait switch is not required.
 2. Open **Notif → Question notifications** and click **Enable Codex alerts**.
 3. Use Codex as you already do. Until that session runs the new hook, no
@@ -412,7 +396,7 @@ Everything is in the popover, one section at a time.
 | **Watch** | Keep the watch, How long (`∞`, `1h`, `3h`, custom minutes, **Agents**), and the last watch end |
 | **Power** | Dim panel or Sleep panel, brightness floor, keyboard backlight off, low-battery auto-off, brightness return time, thermal auto-off |
 | **Agents** | Idle wait (2–15 min), which tools count as busy (at least one), count terminal sessions as busy |
-| **Notif** | Setup instructions, idle message switch, Discord webhook, Telegram token and chat id, Telegram inbound, Question notifications (BETA), Discord inbound (token and channel), clear secrets |
+| **Notif** | Setup instructions, idle message switch, Discord bot token and channel id, Telegram token and chat id, Telegram inbound, Question notifications (BETA), Discord inbound, clear secrets |
 | **General** | Global shortcut (default `⌥⌘A`, remappable), launch at login, quit |
 
 ## What it won't do

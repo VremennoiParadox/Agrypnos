@@ -75,7 +75,7 @@ public enum BotGuide {
     public static func sections(for tab: BotGuideTab) -> [BotGuideSection] {
         switch tab {
         case .telegram: return [telegramSetup, telegramTurnOn, questionSetup(telegram: true), commands(asleep: telegramAsleep), turnOff]
-        case .discord: return [discordWebhook, discordBot, questionSetup(telegram: false), commands(asleep: discordAsleep), turnOff]
+        case .discord: return [discordBot, questionSetup(telegram: false), commands(asleep: discordAsleep), turnOff]
         case .openCode: return toolNote(
             "OpenCode",
             "Enable OpenCode forwarding in Question notifications. Agrypnos installs its plugin. Restart OpenCode once, then use your normal chats. The question is forwarded to your bot. Free text and approvals stay on the Mac."
@@ -110,7 +110,7 @@ public enum BotGuide {
             numbered: true, steps: [
                 BotGuideStep("Save your answering user ID", telegram
                     ? "With Telegram inbound off, send your bot a message and use getUpdates as above. Copy message.from.id (your user, not the bot or chat). Paste it into Question notifications → Telegram. Then turn Telegram inbound on. Only that user can answer."
-                    : "Enable Discord Developer Mode, right-click your own profile → Copy User ID. Paste it into Question notifications → Discord. Turn Discord inbound on. The existing bot token and channel are used; the webhook does not handle answers."),
+                    : "Enable Discord Developer Mode, right-click your own profile → Copy User ID. Paste it into Question notifications → Discord. Turn Discord inbound on. The existing bot token and channel are used."),
                 BotGuideStep("Enable OpenCode forwarding",
                     "Open Notif → Question notifications, then click Enable OpenCode forwarding. Agrypnos installs and registers its global terminal plugin. Restart OpenCode once to load forwarding, then use your normal chats. No port or project-directory setup is needed.",
                     link: BotGuideLink(title: "OpenCode plugins", url: "https://opencode.ai/docs/plugins/")),
@@ -180,32 +180,9 @@ public enum BotGuide {
         ]
     )
 
-    static let discordWebhook = BotGuideSection(
-        title: "Messages to you (webhook)",
-        note: "The webhook only posts to your channel. It does not receive commands.",
-        numbered: true,
-        steps: [
-            BotGuideStep(
-                "Create a webhook",
-                "In your Discord server: Server Settings → Integrations → Webhooks → New Webhook. You need permission to manage webhooks.",
-                image: "guide-discord-webhook-integrations"
-            ),
-            BotGuideStep(
-                "Copy the URL",
-                "Name it, pick the channel, then Copy Webhook URL. Paste it into Notif → Discord webhook URL. It is a secret — don’t share it.",
-                image: "guide-discord-webhook-copy"
-            ),
-            BotGuideStep(
-                "Turn it on",
-                "Switch on Watch-end POST. Agrypnos posts to your webhook when the timer ends or Agents stay idle through the wait."
-            ),
-            BotGuideStep("Test it", idleAfterWait),
-        ]
-    )
-
     static let discordBot = BotGuideSection(
-        title: "Commands (your bot)",
-        note: "A separate bot, not the webhook. You own it. Agrypnos does not run a shared bot.",
+        title: "Create your Discord bot",
+        note: "You own this bot. Agrypnos does not run a shared bot. The same bot messages this channel and receives commands.",
         numbered: true,
         steps: [
             BotGuideStep(
@@ -215,7 +192,7 @@ public enum BotGuide {
             ),
             BotGuideStep(
                 "Copy the bot token",
-                "Go to Bot → Reset Token and copy it. Paste it into Notif → Discord inbound → Token. Treat it like a password and never paste it into the webhook field.",
+                "Go to Bot → Reset Token and copy it. Paste it into Notif → Discord → Token. Treat it like a password.",
                 image: "guide-discord-bot-reset-token"
             ),
             BotGuideStep(
@@ -230,8 +207,16 @@ public enum BotGuide {
             ),
             BotGuideStep(
                 "Copy the channel id",
-                "Right-click the channel the bot should listen in → Copy Channel ID. Paste it into Notif → Discord inbound → Channel. Only that channel can send commands, so anyone who can post there can use them.",
+                "Right-click the channel the bot should listen in → Copy Channel ID. Paste it into Notif → Discord → Channel. Only that channel can send commands, so anyone who can post there can use them.",
                 image: "guide-discord-copy-channel-id"
+            ),
+            BotGuideStep(
+                "Old webhook URL",
+                "An old webhook URL is unused. Paste the bot token and channel id."
+            ),
+            BotGuideStep(
+                "Get a message when the watch ends",
+                "Switch on Watch-end POST. Agrypnos messages this channel when the timer ends, when Agents stay idle through the wait, or when it asks the Mac to sleep."
             ),
             BotGuideStep(
                 "Turn inbound on",
@@ -271,7 +256,7 @@ public enum BotGuide {
         steps: [
             BotGuideStep(
                 "Stop or remove",
-                "Switch the toggles off in Notif to stop. Clear secrets deletes the saved tokens, URL, and ids from this Mac."
+                "Switch the toggles off in Notif to stop. Clear secrets deletes the saved tokens and ids from this Mac."
             ),
         ]
     )

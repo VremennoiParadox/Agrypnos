@@ -38,22 +38,33 @@ final class BotGuideCopyTests: XCTestCase {
         XCTAssertFalse(text.lowercased().contains("webhook"))
     }
 
-    func testDiscordKeepsWebhookOutboundOnlyAndBotSeparate() {
+    func testDiscordUsesOneBotForMessagesAndCommands() {
         let sections = BotGuide.sections(for: .discord)
-        let webhook = try! XCTUnwrap(sections.first)
-        let webhookText = ([webhook.title, webhook.note ?? ""] + webhook.steps.map { $0.title + " " + $0.body })
-            .joined(separator: "\n")
-        XCTAssertTrue(webhookText.contains("Server Settings → Integrations → Webhooks → New Webhook"))
-        XCTAssertTrue(webhookText.contains("Copy Webhook URL"))
-        XCTAssertTrue(webhookText.lowercased().contains("does not receive commands"))
-        XCTAssertFalse(webhookText.contains("/arm"))
+        let bot = try! XCTUnwrap(sections.first)
+        XCTAssertEqual(
+            bot.note,
+            "You own this bot. Agrypnos does not run a shared bot. The same bot messages this channel and receives commands."
+        )
+        XCTAssertFalse(bot.title.lowercased().contains("webhook"))
 
         let text = BotGuide.text(for: .discord)
+        XCTAssertFalse(text.contains("Webhooks → New Webhook"))
+        XCTAssertFalse(text.contains("Copy Webhook URL"))
+        XCTAssertFalse(text.contains("discord.com/api/webhooks/"))
+        XCTAssertTrue(text.contains("Watch-end POST"))
+        XCTAssertTrue(text.contains("asks the Mac to sleep"))
+        XCTAssertTrue(
+            text.contains("Switch on Watch-end POST. Agrypnos messages this channel when the timer ends, when Agents stay idle through the wait, or when it asks the Mac to sleep.")
+        )
+        XCTAssertTrue(text.contains("Paste it into Notif → Discord → Token."))
+        let lower = text.lowercased()
+        XCTAssertTrue(lower.contains("old webhook url is unused"))
+        XCTAssertTrue(lower.contains("bot token") && lower.contains("channel id"))
+        XCTAssertFalse(lower.contains("never paste it into the webhook field"))
         for needle in ["Developer Portal", "New Application", "Reset Token", "applications.commands", "Send Messages", "Developer Mode", "Copy Channel ID", "Discord inbound"] {
             XCTAssertTrue(text.contains(needle), "Discord guide misses \(needle)")
         }
         XCTAssertTrue(text.contains("`bot`") || text.contains("bot and applications.commands"))
-        XCTAssertTrue(text.lowercased().contains("never paste it into the webhook field"))
         let links = sections.flatMap(\.steps).compactMap(\.link)
         XCTAssertTrue(links.contains(
             BotGuideLink(title: "Open Developer Portal", url: "https://discord.com/developers/applications")
@@ -148,8 +159,6 @@ final class BotGuideCopyTests: XCTestCase {
             [
                 "guide-telegram-botfather",
                 "guide-telegram-getupdates",
-                "guide-discord-webhook-integrations",
-                "guide-discord-webhook-copy",
                 "guide-discord-bot-reset-token",
                 "guide-discord-oauth-url",
                 "guide-discord-developer-mode",

@@ -25,15 +25,15 @@ Agent heuristics look at process names and mtimes of known session paths under y
 
 ## Opt-in outbound (Notif)
 
-When Notif outbound is enabled, Agrypnos may POST **once** to **your** Discord incoming webhook and/or **your** Telegram bot when a timed watch expires, or after Agents mode has seen local busy this arm and then stayed quiet through the idle wait. Timer messages report the expired watch timer; Agents messages report idle-after-wait. Default **off**. Empty fields skip that channel. Secrets (webhook URL, Telegram bot token, chat id) live in `~/Library/Application Support/Agrypnos/notif-secrets.json` (mode 0600), not Keychain and not plaintext prefs. Discord inbound bot token and channel id live in that same file when set — they are not an outbound channel. Values saved in an older Keychain build are not imported; paste them again. This is not telemetry. Agrypnos does not run a shared bot.
+When Notif outbound (**Watch-end POST**) is enabled, Agrypnos may POST **once** to **your** Telegram bot when a timed watch expires, or after Agents mode has seen local busy this arm and then stayed quiet through the idle wait. Discord outbound is `POST /api/v10/channels/{channel-id}/messages` with **your** bot token, to the saved channel, when Watch-end POST is on. Discord messages on timer expiry, Agents idle-after-wait, and when this disengage will run `pmset sleepnow` (user-off, inbound `/disarm`, battery, thermal, Low Power Mode, already-off confirmed-closed disarm). One message. If timer or idle-after-wait is also sending the Mac to sleep, that same Discord sentence includes “Asking the Mac to sleep.” Lid open or unconfirmed: timer and idle-after-wait still message Discord, with no sleep sentence. User-off, battery, thermal, and Low Power Mode do not message Discord unless this disengage will `sleepnow`. Power B panel sleep does not message. Discord messages say Agrypnos is asking the Mac to sleep; they do not claim the Mac slept. Telegram does not POST for battery, thermal, LPM, or manual off. Timer messages report the expired watch timer; Agents messages report idle-after-wait. Default **off**. Empty fields skip that channel. Secrets (Telegram bot token, chat id, Discord bot token, Discord channel id) live in `~/Library/Application Support/Agrypnos/notif-secrets.json` (mode 0600), not Keychain and not plaintext prefs. Values saved in an older Keychain build are not imported; paste them again. This is not telemetry. Agrypnos does not run a shared bot. Discord outbound and Discord commands are not Mac-proven.
 
 ## Telegram inbound (your bot)
 
-When Telegram inbound is on, Agrypnos may poll `getUpdates`, register `/arm` `/disarm` `/status` `/help` with `setMyCommands`, and send command replies on **your** BotFather bot using the same token and chat id as outbound. Default **off**. Empty token or chat id: no inbound. Commands are accepted only from the saved chat id. Agrypnos does not reply while the Mac is asleep (no relay). On wake, queued commands are drained without applying (facts-only **missed while asleep**). Confirmed lid-closed `/disarm` may call `pmset sleepnow` (same user-level path as safety auto-off; not a new sudoers grant). Same lid gate as popover/hotkey user-off (I2 — unlocked for Core, not Mac-proven). Lid-open or unconfirmed `/disarm` must not sleep the Mac. If that id is a group, anyone who can message that group can send those commands. Discord webhook stays outbound-only. This is not telemetry. Agrypnos does not run a shared bot.
+When Telegram inbound is on, Agrypnos may poll `getUpdates`, register `/arm` `/disarm` `/status` `/help` with `setMyCommands`, and send command replies on **your** BotFather bot using the same token and chat id as outbound. Default **off**. Empty token or chat id: no inbound. Commands are accepted only from the saved chat id. Agrypnos does not reply while the Mac is asleep (no relay). On wake, queued commands are drained without applying (facts-only **missed while asleep**). Confirmed lid-closed `/disarm` may call `pmset sleepnow` (same user-level path as safety auto-off; not a new sudoers grant). Same lid gate as popover/hotkey user-off (I2 — unlocked for Core, not Mac-proven). Lid-open or unconfirmed `/disarm` must not sleep the Mac. If that id is a group, anyone who can message that group can send those commands. This is not telemetry. Agrypnos does not run a shared bot.
 
 ## Discord inbound (your bot)
 
-When Discord inbound is on, Agrypnos may receive updates on **your** Discord bot on this Mac (Gateway or equivalent — Core picks the smallest reliable path) and send command replies using a **bot token** and **channel id** stored with the other Notif secrets. Default **off**, separate from outbound Notif and from Telegram inbound. Empty token or empty channel id: no inbound. Commands are accepted only from the saved channel. The incoming webhook URL is never inbound — do not mix them. Do **not** set Discord’s Interactions Endpoint URL. Do **not** open a listen port. Same `/arm` `/disarm` `/status` `/help` WatchEngine path as Telegram (Discord-native slash may map to those commands). Agrypnos does not reply while the Mac is asleep (no relay). On wake, queued commands are drained without applying (facts-only **missed while asleep**) if anything was queued — do not scrape channel history on wake to invent missed commands. Confirmed lid-closed Discord `/disarm` may call `pmset sleepnow` (same user-level path as Telegram `/disarm` and as popover/hotkey user-off; not a new sudoers grant). Lid-open or unconfirmed `/disarm` must not sleep the Mac. If that channel is a server channel, anyone who can post there can send those commands. This is not telemetry. Agrypnos does not run a shared Discord bot. Gateway/UI landed on main; not Mac-proven until soft Mac optical.
+When Discord inbound is on, Agrypnos may receive updates on **your** Discord bot on this Mac (Gateway or equivalent — Core picks the smallest reliable path) and send command replies using a **bot token** and **channel id** stored with the other Notif secrets. Default **off**, separate from outbound Notif and from Telegram inbound. Empty token or empty channel id: no inbound. Commands are accepted only from the saved channel. Do **not** set Discord’s Interactions Endpoint URL. Do **not** open a listen port. Same `/arm` `/disarm` `/status` `/help` WatchEngine path as Telegram (Discord-native slash may map to those commands). Agrypnos does not reply while the Mac is asleep (no relay). On wake, queued commands are drained without applying (facts-only **missed while asleep**) if anything was queued — do not scrape channel history on wake to invent missed commands. Confirmed lid-closed Discord `/disarm` may call `pmset sleepnow` (same user-level path as Telegram `/disarm` and as popover/hotkey user-off; not a new sudoers grant). Lid-open or unconfirmed `/disarm` must not sleep the Mac. If that channel is a server channel, anyone who can post there can send those commands. This is not telemetry. Agrypnos does not run a shared Discord bot. Gateway/UI landed on main; not Mac-proven until soft Mac optical.
 
 ## Opt-in OpenCode question forwarding (test build)
 
@@ -64,7 +64,7 @@ starts a replacement OpenCode server, or creates replacement conversations.
 Structured question text/options go to the user's existing Telegram or
 Discord bot through its existing inbound connection. Callback checks include
 the saved answering-user ID, destination, message, live request handle and
-lifecycle generation. The Discord webhook remains outbound-only. No extra
+lifecycle generation. No extra
 bot consumer, listening port, shared bot or sudoers grant is added. A lost
 native reply is unconfirmed and is never retried blindly.
 
@@ -87,7 +87,7 @@ The helper talks to the running menu-bar app on a Unix socket under
 0700, socket 0600, same-UID peer). It does not spawn a second Claude, open a
 listen port, or set a Discord Interactions Endpoint URL. If Agrypnos is not
 running, the helper returns empty JSON within two seconds and does not select
-an answer. No new sudoers grant. The Discord webhook stays outbound-only.
+an answer. No new sudoers grant.
 
 ## Opt-in Codex waiting alert (test build)
 
@@ -100,8 +100,8 @@ socket under `~/Library/Application Support/Agrypnos/codex-alert-hook/`
 does not answer the question. If Agrypnos is not running, the helper still
 exits 0 with empty stdout. It does not open a listen port or set a Discord
 Interactions Endpoint URL. Question text is not written to
-`notif-secrets.json`. Destinations are the saved Discord webhook and Telegram
-token + chat id. The idle-after-wait opt-in is not required. No new sudoers
+`notif-secrets.json`. Destinations are the saved Discord bot token + channel
+id and Telegram token + chat id. The idle-after-wait opt-in is not required. No new sudoers
 grant.
 
 ## What we will not do
