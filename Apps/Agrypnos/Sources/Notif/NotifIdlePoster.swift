@@ -16,9 +16,9 @@ enum NotifIdlePoster {
         return URLSession(configuration: config)
     }()
 
-    static func postIfNeeded(enabled: Bool, reason: DisengageReason) async {
+    static func postIfNeeded(enabled: Bool, reason: DisengageReason, willSleep: Bool) async {
         guard enabled else { return }
-        let requests = requests(secrets: NotifSecretsStore.load(), reason: reason)
+        let requests = requests(secrets: NotifSecretsStore.load(), reason: reason, willSleep: willSleep)
         await withTaskGroup(of: Void.self) { group in
             for request in requests {
                 group.addTask { await fire(request) }
@@ -26,17 +26,25 @@ enum NotifIdlePoster {
         }
     }
 
-    static func requests(secrets: NotifSecrets, reason: DisengageReason) -> [NotifOutboundRequest] {
+    static func requests(
+        secrets: NotifSecrets,
+        reason: DisengageReason,
+        willSleep: Bool
+    ) -> [NotifOutboundRequest] {
         let channels = NotifIdlePostPolicy.destinations(
-            discordWebhookURL: secrets.discordWebhookURL,
+            discordBotToken: secrets.discordBotToken,
+            discordChannelId: secrets.discordChannelId,
             telegramBotToken: secrets.telegramBotToken,
             telegramChatId: secrets.telegramChatId
         )
         let body = reason == .timerExpired ? "Agrypnos: your watch timer ended." : AgrypnosCopy.notifIdleBody
         var requests: [NotifOutboundRequest] = []
         if channels.contains(.discord),
-           let url = secrets.discordWebhookURL,
-           let request = NotifOutboundRequestFactory.discord(webhookURL: url, content: body)
+           let token = secrets.discordBotToken,
+           let channel = secrets.discordChannelId,
+           let text = DiscordBotOutbound.body(reason: reason, willSleep: willSleep),
+           let request = DiscordInboundRequestFactory.channelMessage(
+               botToken: token, channelId: channel, content: text)
         {
             requests.append(request)
         }

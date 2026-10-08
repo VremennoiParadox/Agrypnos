@@ -17,7 +17,8 @@ extension WatchRuntime {
     private func codexHasDestination() -> Bool {
         let secrets = readNotifSecrets()
         return !NotifIdlePostPolicy.destinations(
-            discordWebhookURL: secrets.discordWebhookURL,
+            discordBotToken: secrets.discordBotToken,
+            discordChannelId: secrets.discordChannelId,
             telegramBotToken: secrets.telegramBotToken,
             telegramChatId: secrets.telegramChatId
         ).isEmpty
@@ -52,7 +53,7 @@ extension WatchRuntime {
 
     func enableCodexAlerts() -> Bool {
         guard codexHasDestination() else {
-            return codexSetupFailed("Save a Telegram chat or Discord webhook first.")
+            return codexSetupFailed("Save a Telegram chat or Discord bot token and channel id first.")
         }
         do {
             let executable = Bundle.main.executableURL?.path ?? CommandLine.arguments[0]
@@ -120,14 +121,18 @@ extension WatchRuntime {
     func postCodexAlert(_ sentence: String) async {
         let secrets = readNotifSecrets()
         let channels = NotifIdlePostPolicy.destinations(
-            discordWebhookURL: secrets.discordWebhookURL,
+            discordBotToken: secrets.discordBotToken,
+            discordChannelId: secrets.discordChannelId,
             telegramBotToken: secrets.telegramBotToken,
             telegramChatId: secrets.telegramChatId
         )
         var requests: [NotifOutboundRequest] = []
         if channels.contains(.discord),
-           let url = secrets.discordWebhookURL,
-           let request = NotifOutboundRequestFactory.discord(webhookURL: url, content: sentence) {
+           let token = secrets.discordBotToken,
+           let channel = secrets.discordChannelId,
+           let request = DiscordInboundRequestFactory.channelMessage(
+               botToken: token, channelId: channel, content: sentence
+           ) {
             requests.append(request)
         }
         if channels.contains(.telegram),

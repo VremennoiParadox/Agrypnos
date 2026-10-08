@@ -71,4 +71,52 @@ final class DiscordBotOutboundTests: XCTestCase {
             }
         }
     }
+
+    func testDiscordDestinationNeedsTokenAndChannel() {
+        XCTAssertEqual(
+            NotifIdlePostPolicy.destinations(
+                discordBotToken: "bot",
+                discordChannelId: "123",
+                telegramBotToken: nil,
+                telegramChatId: nil
+            ),
+            [.discord]
+        )
+        XCTAssertEqual(
+            NotifIdlePostPolicy.destinations(
+                discordBotToken: "bot",
+                discordChannelId: "  ",
+                telegramBotToken: nil,
+                telegramChatId: nil
+            ),
+            []
+        )
+        XCTAssertEqual(
+            NotifIdlePostPolicy.destinations(
+                discordBotToken: nil,
+                discordChannelId: "123",
+                telegramBotToken: "tg",
+                telegramChatId: "9"
+            ),
+            [.telegram]
+        )
+    }
+
+    func testOldWebhookURLIsIgnored() throws {
+        let json = Data(#"{"discordWebhookURL":"https://discord.com/api/webhooks/1/abc","discordBotToken":"bot","discordChannelId":"123"}"#.utf8)
+        let decoded = try JSONDecoder().decode(NotifSecretsPayload.self, from: json)
+        XCTAssertEqual(decoded.discordBotToken, "bot")
+        XCTAssertEqual(decoded.discordChannelId, "123")
+        let encoded = try JSONSerialization.jsonObject(with: try JSONEncoder().encode(decoded)) as? [String: Any]
+        XCTAssertNil(encoded?["discordWebhookURL"])
+    }
+
+    func testChannelMessageIsTheDiscordSend() throws {
+        let request = try XCTUnwrap(
+            DiscordInboundRequestFactory.channelMessage(botToken: "bot", channelId: "123", content: "Agrypnos: asking the Mac to sleep.")
+        )
+        XCTAssertEqual(request.url.path, "/api/v10/channels/123/messages")
+        XCTAssertEqual(request.httpMethod, "POST")
+        XCTAssertEqual(request.headers["Authorization"], "Bot bot")
+    }
 }

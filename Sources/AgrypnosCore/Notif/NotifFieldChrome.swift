@@ -6,15 +6,6 @@ public enum NotifFieldCommit: Equatable, Sendable {
     case reject
 }
 
-public enum NotifDiscordFieldChrome: Sendable {
-    public static func commit(_ raw: String) -> NotifFieldCommit {
-        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.isEmpty { return .clear }
-        guard let url = DiscordWebhookURL.parse(trimmed) else { return .reject }
-        return .persist(url.absoluteString)
-    }
-}
-
 public enum NotifOptionalSecretChrome: Sendable {
     public static func commit(_ raw: String) -> String? {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -81,7 +72,7 @@ public enum DiscordBotTokenChrome: Sendable {
     public static func commit(_ raw: String) -> NotifFieldCommit {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty { return .clear }
-        if DiscordWebhookURL.parse(trimmed) != nil { return .reject }
+        if trimmed.contains("/api/webhooks/") { return .reject }
         guard trimmed.count >= secretMinimumCount else { return .reject }
         return .persist(trimmed)
     }

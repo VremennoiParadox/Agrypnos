@@ -14,12 +14,13 @@ public enum NotifIdlePostPolicy: Sendable {
     }
 
     public static func destinations(
-        discordWebhookURL: String?,
+        discordBotToken: String?,
+        discordChannelId: String?,
         telegramBotToken: String?,
         telegramChatId: String?
     ) -> [NotifChannel] {
         var destinations: [NotifChannel] = []
-        if present(discordWebhookURL) {
+        if present(discordBotToken), present(discordChannelId) {
             destinations.append(.discord)
         }
         if present(telegramBotToken), present(telegramChatId) {

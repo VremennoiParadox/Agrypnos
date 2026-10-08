@@ -50,7 +50,8 @@ final class NotifIdlePostPolicyTests: XCTestCase {
                 enabled: false,
                 reason: .agentsSettled,
                 sawBusy: true,
-                discord: "https://discord.com/api/webhooks/1/abc",
+                discordBotToken: "bot",
+                discordChannelId: "123",
                 token: "123:token",
                 chat: "99"
             ),
@@ -64,7 +65,8 @@ final class NotifIdlePostPolicyTests: XCTestCase {
                 enabled: true,
                 reason: .agentsSettled,
                 sawBusy: false,
-                discord: "https://discord.com/api/webhooks/1/abc",
+                discordBotToken: "bot",
+                discordChannelId: "123",
                 token: "123:token",
                 chat: "99"
             ),
@@ -74,7 +76,8 @@ final class NotifIdlePostPolicyTests: XCTestCase {
 
     func testOnlyAgentsSettledFires() {
         let secrets = (
-            discord: "https://discord.com/api/webhooks/1/abc",
+            discordBotToken: "bot",
+            discordChannelId: "123",
             token: "123:token",
             chat: "99"
         )
@@ -84,7 +87,8 @@ final class NotifIdlePostPolicyTests: XCTestCase {
                     enabled: true,
                     reason: reason,
                     sawBusy: true,
-                    discord: secrets.discord,
+                    discordBotToken: secrets.discordBotToken,
+                    discordChannelId: secrets.discordChannelId,
                     token: secrets.token,
                     chat: secrets.chat
                 ),
@@ -97,7 +101,8 @@ final class NotifIdlePostPolicyTests: XCTestCase {
                 enabled: true,
                 reason: .agentsSettled,
                 sawBusy: true,
-                discord: secrets.discord,
+                discordBotToken: secrets.discordBotToken,
+                discordChannelId: secrets.discordChannelId,
                 token: secrets.token,
                 chat: secrets.chat
             ),
@@ -111,7 +116,8 @@ final class NotifIdlePostPolicyTests: XCTestCase {
                 enabled: true,
                 reason: .agentsSettled,
                 sawBusy: true,
-                discord: "https://discord.com/api/webhooks/1/abc",
+                discordBotToken: "bot",
+                discordChannelId: "123",
                 token: nil,
                 chat: nil
             ),
@@ -122,7 +128,8 @@ final class NotifIdlePostPolicyTests: XCTestCase {
                 enabled: true,
                 reason: .agentsSettled,
                 sawBusy: true,
-                discord: "  ",
+                discordBotToken: "bot",
+                discordChannelId: "  ",
                 token: nil,
                 chat: nil
             ),
@@ -136,7 +143,8 @@ final class NotifIdlePostPolicyTests: XCTestCase {
                 enabled: true,
                 reason: .agentsSettled,
                 sawBusy: true,
-                discord: nil,
+                discordBotToken: nil,
+                discordChannelId: nil,
                 token: "123:token",
                 chat: "99"
             ),
@@ -147,7 +155,8 @@ final class NotifIdlePostPolicyTests: XCTestCase {
                 enabled: true,
                 reason: .agentsSettled,
                 sawBusy: true,
-                discord: nil,
+                discordBotToken: nil,
+                discordChannelId: nil,
                 token: "123:token",
                 chat: nil
             ),
@@ -158,7 +167,8 @@ final class NotifIdlePostPolicyTests: XCTestCase {
                 enabled: true,
                 reason: .agentsSettled,
                 sawBusy: true,
-                discord: nil,
+                discordBotToken: nil,
+                discordChannelId: nil,
                 token: nil,
                 chat: "99"
             ),
@@ -169,7 +179,8 @@ final class NotifIdlePostPolicyTests: XCTestCase {
                 enabled: true,
                 reason: .agentsSettled,
                 sawBusy: true,
-                discord: nil,
+                discordBotToken: nil,
+                discordChannelId: nil,
                 token: "  ",
                 chat: "99"
             ),
@@ -181,7 +192,8 @@ final class NotifIdlePostPolicyTests: XCTestCase {
         enabled: Bool,
         reason: DisengageReason,
         sawBusy: Bool,
-        discord: String?,
+        discordBotToken: String?,
+        discordChannelId: String?,
         token: String?,
         chat: String?
     ) -> [NotifChannel] {
@@ -193,7 +205,8 @@ final class NotifIdlePostPolicyTests: XCTestCase {
             return []
         }
         return NotifIdlePostPolicy.destinations(
-            discordWebhookURL: discord,
+            discordBotToken: discordBotToken,
+            discordChannelId: discordChannelId,
             telegramBotToken: token,
             telegramChatId: chat
         )

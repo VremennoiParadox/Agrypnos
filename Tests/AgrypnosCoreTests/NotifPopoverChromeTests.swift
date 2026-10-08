@@ -32,32 +32,6 @@ final class NotifPopoverChromeTests: XCTestCase {
         XCTAssertEqual(NotifEnableChrome.defaultEnabled, UserPreferences.default.notifEnabled)
     }
 
-    func testDiscordCommitPersistsValidURLClearsEmptyAndRejectsJunk() {
-        XCTAssertEqual(
-            NotifDiscordFieldChrome.commit("https://discord.com/api/webhooks/1/abc"),
-            .persist("https://discord.com/api/webhooks/1/abc")
-        )
-        XCTAssertEqual(
-            NotifDiscordFieldChrome.commit("  https://discord.com/api/webhooks/99/Tok.en-1_2  "),
-            .persist("https://discord.com/api/webhooks/99/Tok.en-1_2")
-        )
-        XCTAssertEqual(
-            NotifDiscordFieldChrome.commit("<https://discord.com/api/webhooks/1/abc>"),
-            .persist("https://discord.com/api/webhooks/1/abc")
-        )
-        XCTAssertEqual(NotifDiscordFieldChrome.commit(""), .clear)
-        XCTAssertEqual(NotifDiscordFieldChrome.commit("   "), .clear)
-        XCTAssertEqual(NotifDiscordFieldChrome.commit("https://example.com/api/webhooks/1/abc"), .reject)
-        XCTAssertEqual(NotifDiscordFieldChrome.commit("http://discord.com/api/webhooks/1/abc"), .reject)
-        XCTAssertEqual(NotifDiscordFieldChrome.commit("https://httpbin.org/post"), .reject)
-        XCTAssertEqual(NotifDiscordFieldChrome.commit("not a url"), .reject)
-        if case .reject = NotifDiscordFieldChrome.commit("https://evil.com/api/webhooks/1/abc") {
-            // associated value must not carry the secret-shaped junk for logs
-        } else {
-            XCTFail("invalid Discord URL must reject without saving")
-        }
-    }
-
     func testTelegramCommitClearsEmptyAndKeepsTrimmedValue() {
         XCTAssertNil(NotifOptionalSecretChrome.commit(""))
         XCTAssertNil(NotifOptionalSecretChrome.commit("  "))
@@ -172,28 +146,23 @@ final class NotifPopoverChromeTests: XCTestCase {
         XCTAssertEqual(NotifSecretsFileChrome.fileName, "notif-secrets.json")
         XCTAssertFalse(NotifSecretsFileChrome.fileName.contains("preferences"))
         XCTAssertNil(NotifOptionalSecretChrome.commit(""))
-        XCTAssertEqual(NotifDiscordFieldChrome.commit(""), .clear)
     }
 
     func testSecretsPayloadRoundTripsAndOmitsEmptyFields() throws {
         let data = try XCTUnwrap(
             NotifSecretsPayload.encode(
-                discordWebhookURL: "https://discord.com/api/webhooks/1/abc",
                 telegramBotToken: "111:token",
                 telegramChatId: "5728126329"
             )
         )
         let decoded = try XCTUnwrap(NotifSecretsPayload.decode(data))
-        XCTAssertEqual(decoded.discordWebhookURL, "https://discord.com/api/webhooks/1/abc")
         XCTAssertEqual(decoded.telegramBotToken, "111:token")
         XCTAssertEqual(decoded.telegramChatId, "5728126329")
         let empty = try XCTUnwrap(NotifSecretsPayload.encode(
-            discordWebhookURL: "  ",
             telegramBotToken: nil,
             telegramChatId: ""
         ))
         let emptyDecoded = try XCTUnwrap(NotifSecretsPayload.decode(empty))
-        XCTAssertNil(emptyDecoded.discordWebhookURL)
         XCTAssertNil(emptyDecoded.telegramBotToken)
         XCTAssertNil(emptyDecoded.telegramChatId)
     }

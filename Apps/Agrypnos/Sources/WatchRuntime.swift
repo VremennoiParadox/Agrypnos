@@ -97,7 +97,9 @@ final class WatchRuntime {
         runCommand: @escaping (String, [String]) -> (exit: Int32, out: String, err: String) = {
             ProcessRunner.run($0, $1)
         },
-        postIdle: @escaping (Bool, DisengageReason) async -> Void = { await NotifIdlePoster.postIfNeeded(enabled: $0, reason: $1) },
+        postIdle: @escaping (Bool, DisengageReason) async -> Void = {
+            await NotifIdlePoster.postIfNeeded(enabled: $0, reason: $1, willSleep: false)
+        },
         notify: @escaping (String) -> Void = UserNotify.post,
         postQuestionNotice: @escaping @MainActor (String) async -> Void = { await QuestionNoticeSender.send($0) },
         readNotifSecrets: @escaping () -> NotifSecrets = NotifSecretsStore.load,
@@ -238,11 +240,6 @@ final class WatchRuntime {
 
     func notifSecrets() -> NotifSecrets {
         readNotifSecrets()
-    }
-
-    @discardableResult
-    func setNotifDiscordWebhookURL(_ value: String?) -> Bool {
-        NotifSecretsStore.setDiscordWebhookURL(value)
     }
 
     @discardableResult

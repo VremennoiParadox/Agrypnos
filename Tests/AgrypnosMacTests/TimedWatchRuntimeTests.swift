@@ -219,18 +219,24 @@ final class TimedWatchRuntimeTests: XCTestCase {
     }
 
     func testTimerOutboundUsesExpiryMessageAndAgentsKeepsIdleMessage() throws {
-        let secrets = NotifSecrets(discordWebhookURL: "https://discord.com/api/webhooks/123/test",
-                                   telegramBotToken: "123:test", telegramChatId: "42")
-        let timed = NotifIdlePoster.requests(secrets: secrets, reason: .timerExpired)
+        let secrets = NotifSecrets(
+            telegramBotToken: "123:test",
+            telegramChatId: "42",
+            discordBotToken: "bot",
+            discordChannelId: "123"
+        )
+        let timed = NotifIdlePoster.requests(secrets: secrets, reason: .timerExpired, willSleep: false)
         XCTAssertEqual(timed.count, 2)
         for request in timed {
             let body = try XCTUnwrap(JSONSerialization.jsonObject(with: request.body) as? [String: Any])
             XCTAssertEqual((body["text"] ?? body["content"]) as? String, "Agrypnos: your watch timer ended.")
         }
-        let agents = NotifIdlePoster.requests(secrets: secrets, reason: .agentsSettled)
+        let agents = NotifIdlePoster.requests(secrets: secrets, reason: .agentsSettled, willSleep: false)
         XCTAssertEqual(agents.count, 2)
         let body = try XCTUnwrap(JSONSerialization.jsonObject(with: agents[1].body) as? [String: Any])
         XCTAssertEqual(body["text"] as? String, "Agrypnos: local busy signals went idle after the wait.")
-        XCTAssertTrue(NotifIdlePoster.requests(secrets: NotifSecrets(), reason: .timerExpired).isEmpty)
+        XCTAssertTrue(
+            NotifIdlePoster.requests(secrets: NotifSecrets(), reason: .timerExpired, willSleep: false).isEmpty
+        )
     }
 }

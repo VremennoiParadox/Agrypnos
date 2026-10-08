@@ -15,17 +15,6 @@ public struct NotifOutboundRequest: Equatable, Sendable {
 }
 
 public enum NotifOutboundRequestFactory: Sendable {
-    public static func discord(webhookURL: String, content: String) -> NotifOutboundRequest? {
-        guard let url = DiscordWebhookURL.parse(webhookURL) else { return nil }
-        guard let body = json(["content": content]) else { return nil }
-        return NotifOutboundRequest(
-            url: url,
-            httpMethod: "POST",
-            headers: jsonHeaders,
-            body: body
-        )
-    }
-
     public static func telegram(
         botToken: String,
         chatId: String,

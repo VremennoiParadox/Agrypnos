@@ -35,7 +35,6 @@ final class OpenCodeQuestionSettingsTests: XCTestCase {
         XCTAssertNil(payload.openCodeQuestions)
         XCTAssertEqual(payload.telegramBotToken, "legacy-token")
         XCTAssertEqual(payload.telegramChatId, "42")
-        XCTAssertEqual(payload.discordWebhookURL, "legacy-webhook")
     }
 
     func testMalformedConnectionDoesNotDiscardBotSecrets() throws {

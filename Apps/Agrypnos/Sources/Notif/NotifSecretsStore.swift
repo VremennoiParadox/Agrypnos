@@ -5,7 +5,6 @@ import AgrypnosCore
 #endif
 
 struct NotifSecrets: Equatable {
-    var discordWebhookURL: String?
     var telegramBotToken: String?
     var telegramChatId: String?
     var discordBotToken: String?
@@ -23,7 +22,6 @@ enum NotifSecretsStore {
               let payload = NotifSecretsPayload.decode(data)
         else { return NotifSecrets() }
         return NotifSecrets(
-            discordWebhookURL: payload.discordWebhookURL,
             telegramBotToken: payload.telegramBotToken,
             telegramChatId: payload.telegramChatId,
             discordBotToken: payload.discordBotToken,
@@ -32,13 +30,6 @@ enum NotifSecretsStore {
             discordQuestionUserId: payload.discordQuestionUserId,
             openCodeQuestions: payload.openCodeQuestions
         )
-    }
-
-    @discardableResult
-    static func setDiscordWebhookURL(_ value: String?) -> Bool {
-        var secrets = load()
-        secrets.discordWebhookURL = NotifSecretsPayload.present(value)
-        return write(secrets)
     }
 
     @discardableResult
@@ -97,7 +88,6 @@ enum NotifSecretsStore {
     @discardableResult
     static func write(_ secrets: NotifSecrets) -> Bool {
         let payload = NotifSecretsPayload(
-            discordWebhookURL: secrets.discordWebhookURL,
             telegramBotToken: secrets.telegramBotToken,
             telegramChatId: secrets.telegramChatId,
             discordBotToken: secrets.discordBotToken,

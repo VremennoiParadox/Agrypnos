@@ -1,7 +1,6 @@
 import Foundation
 
-public struct NotifSecretsPayload: Equatable, Sendable {
-    public var discordWebhookURL: String?
+public struct NotifSecretsPayload: Codable, Equatable, Sendable {
     public var telegramBotToken: String?
     public var telegramChatId: String?
     public var discordBotToken: String?
@@ -10,8 +9,17 @@ public struct NotifSecretsPayload: Equatable, Sendable {
     public var discordQuestionUserId: String?
     public var openCodeQuestions: OpenCodeQuestionSettings?
 
+    enum CodingKeys: String, CodingKey {
+        case telegramBotToken
+        case telegramChatId
+        case discordBotToken
+        case discordChannelId
+        case telegramQuestionUserId
+        case discordQuestionUserId
+        case openCodeQuestions
+    }
+
     public init(
-        discordWebhookURL: String? = nil,
         telegramBotToken: String? = nil,
         telegramChatId: String? = nil,
         discordBotToken: String? = nil,
@@ -20,7 +28,6 @@ public struct NotifSecretsPayload: Equatable, Sendable {
         discordQuestionUserId: String? = nil,
         openCodeQuestions: OpenCodeQuestionSettings? = nil
     ) {
-        self.discordWebhookURL = Self.present(discordWebhookURL)
         self.telegramBotToken = Self.present(telegramBotToken)
         self.telegramChatId = Self.present(telegramChatId)
         self.discordBotToken = Self.present(discordBotToken)
@@ -30,8 +37,31 @@ public struct NotifSecretsPayload: Equatable, Sendable {
         self.openCodeQuestions = openCodeQuestions
     }
 
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            telegramBotToken: try container.decodeIfPresent(String.self, forKey: .telegramBotToken),
+            telegramChatId: try container.decodeIfPresent(String.self, forKey: .telegramChatId),
+            discordBotToken: try container.decodeIfPresent(String.self, forKey: .discordBotToken),
+            discordChannelId: try container.decodeIfPresent(String.self, forKey: .discordChannelId),
+            telegramQuestionUserId: try container.decodeIfPresent(String.self, forKey: .telegramQuestionUserId),
+            discordQuestionUserId: try container.decodeIfPresent(String.self, forKey: .discordQuestionUserId),
+            openCodeQuestions: try container.decodeIfPresent(OpenCodeQuestionSettings.self, forKey: .openCodeQuestions)
+        )
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(telegramBotToken, forKey: .telegramBotToken)
+        try container.encodeIfPresent(telegramChatId, forKey: .telegramChatId)
+        try container.encodeIfPresent(discordBotToken, forKey: .discordBotToken)
+        try container.encodeIfPresent(discordChannelId, forKey: .discordChannelId)
+        try container.encodeIfPresent(telegramQuestionUserId, forKey: .telegramQuestionUserId)
+        try container.encodeIfPresent(discordQuestionUserId, forKey: .discordQuestionUserId)
+        try container.encodeIfPresent(openCodeQuestions, forKey: .openCodeQuestions)
+    }
+
     public static func encode(
-        discordWebhookURL: String?,
         telegramBotToken: String?,
         telegramChatId: String?,
         discordBotToken: String? = nil,
@@ -41,7 +71,6 @@ public struct NotifSecretsPayload: Equatable, Sendable {
     ) -> Data? {
         encode(
             NotifSecretsPayload(
-                discordWebhookURL: discordWebhookURL,
                 telegramBotToken: telegramBotToken,
                 telegramChatId: telegramChatId,
                 discordBotToken: discordBotToken,
@@ -54,7 +83,6 @@ public struct NotifSecretsPayload: Equatable, Sendable {
 
     public static func encode(_ payload: NotifSecretsPayload) -> Data? {
         var object: [String: Any] = [:]
-        if let value = payload.discordWebhookURL { object["discordWebhookURL"] = value }
         if let value = payload.telegramBotToken { object["telegramBotToken"] = value }
         if let value = payload.telegramChatId { object["telegramChatId"] = value }
         if let value = payload.discordBotToken { object["discordBotToken"] = value }
@@ -79,7 +107,6 @@ public struct NotifSecretsPayload: Equatable, Sendable {
             }
         }
         return NotifSecretsPayload(
-            discordWebhookURL: object["discordWebhookURL"] as? String,
             telegramBotToken: object["telegramBotToken"] as? String,
             telegramChatId: object["telegramChatId"] as? String,
             discordBotToken: object["discordBotToken"] as? String,

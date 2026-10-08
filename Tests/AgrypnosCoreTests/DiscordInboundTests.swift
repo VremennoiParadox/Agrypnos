@@ -56,7 +56,6 @@ final class DiscordInboundSecretsTests: XCTestCase {
     func testPayloadRoundTripsBotTokenAndChannelIdWithoutMixingWebhook() throws {
         let data = try XCTUnwrap(
             NotifSecretsPayload.encode(
-                discordWebhookURL: "https://discord.com/api/webhooks/1/abc",
                 telegramBotToken: "111:token",
                 telegramChatId: "99",
                 discordBotToken: "BotToken.example",
@@ -64,28 +63,24 @@ final class DiscordInboundSecretsTests: XCTestCase {
             )
         )
         let object = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
-        XCTAssertEqual(object["discordWebhookURL"] as? String, "https://discord.com/api/webhooks/1/abc")
+        XCTAssertNil(object["discordWebhookURL"])
         XCTAssertEqual(object["discordBotToken"] as? String, "BotToken.example")
         XCTAssertEqual(object["discordChannelId"] as? String, "123456789012345678")
         XCTAssertEqual(object["telegramBotToken"] as? String, "111:token")
 
         let decoded = try XCTUnwrap(NotifSecretsPayload.decode(data))
-        XCTAssertEqual(decoded.discordWebhookURL, "https://discord.com/api/webhooks/1/abc")
         XCTAssertEqual(decoded.discordBotToken, "BotToken.example")
         XCTAssertEqual(decoded.discordChannelId, "123456789012345678")
-        XCTAssertNotEqual(decoded.discordBotToken, decoded.discordWebhookURL)
     }
 
     func testOldFileWithoutDiscordInboundKeysLeavesThemNil() throws {
         let data = try XCTUnwrap(
             NotifSecretsPayload.encode(
-                discordWebhookURL: "https://discord.com/api/webhooks/1/abc",
                 telegramBotToken: "111:token",
                 telegramChatId: "99"
             )
         )
         let decoded = try XCTUnwrap(NotifSecretsPayload.decode(data))
-        XCTAssertEqual(decoded.discordWebhookURL, "https://discord.com/api/webhooks/1/abc")
         XCTAssertNil(decoded.discordBotToken)
         XCTAssertNil(decoded.discordChannelId)
     }
@@ -93,7 +88,6 @@ final class DiscordInboundSecretsTests: XCTestCase {
     func testEmptyDiscordInboundSecretsAreOmitted() throws {
         let data = try XCTUnwrap(
             NotifSecretsPayload.encode(
-                discordWebhookURL: nil,
                 telegramBotToken: nil,
                 telegramChatId: nil,
                 discordBotToken: "  ",
@@ -113,7 +107,6 @@ final class DiscordInboundSecretsTests: XCTestCase {
             "discordWebhookURL": "https://discord.com/api/webhooks/1/abc",
         ])
         let decoded = try XCTUnwrap(NotifSecretsPayload.decode(data))
-        XCTAssertEqual(decoded.discordWebhookURL, "https://discord.com/api/webhooks/1/abc")
         XCTAssertNil(decoded.discordBotToken)
         XCTAssertNil(decoded.discordChannelId)
         XCTAssertFalse(
@@ -177,11 +170,12 @@ final class DiscordInboundPolicyTests: XCTestCase {
         )
         XCTAssertEqual(
             NotifIdlePostPolicy.destinations(
-                discordWebhookURL: webhook,
+                discordBotToken: webhook,
+                discordChannelId: nil,
                 telegramBotToken: nil,
                 telegramChatId: nil
             ),
-            [.discord]
+            []
         )
     }
 

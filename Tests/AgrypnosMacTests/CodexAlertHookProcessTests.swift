@@ -29,7 +29,7 @@ final class CodexAlertHookProcessTests: XCTestCase {
         XCTAssertFalse(runtime.enableCodexAlerts())
         XCTAssertFalse(runtime.preferences.codexAlertEnabled)
         XCTAssertFalse(FileManager.default.fileExists(atPath: hooks.path))
-        XCTAssertEqual(runtime.codexAlertCaption, "Save a Telegram chat or Discord webhook first.")
+        XCTAssertEqual(runtime.codexAlertCaption, "Save a Telegram chat or Discord bot token and channel id first.")
         XCTAssertFalse(runtime.engaged)
         XCTAssertNotEqual(hooks.path, FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent(".codex/hooks.json").path)
