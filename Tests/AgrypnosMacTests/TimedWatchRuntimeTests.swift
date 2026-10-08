@@ -78,6 +78,7 @@ final class TimedWatchRuntimeTests: XCTestCase {
         expire(fixture, start: start)
         await fixture.waitForPost()
         XCTAssertEqual(fixture.postReasons, [.timerExpired])
+        XCTAssertTrue(fixture.kernelHeld)
         XCTAssertTrue(fixture.runtime.engine.holdingForIdlePost)
         XCTAssertEqual(fixture.sleepRequests, 0)
         fixture.completePost()
@@ -304,6 +305,7 @@ final class TimedWatchRuntimeTests: XCTestCase {
             closed.discordBodies,
             ["Agrypnos: Keep the watch is off. Asking the Mac to sleep."]
         )
+        XCTAssertTrue(closed.kernelHeld)
         XCTAssertEqual(closed.sleepRequests, 0)
         closed.completePost()
         await closed.waitForCompletion()
@@ -319,6 +321,24 @@ final class TimedWatchRuntimeTests: XCTestCase {
         XCTAssertTrue(open.discordBodies.isEmpty)
         XCTAssertEqual(open.sleepRequests, 0)
         XCTAssertNil(open.postContinuation)
+    }
+
+    func testUserOffDoesNotSleepOnUnconfirmedRecloseDuringPost() async {
+        let secrets = NotifSecrets(discordBotToken: "bot", discordChannelId: "123")
+        let fixture = RuntimeFixture()
+        fixture.notifSecrets = secrets
+        armConfirmedClosed(fixture)
+        fixture.runtime.engine.preferences.notifEnabled = true
+        XCTAssertNotNil(fixture.runtime.setEngaged(false))
+        await fixture.waitForPost()
+        XCTAssertTrue(fixture.kernelHeld)
+        fixture.lidClosed = false
+        fixture.runtime.pollLid()
+        fixture.lidClosed = true
+        XCTAssertFalse(fixture.runtime.engine.lidCloseConfirmed)
+        fixture.completePost()
+        await fixture.waitForCompletion()
+        XCTAssertEqual(fixture.sleepRequests, 0)
     }
 
     func armConfirmedClosed(_ fixture: RuntimeFixture) {

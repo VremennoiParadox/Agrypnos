@@ -37,9 +37,9 @@ final class RuntimeRaceTests: XCTestCase {
     }
     func testLidOpenWhileKernelClearRunsDoesNotSleep() async {
         let f = RuntimeFixture()
-        f.kernelWriteHook = { on in if !on { f.lidClosed = false } }
         f.beginClosedLidSettle()
         await f.waitForPost()
+        f.kernelWriteHook = { on in if !on { f.lidClosed = false } }
         f.completePost()
         await f.waitForCompletion()
         XCTAssertEqual(f.sleepRequests, 0)

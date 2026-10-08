@@ -387,16 +387,27 @@ final class WatchRuntime {
     }
 
     /// Every user/inbound off must verify the same kernel release before sleep or success copy.
+    /// A watch-end POST keeps SleepDisabled held until that send finishes.
     func disarmWatch() -> HygieneApplyResult? {
-        guard disarmKernel() else {
-            notify("Couldn't verify SleepDisabled was cleared. The watch state is unchanged.")
-            delegate?.watchRuntimeDidChange(self)
-            return nil
-        }
         cancelQuestionSleep()
         idlePostTask?.cancel()
         idlePostTask = nil
         idleOutbound.cancelInFlight()
+        _ = engine.observeLid(closed: readLid() == true, now: Date())
+        let confirmed = engine.userOffLidCloseConfirmed(rawClosed: readLid() == true)
+        let reason: DisengageReason? = engine.engaged ? .user : nil
+        let willWait = shouldAwaitWatchEndPost(
+            enabled: engine.preferences.notifEnabled,
+            reason: reason,
+            willSleep: confirmed
+        )
+        if !willWait {
+            guard disarmKernel() else {
+                notify("Couldn't verify SleepDisabled was cleared. The watch state is unchanged.")
+                delegate?.watchRuntimeDidChange(self)
+                return nil
+            }
+        }
         let sleepResult = applyUserOff()
         clearQuestionWatch()
         syncDeadlineTimer()
