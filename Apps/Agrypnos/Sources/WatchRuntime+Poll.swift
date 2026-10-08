@@ -382,13 +382,23 @@ extension WatchRuntime {
         let reason: DisengageReason? = wasEngaged ? .user : nil
         let willSleep = confirmed
         let enabled = engine.preferences.notifEnabled
+        let commands: [WatchCommand]
+        if wasEngaged {
+            commands = engine.userSetEngaged(false, now: Date(), lidClosed: confirmed)
+        } else {
+            commands = confirmed ? [.requestSleep] : []
+        }
         if shouldAwaitWatchEndPost(enabled: enabled, reason: reason, willSleep: willSleep) {
+            // user-off disengage zeros lid confirm. Put it back so a lid-open during the
+            // send can reset it; a raw reclose stays unconfirmed.
+            if confirmed, readLid() == true {
+                _ = engine.lidDidClose(now: Date())
+            }
             idlePostTask = Task { @MainActor in
                 await self.postIdle(enabled, reason, willSleep)
                 guard !Task.isCancelled else { return }
-                var live: [WatchCommand] = willSleep ? [.requestSleep] : []
+                var live = commands
                 self.removeSleepIfLidOpen(&live, reason: reason)
-                let sleepNow = live.contains(.requestSleep)
                 if !self.disarmKernel() {
                     self.notify("Couldn't verify SleepDisabled was cleared. The watch state is unchanged.")
                     self.store.save(self.engine.preferences)
@@ -396,25 +406,13 @@ extension WatchRuntime {
                     self.delegate?.watchRuntimeDidChange(self)
                     return
                 }
-                let commands: [WatchCommand]
-                if wasEngaged {
-                    commands = self.engine.userSetEngaged(false, now: Date(), lidClosed: sleepNow)
-                } else {
-                    commands = sleepNow ? [.requestSleep] : []
-                }
-                let result = self.apply(commands)
+                let result = self.apply(live)
                 self.finishDisengageHygiene(sleepResult: result)
                 self.store.save(self.engine.preferences)
                 self.idlePostTask = nil
                 self.delegate?.watchRuntimeDidChange(self)
             }
             return HygieneApplyResult()
-        }
-        let commands: [WatchCommand]
-        if wasEngaged {
-            commands = engine.userSetEngaged(false, now: Date(), lidClosed: confirmed)
-        } else {
-            commands = confirmed ? [.requestSleep] : []
         }
         let result = apply(commands)
         finishDisengageHygiene(sleepResult: result)

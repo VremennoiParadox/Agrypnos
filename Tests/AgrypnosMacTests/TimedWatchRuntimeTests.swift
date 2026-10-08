@@ -305,6 +305,7 @@ final class TimedWatchRuntimeTests: XCTestCase {
             closed.discordBodies,
             ["Agrypnos: Keep the watch is off. Asking the Mac to sleep."]
         )
+        XCTAssertFalse(closed.runtime.engine.engaged)
         XCTAssertTrue(closed.kernelHeld)
         XCTAssertEqual(closed.sleepRequests, 0)
         closed.completePost()
@@ -331,6 +332,7 @@ final class TimedWatchRuntimeTests: XCTestCase {
         fixture.runtime.engine.preferences.notifEnabled = true
         XCTAssertNotNil(fixture.runtime.setEngaged(false))
         await fixture.waitForPost()
+        XCTAssertFalse(fixture.runtime.engine.engaged)
         XCTAssertTrue(fixture.kernelHeld)
         fixture.lidClosed = false
         fixture.runtime.pollLid()
