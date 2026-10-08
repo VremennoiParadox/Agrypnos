@@ -16,7 +16,7 @@ enum NotifIdlePoster {
         return URLSession(configuration: config)
     }()
 
-    static func postIfNeeded(enabled: Bool, reason: DisengageReason, willSleep: Bool) async {
+    static func postIfNeeded(enabled: Bool, reason: DisengageReason?, willSleep: Bool) async {
         guard enabled else { return }
         let requests = requests(secrets: NotifSecretsStore.load(), reason: reason, willSleep: willSleep)
         await withTaskGroup(of: Void.self) { group in
@@ -28,7 +28,7 @@ enum NotifIdlePoster {
 
     static func requests(
         secrets: NotifSecrets,
-        reason: DisengageReason,
+        reason: DisengageReason?,
         willSleep: Bool
     ) -> [NotifOutboundRequest] {
         let channels = NotifIdlePostPolicy.destinations(
@@ -37,7 +37,6 @@ enum NotifIdlePoster {
             telegramBotToken: secrets.telegramBotToken,
             telegramChatId: secrets.telegramChatId
         )
-        let body = reason == .timerExpired ? "Agrypnos: your watch timer ended." : AgrypnosCopy.notifIdleBody
         var requests: [NotifOutboundRequest] = []
         if channels.contains(.discord),
            let token = secrets.discordBotToken,
@@ -48,13 +47,15 @@ enum NotifIdlePoster {
         {
             requests.append(request)
         }
-        if channels.contains(.telegram) {
+        if channels.contains(.telegram),
+           let telegramBody = Self.telegramBody(reason: reason)
+        {
             if let token = secrets.telegramBotToken,
                let chat = secrets.telegramChatId,
                let request = NotifOutboundRequestFactory.telegram(
                 botToken: token,
                 chatId: chat,
-                text: body
+                text: telegramBody
                )
             {
                 requests.append(request)
@@ -63,6 +64,17 @@ enum NotifIdlePoster {
             }
         }
         return requests
+    }
+
+    private static func telegramBody(reason: DisengageReason?) -> String? {
+        switch reason {
+        case .timerExpired:
+            return "Agrypnos: your watch timer ended."
+        case .agentsSettled:
+            return AgrypnosCopy.notifIdleBody
+        default:
+            return nil
+        }
     }
 
     static func fire(_ request: NotifOutboundRequest) async {

@@ -78,7 +78,7 @@ final class TimedWatchRuntimeTests: XCTestCase {
         expire(fixture, start: start)
         await fixture.waitForPost()
         XCTAssertEqual(fixture.postReasons, [.timerExpired])
-        XCTAssertTrue(fixture.kernelHeld)
+        XCTAssertTrue(fixture.runtime.engine.holdingForIdlePost)
         XCTAssertEqual(fixture.sleepRequests, 0)
         fixture.completePost()
         await fixture.waitForCompletion()
@@ -218,25 +218,140 @@ final class TimedWatchRuntimeTests: XCTestCase {
         XCTAssertEqual(fixture.sleepRequests, 1)
     }
 
-    func testTimerOutboundUsesExpiryMessageAndAgentsKeepsIdleMessage() throws {
+    func testTimerOutboundUsesExpiryMessageAndAgentsKeepsIdleMessage() async throws {
         let secrets = NotifSecrets(
             telegramBotToken: "123:test",
             telegramChatId: "42",
             discordBotToken: "bot",
             discordChannelId: "123"
         )
-        let timed = NotifIdlePoster.requests(secrets: secrets, reason: .timerExpired, willSleep: false)
-        XCTAssertEqual(timed.count, 2)
-        for request in timed {
+        let openRequests = NotifIdlePoster.requests(secrets: secrets, reason: .timerExpired, willSleep: false)
+        XCTAssertEqual(openRequests.count, 2)
+        try assertDiscordChannelMessage(openRequests)
+        for request in openRequests {
             let body = try XCTUnwrap(JSONSerialization.jsonObject(with: request.body) as? [String: Any])
             XCTAssertEqual((body["text"] ?? body["content"]) as? String, "Agrypnos: your watch timer ended.")
         }
+
+        let closedRequests = NotifIdlePoster.requests(secrets: secrets, reason: .timerExpired, willSleep: true)
+        XCTAssertEqual(closedRequests.count, 2)
+        try assertDiscordChannelMessage(closedRequests)
+        XCTAssertEqual(
+            try discordContent(closedRequests),
+            "Agrypnos: your watch timer ended. Asking the Mac to sleep."
+        )
+        XCTAssertEqual(
+            try telegramText(closedRequests),
+            "Agrypnos: your watch timer ended."
+        )
+
         let agents = NotifIdlePoster.requests(secrets: secrets, reason: .agentsSettled, willSleep: false)
         XCTAssertEqual(agents.count, 2)
-        let body = try XCTUnwrap(JSONSerialization.jsonObject(with: agents[1].body) as? [String: Any])
-        XCTAssertEqual(body["text"] as? String, "Agrypnos: local busy signals went idle after the wait.")
+        XCTAssertEqual(try telegramText(agents), "Agrypnos: local busy signals went idle after the wait.")
         XCTAssertTrue(
             NotifIdlePoster.requests(secrets: NotifSecrets(), reason: .timerExpired, willSleep: false).isEmpty
         )
+
+        let openLid = RuntimeFixture()
+        openLid.lidClosed = false
+        let openStart = arm(openLid)
+        openLid.runtime.engine.preferences.notifEnabled = true
+        expire(openLid, start: openStart)
+        await openLid.waitForPost()
+        XCTAssertEqual(openLid.discordBodies, ["Agrypnos: your watch timer ended."])
+        XCTAssertEqual(openLid.postWillSleep, [false])
+        openLid.completePost()
+        await openLid.waitForCompletion()
+        XCTAssertEqual(openLid.sleepRequests, 0)
+
+        let closedLid = RuntimeFixture()
+        let closedStart = arm(closedLid)
+        closedLid.runtime.engine.preferences.notifEnabled = true
+        expire(closedLid, start: closedStart)
+        await closedLid.waitForPost()
+        XCTAssertEqual(
+            closedLid.discordBodies,
+            ["Agrypnos: your watch timer ended. Asking the Mac to sleep."]
+        )
+        XCTAssertEqual(closedLid.postWillSleep, [true])
+        closedLid.completePost()
+        await closedLid.waitForCompletion()
+        XCTAssertEqual(closedLid.sleepRequests, 1)
+    }
+
+    func testUserOffPostsDiscordSleepSentenceOnlyWhenLidIsConfirmedClosed() async throws {
+        let secrets = NotifSecrets(
+            telegramBotToken: "123:test",
+            telegramChatId: "42",
+            discordBotToken: "bot",
+            discordChannelId: "123"
+        )
+        let userOff = NotifIdlePoster.requests(secrets: secrets, reason: .user, willSleep: true)
+        try assertDiscordChannelMessage(userOff)
+        XCTAssertEqual(userOff.count, 1)
+        XCTAssertEqual(
+            try discordContent(userOff),
+            "Agrypnos: Keep the watch is off. Asking the Mac to sleep."
+        )
+
+        let closed = RuntimeFixture()
+        closed.notifSecrets = secrets
+        armConfirmedClosed(closed)
+        closed.runtime.engine.preferences.notifEnabled = true
+        XCTAssertNotNil(closed.runtime.setEngaged(false))
+        await closed.waitForPost()
+        XCTAssertEqual(
+            closed.discordBodies,
+            ["Agrypnos: Keep the watch is off. Asking the Mac to sleep."]
+        )
+        XCTAssertEqual(closed.sleepRequests, 0)
+        closed.completePost()
+        await closed.waitForCompletion()
+        XCTAssertEqual(closed.sleepRequests, 1)
+
+        let open = RuntimeFixture()
+        open.notifSecrets = secrets
+        open.lidClosed = false
+        _ = arm(open)
+        open.runtime.engine.preferences.notifEnabled = true
+        XCTAssertNotNil(open.runtime.setEngaged(false))
+        await open.waitForCompletion()
+        XCTAssertTrue(open.discordBodies.isEmpty)
+        XCTAssertEqual(open.sleepRequests, 0)
+        XCTAssertNil(open.postContinuation)
+    }
+
+    func armConfirmedClosed(_ fixture: RuntimeFixture) {
+        fixture.lidClosed = true
+        fixture.runtime.engine.preferences.notifEnabled = true
+        fixture.runtime.engine.preferences.duration = .indefinite
+        let start = Date()
+        _ = fixture.runtime.engine.userSetEngaged(true, now: start, lidClosed: false)
+        _ = fixture.runtime.engine.observeLid(closed: true, now: start)
+        _ = fixture.runtime.engine.observeLid(
+            closed: true,
+            now: start.addingTimeInterval(LidCloseConfirm.pulseInterval)
+        )
+        XCTAssertTrue(fixture.runtime.engine.lidCloseConfirmed)
+        fixture.kernelHeld = true
+    }
+
+    func assertDiscordChannelMessage(_ requests: [NotifOutboundRequest]) throws {
+        let discord = try XCTUnwrap(requests.first { $0.url.path.contains("/channels/") })
+        XCTAssertEqual(discord.url.path, "/api/v10/channels/123/messages")
+        XCTAssertFalse(discord.url.path.contains("/api/webhooks/"))
+        XCTAssertFalse(discord.url.path.contains("webhooks"))
+    }
+
+    func discordContent(_ requests: [NotifOutboundRequest]) throws -> String {
+        let discord = try XCTUnwrap(requests.first { $0.url.path.contains("/channels/") })
+        let body = try XCTUnwrap(JSONSerialization.jsonObject(with: discord.body) as? [String: Any])
+        return try XCTUnwrap(body["content"] as? String)
+    }
+
+    func telegramText(_ requests: [NotifOutboundRequest]) throws -> String {
+        let telegram = try XCTUnwrap(requests.first { $0.url.path.contains("/bot") })
+        let body = try XCTUnwrap(JSONSerialization.jsonObject(with: telegram.body) as? [String: Any])
+        return try XCTUnwrap(body["text"] as? String)
     }
 }

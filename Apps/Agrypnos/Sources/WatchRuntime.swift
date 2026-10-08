@@ -17,7 +17,7 @@ final class WatchRuntime {
     let readKernel: () -> SleepDisabledState
     let setKernel: (Bool) -> ToggleResult
     let runCommand: (String, [String]) -> (exit: Int32, out: String, err: String)
-    let postIdle: (Bool, DisengageReason) async -> Void
+    let postIdle: (Bool, DisengageReason?, Bool) async -> Void
     let notify: (String) -> Void
     let postQuestionNotice: @MainActor (String) async -> Void
     let readNotifSecrets: () -> NotifSecrets
@@ -97,8 +97,8 @@ final class WatchRuntime {
         runCommand: @escaping (String, [String]) -> (exit: Int32, out: String, err: String) = {
             ProcessRunner.run($0, $1)
         },
-        postIdle: @escaping (Bool, DisengageReason) async -> Void = {
-            await NotifIdlePoster.postIfNeeded(enabled: $0, reason: $1, willSleep: false)
+        postIdle: @escaping (Bool, DisengageReason?, Bool) async -> Void = {
+            await NotifIdlePoster.postIfNeeded(enabled: $0, reason: $1, willSleep: $2)
         },
         notify: @escaping (String) -> Void = UserNotify.post,
         postQuestionNotice: @escaping @MainActor (String) async -> Void = { await QuestionNoticeSender.send($0) },

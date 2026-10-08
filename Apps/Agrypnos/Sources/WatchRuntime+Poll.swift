@@ -192,17 +192,7 @@ extension WatchRuntime {
         if commands.contains(where: Self.isOutboundPost) {
             WatchDiagnostics.event("idle POST decision enabled=\(engine.preferences.notifEnabled)")
             let token = idleOutbound.beginPost()
-            let enabled = engine.preferences.notifEnabled
-            let reason: DisengageReason = commands.contains(.postTimerExpiredNotif) ? .timerExpired : .agentsSettled
-            idlePostTask?.cancel()
-            idlePostTask = Task { @MainActor in
-                await self.postIdle(enabled, reason)
-                guard self.idleOutbound.completePost(token: token) else { return }
-                self.idlePostTask = nil
-                WatchDiagnostics.event("idle POST attempt complete; releasing hold")
-                self.finishTickCommands(commands)
-                self.delegate?.watchRuntimeDidChange(self)
-            }
+            finishTickCommands(commands, postToken: token)
             delegate?.watchRuntimeDidChange(self)
             return
         }
@@ -210,12 +200,15 @@ extension WatchRuntime {
         delegate?.watchRuntimeDidChange(self)
     }
 
-    func finishTickCommands(_ commands: [WatchCommand]) {
+    func finishTickCommands(_ commands: [WatchCommand], postToken: UInt64? = nil) {
         var applyCommands = commands.filter { !Self.isOutboundPost($0) }
         var released = false
+        var disengageReason: DisengageReason?
         for command in commands {
             if case .disengage(let reason) = command {
+                disengageReason = reason
                 if !disarmKernel() {
+                    idleOutbound.cancelInFlight()
                     let rollback = engine.rollbackDisarmFailure(now: Date())
                     // A failed clear left SleepDisabled held; do not turn a valid rollback into a failed reassertion.
                     let commands = readKernel() == .held ? rollback.filter { $0 != .assertSleepDisabled } : rollback
@@ -237,7 +230,9 @@ extension WatchRuntime {
                     store.save(engine.preferences)
                     clearQuestionWatch()
                     let context = key.map { "\n\($0.provider.displayName) · session \($0.sessionID.prefix(80))" } ?? ""
-                    let message = "Agrypnos: watch turned off because an agent question went unanswered for 10 minutes." + context
+                    var message = "Agrypnos: watch turned off because an agent question went unanswered for 10 minutes."
+                    if shouldSleep { message += " Asking the Mac to sleep." }
+                    message += context
                     let captured = questionSleepGeneration
                     questionSleepTask = Task { [weak self] in
                         guard let self else { return }
@@ -262,25 +257,82 @@ extension WatchRuntime {
                 }
                 clearQuestionWatch()
                 // Recheck after the blocking clear/read, preserving live confirmation during POST.
-                let rawClosed = readLid()
-                if engine.holdingForIdlePost, reason != .timerExpired {
-                    _ = engine.observeLid(closed: rawClosed == true, now: Date())
-                    if !engine.userOffLidCloseConfirmed(rawClosed: rawClosed == true) {
-                        applyCommands.removeAll { $0 == .requestSleep }
-                    }
-                } else if reason == .timerExpired ? rawClosed == false : rawClosed != true {
-                    applyCommands.removeAll { $0 == .requestSleep }
-                }
-                engine.completeIdlePostHold()
+                removeSleepIfLidOpen(&applyCommands, reason: reason)
                 released = true
                 if reason != .user { notify(AgrypnosCopy.notification(for: reason)) }
             }
         }
+        let willSleep = applyCommands.contains(.requestSleep)
+        let enabled = engine.preferences.notifEnabled
+        let needsPost = postToken != nil || shouldAwaitWatchEndPost(
+            enabled: enabled, reason: disengageReason, willSleep: willSleep
+        )
+        if needsPost {
+            idlePostTask?.cancel()
+            idlePostTask = Task { @MainActor in
+                await self.postIdle(enabled, disengageReason, willSleep)
+                guard !Task.isCancelled else { return }
+                if let postToken, !self.idleOutbound.completePost(token: postToken) { return }
+                WatchDiagnostics.event("idle POST attempt complete; releasing hold")
+                var liveCommands = applyCommands
+                self.removeSleepIfLidOpen(&liveCommands, reason: disengageReason)
+                self.engine.completeIdlePostHold()
+                self.applyPreparedDisengage(liveCommands, released: released)
+                self.idlePostTask = nil
+                self.delegate?.watchRuntimeDidChange(self)
+            }
+            return
+        }
+        if released {
+            engine.completeIdlePostHold()
+        }
+        applyPreparedDisengage(applyCommands, released: released)
+    }
+
+    func removeSleepIfLidOpen(_ applyCommands: inout [WatchCommand], reason: DisengageReason?) {
+        let rawClosed = readLid()
+        if reason == nil {
+            if !engine.userOffLidCloseConfirmed(rawClosed: rawClosed == true) {
+                applyCommands.removeAll { $0 == .requestSleep }
+            }
+            return
+        }
+        if engine.holdingForIdlePost, reason != .timerExpired {
+            _ = engine.observeLid(closed: rawClosed == true, now: Date())
+            if !engine.userOffLidCloseConfirmed(rawClosed: rawClosed == true) {
+                applyCommands.removeAll { $0 == .requestSleep }
+            }
+        } else if reason == .timerExpired ? rawClosed == false : rawClosed != true {
+            applyCommands.removeAll { $0 == .requestSleep }
+        }
+    }
+
+    func applyPreparedDisengage(_ applyCommands: [WatchCommand], released: Bool) {
         let result = apply(applyCommands)
         if released {
             finishDisengageHygiene(sleepResult: result)
             store.save(engine.preferences)
         }
+    }
+
+    func shouldAwaitWatchEndPost(enabled: Bool, reason: DisengageReason?, willSleep: Bool) -> Bool {
+        guard enabled else { return false }
+        let secrets = readNotifSecrets()
+        let channels = NotifIdlePostPolicy.destinations(
+            discordBotToken: secrets.discordBotToken,
+            discordChannelId: secrets.discordChannelId,
+            telegramBotToken: secrets.telegramBotToken,
+            telegramChatId: secrets.telegramChatId
+        )
+        if channels.contains(.discord),
+           DiscordBotOutbound.body(reason: reason, willSleep: willSleep) != nil
+        {
+            return true
+        }
+        if channels.contains(.telegram), reason == .timerExpired || reason == .agentsSettled {
+            return true
+        }
+        return false
     }
 
     func finishDisengageHygiene(sleepResult: HygieneApplyResult) {
@@ -305,7 +357,29 @@ extension WatchRuntime {
         _ = engine.observeLid(closed: readLid() == true, now: Date())
         let confirmed = engine.userOffLidCloseConfirmed(rawClosed: readLid() == true)
         if engine.holdingForIdlePost { engine.completeIdlePostHold() }
-        let commands = engine.userSetEngaged(false, now: Date(), lidClosed: confirmed)
+        let reason: DisengageReason?
+        let commands: [WatchCommand]
+        if engine.engaged {
+            commands = engine.userSetEngaged(false, now: Date(), lidClosed: confirmed)
+            reason = .user
+        } else {
+            commands = confirmed ? [.requestSleep] : []
+            reason = nil
+        }
+        let willSleep = commands.contains(.requestSleep)
+        let enabled = engine.preferences.notifEnabled
+        if shouldAwaitWatchEndPost(enabled: enabled, reason: reason, willSleep: willSleep) {
+            idlePostTask = Task { @MainActor in
+                await self.postIdle(enabled, reason, willSleep)
+                guard !Task.isCancelled else { return }
+                let result = self.apply(commands)
+                self.finishDisengageHygiene(sleepResult: result)
+                self.store.save(self.engine.preferences)
+                self.idlePostTask = nil
+                self.delegate?.watchRuntimeDidChange(self)
+            }
+            return HygieneApplyResult()
+        }
         let result = apply(commands)
         finishDisengageHygiene(sleepResult: result)
         return result

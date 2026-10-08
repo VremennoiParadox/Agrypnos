@@ -6,7 +6,10 @@ import AgrypnosCore
 final class RuntimeFixture {
     var lidClosed = true
     var lidUnknown = false
-    var postReasons: [DisengageReason] = []
+    var postReasons: [DisengageReason?] = []
+    var postWillSleep: [Bool] = []
+    var discordBodies: [String] = []
+    var notifSecrets = NotifSecrets()
     var kernelHeld = true
     var kernelWriteHook: ((Bool) -> Void)?
     var kernelUnknown = false
@@ -35,15 +38,20 @@ final class RuntimeFixture {
                 if args == ["displaysleepnow"] { self.panelSleepRequests += 1 }
                 return (0, "", "")
             },
-            postIdle: { [unowned self] _, reason in
+            postIdle: { [unowned self] _, reason, willSleep in
                 self.postReasons.append(reason)
+                self.postWillSleep.append(willSleep)
+                if let body = DiscordBotOutbound.body(reason: reason, willSleep: willSleep) {
+                    self.discordBodies.append(body)
+                }
                 await withCheckedContinuation { self.postContinuation = $0 }
             },
             notify: { [unowned self] in self.messages.append($0) },
             postQuestionNotice: { [unowned self] message in
                 self.questionNotices.append(message)
                 await withCheckedContinuation { self.questionNoticeContinuation = $0 }
-            }
+            },
+            readNotifSecrets: { [unowned self] in self.notifSecrets }
         )
         runtime.questionUptime = { [unowned self] in self.questionUptime }
         runtime.hygieneDevices = HygieneDevices(canSetBrightness: { true }, brightness: { nil },
@@ -100,6 +108,7 @@ final class RuntimeFixture {
     }
 
     func waitForCompletion() async {
+        await runtime.idlePostTask?.value
         await runtime.questionSleepTask?.value
         for _ in 0..<100 { await Task.yield() }
     }

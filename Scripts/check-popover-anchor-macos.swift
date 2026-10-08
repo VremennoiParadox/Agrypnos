@@ -46,7 +46,7 @@ struct PopoverAnchorCheck {
         let runtime = WatchRuntime(store: PreferencesStore(defaults: defaults),
             readLid: { false }, readKernel: { kernelHeld ? .held : .clear },
             setKernel: { kernelHeld = $0; return .ok },
-            runCommand: { _, _ in (0, "", "") }, postIdle: { _, _ in }, notify: { _ in })
+            runCommand: { _, _ in (0, "", "") }, postIdle: { _, _, _ in }, notify: { _ in })
         runtime.hygieneDevices = HygieneDevices(canSetBrightness: { false }, brightness: { nil },
             setBrightness: { _ in }, keyboard: { nil }, setKeyboard: { _ in }, wakeDisplay: {})
         runtime.engine.preferences.duration = .oneHour
