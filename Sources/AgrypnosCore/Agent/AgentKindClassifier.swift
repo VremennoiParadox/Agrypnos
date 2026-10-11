@@ -26,11 +26,26 @@ public enum AgentKindClassifier: Sendable {
 
     public static func cpuCountsTowardBusy(processName: String) -> Bool {
         switch classify(processName: processName) {
-        case .claudeCode, .codex:
+        case .claudeCode:
             return true
+        case .codex:
+            return !isCodexDesktop(processName.lowercased())
         case .cursor, .openCode, .none:
             return false
         }
+    }
+
+    /// Desktop UI CPU is not agent work; its fresh transcripts can still count.
+    static func isCodexDesktop(_ lowered: String) -> Bool {
+        let command = lowered.trimmingCharacters(in: .whitespaces)
+        if command.hasPrefix("codex (") || command.hasPrefix("codex helper") { return true }
+        let first = command.split(whereSeparator: \.isWhitespace).first ?? ""
+        guard first.contains(".app/"),
+              let executable = command.range(of: ".app/contents/macos/") else { return false }
+        let app = command[..<executable.lowerBound]
+        let name = command[executable.upperBound...]
+        return (app.hasSuffix("/codex") && name.hasPrefix("codex"))
+            || name.hasPrefix("codex (") || name.hasPrefix("codex helper")
     }
 
     static func isClaudeDesktop(_ lowered: String) -> Bool {
