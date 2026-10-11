@@ -4,7 +4,7 @@ Agrypnos is a native Swift macOS **menu-bar extra**. It keeps a Mac awake with t
 
 This file is the project bar. Follow it. If a request fights this file, stop and say so.
 
-## Model (non-negotiable)
+## Question relay release gates
 
 Question relay work on `codex/agent-question-relay`: before modifying or
 reviewing it, read [the OpenCode milestone](docs/superpowers/plans/2026-10-01-opencode-relay-milestone.md)
@@ -15,8 +15,6 @@ Claude Code forwarding is wired and stays BETA until a same-session Mac check.
 Codex waiting alerts are wired and stay BETA until a ChatGPT-app check. They do not answer the question.
 Cursor has no question forwarding and no waiting alert.
 Full four-provider release remains gated. Separate automated evidence from live user/bot/Mac proof.
-
-For any coding, architecture, tests, or review on this repo, use **Grok 4.6 Extra High, non-fast**. Do not switch to a fast variant to save time. Do not silently downgrade.
 
 ## Session start
 
