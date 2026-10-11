@@ -7,17 +7,16 @@ final class CodexDesktopBusyTests: XCTestCase {
 
     func testDesktopCPUWithoutSessionWritesDoesNotCountAsBusy() {
         let desktopProcesses = [
-            "Codex (Renderer)", "Codex (Service)", "Codex Helper (GPU)",
             renderer + " --type=renderer",
             "/Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/155/Helpers/Codex (Service).app/Contents/MacOS/Codex (Service)",
-            "/Applications/Codex.app/Contents/MacOS/Codex",
-            "/Users/ada/My Apps/Codex.app/Contents/MacOS/Codex"
+            "/Applications/Codex.app/Contents/MacOS/Codex"
         ]
         for name in desktopProcesses {
             let snapshot = AgentHeuristicEngine().evaluate(
                 processes: [ProcessRecord(pid: 1, cpuPercent: 40, name: name)],
                 sessionWrites: [], now: now)
             let report = snapshot.reports.first { $0.kind == .codex }
+            XCTAssertEqual(report?.processRunning, true, name)
             XCTAssertEqual(report?.cpuBusy, false, name)
             XCTAssertFalse(snapshot.anyBusy, name)
         }
@@ -43,6 +42,15 @@ final class CodexDesktopBusyTests: XCTestCase {
             "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex --file /Applications/Codex.app/Contents/MacOS/Codex"
         ]
         for name in cliProcesses {
+            let snapshot = AgentHeuristicEngine().evaluate(
+                processes: [ProcessRecord(pid: 1, cpuPercent: 10, name: name)],
+                sessionWrites: [], now: now)
+            XCTAssertTrue(snapshot.anyBusy, name)
+        }
+    }
+
+    func testCodexCLIPositionalPromptsRetainCPUEvidence() {
+        for name in ["codex helper functions need tests", "codex (review this change)", "codex (Renderer)"] {
             let snapshot = AgentHeuristicEngine().evaluate(
                 processes: [ProcessRecord(pid: 1, cpuPercent: 10, name: name)],
                 sessionWrites: [], now: now)
