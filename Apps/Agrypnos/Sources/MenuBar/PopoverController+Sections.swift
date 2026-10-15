@@ -110,6 +110,7 @@ extension PopoverController {
         PopoverForm.apply(lastWatchEndCard, slot: layout.lastWatchEnd, pad: pad, width: width)
         PopoverForm.apply(panelPowerCard, slot: layout.panelPower, pad: pad, width: width)
         PopoverForm.apply(hygieneCard, slot: layout.hygiene, pad: pad, width: width)
+        floorChrome?.isHidden = !(runtime?.preferences.panelPowerMode.writesBrightnessFloor ?? true)
         PopoverForm.apply(batteryCard, slot: layout.battery, pad: pad, width: width)
         PopoverForm.apply(agentIncludeCard, slot: layout.agentInclude, pad: pad, width: width)
         PopoverForm.apply(settleCard, slot: layout.settle, pad: pad, width: width)

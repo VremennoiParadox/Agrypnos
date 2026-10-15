@@ -56,6 +56,21 @@ final class PanelPowerPopoverChromeTests: XCTestCase {
         XCTAssertEqual(sleep.hygiene?.y, sleep.panelPower!.maxY + PopoverStackLayout.cardGap)
         XCTAssertEqual(sleep.battery?.y, sleep.hygiene!.maxY + PopoverStackLayout.cardGap)
         XCTAssertEqual(sleep.thermal?.y, sleep.battery!.maxY + PopoverStackLayout.cardGap)
+        XCTAssertGreaterThan(dim.hygiene!.height, sleep.hygiene!.height)
+        XCTAssertEqual(
+            sleep.hygiene!.height,
+            PopoverStackLayout.hygieneKeyboardY
+                + PopoverStackLayout.switchRowHeight
+                + PopoverStackLayout.inset
+        )
+        XCTAssertEqual(
+            dim.hygiene!.height,
+            PopoverStackLayout.hygieneKeyboardY
+                + 2 * PopoverStackLayout.switchRowHeight
+                + PopoverCopyLayout.helpHeightPoints
+                + PopoverStackLayout.sliderBlockHeight
+                + PopoverStackLayout.inset
+        )
         XCTAssertEqual(
             sleep.panelPower!.height,
             PopoverStackLayout.inset

@@ -162,12 +162,13 @@ public struct PopoverStackLayout: Equatable, Sendable {
         showQuestionNotifications: Bool = false
     ) -> PopoverStackLayout {
         let watchHeight = inset + 28 + PopoverCopyLayout.captionHeightPoints + inset
-        let hygieneHeight =
-            hygieneKeyboardY
-            + 2 * switchRowHeight
-            + PopoverCopyLayout.helpHeightPoints
-            + sliderBlockHeight
-            + inset
+        let hygieneHeight = panelPowerMode.writesBrightnessFloor
+            ? hygieneKeyboardY
+                + 2 * switchRowHeight
+                + PopoverCopyLayout.helpHeightPoints
+                + sliderBlockHeight
+                + inset
+            : hygieneKeyboardY + switchRowHeight + inset
         let includeHeight =
             inset
             + titleRowHeight

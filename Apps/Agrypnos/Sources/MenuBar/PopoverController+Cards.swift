@@ -31,9 +31,18 @@ extension PopoverController {
             target: self,
             action: #selector(keyboardToggled(_:))
         )
+        let floorY = CGFloat(PopoverStackLayout.hygieneFloorY)
+        let chrome = FlippedView(frame: NSRect(
+            x: 0,
+            y: floorY,
+            width: card.bounds.width,
+            height: card.bounds.height - floorY
+        ))
+        card.addSubview(chrome)
+        floorChrome = chrome
         floorSwitch = PopoverForm.switchRow(
-            in: card,
-            y: CGFloat(PopoverStackLayout.hygieneFloorY),
+            in: chrome,
+            y: 0,
             title: AgrypnosCopy.brightnessFloor,
             contentW: contentW,
             ci: ci,
@@ -45,8 +54,8 @@ extension PopoverController {
             trailing: PopoverForm.percentValueWidth + 8
         )
         floorPercentValue = PopoverForm.valueLabel(
-            in: card,
-            y: CGFloat(PopoverStackLayout.hygieneFloorY),
+            in: chrome,
+            y: 0,
             contentW: contentW,
             ci: ci,
             text: "\(UserPreferences.default.brightnessFloorPercent)%",
@@ -55,16 +64,16 @@ extension PopoverController {
         )
         _ = PopoverForm.help(
             AgrypnosCopy.brightnessFloorHelp,
-            in: card,
-            y: CGFloat(PopoverStackLayout.hygieneHelpY),
+            in: chrome,
+            y: CGFloat(PopoverStackLayout.hygieneHelpY) - floorY,
             x: ci,
             width: cw
         )
         let floorRange = UserPreferences.brightnessFloorPercentRange
         floorPercentSlider = PopoverForm.slider(
-            in: card,
-            sliderY: CGFloat(PopoverStackLayout.hygieneSliderY),
-            minMaxY: CGFloat(PopoverStackLayout.hygieneMinMaxY),
+            in: chrome,
+            sliderY: CGFloat(PopoverStackLayout.hygieneSliderY) - floorY,
+            minMaxY: CGFloat(PopoverStackLayout.hygieneMinMaxY) - floorY,
             ci: ci,
             cw: cw,
             contentW: contentW,

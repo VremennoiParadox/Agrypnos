@@ -30,6 +30,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var countdownLabel: NSTextField!
     var countdownTimer: Timer?
     var keyboardSwitch: NSSwitch!
+    var floorChrome: NSView!
     var floorSwitch: NSSwitch!
     var floorPercentSlider: NSSlider!
     var floorPercentValue: NSTextField!
