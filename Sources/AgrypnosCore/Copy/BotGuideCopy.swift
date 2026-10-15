@@ -74,20 +74,29 @@ public enum BotGuide {
 
     public static func sections(for tab: BotGuideTab) -> [BotGuideSection] {
         switch tab {
-        case .telegram: return [telegramSetup, telegramTurnOn, questionSetup(), commands(asleep: telegramAsleep), turnOff]
-        case .discord: return [discordBot, questionSetup(), commands(asleep: discordAsleep), turnOff]
-        case .openCode: return toolNote(
-            "OpenCode",
-            "Enable OpenCode forwarding in Question notifications. Agrypnos installs its plugin. Restart OpenCode once, then use your normal chats. The question is forwarded to your bot. Free text and approvals stay on the Mac."
-        )
-        case .claudeCode: return toolNote(
-            "Claude Code",
-            "Enable Claude Code forwarding in Question notifications. Agrypnos merges a PreToolUse AskUserQuestion hook into ~/.claude/settings.json and keeps your other hooks. Interactive sessions hold hooks until you trust the folder. The question is forwarded to your bot. This path is not Mac-proven yet."
-        )
-        case .codex: return toolNote(
-            "Codex",
-            "Enable Codex alerts in Question notifications. Agrypnos adds a hook to ~/.codex/hooks.json and keeps your other hooks. There is no codex hooks shell command, and the ChatGPT app has no documented trust screen. Until Codex runs the hook, no alert is sent. The alert says Codex is waiting on you, or waiting for an approval. It does not answer the question."
-        )
+        case .telegram: return [telegramSetup, telegramTurnOn, commands(asleep: telegramAsleep), turnOff]
+        case .discord: return [discordBot, commands(asleep: discordAsleep), turnOff]
+        case .openCode: return questionGuide("OpenCode", [
+            savedBot,
+            BotGuideStep("Enable OpenCode forwarding",
+                "Open Notif → Question notifications, then click Enable OpenCode forwarding. Agrypnos installs and registers its global terminal plugin. Restart OpenCode once to load forwarding, then use your normal chats. No port or project-directory setup is needed. Free text and approvals stay on the Mac.",
+                link: BotGuideLink(title: "OpenCode plugins", url: "https://opencode.ai/docs/plugins/")),
+            answerOnBot,
+            disableOpenCode,
+            watchAndExpiry,
+        ])
+        case .claudeCode: return questionGuide("Claude Code", [
+            savedBot,
+            BotGuideStep("Enable Claude Code forwarding",
+                "Open Notif → Question notifications, then click Enable Claude Code forwarding. Agrypnos merges a PreToolUse AskUserQuestion hook into ~/.claude/settings.json and keeps your other hooks, including UserPromptSubmit / Stop / StopFailure. Interactive sessions hold hooks until you trust the folder. Ask a structured choice in that same Claude Code session and answer on your bot. This path is not Mac-proven yet."),
+            answerOnBot,
+            watchAndExpiry,
+        ])
+        case .codex: return questionGuide("Codex", [
+            savedBot,
+            BotGuideStep("Enable Codex alerts",
+                "Open Notif → Question notifications, then click Enable Codex alerts. Agrypnos adds a hook to ~/.codex/hooks.json and keeps your other hooks. There is no codex hooks shell command, and the ChatGPT app has no documented trust screen. Until Codex runs the hook, no alert is sent. The alert says Codex is waiting on you, or waiting for an approval. It does not answer the question."),
+        ])
         case .cursor: return toolNote(
             "Cursor",
             "Cursor cannot forward a question or send a waiting alert. The question stays in Cursor. There is no setup."
@@ -101,32 +110,32 @@ public enum BotGuide {
         ])]
     }
 
+    static func questionGuide(_ title: String, _ steps: [BotGuideStep]) -> [BotGuideSection] {
+        [BotGuideSection(title: title, note: nil, numbered: true, steps: steps)]
+    }
+
+    static let savedBot = BotGuideStep(
+        "Use the bot you already saved",
+        "Turn on Telegram or Discord inbound in Notif and save the bot token and chat or channel id. Question forwarding uses that bot. The switch stays off until one of those is saved."
+    )
+
+    static let answerOnBot = BotGuideStep(
+        "Answer a new question",
+        "Check for a connected terminal count. Start a new structured choice question in that same chat. Select every answer on your bot, review, then Send answers. Answer on Mac leaves it local without rejecting the question."
+    )
+
+    static let disableOpenCode = BotGuideStep(
+        "Disable or remove",
+        "Disable OpenCode forwarding keeps the plugin installed but inactive. Remove OpenCode integration removes only unchanged Agrypnos-owned files and its registration."
+    )
+
+    static let watchAndExpiry = BotGuideStep(
+        "Watch and expiry",
+        "Forwarding never arms Keep the watch. While already armed, a question holds it for up to 10 minutes; other busy or unknown agent activity delays auto-off. Manual off and safety still win. App restart and sleep invalidate phone controls and leave existing pending questions local; new questions can forward when connected again. Screen lock alone does not cancel forwarding."
+    )
+
     static let telegramAsleep = "If the bot isn’t replying, the Mac is likely asleep / Agrypnos isn’t polling."
     static let discordAsleep = "If the bot isn’t replying, the Mac is likely asleep / Agrypnos isn’t receiving updates."
-
-    static func questionSetup() -> BotGuideSection {
-        BotGuideSection(title: "Question notifications (BETA)",
-            note: "OpenCode and Claude Code forwarding, the Codex waiting alert, and the Cursor note live in Notif under Telegram → Question notifications. Setup instructions is the first Notif card. Info buttons on those cards open these notes.",
-            numbered: true, steps: [
-                BotGuideStep("Use the bot you already saved",
-                    "Turn on Telegram or Discord inbound and save the bot token and chat or channel id on the cards above. Question forwarding uses that bot. The switch stays off until one of those is saved."),
-                BotGuideStep("Enable OpenCode forwarding",
-                    "Open Notif → Question notifications, then click Enable OpenCode forwarding. Agrypnos installs and registers its global terminal plugin. Restart OpenCode once to load forwarding, then use your normal chats. No port or project-directory setup is needed.",
-                    link: BotGuideLink(title: "OpenCode plugins", url: "https://opencode.ai/docs/plugins/")),
-                BotGuideStep("Enable Claude Code forwarding",
-                    "Open Notif → Question notifications, then click Enable Claude Code forwarding. Agrypnos merges a PreToolUse AskUserQuestion hook into ~/.claude/settings.json and keeps your other hooks, including UserPromptSubmit / Stop / StopFailure. Interactive sessions hold hooks until you trust the folder. Ask a structured choice in that same Claude Code session and answer on your bot."),
-                BotGuideStep("Enable Codex alerts",
-                    "Open Notif → Question notifications, then click Enable Codex alerts. Agrypnos adds a hook to ~/.codex/hooks.json and keeps your other hooks. There is no codex hooks shell command. Until Codex runs the hook, no alert is sent. The alert says Codex is waiting on you, or waiting for an approval. It does not answer the question."),
-                BotGuideStep("Cursor",
-                    "Cursor cannot forward a question or send a waiting alert. The question stays in Cursor. There is no setup."),
-                BotGuideStep("Answer a new question",
-                    "Check for a connected terminal count. Start a new structured choice question in that same chat. Select every answer on your bot, review, then Send answers. Answer on Mac leaves it local without rejecting the question."),
-                BotGuideStep("Disable or remove",
-                    "Disable OpenCode forwarding keeps the plugin installed but inactive. Remove OpenCode integration removes only unchanged Agrypnos-owned files and its registration."),
-                BotGuideStep("Watch and expiry",
-                    "Forwarding never arms Keep the watch. While already armed, a question holds it for up to 10 minutes; other busy or unknown agent activity delays auto-off. Manual off and safety still win. App restart and sleep invalidate phone controls and leave existing pending questions local; new questions can forward when connected again. Screen lock alone does not cancel forwarding."),
-            ])
-    }
 
     static let idleAfterWait =
         "Arm Keep the watch with How long set to Agents and run an agent so Agrypnos sees a local busy signal. When those signals stay idle through the wait (the idle wait in Agents), expect one message. Then Keep the watch turns off."

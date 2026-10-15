@@ -184,6 +184,56 @@ final class BotGuideCopyTests: XCTestCase {
         XCTAssertFalse(text.contains("Notif → Forward agent questions"))
     }
 
+    func testQuestionStepsLiveOnQuestionSetupNotBotSetup() {
+        for tab in [BotGuideTab.telegram, .discord] {
+            let text = BotGuide.text(for: tab)
+            XCTAssertFalse(text.contains("Question notifications"), "\(tab) still has question setup")
+            XCTAssertFalse(text.contains("Enable OpenCode forwarding"))
+            XCTAssertFalse(text.contains("Enable Claude Code forwarding"))
+            XCTAssertFalse(text.contains("Enable Codex alerts"))
+            XCTAssertFalse(text.contains("Cursor cannot forward"))
+        }
+
+        let openCode = BotGuide.text(for: .openCode)
+        XCTAssertTrue(openCode.contains("Use the bot you already saved"))
+        XCTAssertTrue(openCode.contains("Enable OpenCode forwarding"))
+        XCTAssertTrue(openCode.contains("Restart OpenCode once"))
+        XCTAssertTrue(openCode.contains("Free text and approvals stay on the Mac"))
+        XCTAssertTrue(openCode.contains("Send answers"))
+        XCTAssertTrue(openCode.contains("Remove OpenCode integration"))
+        XCTAssertTrue(openCode.contains("10 minutes"))
+        XCTAssertTrue(BotGuide.sections(for: .openCode).flatMap(\.steps).compactMap(\.link).contains(
+            BotGuideLink(title: "OpenCode plugins", url: "https://opencode.ai/docs/plugins/")
+        ))
+        XCTAssertFalse(openCode.contains("Enable Claude Code forwarding"))
+        XCTAssertFalse(openCode.contains("Enable Codex alerts"))
+        XCTAssertFalse(openCode.contains("cards above"))
+
+        let claude = BotGuide.text(for: .claudeCode)
+        XCTAssertTrue(claude.contains("Use the bot you already saved"))
+        XCTAssertTrue(claude.contains("Enable Claude Code forwarding"))
+        XCTAssertTrue(claude.contains("not Mac-proven yet"))
+        XCTAssertTrue(claude.contains("Send answers"))
+        XCTAssertTrue(claude.contains("10 minutes"))
+        XCTAssertFalse(claude.contains("Enable OpenCode forwarding"))
+        XCTAssertFalse(claude.contains("cards above"))
+
+        let codex = BotGuide.text(for: .codex)
+        XCTAssertTrue(codex.contains("Use the bot you already saved"))
+        XCTAssertTrue(codex.contains("Enable Codex alerts"))
+        XCTAssertTrue(codex.contains("does not answer"))
+        XCTAssertTrue(codex.contains("no codex hooks shell command"))
+        XCTAssertTrue(codex.contains("ChatGPT app has no documented trust screen"))
+        XCTAssertFalse(codex.contains("Send answers"))
+        XCTAssertFalse(codex.contains("cards above"))
+
+        let cursor = BotGuide.text(for: .cursor)
+        XCTAssertTrue(cursor.contains("Cursor cannot forward a question"))
+        XCTAssertTrue(cursor.contains("There is no setup."))
+        XCTAssertFalse(cursor.contains("Enable OpenCode forwarding"))
+        XCTAssertFalse(cursor.contains("Send answers"))
+    }
+
     func testToolTabsAreInstructionsOnly() {
         for tab in [BotGuideTab.openCode, .claudeCode, .codex, .cursor] {
             let text = BotGuide.text(for: tab)

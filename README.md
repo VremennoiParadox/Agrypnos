@@ -251,8 +251,8 @@ When you first turn inbound on, or quit and relaunch, Agrypnos quietly skips any
 ## Question notifications (BETA)
 
 Question notifications live in **Notif**, under Telegram. The row is
-marked **BETA**. **Setup instructions…** is the first Notif card. The info
-button on each tool card opens that same guide.
+marked **BETA**. **Setup instructions…** opens Bot setup for Telegram and Discord.
+The info button on a tool card opens Question setup for that tool.
 
 OpenCode and Claude Code forward the question after their Enable button.
 OpenCode needs one restart. Claude needs the folder trusted. Claude forwarding
@@ -337,7 +337,7 @@ secrets file. The plugin receives only a separate local bridge token, stored
 in a private mode-0700 Application Support directory. The bridge uses a short
 private Unix socket, with no TCP listening port. Question content stays in
 memory and on your opted-in messaging service, without local history or content
-logs. **Setup instructions…** in Notif includes the same setup steps.
+logs. The OpenCode info button opens Question setup with these steps.
 
 Automated tests have answered a real native question through the production
 plugin and Swift socket source, continuing the original isolated conversation
