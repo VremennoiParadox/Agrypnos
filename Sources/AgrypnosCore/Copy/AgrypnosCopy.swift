@@ -197,7 +197,7 @@ public enum AgrypnosCopy: Sendable {
     public static let notifTelegramTokenPlaceholder = "paste bot token"
     public static let notifTelegramChatPlaceholder = "from getUpdates"
     public static let notifTelegramHelp =
-        "Message your Telegram bot. Needs token; chat id from getUpdates. Agrypnos does not run a shared bot."
+        "Message your Telegram bot. Needs token; chat id from getUpdates. Turn this on for commands: /arm, /disarm, /status, /help. Agrypnos does not run a shared bot."
     public static let notifTelegramInbound = "Telegram inbound"
     public static let notifTelegramInboundHelp =
         "Commands on your Telegram bot: /arm, /disarm, /status, /help. Details in Setup instructions."

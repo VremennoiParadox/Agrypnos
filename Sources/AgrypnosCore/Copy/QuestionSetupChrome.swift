@@ -6,15 +6,20 @@ public enum QuestionSetupChrome {
     public static let codexHelp = "Adds a hook that tells your bot when Codex is waiting on you or waiting for an approval. It does not answer the question. There is no shell command to trust it. Not proven in the ChatGPT app yet."
     public static let codexTrustStatus = "Added the hook. Codex has to run it before an alert is sent. That step is not proven in the ChatGPT app yet."
     public static let title = "Forward agent questions"
-    public static let help = "Structured OpenCode and Claude Code choices on your bot. Codex sends a waiting alert and does not answer. Cursor stays in Cursor. Free text and approvals stay on Mac."
+    public static let needsBot = "Turn on Telegram or Discord inbound and save the bot token and chat or channel id first."
+    public static let help = "Structured OpenCode and Claude Code choices on your bot. Codex sends a waiting alert and does not answer. Cursor stays in Cursor. Free text and approvals stay on Mac. " + needsBot
     public static let policy = "While armed, questions hold the watch for 10 minutes. Busy or unknown activity delays auto-off. Forwarding never arms it."
     public static let helpY = 40
-    public static let telegramUserY = 112
-    public static let discordUserY = 140
-    public static let policyY = 176
-    public static let statusY = 248
+    public static var helpMaxLines: Int {
+        max(CopyWrap.lineCount(help, columns: PopoverCopyLayout.innerColumns), 1)
+    }
+    public static var policyMaxLines: Int {
+        max(CopyWrap.lineCount(policy, columns: PopoverCopyLayout.innerColumns), 1)
+    }
+    public static var policyY: Int { helpY + helpMaxLines * PopoverCopyLayout.lineHeightPoints + 8 }
     public static let statusHeight = 56
-    public static let relayCardHeight = 316
+    public static var statusY: Int { policyY + policyMaxLines * PopoverCopyLayout.lineHeightPoints + 8 }
+    public static var relayCardHeight: Int { statusY + statusHeight + 12 }
     public static let pluginCardHeight = 156
     public static let claudeEnableTitle = "Enable Claude Code forwarding"
     public static let claudeHelp = "Adds a PreToolUse AskUserQuestion hook to your Claude settings. Interactive sessions hold hooks until you trust the folder."

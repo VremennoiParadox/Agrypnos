@@ -112,7 +112,7 @@ final class QuestionRelayCoordinatorTests: XCTestCase {
 
     func testNativeCancellationEditsBothMessagesToUnavailable() async {
         let fixture = QuestionRelayFixture()
-        fixture.settings.discord = DiscordQuestionDestination(token: "discord", channelID: "10", userID: "43")
+        fixture.settings.discord = DiscordQuestionDestination(token: "discord", channelID: "10")
         XCTAssertTrue(fixture.receive())
         await fixture.waitForEdits(2)
         fixture.relay.cancel(key: fixture.batch.key)
@@ -150,16 +150,22 @@ final class QuestionRelayCoordinatorTests: XCTestCase {
         XCTAssertFalse(fixture.events.contains { if case .expired = $0 { return true }; return false })
     }
 
-    func testUnauthorizedAndWakeMissClicksCannotSelectOrSubmit() async throws {
+    func testSameChatClickSelectsAndWakeMissOrOtherChatDoesNot() async throws {
         let fixture = QuestionRelayFixture()
         XCTAssertTrue(fixture.receive())
         await fixture.waitForEdits(1)
         let click = try fixture.callback("1")
         let outsider = TelegramQuestionCallback(id: "outsider", senderID: "99", reference: click.reference, actionToken: click.actionToken)
         fixture.relay.handleTelegram(outsider, drain: .live)
+        await fixture.waitForEdits(2)
+        let otherChat = TelegramQuestionCallback(
+            id: "other-chat", senderID: "42",
+            reference: QuestionMessageRef(destination: .telegram, destinationID: "8", messageID: click.reference.messageID),
+            actionToken: click.actionToken)
+        fixture.relay.handleTelegram(otherChat, drain: .live)
         fixture.relay.handleTelegram(click, drain: .wakeMiss)
         await fixture.yieldTasks()
-        XCTAssertEqual(fixture.editCount, 1)
+        XCTAssertEqual(fixture.editCount, 2)
         XCTAssertTrue(fixture.submissions.isEmpty)
     }
 
@@ -223,7 +229,7 @@ final class QuestionRelayCoordinatorTests: XCTestCase {
 
     func testFirstCompleteAnswerWinsAcrossTelegramAndDiscord() async throws {
         let fixture = QuestionRelayFixture()
-        fixture.settings.discord = DiscordQuestionDestination(token: "discord", channelID: "10", userID: "43")
+        fixture.settings.discord = DiscordQuestionDestination(token: "discord", channelID: "10")
         XCTAssertTrue(fixture.receive())
         await fixture.waitForEdits(2)
         XCTAssertNotNil(fixture.discordCallback("1"))
@@ -311,7 +317,7 @@ final class QuestionRelayCoordinatorTests: XCTestCase {
 @MainActor
 private final class QuestionRelayFixture {
     var now: TimeInterval = 0
-    var settings = QuestionRelaySettings(enabled: true, includedKinds: [.cursor], telegram: TelegramQuestionDestination(token: "fixture", chatID: "9", userID: "42"))
+    var settings = QuestionRelaySettings(enabled: true, includedKinds: [.cursor], telegram: TelegramQuestionDestination(token: "fixture", chatID: "9"))
     var requests: [NotifOutboundRequest] = []
     var submissions: [QuestionAnswer] = []
     var delivery: CheckedContinuation<QuestionDelivery, Never>?
@@ -358,7 +364,7 @@ private final class QuestionRelayFixture {
     func use(_ destination: QuestionDestination) {
         if destination == .discord {
             settings.telegram = nil
-            settings.discord = DiscordQuestionDestination(token: "discord", channelID: "10", userID: "43")
+            settings.discord = DiscordQuestionDestination(token: "discord", channelID: "10")
         }
     }
     func click(_ label: String, on destination: QuestionDestination) throws {

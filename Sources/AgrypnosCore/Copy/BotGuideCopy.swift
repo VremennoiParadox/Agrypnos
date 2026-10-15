@@ -74,8 +74,8 @@ public enum BotGuide {
 
     public static func sections(for tab: BotGuideTab) -> [BotGuideSection] {
         switch tab {
-        case .telegram: return [telegramSetup, telegramTurnOn, questionSetup(telegram: true), commands(asleep: telegramAsleep), turnOff]
-        case .discord: return [discordBot, questionSetup(telegram: false), commands(asleep: discordAsleep), turnOff]
+        case .telegram: return [telegramSetup, telegramTurnOn, questionSetup(), commands(asleep: telegramAsleep), turnOff]
+        case .discord: return [discordBot, questionSetup(), commands(asleep: discordAsleep), turnOff]
         case .openCode: return toolNote(
             "OpenCode",
             "Enable OpenCode forwarding in Question notifications. Agrypnos installs its plugin. Restart OpenCode once, then use your normal chats. The question is forwarded to your bot. Free text and approvals stay on the Mac."
@@ -104,13 +104,12 @@ public enum BotGuide {
     static let telegramAsleep = "If the bot isn’t replying, the Mac is likely asleep / Agrypnos isn’t polling."
     static let discordAsleep = "If the bot isn’t replying, the Mac is likely asleep / Agrypnos isn’t receiving updates."
 
-    static func questionSetup(telegram: Bool) -> BotGuideSection {
+    static func questionSetup() -> BotGuideSection {
         BotGuideSection(title: "Question notifications (BETA)",
-            note: "OpenCode and Claude Code forwarding, the Codex waiting alert, and the Cursor note live in Notif under Telegram inbound → Question notifications. Setup instructions is the first Notif card. Info buttons on those cards open these notes.",
+            note: "OpenCode and Claude Code forwarding, the Codex waiting alert, and the Cursor note live in Notif under Telegram → Question notifications. Setup instructions is the first Notif card. Info buttons on those cards open these notes.",
             numbered: true, steps: [
-                BotGuideStep("Save your answering user ID", telegram
-                    ? "With Telegram inbound off, send your bot a message and use getUpdates as above. Copy message.from.id (your user, not the bot or chat). Paste it into Question notifications → Telegram. Then turn Telegram inbound on. Only that user can answer."
-                    : "Enable Discord Developer Mode, right-click your own profile → Copy User ID. Paste it into Question notifications → Discord. Turn Discord inbound on. The existing bot token and channel are used."),
+                BotGuideStep("Use the bot you already saved",
+                    "Turn on Telegram or Discord inbound and save the bot token and chat or channel id on the cards above. Question forwarding uses that bot. The switch stays off until one of those is saved."),
                 BotGuideStep("Enable OpenCode forwarding",
                     "Open Notif → Question notifications, then click Enable OpenCode forwarding. Agrypnos installs and registers its global terminal plugin. Restart OpenCode once to load forwarding, then use your normal chats. No port or project-directory setup is needed.",
                     link: BotGuideLink(title: "OpenCode plugins", url: "https://opencode.ai/docs/plugins/")),
@@ -174,7 +173,7 @@ public enum BotGuide {
             ),
             BotGuideStep(
                 "Send commands from Telegram",
-                "Switch on Telegram inbound. It is separate from the POST switch. Only the chat id you saved can send commands."
+                "Switch on the Telegram card. Commands turn on with it. It is separate from the POST switch. Only the chat id you saved can send commands."
             ),
             BotGuideStep("Test it", idleAfterWait),
         ]

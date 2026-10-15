@@ -2,7 +2,7 @@ import XCTest
 @testable import AgrypnosCore
 
 final class TelegramInboundPopoverChromeTests: XCTestCase {
-    func testNotifPlacesInboundAfterTelegramSecretsAndBeforeSetup() {
+    func testNotifPlacesTheSwitchOnTheTelegramCard() {
         XCTAssertEqual(
             PopoverSection.notif.cards,
             [
@@ -10,12 +10,12 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
                 .notifEnable,
                 .notifDiscord,
                 .notifTelegram,
-                .notifTelegramInbound,
                 .questionNotifications,
                 .notifClear,
             ]
         )
-        XCTAssertEqual(PopoverSection.notif.cards.count, 7)
+        XCTAssertEqual(PopoverSection.notif.cards.count, 6)
+        XCTAssertFalse(PopoverSection.notif.cards.contains(.notifTelegramInbound))
         XCTAssertFalse(PopoverSection.watch.cards.contains(.notifTelegramInbound))
         XCTAssertFalse(PopoverSection.power.cards.contains(.notifTelegramInbound))
         XCTAssertFalse(PopoverSection.agents.cards.contains(.notifTelegramInbound))
@@ -81,24 +81,21 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
 
     func testInboundChromeIsTogglePlusHelpNotARemotePanel() {
         let layout = PopoverStackLayout.make(section: .notif)
-        XCTAssertNotNil(layout.notifTelegramInbound)
-        XCTAssertEqual(
-            layout.notifTelegramInbound?.y,
-            layout.notifTelegram!.maxY + PopoverStackLayout.cardGap
-        )
+        XCTAssertNil(layout.notifTelegramInbound)
         XCTAssertEqual(layout.notifSetup?.y, PopoverStackLayout.firstCardY)
         XCTAssertEqual(layout.notifEnable?.y, layout.notifSetup!.maxY + PopoverStackLayout.cardGap)
         XCTAssertEqual(
-            layout.notifTelegramInbound!.height,
+            layout.notifTelegram!.height,
             PopoverStackLayout.inset
                 + PopoverStackLayout.titleRowHeight
-                + PopoverCopyLayout.notifTelegramInboundHelpHeightPoints
+                + PopoverCopyLayout.notifTelegramHelpHeightPoints
+                + 2 * PopoverStackLayout.secretFieldRowHeight
                 + PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset
         )
         XCTAssertEqual(
             PopoverStackLayout.notifTelegramInboundSwitchY,
-            PopoverStackLayout.prefHelpY + PopoverCopyLayout.notifTelegramInboundHelpHeightPoints
+            PopoverStackLayout.notifTelegramChatY + PopoverStackLayout.secretFieldRowHeight
         )
         XCTAssertEqual(
             layout.stackedCards.map(\.y),
@@ -107,12 +104,11 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
                 layout.notifEnable,
                 layout.notifDiscord,
                 layout.notifTelegram,
-                layout.notifTelegramInbound,
                 layout.questionNotifications,
                 layout.notifClear
             )
         )
-        XCTAssertEqual(layout.stackedCards.count, 7)
+        XCTAssertEqual(layout.stackedCards.count, 6)
         XCTAssertNil(layout.watch)
         XCTAssertEqual(layout.contentHeight, layout.notifClear!.maxY + PopoverStackLayout.pad)
         XCTAssertEqual(
@@ -121,10 +117,12 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
         )
         XCTAssertEqual(layout.needsScroll, layout.contentHeight > layout.popoverHeight)
         XCTAssertGreaterThan(
-            layout.notifTelegramInbound!.height,
+            layout.notifTelegram!.height,
             PopoverStackLayout.switchRowHeight
         )
         XCTAssertEqual(layout.notifSetup!.height, PopoverStackLayout.loginCardHeight)
+        XCTAssertTrue(AgrypnosCopy.notifTelegramHelp.contains("/arm"))
+        XCTAssertTrue(AgrypnosCopy.notifTelegramHelp.contains("Turn this on for commands"))
     }
 
     func testInboundCopyBansJobFinishedPhoneNotifyAndRichStatus() {
@@ -171,7 +169,8 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
     func testSetupGuideNamesInboundOnOffWithoutClaimingMacProve() {
         let help = BotGuide.text(for: .telegram)
         let lower = help.lowercased()
-        XCTAssertTrue(lower.contains("telegram inbound"))
+        XCTAssertTrue(lower.contains("telegram card"))
+        XCTAssertTrue(lower.contains("commands turn on"))
         XCTAssertTrue(help.contains("/arm") && help.contains("/disarm") && help.contains("/status") && help.contains("/help"))
         XCTAssertTrue(lower.contains("live battery"))
         XCTAssertTrue(lower.contains("when known"))

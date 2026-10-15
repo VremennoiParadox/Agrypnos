@@ -151,7 +151,7 @@ final class QuestionTimeoutRuntimeTests: XCTestCase {
         var localReturns = 0
         runtime.questionRelay = QuestionRelayCoordinator(settings: {
             QuestionRelaySettings(enabled: true, includedKinds: [.cursor],
-                telegram: TelegramQuestionDestination(token: "fixture", chatID: "9", userID: "42"))
+                telegram: TelegramQuestionDestination(token: "fixture", chatID: "9"))
         }, transport: { _ in QuestionHTTPResponse(statusCode: nil, body: Data()) },
            uptime: { [unowned fixture] in fixture.questionUptime },
            onChange: { [weak runtime] event in runtime?.questionRelayDidChange(event) })

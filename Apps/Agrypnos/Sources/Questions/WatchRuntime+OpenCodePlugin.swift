@@ -22,7 +22,7 @@ extension WatchRuntime {
         if !preferences.includedAgentKinds.contains(.openCode) { return "OpenCode: select it in Agents first." }
         let relay = questionRelaySettings()
         if relay.telegram?.isComplete != true && relay.discord?.isComplete != true {
-            return "OpenCode: enable bot inbound and save its answering user ID."
+            return "OpenCode: " + QuestionSetupChrome.needsBot
         }
         return nil
     }

@@ -18,22 +18,26 @@ extension WatchRuntime {
         let telegram: TelegramQuestionDestination?
         if engine.preferences.telegramInboundEnabled,
            let token = secrets.telegramBotToken,
-           let chatID = secrets.telegramChatId,
-           let userID = secrets.telegramQuestionUserId {
-            telegram = TelegramQuestionDestination(token: token, chatID: chatID, userID: userID)
+           let chatID = secrets.telegramChatId {
+            telegram = TelegramQuestionDestination(token: token, chatID: chatID)
         } else { telegram = nil }
         let discord: DiscordQuestionDestination?
         if engine.preferences.discordInboundEnabled,
            let token = secrets.discordBotToken,
-           let channelID = secrets.discordChannelId,
-           let userID = secrets.discordQuestionUserId {
-            discord = DiscordQuestionDestination(token: token, channelID: channelID, userID: userID)
+           let channelID = secrets.discordChannelId {
+            discord = DiscordQuestionDestination(token: token, channelID: channelID)
         } else { discord = nil }
         return QuestionRelaySettings(enabled: engine.preferences.forwardAgentQuestions,
             includedKinds: engine.preferences.includedAgentKinds, telegram: telegram, discord: discord)
     }
 
+    var questionBotReady: Bool {
+        let relay = questionRelaySettings()
+        return relay.telegram?.isComplete == true || relay.discord?.isComplete == true
+    }
+
     func setForwardAgentQuestions(_ on: Bool) {
+        if on, !questionBotReady { return }
         guard on != engine.preferences.forwardAgentQuestions else { return }
         engine.preferences.forwardAgentQuestions = on
         clearQuestionWatch()
@@ -43,24 +47,9 @@ extension WatchRuntime {
         delegate?.watchRuntimeDidChange(self)
     }
 
-    @discardableResult
-    func setNotifTelegramQuestionUserId(_ value: String?) -> Bool {
-        guard NotifSecretsPayload.present(value) != readNotifSecrets().telegramQuestionUserId else { return true }
-        questionRelay.invalidateAll()
-        let saved = NotifSecretsStore.setTelegramQuestionUserId(value)
-        clearQuestionWatch()
-        delegate?.watchRuntimeDidChange(self)
-        return saved
-    }
-
-    @discardableResult
-    func setNotifDiscordQuestionUserId(_ value: String?) -> Bool {
-        guard NotifSecretsPayload.present(value) != readNotifSecrets().discordQuestionUserId else { return true }
-        questionRelay.invalidateAll()
-        let saved = NotifSecretsStore.setDiscordQuestionUserId(value)
-        clearQuestionWatch()
-        delegate?.watchRuntimeDidChange(self)
-        return saved
+    func dropQuestionForwardingWithoutBot() {
+        guard preferences.forwardAgentQuestions, !questionBotReady else { return }
+        setForwardAgentQuestions(false)
     }
 }
 

@@ -95,7 +95,14 @@ extension PopoverController {
         discordInboundSwitch.setAccessibilityHelp(AgrypnosCopy.notifDiscordHelp)
     }
 
-    func addNotifTelegramCard(_ card: CardView, ci: CGFloat, cw: CGFloat) {
+    func addNotifTelegramCard(
+        _ card: CardView,
+        contentW: CGFloat,
+        ci: CGFloat,
+        cw: CGFloat,
+        swW: CGFloat,
+        swH: CGFloat
+    ) {
         addPrefTitle(AgrypnosCopy.notifTelegram, in: card, ci: ci, width: cw)
         _ = PopoverForm.help(
             AgrypnosCopy.notifTelegramHelp,
@@ -131,25 +138,6 @@ extension PopoverController {
             action: #selector(telegramChatCommitted(_:)),
             delegate: self
         )
-    }
-
-    func addNotifTelegramInboundCard(
-        _ card: CardView,
-        contentW: CGFloat,
-        ci: CGFloat,
-        cw: CGFloat,
-        swW: CGFloat,
-        swH: CGFloat
-    ) {
-        addPrefTitle(AgrypnosCopy.notifTelegramInbound, in: card, ci: ci, width: cw)
-        _ = PopoverForm.help(
-            AgrypnosCopy.notifTelegramInboundHelp,
-            in: card,
-            y: CGFloat(PopoverStackLayout.prefHelpY),
-            x: ci,
-            width: cw,
-            lines: PopoverCopyLayout.notifTelegramInboundHelpMaxLines
-        )
         telegramInboundSwitch = PopoverForm.switchControl(
             in: card,
             y: CGFloat(PopoverStackLayout.notifTelegramInboundSwitchY),
@@ -161,8 +149,8 @@ extension PopoverController {
             action: #selector(telegramInboundToggled(_:))
         )
         telegramInboundSwitch.state = TelegramInboundChrome.defaultEnabled ? .on : .off
-        telegramInboundSwitch.setAccessibilityLabel(AgrypnosCopy.notifTelegramInbound)
-        telegramInboundSwitch.setAccessibilityHelp(AgrypnosCopy.notifTelegramInboundHelp)
+        telegramInboundSwitch.setAccessibilityLabel(AgrypnosCopy.notifTelegram)
+        telegramInboundSwitch.setAccessibilityHelp(AgrypnosCopy.notifTelegramHelp)
     }
 
     func addNotifSetupCard(_ card: CardView, ci: CGFloat, cw: CGFloat) {
@@ -208,7 +196,6 @@ extension PopoverController {
         discordInboundChannelSecrets?.stringValue = secrets.discordChannelId ?? ""
         telegramTokenSecrets?.stringValue = secrets.telegramBotToken ?? ""
         telegramChatSecrets?.stringValue = secrets.telegramChatId ?? ""
-        loadQuestionFields()
     }
 
     func commitNotifFields() {
@@ -220,7 +207,6 @@ extension PopoverController {
         if let discordInboundChannelSecrets { discordInboundChannelCommitted(discordInboundChannelSecrets.field) }
         if let telegramTokenSecrets { telegramTokenCommitted(telegramTokenSecrets.field) }
         if let telegramChatSecrets { telegramChatCommitted(telegramChatSecrets.field) }
-        commitQuestionUserFields()
     }
 
     func flushSecretFieldEditor(_ field: NSTextField?) {
@@ -322,7 +308,6 @@ extension PopoverController {
         discordInboundChannelSecrets?.stringValue = ""
         telegramTokenSecrets?.stringValue = ""
         telegramChatSecrets?.stringValue = ""
-        loadQuestionFields()
         refresh()
     }
 }

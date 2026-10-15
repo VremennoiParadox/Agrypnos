@@ -14,12 +14,11 @@ final class OpenCodeQuestionSettingsTests: XCTestCase {
         XCTAssertTrue(try JSONDecoder().decode(UserPreferences.self, from: JSONEncoder().encode(enabled)).openCodePluginEnabled)
     }
     // Dropping the nested connection or a pre-existing bot field would break setup.
-    func testConnectionRoundTripPreservesExistingBotSecretsAndAnsweringUsers() throws {
+    func testConnectionRoundTripPreservesExistingBotSecrets() throws {
         let connection = OpenCodeQuestionSettings(endpoint: "http://127.0.0.1:4096",
             directory: "/project", username: "opencode", password: "fixture")
         let payload = NotifSecretsPayload(telegramBotToken: "fixture-token", telegramChatId: "42",
             discordBotToken: "fixture-discord", discordChannelId: "123456789012345678",
-            telegramQuestionUserId: "42", discordQuestionUserId: "223456789012345678",
             openCodeQuestions: connection)
         let data = try XCTUnwrap(NotifSecretsPayload.encode(payload))
         XCTAssertEqual(NotifSecretsPayload.decode(data), payload)

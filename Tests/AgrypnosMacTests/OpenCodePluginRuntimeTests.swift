@@ -73,11 +73,28 @@ final class OpenCodePluginRuntimeTests: XCTestCase {
         fixture.runtime.disableOpenCodeForwarding()
         XCTAssertFalse(FileManager.default.fileExists(atPath: path))
     }
+    func testForwardingStaysOffWithoutASavedBot() {
+        let fixture = Fixture(); defer { fixture.cleanup() }
+        let runtime = fixture.runtime
+        fixture.secrets = NotifSecrets()
+        runtime.setTelegramInboundEnabled(false)
+        runtime.setForwardAgentQuestions(true)
+        XCTAssertFalse(runtime.preferences.forwardAgentQuestions)
+    }
+
+    func testForwardingTurnsOffWhenTheSavedBotGoesAway() {
+        let fixture = Fixture(); defer { fixture.cleanup() }
+        let runtime = fixture.runtime
+        runtime.setForwardAgentQuestions(true)
+        XCTAssertTrue(runtime.preferences.forwardAgentQuestions)
+        runtime.setTelegramInboundEnabled(false)
+        XCTAssertFalse(runtime.preferences.forwardAgentQuestions)
+    }
+
     func testPrerequisitesAndFailureKeepPreferencesUnchanged() async throws {
-        for missing in ["owner", "inbound", "selection", "installation"] {
+        for missing in ["inbound", "selection", "installation"] {
             let fixture = Fixture(); defer { fixture.cleanup() }
             let runtime = fixture.runtime
-            if missing == "owner" { fixture.secrets.telegramQuestionUserId = nil }
             if missing == "inbound" { runtime.engine.preferences.telegramInboundEnabled = false }
             if missing == "selection" { runtime.engine.preferences.includedAgentKinds = [.codex] }
             if missing == "installation" {
@@ -118,7 +135,7 @@ private final class Fixture {
     var config: URL { root.appendingPathComponent("config") }
     var bridgeOverride: URL?
     var bridge: URL { bridgeOverride ?? root.appendingPathComponent("bridge") }
-    var secrets = NotifSecrets(telegramBotToken: "fixture", telegramChatId: "9", telegramQuestionUserId: "42")
+    var secrets = NotifSecrets(telegramBotToken: "fixture", telegramChatId: "9")
     var notices: [String] = []
     var writeHook: ((Data, URL) throws -> Void)?
     let defaults = UserDefaults(suiteName: "ag-plugin-runtime-" + UUID().uuidString)!

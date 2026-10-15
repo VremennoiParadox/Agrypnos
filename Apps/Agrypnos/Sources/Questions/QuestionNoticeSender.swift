@@ -14,13 +14,11 @@ enum QuestionNoticeSender {
         var requests: [NotifOutboundRequest] = []
         if preferences.telegramInboundEnabled,
            let token = secrets.telegramBotToken, let chatID = secrets.telegramChatId,
-           secrets.telegramQuestionUserId != nil,
            let request = NotifOutboundRequestFactory.telegram(botToken: token, chatId: chatID, text: text) {
             requests.append(request)
         }
         if preferences.discordInboundEnabled,
            let token = secrets.discordBotToken, let channelID = secrets.discordChannelId,
-           secrets.discordQuestionUserId != nil,
            let request = DiscordQuestionMessage.notice(text, botToken: token, channelID: channelID) {
             requests.append(request)
         }

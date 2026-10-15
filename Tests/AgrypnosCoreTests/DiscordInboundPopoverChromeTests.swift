@@ -10,12 +10,11 @@ final class DiscordInboundPopoverChromeTests: XCTestCase {
                 .notifEnable,
                 .notifDiscord,
                 .notifTelegram,
-                .notifTelegramInbound,
                 .questionNotifications,
                 .notifClear,
             ]
         )
-        XCTAssertEqual(PopoverSection.notif.cards.count, 7)
+        XCTAssertEqual(PopoverSection.notif.cards.count, 6)
         XCTAssertEqual(PopoverSection.notif.cards.filter { $0 == .notifDiscord }.count, 1)
         XCTAssertFalse(PopoverSection.notif.cards.contains(.notifDiscordInbound))
         XCTAssertFalse(PopoverSection.watch.cards.contains(.notifDiscordInbound))
@@ -127,12 +126,11 @@ final class DiscordInboundPopoverChromeTests: XCTestCase {
                 layout.notifEnable,
                 layout.notifDiscord,
                 layout.notifTelegram,
-                layout.notifTelegramInbound,
                 layout.questionNotifications,
                 layout.notifClear
             )
         )
-        XCTAssertEqual(layout.stackedCards.count, 7)
+        XCTAssertEqual(layout.stackedCards.count, 6)
         XCTAssertNil(layout.watch)
         XCTAssertEqual(layout.contentHeight, layout.notifClear!.maxY + PopoverStackLayout.pad)
         XCTAssertEqual(

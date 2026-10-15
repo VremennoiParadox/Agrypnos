@@ -36,14 +36,8 @@ extension PopoverController {
 
     @objc func toggleQuestionNotifications() {
         stopRecordingIfNeeded()
-        if showQuestionNotifications {
-            commitQuestionUserFields()
-        }
         showQuestionNotifications.toggle()
         applySection(.notif)
-        if showQuestionNotifications {
-            loadQuestionFields()
-        }
         refresh()
     }
 
@@ -152,32 +146,17 @@ extension PopoverController {
         forwardQuestionsSwitch.setAccessibilityLabel(QuestionSetupChrome.title)
         forwardQuestionsSwitch.setAccessibilityHelp(QuestionSetupChrome.help + " " + QuestionSetupChrome.policy)
         _ = PopoverForm.help(QuestionSetupChrome.help, in: card,
-            y: CGFloat(QuestionSetupChrome.helpY), x: ci, width: cw, lines: 4)
-        telegramQuestionUser = PopoverForm.labeledSecretField(in: card,
-            y: CGFloat(QuestionSetupChrome.telegramUserY), x: ci, width: cw, caption: "Telegram",
-            placeholder: "Your user ID", label: "Telegram answering user ID",
-            help: "Only this Telegram user may answer forwarded questions. Find message.from.id in getUpdates.",
-            target: self, action: #selector(questionUserCommitted(_:)), delegate: self)
-        discordQuestionUser = PopoverForm.labeledSecretField(in: card,
-            y: CGFloat(QuestionSetupChrome.discordUserY), x: ci, width: cw, caption: "Discord",
-            placeholder: "Your user ID", label: "Discord answering user ID",
-            help: "Only this Discord user may answer forwarded questions. Enable Developer Mode, then Copy User ID.",
-            target: self, action: #selector(questionUserCommitted(_:)), delegate: self)
+            y: CGFloat(QuestionSetupChrome.helpY), x: ci, width: cw, lines: QuestionSetupChrome.helpMaxLines)
         _ = PopoverForm.help(QuestionSetupChrome.policy, in: card,
-            y: CGFloat(QuestionSetupChrome.policyY), x: ci, width: cw, lines: 5)
+            y: CGFloat(QuestionSetupChrome.policyY), x: ci, width: cw, lines: QuestionSetupChrome.policyMaxLines)
         questionConnectionStatus = PopoverForm.help("", in: card,
             y: CGFloat(QuestionSetupChrome.statusY), x: ci, width: cw, lines: 4)
     }
 
-    func loadQuestionFields() {
-        guard let runtime else { return }
-        let secrets = runtime.notifSecrets()
-        telegramQuestionUser?.stringValue = secrets.telegramQuestionUserId ?? ""
-        discordQuestionUser?.stringValue = secrets.discordQuestionUserId ?? ""
-    }
-
     func refreshQuestionChrome(runtime: WatchRuntime) {
-        forwardQuestionsSwitch?.state = runtime.preferences.forwardAgentQuestions ? .on : .off
+        let ready = runtime.questionBotReady
+        forwardQuestionsSwitch?.isEnabled = ready
+        forwardQuestionsSwitch?.state = ready && runtime.preferences.forwardAgentQuestions ? .on : .off
         questionConnectionStatus?.stringValue = runtime.openCodeQuestionCaption
         let active = runtime.preferences.openCodePluginEnabled && runtime.preferences.forwardAgentQuestions
         openCodeEnableButton?.isEnabled = !runtime.openCodeSetupInProgress && !active
@@ -193,32 +172,15 @@ extension PopoverController {
         codexAlertStatus?.stringValue = runtime.codexAlertCaption
     }
 
-    func commitQuestionUserFields() {
-        for row in [telegramQuestionUser, discordQuestionUser] {
-            if let row { questionUserCommitted(row.field) }
-        }
-    }
-
-    @objc func questionUserCommitted(_ sender: NSTextField) {
-        flushSecretFieldEditor(sender)
-        let value = NotifSecretsPayload.present(sender.stringValue)
-        let telegram = telegramQuestionUser?.contains(sender) == true
-        if let value {
-            let valid = value.utf8.allSatisfy { (48...57).contains($0) }
-                && (telegram ? (Int64(value) ?? 0) > 0 : (UInt64(value) ?? 0) > 0)
-            guard valid else { UserNotify.post("Enter a numeric answering user ID."); return }
-        }
-        let saved = telegram ? runtime?.setNotifTelegramQuestionUserId(value)
-            : runtime?.setNotifDiscordQuestionUserId(value)
-        if saved == false { UserNotify.post(AgrypnosCopy.notifSaveFailed) }
-        refresh()
-    }
-
     @objc func forwardQuestionsToggled(_ sender: NSSwitch) {
         stopRecordingIfNeeded()
-        let on = sender.state == .on
         commitNotifFields()
-        runtime?.setForwardAgentQuestions(on)
+        guard runtime?.questionBotReady == true else {
+            sender.state = .off
+            UserNotify.post(QuestionSetupChrome.needsBot)
+            return
+        }
+        runtime?.setForwardAgentQuestions(sender.state == .on)
         refresh()
     }
 }

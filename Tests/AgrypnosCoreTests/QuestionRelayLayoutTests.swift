@@ -36,7 +36,7 @@ final class QuestionRelayLayoutTests: XCTestCase {
         XCTAssertNil(notif.questionForwardingBack)
         XCTAssertEqual(notif.notifSetup?.y, PopoverStackLayout.firstCardY)
         XCTAssertEqual(notif.notifEnable?.y, notif.notifSetup!.maxY + PopoverStackLayout.cardGap)
-        XCTAssertEqual(notif.stackedCards.count, 7)
+        XCTAssertEqual(notif.stackedCards.count, 6)
         XCTAssertEqual(notif.contentHeight, notif.notifClear!.maxY + PopoverStackLayout.pad)
 
         let tools = PopoverStackLayout.make(section: .agents)
@@ -53,7 +53,7 @@ final class QuestionRelayLayoutTests: XCTestCase {
             showQuestionNotifications: true
         )
         let forwarding = try XCTUnwrap(layout.questionRelay)
-        XCTAssertEqual(layout.questionNotifications?.y, layout.notifTelegramInbound!.maxY + PopoverStackLayout.cardGap)
+        XCTAssertEqual(layout.questionNotifications?.y, layout.notifTelegram!.maxY + PopoverStackLayout.cardGap)
         XCTAssertEqual(forwarding.y, layout.questionNotifications!.maxY + PopoverStackLayout.cardGap)
         XCTAssertGreaterThanOrEqual(forwarding.height, QuestionSetupChrome.statusY + QuestionSetupChrome.statusHeight + 12)
         XCTAssertEqual(layout.pluginConnection?.y, forwarding.maxY + PopoverStackLayout.cardGap)

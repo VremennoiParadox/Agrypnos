@@ -19,9 +19,9 @@ public enum PopoverCopyLayout: Sendable {
     public static let settleHelpHeightPoints = settleHelpMaxLines * lineHeightPoints
     public static let countTerminalSessionsHelpHeightPoints =
         countTerminalSessionsHelpMaxLines * lineHeightPoints
-    /// Notif help wraps at `innerColumns`. Enable 5, Telegram 3, inbound 3, Discord inbound 4, Discord 7.
+    /// Notif help wraps at `innerColumns`. Enable 5, Telegram 5, inbound 3, Discord inbound 4, Discord 7.
     public static let notifEnableHelpMaxLines = 5
-    public static let notifTelegramHelpMaxLines = 3
+    public static let notifTelegramHelpMaxLines = 5
     public static let notifTelegramInboundHelpMaxLines = 3
     public static let notifDiscordInboundHelpMaxLines = 4
     public static let notifDiscordHelpMaxLines = 7

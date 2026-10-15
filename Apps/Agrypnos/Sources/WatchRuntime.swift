@@ -224,6 +224,7 @@ final class WatchRuntime {
         store.save(engine.preferences)
         inboundPoller.sync()
         clearQuestionWatch()
+        dropQuestionForwardingWithoutBot()
         pollLid()
         delegate?.watchRuntimeDidChange(self)
     }
@@ -234,6 +235,7 @@ final class WatchRuntime {
         store.save(engine.preferences)
         discordGateway.sync()
         clearQuestionWatch()
+        dropQuestionForwardingWithoutBot()
         pollLid()
         delegate?.watchRuntimeDidChange(self)
     }
@@ -251,6 +253,7 @@ final class WatchRuntime {
         let saved = NotifSecretsStore.setTelegramBotToken(value)
         inboundPoller.sync()
         clearQuestionWatch()
+        dropQuestionForwardingWithoutBot()
         return saved
     }
 
@@ -261,6 +264,7 @@ final class WatchRuntime {
         let saved = NotifSecretsStore.setTelegramChatId(value)
         inboundPoller.sync()
         clearQuestionWatch()
+        dropQuestionForwardingWithoutBot()
         return saved
     }
 
@@ -273,6 +277,7 @@ final class WatchRuntime {
         let saved = NotifSecretsStore.setDiscordBotToken(value)
         discordGateway.sync()
         clearQuestionWatch()
+        dropQuestionForwardingWithoutBot()
         return saved
     }
 
@@ -283,6 +288,7 @@ final class WatchRuntime {
         let saved = NotifSecretsStore.setDiscordChannelId(value)
         discordGateway.sync()
         clearQuestionWatch()
+        dropQuestionForwardingWithoutBot()
         return saved
     }
 
@@ -294,6 +300,7 @@ final class WatchRuntime {
         discordGateway.invalidate()
         NotifSecretsStore.clear()
         clearQuestionWatch()
+        dropQuestionForwardingWithoutBot()
         inboundPoller.sync()
         discordGateway.sync()
     }

@@ -59,7 +59,6 @@ final class PopoverSectionTests: XCTestCase {
                 .notifEnable,
                 .notifDiscord,
                 .notifTelegram,
-                .notifTelegramInbound,
                 .questionNotifications,
                 .notifClear,
             ]
@@ -186,7 +185,7 @@ final class PopoverSectionLayoutTests: XCTestCase {
     func testNotifSectionShowsEnableDiscordTelegramInboundSetupAndClear() {
         let layout = PopoverStackLayout.make(section: .notif)
         XCTAssertEqual(layout.section, .notif)
-        XCTAssertEqual(layout.stackedCards.count, 7)
+        XCTAssertEqual(layout.stackedCards.count, 6)
         XCTAssertEqual(layout.notifSetup?.y, PopoverStackLayout.firstCardY)
         XCTAssertNil(layout.watch)
         XCTAssertNil(layout.duration)

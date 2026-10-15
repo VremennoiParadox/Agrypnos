@@ -7,17 +7,15 @@ import AgrypnosCore
 struct TelegramQuestionDestination: Equatable {
     let token: String
     let chatID: String
-    let userID: String
 
-    var isComplete: Bool { !token.isEmpty && Int64(chatID) != nil && (Int64(userID) ?? 0) > 0 }
+    var isComplete: Bool { !token.isEmpty && Int64(chatID) != nil }
 }
 
 struct DiscordQuestionDestination: Equatable {
     let token: String
     let channelID: String
-    let userID: String
 
-    var isComplete: Bool { !token.isEmpty && !channelID.isEmpty && !userID.isEmpty }
+    var isComplete: Bool { !token.isEmpty && !channelID.isEmpty }
 }
 
 struct QuestionRelaySettings: Equatable {
@@ -139,26 +137,26 @@ final class QuestionRelayCoordinator {
             text: drain == .live ? nil : "This question must be answered on your Mac.")
         if let ack { Task { [transport] in _ = await transport(ack) } }
         guard drain == .live, click.reference.destinationID == target.chatID,
-              click.senderID == target.userID else { return }
+              !click.senderID.isEmpty else { return }
         let dedupeID = target.token + ":" + click.id
         guard !recentCallbacks.contains(dedupeID) else { return }
         recentCallbacks.append(dedupeID)
         if recentCallbacks.count > 256 { recentCallbacks.removeFirst(recentCallbacks.count - 256) }
         let effect = registry.handle(QuestionCallback(reference: click.reference, senderID: click.senderID,
-            actionToken: click.actionToken, generation: registry.generation), authorizedUserID: target.userID, now: uptime())
+            actionToken: click.actionToken, generation: registry.generation), authorizedUserID: click.senderID, now: uptime())
         apply(effect)
     }
 
     func handleDiscord(_ click: DiscordQuestionInteraction, drain: TelegramInboundDrain) {
         refreshSettings()
         guard drain == .live, let target = currentSettings?.discord, target.isComplete,
-              click.reference.destinationID == target.channelID, click.senderID == target.userID else { return }
+              click.reference.destinationID == target.channelID, !click.senderID.isEmpty else { return }
         let dedupeID = target.token + ":" + click.interactionID
         guard !recentCallbacks.contains(dedupeID) else { return }
         recentCallbacks.append(dedupeID)
         if recentCallbacks.count > 256 { recentCallbacks.removeFirst(recentCallbacks.count - 256) }
         let effect = registry.handle(QuestionCallback(reference: click.reference, senderID: click.senderID,
-            actionToken: click.actionToken, generation: registry.generation), authorizedUserID: target.userID, now: uptime())
+            actionToken: click.actionToken, generation: registry.generation), authorizedUserID: click.senderID, now: uptime())
         apply(effect)
     }
 

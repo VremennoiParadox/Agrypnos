@@ -74,7 +74,6 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var notifEnableCard: CardView!
     var notifDiscordCard: CardView!
     var notifTelegramCard: CardView!
-    var notifTelegramInboundCard: CardView!
     var questionRelayCard: CardView!
     var openCodePluginCard: CardView!
     var openCodeEnableButton: NSButton!
@@ -94,8 +93,6 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var questionNotificationsButton: NSButton!
     var questionNotificationsBeta: NSTextField!
     var forwardQuestionsSwitch: NSSwitch!
-    var telegramQuestionUser: SecretRevealRow!
-    var discordQuestionUser: SecretRevealRow!
     var questionConnectionStatus: NSTextField!
     var notifSetupCard: CardView!
     var notifClearCard: CardView!
@@ -252,7 +249,6 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         commitMinutesIfChanged(onLeaveWatch: true)
         if currentSection == .notif {
             commitNotifFields()
-            commitQuestionUserFields()
         }
         recorder.stop()
         runtime?.restoreSuspendedHotkey()
@@ -349,7 +345,6 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         }
         if currentSection == .notif, section != .notif {
             commitNotifFields()
-            commitQuestionUserFields()
         }
         stopRecordingIfNeeded()
         applySection(section)

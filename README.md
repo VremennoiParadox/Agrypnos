@@ -170,7 +170,7 @@ If the bot doesn't answer, the Mac is probably asleep. Nothing relays commands w
 
    If you see `"result":[]`, the bot hasn't seen a message yet. Message it again and reload. A private chat id is a positive number. A group id is usually negative.
 5. Paste the number into **Notif → Telegram → Chat id**.
-6. Turn on **Watch-end POST** for the idle message, **Telegram inbound** for commands, or both.
+6. Turn on **Watch-end POST** for the idle message. Turn on the switch on **Telegram** for commands. They stay separate.
 
 Commands only count from the chat id you saved. If that's a group, anyone in the group can send them.
 
@@ -238,7 +238,7 @@ Nothing arrived? Check that Watch-end POST is on and the secrets are right. For 
 
 <br>
 
-- Switch off **Watch-end POST**, **Telegram inbound**, or **Discord inbound** to stop that piece.
+- Switch off **Watch-end POST**, the **Telegram** switch, or **Discord inbound** to stop that piece.
 - **Clear secrets** in **Notif** deletes every saved token and id from this Mac.
 - To kill a bot for good: `/revoke` or `/deletebot` in BotFather, or **Bot → Reset Token** in the Discord Developer Portal.
 
@@ -250,7 +250,7 @@ When you first turn inbound on, or quit and relaunch, Agrypnos quietly skips any
 
 ## Question notifications (BETA)
 
-Question notifications live in **Notif**, under Telegram inbound. The row is
+Question notifications live in **Notif**, under Telegram. The row is
 marked **BETA**. **Setup instructions…** is the first Notif card. The info
 button on each tool card opens that same guide.
 
@@ -276,18 +276,14 @@ prose questions, free text and permission/plan approvals stay on the Mac.
 
 1. Configure your own Telegram or Discord bot using the steps above, and
    enable its **inbound** switch. Idle-after-wait POST is independent.
-2. Open **Notif → Question notifications** (BETA, under Telegram inbound).
-   Save your **answering user ID** there.
-   For Telegram, temporarily turn inbound off, message your bot, then use
-   `getUpdates` and copy `message.from.id`; this is your user ID, not the bot
-   or chat ID. Turn inbound back on. For Discord, enable Developer Mode,
-   right-click your own profile and choose **Copy User ID**. Only this user
-   may answer questions, even in a shared chat/channel.
-3. Include **OpenCode** in Agents. In Question notifications, click
+   Question forwarding stays off until that bot token and chat or channel id
+   are saved.
+2. Include **OpenCode** in Agents. In **Notif → Question notifications**
+   (BETA, under Telegram), turn on **Forward agent questions**, then click
    **Enable OpenCode forwarding**.
    Setup installs and registers a global terminal plugin without changing
    your other OpenCode settings. It enables forwarding without arming the watch.
-4. **Restart OpenCode once to load forwarding**, then use your normal terminal
+3. **Restart OpenCode once to load forwarding**, then use your normal terminal
    chats in any project. Wait for a real connected terminal count in that Notif card.
    No server address, project directory, port or password is needed.
    This test build supports OpenCode **1.18.32** interactive terminals;
@@ -357,9 +353,11 @@ One click merges a `PreToolUse` hook matching `AskUserQuestion` into
 `~/.brainrot/brainrot-state.sh` on this Mac) stay. Interactive Claude Code
 sessions hold hooks until you trust the folder.
 
-1. Configure your own Telegram or Discord bot, turn its inbound switch on, and
-   save your answering user ID under **Notif → Question notifications**.
-2. Select **Claude Code** in Agents. In Question notifications, click
+1. Configure your own Telegram or Discord bot and turn its inbound switch on.
+   **Forward agent questions** stays off until that bot token and chat or
+   channel id are saved.
+2. Select **Claude Code** in Agents. In Question notifications, turn on
+   **Forward agent questions**, then click
    **Enable Claude Code forwarding**.
 3. In an already-trusted project, ask Claude Code a structured choice in the
    session you already started. Answer on your bot. That same session should
@@ -396,7 +394,7 @@ Everything is in the popover, one section at a time.
 | **Watch** | Keep the watch, How long (`∞`, `1h`, `3h`, custom minutes, **Agents**), and the last watch end |
 | **Power** | Dim panel or Sleep panel, brightness floor, keyboard backlight off, low-battery auto-off, brightness return time, thermal auto-off |
 | **Agents** | Idle wait (1m 30s–10m), which tools count as busy (at least one), count terminal sessions as busy |
-| **Notif** | Setup instructions, idle message switch, Discord bot token and channel id, Telegram token and chat id, Telegram inbound, Question notifications (BETA), Discord inbound, clear secrets |
+| **Notif** | Setup instructions, idle message switch, Discord bot token and channel id, Telegram token, chat id, and switch, Question notifications (BETA), Discord inbound, clear secrets |
 | **General** | Global shortcut (default `⌥⌘A`, remappable), launch at login, quit |
 
 ## What it won't do

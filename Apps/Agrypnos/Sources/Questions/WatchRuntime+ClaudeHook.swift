@@ -13,7 +13,7 @@ extension WatchRuntime {
         if !preferences.includedAgentKinds.contains(.claudeCode) { return "Claude Code: select it in Agents first." }
         let relay = questionRelaySettings()
         if relay.telegram?.isComplete != true && relay.discord?.isComplete != true {
-            return "Claude Code: enable bot inbound and save its answering user ID."
+            return "Claude Code: " + QuestionSetupChrome.needsBot
         }
         if preferences.claudeQuestionHookEnabled {
             return "Claude Code: hook installed. Interactive sessions hold hooks until you trust the folder."
@@ -25,7 +25,7 @@ extension WatchRuntime {
         if !preferences.includedAgentKinds.contains(.claudeCode) { return "Claude Code: select it in Agents first." }
         let relay = questionRelaySettings()
         if relay.telegram?.isComplete != true && relay.discord?.isComplete != true {
-            return "Claude Code: enable bot inbound and save its answering user ID."
+            return "Claude Code: " + QuestionSetupChrome.needsBot
         }
         return nil
     }

@@ -10,12 +10,12 @@ final class NotifPopoverChromeTests: XCTestCase {
                 .notifEnable,
                 .notifDiscord,
                 .notifTelegram,
-                .notifTelegramInbound,
                 .questionNotifications,
                 .notifClear,
             ]
         )
-        XCTAssertEqual(PopoverSection.notif.cards.count, 7)
+        XCTAssertEqual(PopoverSection.notif.cards.count, 6)
+        XCTAssertFalse(PopoverSection.notif.cards.contains(.notifTelegramInbound))
         XCTAssertEqual(PopoverSection.notif.cards.filter { $0 == .notifDiscord }.count, 1)
         XCTAssertFalse(PopoverSection.notif.cards.contains(.notifDiscordInbound))
         XCTAssertEqual(PopoverSection.notif.cards.first, .notifSetup)
@@ -212,9 +212,9 @@ final class NotifPopoverChromeTests: XCTestCase {
                 AgrypnosCopy.notifTelegramHelp,
                 columns: PopoverCopyLayout.innerColumns
             ),
-            3
+            5
         )
-        XCTAssertEqual(PopoverCopyLayout.notifTelegramHelpMaxLines, 3)
+        XCTAssertEqual(PopoverCopyLayout.notifTelegramHelpMaxLines, 5)
         XCTAssertEqual(
             CopyWrap.lineCount(
                 AgrypnosCopy.notifDiscordHelp,
@@ -305,7 +305,6 @@ final class NotifPopoverChromeTests: XCTestCase {
                 layout.notifEnable,
                 layout.notifDiscord,
                 layout.notifTelegram,
-                layout.notifTelegramInbound,
                 layout.questionNotifications,
                 layout.notifClear
             )
@@ -314,14 +313,11 @@ final class NotifPopoverChromeTests: XCTestCase {
         XCTAssertEqual(layout.notifEnable?.y, layout.notifSetup!.maxY + PopoverStackLayout.cardGap)
         XCTAssertEqual(layout.notifDiscord?.y, layout.notifEnable!.maxY + PopoverStackLayout.cardGap)
         XCTAssertNil(layout.notifDiscordInbound)
+        XCTAssertNil(layout.notifTelegramInbound)
         XCTAssertEqual(layout.notifTelegram?.y, layout.notifDiscord!.maxY + PopoverStackLayout.cardGap)
         XCTAssertEqual(
-            layout.notifTelegramInbound?.y,
-            layout.notifTelegram!.maxY + PopoverStackLayout.cardGap
-        )
-        XCTAssertEqual(
             layout.questionNotifications?.y,
-            layout.notifTelegramInbound!.maxY + PopoverStackLayout.cardGap
+            layout.notifTelegram!.maxY + PopoverStackLayout.cardGap
         )
         XCTAssertEqual(layout.notifClear?.y, layout.questionNotifications!.maxY + PopoverStackLayout.cardGap)
         XCTAssertEqual(layout.contentHeight, layout.notifClear!.maxY + PopoverStackLayout.pad)
@@ -362,6 +358,7 @@ final class NotifPopoverChromeTests: XCTestCase {
                 + PopoverStackLayout.titleRowHeight
                 + PopoverCopyLayout.notifTelegramHelpHeightPoints
                 + 2 * PopoverStackLayout.secretFieldRowHeight
+                + PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset
         )
         XCTAssertEqual(layout.notifClear!.height, PopoverStackLayout.loginCardHeight)

@@ -9,8 +9,6 @@ struct NotifSecrets: Equatable {
     var telegramChatId: String?
     var discordBotToken: String?
     var discordChannelId: String?
-    var telegramQuestionUserId: String?
-    var discordQuestionUserId: String?
     var openCodeQuestions: OpenCodeQuestionSettings?
 }
 
@@ -26,8 +24,6 @@ enum NotifSecretsStore {
             telegramChatId: payload.telegramChatId,
             discordBotToken: payload.discordBotToken,
             discordChannelId: payload.discordChannelId,
-            telegramQuestionUserId: payload.telegramQuestionUserId,
-            discordQuestionUserId: payload.discordQuestionUserId,
             openCodeQuestions: payload.openCodeQuestions
         )
     }
@@ -60,20 +56,6 @@ enum NotifSecretsStore {
         return write(secrets)
     }
 
-    @discardableResult
-    static func setTelegramQuestionUserId(_ value: String?) -> Bool {
-        var secrets = load()
-        secrets.telegramQuestionUserId = NotifSecretsPayload.present(value)
-        return write(secrets)
-    }
-
-    @discardableResult
-    static func setDiscordQuestionUserId(_ value: String?) -> Bool {
-        var secrets = load()
-        secrets.discordQuestionUserId = NotifSecretsPayload.present(value)
-        return write(secrets)
-    }
-
     static func clear() {
         try? FileManager.default.removeItem(at: fileURL())
     }
@@ -92,8 +74,6 @@ enum NotifSecretsStore {
             telegramChatId: secrets.telegramChatId,
             discordBotToken: secrets.discordBotToken,
             discordChannelId: secrets.discordChannelId,
-            telegramQuestionUserId: secrets.telegramQuestionUserId,
-            discordQuestionUserId: secrets.discordQuestionUserId,
             openCodeQuestions: secrets.openCodeQuestions
         )
         guard let data = NotifSecretsPayload.encode(payload) else { return false }

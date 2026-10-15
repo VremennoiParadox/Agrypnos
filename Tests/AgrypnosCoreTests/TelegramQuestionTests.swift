@@ -71,9 +71,12 @@ final class TelegramQuestionTests: XCTestCase {
         XCTAssertFalse(try JSONDecoder().decode(UserPreferences.self, from: JSONSerialization.data(withJSONObject: old)).forwardAgentQuestions)
         prefs.forwardAgentQuestions = true
         XCTAssertTrue(try JSONDecoder().decode(UserPreferences.self, from: JSONEncoder().encode(prefs)).forwardAgentQuestions)
-        let secrets = NotifSecretsPayload(telegramBotToken: "fixture", telegramChatId: "9", discordBotToken: "discord", discordChannelId: "10", telegramQuestionUserId: "42", discordQuestionUserId: "43")
+        let secrets = NotifSecretsPayload(telegramBotToken: "fixture", telegramChatId: "9", discordBotToken: "discord", discordChannelId: "10")
         XCTAssertEqual(NotifSecretsPayload.decode(try XCTUnwrap(NotifSecretsPayload.encode(secrets))), secrets)
-        XCTAssertNil(NotifSecretsPayload.decode(Data("{}".utf8))?.telegramQuestionUserId)
+        let legacy = try XCTUnwrap(NotifSecretsPayload.decode(Data(
+            #"{"telegramBotToken":"fixture","telegramChatId":"9","telegramQuestionUserId":"42"}"#.utf8)))
+        XCTAssertEqual(legacy.telegramBotToken, "fixture")
+        XCTAssertEqual(legacy.telegramChatId, "9")
     }
 
     private func questionBatch() -> QuestionBatch {

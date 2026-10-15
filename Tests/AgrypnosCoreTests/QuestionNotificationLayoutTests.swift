@@ -13,22 +13,22 @@ final class QuestionNotificationLayoutTests: XCTestCase {
             PopoverSection.notif.cards(showQuestionNotifications: false),
             [
                 .notifSetup,
-                .notifEnable, .notifDiscord, .notifTelegram, .notifTelegramInbound,
+                .notifEnable, .notifDiscord, .notifTelegram,
                 .questionNotifications,
                 .notifClear,
             ]
         )
         let open = PopoverSection.notif.cards(showQuestionNotifications: true)
-        let inbound = open.firstIndex(of: .notifTelegramInbound)!
-        XCTAssertEqual(open[inbound + 1], .questionNotifications)
+        let telegram = open.firstIndex(of: .notifTelegram)!
+        XCTAssertEqual(open[telegram + 1], .questionNotifications)
         XCTAssertEqual(
-            Array(open[(inbound + 2)...]),
+            Array(open[(telegram + 2)...]),
             [.questionRelay, .pluginConnection, .claudeHook, .codexAlert, .cursorQuestionNote, .notifClear]
         )
         let layout = PopoverStackLayout.make(section: .notif, showQuestionNotifications: true)
         XCTAssertEqual(
             layout.questionNotifications?.y,
-            layout.notifTelegramInbound!.maxY + PopoverStackLayout.cardGap
+            layout.notifTelegram!.maxY + PopoverStackLayout.cardGap
         )
         XCTAssertEqual(layout.cursorQuestionNote?.y, layout.codexAlert!.maxY + PopoverStackLayout.cardGap)
         XCTAssertNil(layout.questionForwardingBack)
