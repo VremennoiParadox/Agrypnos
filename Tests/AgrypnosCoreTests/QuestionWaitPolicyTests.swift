@@ -91,6 +91,28 @@ final class QuestionWaitPolicyTests: XCTestCase {
             cleared: [second], now: 1602, busy: nil, grace: 120).action, .normal)
     }
 
+    func testDeferredEndUsesTheSameSettleRangeAsTheSlider() {
+        var low = QuestionWaitPolicy()
+        _ = low.observe(pendingDeadlines: [:], newlyExpired: [questionKey()],
+            cleared: [], now: 1600, busy: true, grace: 90)
+        for now in stride(from: 1605.0, through: 1690.0, by: 5) {
+            XCTAssertEqual(low.observe(pendingDeadlines: [:], newlyExpired: [],
+                cleared: [], now: now, busy: false, grace: 90).action, .deferTimeout)
+        }
+        XCTAssertEqual(low.observe(pendingDeadlines: [:], newlyExpired: [],
+            cleared: [], now: 1695, busy: false, grace: 90).action, .endUnanswered)
+
+        var high = QuestionWaitPolicy()
+        _ = high.observe(pendingDeadlines: [:], newlyExpired: [questionKey()],
+            cleared: [], now: 1600, busy: true, grace: 900)
+        for now in stride(from: 1605.0, through: 2190.0, by: 15) {
+            XCTAssertEqual(high.observe(pendingDeadlines: [:], newlyExpired: [],
+                cleared: [], now: now, busy: false, grace: 900).action, .deferTimeout)
+        }
+        XCTAssertEqual(high.observe(pendingDeadlines: [:], newlyExpired: [],
+            cleared: [], now: 2205, busy: false, grace: 900).action, .endUnanswered)
+    }
+
     func testResetDropsPreviousArmTimeout() {
         var policy = QuestionWaitPolicy()
         _ = policy.observe(pendingDeadlines: [:], newlyExpired: [questionKey()],

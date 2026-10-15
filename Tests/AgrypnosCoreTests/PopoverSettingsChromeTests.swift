@@ -162,21 +162,23 @@ final class PopoverPrefChromeTests: XCTestCase {
     func testSettleGraceChromeMatchesPreferencesRange() {
         XCTAssertEqual(AgentSettleGraceChrome.minSeconds, UserPreferences.agentSettleGraceRange.lowerBound)
         XCTAssertEqual(AgentSettleGraceChrome.maxSeconds, UserPreferences.agentSettleGraceRange.upperBound)
-        XCTAssertEqual(UserPreferences.agentSettleGraceRange, 120...900)
+        XCTAssertEqual(UserPreferences.agentSettleGraceRange, 90...600)
         XCTAssertEqual(UserPreferences.defaultAgentSettleGrace, 120)
         XCTAssertEqual(UserPreferences.default.agentSettleGrace, 120)
-        XCTAssertEqual(AgentSettleGraceChrome.minLabel, "2m")
+        XCTAssertEqual(AgentSettleGraceChrome.minLabel, "1m 30s")
+        XCTAssertNotEqual(AgentSettleGraceChrome.minLabel, "1m")
         XCTAssertNotEqual(AgentSettleGraceChrome.minLabel, "120s")
-        XCTAssertEqual(AgentSettleGraceChrome.maxLabel, "15m")
-        XCTAssertEqual(AgentSettleGraceChrome.valueLabel(seconds: 15), "2m")
-        XCTAssertEqual(AgentSettleGraceChrome.valueLabel(seconds: 90), "2m")
+        XCTAssertEqual(AgentSettleGraceChrome.maxLabel, "10m")
+        XCTAssertEqual(AgentSettleGraceChrome.valueLabel(seconds: 15), "1m 30s")
+        XCTAssertEqual(AgentSettleGraceChrome.valueLabel(seconds: 90), "1m 30s")
         XCTAssertEqual(AgentSettleGraceChrome.valueLabel(seconds: 120), "2m")
         XCTAssertEqual(AgentSettleGraceChrome.valueLabel(seconds: 150), "2m 30s")
-        XCTAssertEqual(AgentSettleGraceChrome.valueLabel(seconds: 900), "15m")
-        XCTAssertEqual(AgentSettleGraceChrome.seconds(sliderValue: 5), 120)
-        XCTAssertEqual(AgentSettleGraceChrome.seconds(sliderValue: 90), 120)
+        XCTAssertEqual(AgentSettleGraceChrome.valueLabel(seconds: 600), "10m")
+        XCTAssertEqual(AgentSettleGraceChrome.valueLabel(seconds: 900), "10m")
+        XCTAssertEqual(AgentSettleGraceChrome.seconds(sliderValue: 5), 90)
+        XCTAssertEqual(AgentSettleGraceChrome.seconds(sliderValue: 90), 90)
         XCTAssertEqual(AgentSettleGraceChrome.seconds(sliderValue: 120), 120)
-        XCTAssertEqual(AgentSettleGraceChrome.seconds(sliderValue: 9_999), 900)
+        XCTAssertEqual(AgentSettleGraceChrome.seconds(sliderValue: 9_999), 600)
     }
 
     func testLidOpenRampChromeMapsOneTwoThreeSeconds() {
@@ -383,9 +385,9 @@ final class PopoverStackLayoutTests: XCTestCase {
             ),
             PopoverCopyLayout.helpMaxLines
         )
-        XCTAssertEqual(AgentSettleGraceChrome.minLabel, "2m")
+        XCTAssertEqual(AgentSettleGraceChrome.minLabel, "1m 30s")
         XCTAssertNotEqual(AgentSettleGraceChrome.minLabel, "15s")
-        XCTAssertEqual(AgentSettleGraceChrome.maxLabel, "15m")
+        XCTAssertEqual(AgentSettleGraceChrome.maxLabel, "10m")
     }
 
     func testSettleCardGrowsWithSettleHelpAndLeavesRampThermalOnTheTwoLineSlot() {

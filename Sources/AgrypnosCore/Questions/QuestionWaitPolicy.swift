@@ -69,7 +69,7 @@ public struct QuestionWaitPolicy: Sendable {
             // Continue the observed quiet interval.
         } else { quietSince = now }
         lastQuietObservation = now
-        let wait = grace.isFinite ? min(900, max(120, grace)) : 120
+        let wait = UserPreferences.clampAgentSettleGrace(grace)
         let settled = now - (quietSince ?? now) >= wait
         return QuestionWaitDecision(action: settled ? .endUnanswered : .deferTimeout, timeouts: reports)
     }

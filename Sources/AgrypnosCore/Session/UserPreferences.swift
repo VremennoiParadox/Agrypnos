@@ -5,8 +5,8 @@ public struct UserPreferences: Equatable, Sendable, Codable {
     /// Lid-close brightness floor as percent. Default 15%; clamp 1–40. Never 0% — that is not a sleep trick.
     public static let brightnessFloorPercentRange = 1...40
     public static let defaultBrightnessFloorPercent = 15
-    /// Quiet seconds after last busy before Agents mode allows sleep. 2–15 minutes.
-    public static let agentSettleGraceRange = 120...900
+    /// Quiet seconds after last busy before Agents mode allows sleep. 1m 30s–10m.
+    public static let agentSettleGraceRange = 90...600
     public static let defaultAgentSettleGrace: TimeInterval = 120
     /// Lid-open brightness ramp, seconds.
     public static let lidOpenRampRange = 1...3
@@ -263,8 +263,8 @@ public enum BrightnessFloorPercentChrome: Sendable {
 public enum AgentSettleGraceChrome: Sendable {
     public static var minSeconds: Int { UserPreferences.agentSettleGraceRange.lowerBound }
     public static var maxSeconds: Int { UserPreferences.agentSettleGraceRange.upperBound }
-    public static var minLabel: String { "\(minSeconds / 60)m" }
-    public static var maxLabel: String { "\(maxSeconds / 60)m" }
+    public static var minLabel: String { valueLabel(seconds: TimeInterval(minSeconds)) }
+    public static var maxLabel: String { valueLabel(seconds: TimeInterval(maxSeconds)) }
 
     public static func valueLabel(seconds: TimeInterval) -> String {
         let clamped = Int(UserPreferences.clampAgentSettleGrace(seconds).rounded())

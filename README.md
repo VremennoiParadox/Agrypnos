@@ -106,7 +106,7 @@ It only looks at your own Mac. For each tool you leave checked under **Agents**,
 
 It reads file modification times, not what's inside the files.
 
-Once it has seen work during this watch, it starts counting when the signals stop. If they stay quiet through the idle wait (2–15 minutes), the watch ends. If it never saw any work since you turned it on, it keeps the watch on. The idle wait exists because an agent can pause for a while between file writes, and that shouldn't look like the end of the run.
+Once it has seen work during this watch, it starts counting when the signals stop. If they stay quiet through the idle wait (1 minute 30 seconds–10 minutes), the watch ends. If it never saw any work since you turned it on, it keeps the watch on. The idle wait exists because an agent can pause for a while between file writes, and that shouldn't look like the end of the run.
 
 Agrypnos can't tell whether a model is "thinking". It only sees processes and files, so pick an idle wait that fits how your agents work.
 
@@ -395,7 +395,7 @@ Everything is in the popover, one section at a time.
 |---|---|
 | **Watch** | Keep the watch, How long (`∞`, `1h`, `3h`, custom minutes, **Agents**), and the last watch end |
 | **Power** | Dim panel or Sleep panel, brightness floor, keyboard backlight off, low-battery auto-off, brightness return time, thermal auto-off |
-| **Agents** | Idle wait (2–15 min), which tools count as busy (at least one), count terminal sessions as busy |
+| **Agents** | Idle wait (1m 30s–10m), which tools count as busy (at least one), count terminal sessions as busy |
 | **Notif** | Setup instructions, idle message switch, Discord bot token and channel id, Telegram token and chat id, Telegram inbound, Question notifications (BETA), Discord inbound, clear secrets |
 | **General** | Global shortcut (default `⌥⌘A`, remappable), launch at login, quit |
 
