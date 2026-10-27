@@ -30,7 +30,7 @@
 
 You start a long agent run, close the laptop, and walk away. macOS goes to sleep and the run dies with it.
 
-The usual keep-awake tricks don't help here. Power assertions (what `caffeinate` uses) stop working the moment the lid closes. The one switch that does hold is `pmset disablesleep`, and it's easy to forget to turn off again. Agrypnos flips it for you, turns the screen down while the lid is shut, and flips it back once your timer ends, the wait after agent signals stop ends, or you turn it off.
+The usual keep-awake tricks don't help here. Power assertions (what `caffeinate` uses) stop working the moment the lid closes. The one switch that does hold is `pmset disablesleep`, and it's easy to forget to turn off again. Agrypnos flips it for you, dims the panel or sleeps it while the lid is shut, and clears the hold once your timer ends, the wait after agent signals stop ends, or you turn it off.
 
 ## What you get
 
@@ -96,16 +96,16 @@ If Agrypnos never saw your brightness before the lid closed, it won't guess one 
 
 ### How it knows your agents are busy
 
-It only looks at your own Mac, and only at the tools you leave checked under **Agents**. A tool counts as busy when its process is running and one of its session files changed in the last 45 seconds. For Claude Code and the Codex CLI, a running process that uses 5% CPU or more also counts. CPU use in the Codex desktop app doesn't.
+It only looks at your own Mac, and only at the tools you leave checked under **Agents**. A tool counts as busy when its process is running and one of its session files changed in the last 45 seconds. For Claude Code and the Codex CLI, a running process that uses 5% CPU or more also counts.
 
-| Tool | Session files it watches |
-|---|---|
-| Cursor | `~/.cursor/projects`, `~/.cursor/chats`, `~/.cursor/acp-sessions` (and the same folders under `$XDG_CONFIG_HOME/cursor`) |
-| Claude Code | `~/.claude/projects` (or `$CLAUDE_CONFIG_DIR`) |
-| Codex | `~/.codex/sessions` (or `$CODEX_HOME`) |
-| OpenCode | `~/.local/share/opencode` (or `$XDG_DATA_HOME/opencode`) |
+| Tool | Processes it looks for | Session files it watches |
+|---|---|---|
+| Cursor | The Cursor app and `cursor-agent` | `~/.cursor/projects`, `~/.cursor/chats`, `~/.cursor/acp-sessions` (and the same folders under `$XDG_CONFIG_HOME/cursor`) |
+| Claude Code | The `claude` command-line tool. The Claude desktop app doesn't count. | `~/.claude/projects` (or `$CLAUDE_CONFIG_DIR/projects`) |
+| Codex | The Codex CLI and the Codex desktop app. CPU use counts only for the CLI. | `~/.codex/sessions` (or `$CODEX_HOME/sessions`) |
+| OpenCode | The `opencode` command-line tool. The OpenCode desktop app doesn't count. | `~/.local/share/opencode` (or `$XDG_DATA_HOME/opencode`) |
 
-It reads file modification times, not what's inside the files.
+It reads file modification times, not what's inside the files. If Cursor is selected, a nested `/subagents/*.jsonl` file counts the same way.
 
 Once Agrypnos has seen work since you turned Keep awake on, it starts the wait after agent signals stop each time the busy signals stop. New activity starts the wait over. You can set it from 1 minute 30 seconds to 10 minutes. When the wait runs out, Keep awake turns off. If Agrypnos never saw any work since you turned it on, Keep awake stays on. The wait is there because an agent can go quiet for a while between file writes, and that shouldn't look like the end of the run.
 
@@ -120,7 +120,7 @@ Agrypnos can't tell whether a model is "thinking". It only sees processes and fi
 - **Wait after agent signals stop ended.** Only when How long is **Agents**.
 - **Low battery.** On battery, at the level you set (15% by default, 5–100%).
 - **Thermal pressure.** When macOS reports a serious or critical thermal state. You can turn this off in **Power**.
-- **Low Power Mode.** On battery, Keep awake left over from an earlier session turns off. Keep awake you turned on yourself stays on.
+- **Low Power Mode.** On battery with Low Power Mode on, Keep awake that Agrypnos took over at launch (see below) turns off. Keep awake you turned on yourself, from the popover, the hotkey, or `/arm`, stays on.
 - **Unanswered question.** A forwarded agent question got no answer for 10 minutes. See [Question notifications](#question-notifications-beta).
 
 If the lid is confirmed closed when one of these happens, Agrypnos also asks the Mac to sleep. The timer asks unless the lid is known to be open.
@@ -131,11 +131,13 @@ Keep awake also ends in these cases:
 - **Quit or crash.** Quitting Agrypnos turns the setting off. If the lid is confirmed closed, quitting also asks the Mac to sleep. If the app crashes or gets force-quit, a small helper it started at launch turns the setting off right after.
 - **Wake hold lost.** If Agrypnos can't set `disablesleep` again and read it back, it turns Keep awake off instead of showing it as on.
 
-The **Watch** section shows when Keep awake last ended and why.
+When the timer, the wait after agent signals stop, an unanswered question, low battery, thermal pressure, or Low Power Mode turns Keep awake off, Agrypnos also shows a macOS notification that says why. The **Watch** section always shows when Keep awake last ended and why.
+
+When Agrypnos starts and finds `disablesleep` still on from before, it turns it off. If that fails, it takes the setting over as Keep awake and shows a notification, so you can turn it off the normal way.
 
 ### Turning it off yourself
 
-Click the toggle or press `⌥⌘A`. If the lid is open, Keep awake turns off and the Mac stays awake. If the lid is confirmed closed (say you're doing it from a bot or the hotkey on an external keyboard), Keep awake turns off and the Mac goes to sleep.
+Click the toggle or press `⌥⌘A`. If the lid is open, Keep awake turns off and the Mac stays awake. If the lid is confirmed closed (say you're using the hotkey from an external keyboard), Keep awake turns off and the Mac goes to sleep. `/disarm` from your bot follows the same rule.
 
 ## Messages and remote commands
 
@@ -143,7 +145,7 @@ This part is optional and off by default. It lives in the **Notif** section. You
 
 There are two separate pieces:
 
-- **Watch-end message.** With **Watch-end POST** on, timer expiry sends "Agrypnos: your Keep awake timer ended." In **Agents** mode, the end of the wait sends "Agrypnos: the wait after agent signals stop ended." That one only goes out if Agrypnos saw your agents working since you turned Keep awake on. When Agrypnos is also asking the Mac to sleep, the message ends with "Asking the Mac to sleep." Discord also gets one message when Agrypnos asks the Mac to sleep for any other reason, such as `/disarm` or low battery with the lid confirmed closed. Telegram doesn't message for those.
+- **Watch-end message.** With **Watch-end POST** on, timer expiry sends "Agrypnos: your Keep awake timer ended." In **Agents** mode, the end of the wait sends "Agrypnos: the wait after agent signals stop ended." That one only goes out if Agrypnos saw your agents working since you turned Keep awake on. When Agrypnos is also asking the Mac to sleep, the message ends with "Asking the Mac to sleep." Discord also gets one message when Agrypnos asks the Mac to sleep after you turn Keep awake off (popover, hotkey, or `/disarm`) or after low battery, thermal pressure, or Low Power Mode turns it off. That only happens with the lid confirmed closed. Telegram doesn't message for those.
 - **Commands.** Send `/arm`, `/disarm`, `/status`, or `/help` to your own Telegram or Discord bot, and Agrypnos acts on them while the Mac is awake.
 
 The app has the same steps as below, with screenshots. Click **Setup instructions…**, the first card in **Notif**.
@@ -153,9 +155,9 @@ The app has the same steps as below, with screenshots. Click **Setup instruction
 | Command | What happens |
 |---|---|
 | `/arm` | Turns on Keep awake. |
-| `/disarm` | Turns off Keep awake. Lid open: the Mac stays awake. Lid confirmed closed: the Mac also goes to sleep. |
-| `/status` | Replies with what Agrypnos knows right now: Keep awake on or off, How long and the time left on a timer, lid state, panel mode, agent activity in **Agents** mode, the last time Keep awake turned off, your safety settings, and battery (for example `Battery 62% · on AC`) when it can read it. |
-| `/help` | Lists these commands. |
+| `/disarm` | Turns off Keep awake. Lid open: the Mac stays awake. Lid confirmed closed: the Mac also goes to sleep, even if Keep awake was already off. |
+| `/status` | Replies with what Agrypnos knows right now: Keep awake on or off, How long and the time left on a timer, lid state, panel mode (`Power A: brightness floor + ramp.` or `Power B: display sleep on confirmed lid close.`), agent activity in **Agents** mode, the last time Keep awake turned off, your safety settings, and battery (for example `Battery 62% · on AC`) when it can read it. |
+| `/help` | Replies with the command list, the lid rule for `/disarm`, what `/status` returns (including live battery when known), and the note that a silent bot usually means the Mac is asleep. |
 
 Agrypnos registers these four with your bot, so they show up in the `/` menu.
 
@@ -254,7 +256,7 @@ Nothing arrived? Check that Watch-end POST is on and the token and id are right.
 
 Secrets live in `~/Library/Application Support/Agrypnos/notif-secrets.json` with mode `0600`. They're not in the Keychain on purpose: an unsigned app asking for your login password looks like exactly the thing you shouldn't trust.
 
-When you first turn inbound on, or quit and relaunch, Agrypnos skips any old messages still waiting for the bot without running them. If the Mac was asleep when they arrived, the bot replies "Missed while asleep."
+Telegram holds messages for the bot until someone fetches them. When you first turn **Telegram inbound** on, or quit and relaunch, Agrypnos skips those old messages without running them. If the Mac was asleep when they arrived, the bot replies "Missed while asleep."
 
 </details>
 
@@ -269,7 +271,7 @@ When an agent stops to ask you a multiple-choice question, Agrypnos can send it 
 | Codex | A message that Codex is waiting on you. You still answer in Codex. |
 | Cursor | Nothing. The question stays in Cursor. |
 
-Each tool card has an info button that opens **Question setup** with the steps for that tool.
+The OpenCode, Claude Code, and Codex cards each have an info button that opens **Question setup** with the steps for that tool.
 
 ### Before you start
 
@@ -316,9 +318,9 @@ The Claude Code and Codex hooks run Agrypnos from where it is now. If you move `
 
 ### How answering works
 
-The bot shows the question with its options as buttons. Pick your answers, review them, then press **Send answers**. **Answer on Mac** leaves the question for you to answer on the Mac, without answering or rejecting it. If you answer on the Mac first, the buttons on your phone stop doing anything.
+The bot shows the question with numbered options and a button for each number. Tap a number to pick it (a ✓ marks your choice). Use **Review / next** to move through the questions and check your picks, then press **Send answers**. **Answer on Mac** leaves the question for you to answer on the Mac, without answering or rejecting it. If you answer on the Mac first, the buttons on your phone stop doing anything.
 
-Only questions with listed options go to the bot. Questions that need typed text, and permission or plan approvals, stay on the Mac. If a question is too big for a Discord message, it stays on the Mac and the bot says so.
+Only questions the agent asks through its question tool, with listed options, go to the bot. Questions it writes as ordinary chat text, questions that need typed text, and permission or plan approvals stay on the Mac. If a question is too big for a Discord message, it stays on the Mac and the bot says so.
 
 After Agrypnos restarts or the Mac sleeps, questions that were already waiting stay on the Mac. New ones forward once the connection is back. Locking the screen doesn't stop forwarding. Nothing relays questions while the Mac sleeps.
 
@@ -326,7 +328,9 @@ Question text stays in memory and on your messaging service. Agrypnos keeps no q
 
 ### Keep awake and unanswered questions
 
-Forwarding never turns Keep awake on. If Keep awake is already on, a waiting question holds it on for up to 10 minutes. If nobody answers by then and your selected agents look idle, Keep awake turns off. Agrypnos tries to send your bot a short note first. With the lid confirmed closed, it then asks the Mac to sleep. If an agent still looks busy, or Agrypnos can't tell, it waits for the usual wait after agent signals stop first. Turning Keep awake off yourself, and the battery, thermal, and Low Power Mode limits, still work at any time.
+Forwarding never turns Keep awake on. If Keep awake is already on, a waiting question stops **Agents** mode from turning it off for up to 10 minutes. The timer, the battery, thermal, and Low Power Mode limits, and turning it off yourself still work at any time.
+
+If nobody answers within 10 minutes, Keep awake turns off once your selected agents look idle, whatever How long is set to. Agrypnos tries to send your bot a short note first. With the lid confirmed closed, it then asks the Mac to sleep. If an agent still looks busy or Agrypnos can't check, the bot gets a note that Keep awake stays on, and Agrypnos waits for the usual wait after agent signals stop before turning it off. If another question is still waiting, Keep awake stays on while that one waits.
 
 ## Settings
 
