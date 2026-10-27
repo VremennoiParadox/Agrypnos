@@ -36,7 +36,7 @@ final class CountTerminalSessionsPreferenceTests: XCTestCase {
         XCTAssertEqual(AgrypnosCopy.countTerminalSessions, "Count terminal sessions as busy")
         XCTAssertEqual(
             AgrypnosCopy.countTerminalSessionsHelp,
-            "Terminal session files can keep the watch on if this is on. Default off so a noisy terminal doesn’t hold wake."
+            "Some agents might launch terminals for tasks like testing. While the terminal is active and executing a command, the agent might go idle and wait for the terminal. This may turn Keep awake off. Turn this on if you want to prevent that."
         )
         let blob = [
             AgrypnosCopy.countTerminalSessions,
@@ -61,9 +61,9 @@ final class CountTerminalSessionsPreferenceTests: XCTestCase {
                 AgrypnosCopy.countTerminalSessionsHelp,
                 columns: PopoverCopyLayout.innerColumns
             ),
-            4
+            7
         )
-        XCTAssertEqual(PopoverCopyLayout.countTerminalSessionsHelpMaxLines, 4)
+        XCTAssertEqual(PopoverCopyLayout.countTerminalSessionsHelpMaxLines, 7)
         XCTAssertLessThanOrEqual(
             CopyWrap.lineCount(
                 AgrypnosCopy.countTerminalSessionsHelp,

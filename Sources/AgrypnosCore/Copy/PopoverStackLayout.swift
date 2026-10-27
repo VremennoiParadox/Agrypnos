@@ -61,7 +61,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static var panelPowerHelpY: Int { panelPowerCaptionY + PopoverCopyLayout.panelPowerCaptionHeightPoints }
 
     public static func includeSwitchY(index: Int) -> Int {
-        prefControlY + index * switchRowHeight
+        prefHelpY + index * switchRowHeight
     }
 
     public static var notifEnableHelpY: Int { prefTitleY + titleRowHeight }
@@ -159,9 +159,11 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static func make(
         section: PopoverSection = .default,
         panelPowerMode: PanelPowerMode = .default,
-        showQuestionNotifications: Bool = false
+        showQuestionNotifications: Bool = false,
+        showsWatchCaption: Bool = false
     ) -> PopoverStackLayout {
-        let watchHeight = inset + 28 + PopoverCopyLayout.captionHeightPoints + inset
+        let watchHeight =
+            inset + 28 + (showsWatchCaption ? PopoverCopyLayout.captionHeightPoints : 0) + inset
         let hygieneHeight = panelPowerMode.writesBrightnessFloor
             ? hygieneKeyboardY
                 + 2 * switchRowHeight
@@ -172,7 +174,6 @@ public struct PopoverStackLayout: Equatable, Sendable {
         let includeHeight =
             inset
             + titleRowHeight
-            + PopoverCopyLayout.helpHeightPoints
             + AgentKind.allCases.count * switchRowHeight
             + inset
         let settleHeight =
@@ -238,15 +239,10 @@ public struct PopoverStackLayout: Equatable, Sendable {
             case .duration: return durationCardHeight
             case .lastWatchEnd: return inset + PopoverCopyLayout.lastWatchEndHeightPoints + inset
             case .panelPower:
-                var height =
-                    inset
+                return inset
                     + segmentRowHeight
                     + PopoverCopyLayout.panelPowerCaptionHeightPoints
                     + inset
-                if !PanelPowerChrome.showsLidOpenRamp(panelPowerMode) {
-                    height += PopoverCopyLayout.panelPowerHelpHeightPoints
-                }
-                return height
             case .hygiene: return hygieneHeight
             case .battery: return batteryCardHeight
             case .agentInclude: return includeHeight

@@ -26,14 +26,14 @@ final class LastWatchEndTests: XCTestCase {
     }
 
     func testLastWatchEndCopyMatchesLockedReasons() {
-        XCTAssertEqual(AgrypnosCopy.lastWatchEndNone, "No watch has ended yet.")
+        XCTAssertEqual(AgrypnosCopy.lastWatchEndNone, "Keep awake has not ended yet.")
         let expected: [(DisengageReason, String)] = [
-            (.user, "Last watch ended at 23:04, because you turned it off."),
-            (.timerExpired, "Last watch ended at 23:04, because the timer ended."),
-            (.batteryFloor, "Last watch ended at 23:04, because the battery floor was reached."),
-            (.thermal, "Last watch ended at 23:04, because thermal pressure turned the watch off."),
-            (.agentsSettled, "Last watch ended at 23:04, because local busy signals stayed idle after the wait."),
-            (.lowPowerMode, "Last watch ended at 23:04, because Low Power Mode was on."),
+            (.user, "Keep awake ended at 23:04, because you turned it off."),
+            (.timerExpired, "Keep awake ended at 23:04, because the timer ended."),
+            (.batteryFloor, "Keep awake ended at 23:04, because the battery floor was reached."),
+            (.thermal, "Keep awake ended at 23:04, because thermal pressure turned Keep awake off."),
+            (.agentsSettled, "Keep awake ended at 23:04, because the wait after agent signals stop ended."),
+            (.lowPowerMode, "Keep awake ended at 23:04, because Low Power Mode was on."),
         ]
         for (reason, line) in expected {
             XCTAssertEqual(AgrypnosCopy.lastWatchEndCaption(when: "23:04", reason: reason), line)
@@ -52,8 +52,7 @@ final class LastWatchEndTests: XCTestCase {
         ] {
             XCTAssertFalse(blob.contains(banned), banned)
         }
-        XCTAssertTrue(caption.contains("local busy signals"))
-        XCTAssertTrue(caption.contains("after the wait"))
+        XCTAssertTrue(caption.contains("wait after agent signals stop"))
         XCTAssertEqual(PopoverCopyLayout.lastWatchEndMaxLines, 3)
         for reason in DisengageReason.allCases {
             let lines = CopyWrap.lineCount(

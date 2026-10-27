@@ -29,7 +29,7 @@ final class WatchCaptionPanelModeTests: XCTestCase {
         let caption = AgrypnosCopy.captionPrepared(floor: 15, panelPowerMode: .displaySleep)
         XCTAssertEqual(
             caption,
-            "Armed. Waiting for lid close — then the panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake."
+            "Armed and waiting for the lid to close."
         )
         XCTAssertEqual(
             AgrypnosCopy.watchCaption(
@@ -37,7 +37,7 @@ final class WatchCaptionPanelModeTests: XCTestCase {
             ),
             caption
         )
-        assertSleepPanelHonesty(caption)
+        XCTAssertFalse(caption.lowercased().contains("brightness floor"))
         assertFitsCaption(caption)
         assertFitsCaption(AgrypnosCopy.captionPrepared(floor: 100, panelPowerMode: .displaySleep))
     }
@@ -46,7 +46,7 @@ final class WatchCaptionPanelModeTests: XCTestCase {
         let caption = AgrypnosCopy.captionLidClosed(floor: 15, panelPowerMode: .displaySleep)
         XCTAssertEqual(
             caption,
-            "Lid closed. Panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake. Auto-off at 15% battery."
+            "Lid closed. Panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake. Auto-off at 15% battery."
         )
         XCTAssertEqual(
             AgrypnosCopy.watchCaption(
@@ -69,15 +69,15 @@ final class WatchCaptionPanelModeTests: XCTestCase {
         )
         XCTAssertEqual(
             open,
-            "Leftover SleepDisabled. Lid close — then the panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake."
+            "Leftover SleepDisabled. Lid close — then the panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake."
         )
         XCTAssertEqual(
             closed,
-            "Leftover SleepDisabled. Lid closed. Panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake. Auto-off at 15% battery."
+            "Leftover SleepDisabled. Lid closed. Panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake. Auto-off at 15% battery."
         )
         XCTAssertEqual(
             AgrypnosCopy.leftoverNotify(for: .displaySleep),
-            "SleepDisabled was already on. Agrypnos adopted it. Lid close still sleeps the panel + keyboard backlight off. Keep the watch still holds the Mac awake."
+            "SleepDisabled was already on. Agrypnos adopted it. Lid close still sleeps the panel + keyboard backlight off. Keep awake still holds the Mac awake."
         )
         XCTAssertEqual(
             AgrypnosCopy.leftoverNotify(for: .floor),
@@ -87,31 +87,31 @@ final class WatchCaptionPanelModeTests: XCTestCase {
             AgrypnosCopy.menuTooltip(
                 engaged: true, leftover: false, onBattery: false, lidClosed: false, panelPowerMode: .displaySleep
             ),
-            "Agrypnos: armed. Waiting for lid close — then the panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake."
+            "Agrypnos: armed. Waiting for lid close — then the panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake."
         )
         XCTAssertEqual(
             AgrypnosCopy.menuTooltip(
                 engaged: true, leftover: false, onBattery: true, lidClosed: false, panelPowerMode: .displaySleep
             ),
-            "Agrypnos: armed. Waiting for lid close — then the panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake. On battery."
+            "Agrypnos: armed. Waiting for lid close — then the panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake. On battery."
         )
         XCTAssertEqual(
             AgrypnosCopy.menuTooltip(
                 engaged: true, leftover: false, onBattery: false, lidClosed: true, panelPowerMode: .displaySleep
             ),
-            "Agrypnos: lid closed. Panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake."
+            "Agrypnos: lid closed. Panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake."
         )
         XCTAssertEqual(
             AgrypnosCopy.menuTooltip(
                 engaged: true, leftover: true, onBattery: false, lidClosed: false, panelPowerMode: .displaySleep
             ),
-            "Agrypnos: adopted leftover SleepDisabled. Waiting for lid close — then the panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake."
+            "Agrypnos: adopted leftover SleepDisabled. Waiting for lid close — then the panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake."
         )
         XCTAssertEqual(
             AgrypnosCopy.menuTooltip(
                 engaged: true, leftover: true, onBattery: false, lidClosed: true, panelPowerMode: .displaySleep
             ),
-            "Agrypnos: adopted leftover SleepDisabled. Lid closed. Panel sleeps + keyboard backlight off. Keep the watch still holds the Mac awake."
+            "Agrypnos: adopted leftover SleepDisabled. Lid closed. Panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake."
         )
         XCTAssertEqual(
             AgrypnosCopy.menuTooltip(
@@ -137,9 +137,9 @@ final class WatchCaptionPanelModeTests: XCTestCase {
     private func assertSleepPanelHonesty(_ text: String, file: StaticString = #filePath, line: UInt = #line) {
         let lower = text.lowercased()
         XCTAssertTrue(
-            lower.contains("keep the watch still holds")
+            lower.contains("keep awake still holds")
                 || lower.contains("still holds the mac awake"),
-            "Sleep panel copy must say Keep the watch still holds: \(text)",
+            "Sleep panel copy must say Keep awake still holds: \(text)",
             file: file,
             line: line
         )

@@ -16,18 +16,7 @@ final class AgentIncludeTests: XCTestCase {
         XCTAssertEqual(AgentIncludeChrome.defaultIncluded, Set(AgentKind.allCases))
         XCTAssertEqual(AgentIncludeChrome.titles, ["Cursor", "Claude Code", "Codex", "OpenCode"])
         XCTAssertEqual(AgrypnosCopy.agentInclude, "Which tools count as busy.")
-        XCTAssertEqual(
-            AgrypnosCopy.agentIncludeHelp,
-            "Only selected tools count as busy. Keep at least one on."
-        )
         XCTAssertFalse(AgrypnosCopy.agentInclude.lowercased().contains("we track every"))
-        XCTAssertFalse(AgrypnosCopy.agentIncludeHelp.lowercased().contains("we track every"))
-        XCTAssertFalse(AgrypnosCopy.agentIncludeHelp.lowercased().contains("still thinking"))
-        XCTAssertFalse(AgrypnosCopy.agentIncludeHelp.lowercased().contains("every ai"))
-        XCTAssertLessThanOrEqual(
-            CopyWrap.lineCount(AgrypnosCopy.agentIncludeHelp, columns: PopoverCopyLayout.innerColumns),
-            PopoverCopyLayout.helpMaxLines
-        )
     }
 
     func testMissingIncludeKeyDecodesToAllFourIncludingOpenCode() throws {

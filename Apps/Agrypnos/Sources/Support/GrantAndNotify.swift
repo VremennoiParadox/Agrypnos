@@ -42,7 +42,7 @@ enum GrantInstaller {
 
         let intro = NSAlert()
         intro.alertStyle = .informational
-        intro.messageText = "Let Agrypnos keep the watch"
+        intro.messageText = "Let Agrypnos keep awake"
         intro.informativeText = AgrypnosCopy.grantNeeded + " The grant is two exact pmset disablesleep commands. See SECURITY.md."
         intro.addButton(withTitle: "Enable")
         intro.addButton(withTitle: "Not now")

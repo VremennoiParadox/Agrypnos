@@ -14,7 +14,6 @@ final class QuestionRelayLayoutTests: XCTestCase {
             tools.agentInclude!.height,
             PopoverStackLayout.inset
                 + PopoverStackLayout.titleRowHeight
-                + PopoverCopyLayout.helpHeightPoints
                 + AgentKind.allCases.count * PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset
         )

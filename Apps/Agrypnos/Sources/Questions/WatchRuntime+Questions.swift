@@ -91,11 +91,11 @@ extension WatchRuntime {
             let text: String
             switch timeout.reason {
             case .busy:
-                text = "Question unanswered for 10 minutes; watch remains on because local busy signals are present."
+                text = "Question unanswered for 10 minutes; Keep awake stays on because local busy signals are present."
             case .unknown:
-                text = "Question unanswered for 10 minutes; watch remains on because agent activity could not be checked."
+                text = "Question unanswered for 10 minutes; Keep awake stays on because agent activity could not be checked."
             case .anotherQuestion:
-                text = "Question unanswered for 10 minutes; watch remains on while another question awaits an answer."
+                text = "Question unanswered for 10 minutes; Keep awake stays on while another question awaits an answer."
             case .idle:
                 continue
             }

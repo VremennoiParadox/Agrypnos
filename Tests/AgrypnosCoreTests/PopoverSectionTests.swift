@@ -151,31 +151,20 @@ final class PopoverSectionLayoutTests: XCTestCase {
             layout.agentInclude!.height,
             PopoverStackLayout.inset
                 + PopoverStackLayout.titleRowHeight
-                + PopoverCopyLayout.helpHeightPoints
                 + AgentKind.allCases.count * PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset
         )
-        XCTAssertEqual(PopoverStackLayout.includeSwitchY(index: 0), PopoverStackLayout.prefControlY)
+        XCTAssertEqual(PopoverStackLayout.includeSwitchY(index: 0), PopoverStackLayout.prefHelpY)
         XCTAssertEqual(
             PopoverStackLayout.includeSwitchY(index: 3),
-            PopoverStackLayout.prefControlY + 3 * PopoverStackLayout.switchRowHeight
-        )
-        XCTAssertLessThanOrEqual(
-            CopyWrap.lineCount(AgrypnosCopy.agentIncludeHelp, columns: PopoverCopyLayout.innerColumns),
-            PopoverCopyLayout.helpMaxLines
+            PopoverStackLayout.prefHelpY + 3 * PopoverStackLayout.switchRowHeight
         )
         XCTAssertLessThanOrEqual(
             CopyWrap.lineCount(AgrypnosCopy.agentInclude, columns: PopoverCopyLayout.innerColumns),
             1
         )
         XCTAssertEqual(AgrypnosCopy.agentInclude, "Which tools count as busy.")
-        XCTAssertEqual(
-            AgrypnosCopy.agentIncludeHelp,
-            "Only selected tools count as busy. Keep at least one on."
-        )
         XCTAssertFalse(AgrypnosCopy.agentInclude.lowercased().contains("we track every"))
-        XCTAssertFalse(AgrypnosCopy.agentIncludeHelp.lowercased().contains("every ai"))
-        XCTAssertFalse(AgrypnosCopy.agentIncludeHelp.lowercased().contains("still thinking"))
         XCTAssertNil(PopoverStackLayout.make(section: .watch).agentInclude)
         XCTAssertNil(PopoverStackLayout.make(section: .power).agentInclude)
         XCTAssertNil(PopoverStackLayout.make(section: .notif).agentInclude)

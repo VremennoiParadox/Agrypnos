@@ -332,8 +332,8 @@ final class TelegramInboundCopyTests: XCTestCase {
     func testRepliesArePlainFacts() {
         XCTAssertEqual(TelegramInboundCopy.armed, "Armed.")
         XCTAssertEqual(TelegramInboundCopy.disarmed, "Disarmed.")
-        XCTAssertEqual(TelegramInboundCopy.keepOn, "Keep the watch is on.")
-        XCTAssertEqual(TelegramInboundCopy.keepOff, "Keep the watch is off.")
+        XCTAssertEqual(TelegramInboundCopy.keepOn, "Keep awake is on.")
+        XCTAssertEqual(TelegramInboundCopy.keepOff, "Keep awake is off.")
         XCTAssertEqual(
             TelegramInboundCopy.reply(intent: .arm, engaged: true, duration: .indefinite),
             "Armed."

@@ -67,12 +67,12 @@ public struct TelegramBotCommand: Equatable, Sendable {
 
 public enum TelegramBotCommandMenu: Sendable {
     public static let commands: [TelegramBotCommand] = [
-        TelegramBotCommand(command: "arm", description: "Turn Keep the watch on."),
+        TelegramBotCommand(command: "arm", description: "Turn Keep awake on."),
         TelegramBotCommand(
             command: "disarm",
-            description: "Turn Keep the watch off. Sleeps the Mac only if the lid is closed."
+            description: "Turn Keep awake off. Sleeps the Mac only if the lid is closed."
         ),
-        TelegramBotCommand(command: "status", description: "Keep the watch, How long, lid, and safety facts."),
+        TelegramBotCommand(command: "status", description: "Keep awake, How long, lid, and safety facts."),
         TelegramBotCommand(command: "help", description: "Explain /arm, /disarm, /status, and /help."),
     ]
 }

@@ -25,6 +25,8 @@ public struct WatchEngine: Equatable, Sendable {
     public private(set) var lastDisengageLidClosed: Bool
     var lastWatchEndRollback: LastWatchEnd?
     private var timerEndRollback: Date?
+    private var userForcedRollback = false
+    private var leftoverAdoptedRollback = false
     var pendingLastWatchEnd: LastWatchEnd?
     private var lidConfirm: LidCloseConfirm
 
@@ -69,10 +71,11 @@ public struct WatchEngine: Equatable, Sendable {
         pendingLastWatchEnd = nil
         let restored = lastWatchEndRollback
         lastWatchEndRollback = nil
-        leftoverAdopted = false
+        leftoverAdopted = leftoverAdoptedRollback
         self.lidClosed = lastDisengageLidClosed
         let deadline = timerEndRollback
-        let commands = engage(now: now, forcedByUser: true, resetPostedThisUserArm: false)
+        let commands = engage(now: now, forcedByUser: userForcedRollback, resetPostedThisUserArm: false)
+        leftoverAdopted = leftoverAdoptedRollback
         timerEnd = deadline
         preferences.lastWatchEnd = restored
         return commands
@@ -105,6 +108,7 @@ public struct WatchEngine: Equatable, Sendable {
     }
 
     public mutating func userSetDuration(_ option: DurationOption, now: Date) -> [WatchCommand] {
+        guard option != preferences.duration else { return [] }
         preferences.duration = option
         settle.grace = preferences.agentSettleGrace
         guard engaged else { return [] }
@@ -207,9 +211,6 @@ public struct WatchEngine: Equatable, Sendable {
             now: now
         ), reason.turnsWatchOff {
             return disengage(reason, at: now)
-        }
-        if questionWait.action == .endUnanswered {
-            return disengage(.questionUnanswered, at: now)
         }
         if questionWait.action == .hold || questionWait.action == .deferTimeout {
             if observeAgents, agents.anyBusy(included: preferences.includedAgentKinds) {
@@ -322,6 +323,8 @@ public struct WatchEngine: Equatable, Sendable {
         if wasEngaged {
             lastWatchEndRollback = preferences.lastWatchEnd
             timerEndRollback = timerEnd
+            userForcedRollback = userForcedThisSession
+            leftoverAdoptedRollback = leftoverAdopted
             let end = LastWatchEnd(endedAt: now, reason: reason)
             if postWatchEnd {
                 pendingLastWatchEnd = end

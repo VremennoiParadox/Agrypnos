@@ -1,7 +1,7 @@
 import Foundation
 
 /// Mutually exclusive panel modes. A = floor + ramp. B = display sleep.
-/// B does not turn Keep the watch off and does not sleep the Mac.
+/// B does not turn Keep awake off and does not sleep the Mac.
 public enum PanelPowerMode: String, Equatable, Sendable, CaseIterable {
     /// A (default): brightness floor on confirmed lid-close; lid-open ramp.
     case floor
@@ -113,9 +113,9 @@ public enum PanelPowerChrome: Sendable {
     public static func caption(_ mode: PanelPowerMode) -> String {
         switch mode {
         case .floor:
-            return "Brightness floor on confirmed lid close + lid-open ramp. Panel stays on, dimmed."
+            return "Lowers brightness to a set point instead of fully shutting off the screen."
         case .displaySleep:
-            return "Panel sleeps on confirmed lid close. Keep the watch still holds the Mac awake."
+            return "Shuts off the screen fully to minimize battery usage, the Mac still stays awake and agents aren't interrupted in any way."
         }
     }
 
@@ -124,7 +124,7 @@ public enum PanelPowerChrome: Sendable {
         case .floor:
             return "Confirmed lid close sets the brightness floor. The panel stays on, dimmed."
         case .displaySleep:
-            return "Confirmed lid close sleeps the panel. Keep the watch still holds the Mac awake. Brightness return is hidden because it only applies after the floor path."
+            return caption(.displaySleep)
         }
     }
 }

@@ -115,7 +115,7 @@ final class SettingsSliceTests: XCTestCase {
     func testTimedHintTreatsCustomMinutesLikeOtherTimers() {
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .customMinutes(33), engaged: false, remainingSeconds: nil),
-            "Starts when Keep the watch is on.\nSleeps unless the lid is open."
+            AgrypnosCopy.timedHint
         )
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .customMinutes(33), engaged: true, remainingSeconds: 125),
@@ -194,9 +194,9 @@ final class SettingsSliceTests: XCTestCase {
         let remap = HotkeyChord(keyCode: 1, option: true, command: true)
         let failed = AgrypnosCopy.hotkeyHint(remap, registered: false)
         XCTAssertTrue(failed.contains("⌥⌘S"))
-        XCTAssertFalse(failed.lowercased().contains("toggles the watch"))
+        XCTAssertFalse(failed.lowercased().contains("toggles keep awake"))
         XCTAssertTrue(failed.lowercased().contains("not registered") || failed.lowercased().contains("isn’t registered"))
-        XCTAssertEqual(AgrypnosCopy.hotkeyHint(remap, registered: true), "⌥⌘S toggles the watch")
+        XCTAssertEqual(AgrypnosCopy.hotkeyHint(remap, registered: true), "⌥⌘S toggles Keep awake")
     }
 
     func testSettingsBundleRoundTripKeepsRemapCustomMinutesAndBattery() throws {

@@ -264,12 +264,12 @@ extension WatchRuntime {
         if let reason {
             let rollback = engine.rollbackDisarmFailure(now: Date())
             // A failed clear left SleepDisabled held; do not turn a valid rollback into a failed reassertion.
-            let commands = readKernel() == .held ? rollback.filter { $0 != .assertSleepDisabled } : rollback
+            let commands = readKernel() == .clear ? rollback : rollback.filter { $0 != .assertSleepDisabled }
             apply(commands)
             syncDeadlineTimer()
             if reason == .questionUnanswered, !questionReleaseFailureReported {
                 questionReleaseFailureReported = true
-                Task { await attemptQuestionNotice("Agrypnos couldn't turn the watch off after an unanswered question.") }
+                Task { await attemptQuestionNotice("Agrypnos couldn't turn Keep awake off after an unanswered question.") }
             }
         }
         notify("Couldn't verify SleepDisabled was cleared.")
@@ -284,7 +284,7 @@ extension WatchRuntime {
         store.save(engine.preferences)
         clearQuestionWatch()
         let context = key.map { "\n\($0.provider.displayName) · session \($0.sessionID.prefix(80))" } ?? ""
-        var message = "Agrypnos: watch turned off because an agent question went unanswered for 10 minutes."
+        var message = "Agrypnos: Keep awake turned off because an agent question went unanswered for 10 minutes."
         if shouldSleep { message += " Asking the Mac to sleep." }
         message += context
         let captured = questionSleepGeneration
@@ -400,10 +400,8 @@ extension WatchRuntime {
                 var live = commands
                 self.removeSleepIfLidOpen(&live, reason: reason)
                 if !self.disarmKernel() {
-                    self.notify("Couldn't verify SleepDisabled was cleared.")
-                    self.store.save(self.engine.preferences)
+                    self.rollbackFailedKernelClear(reason: reason)
                     self.idlePostTask = nil
-                    self.delegate?.watchRuntimeDidChange(self)
                     return
                 }
                 let result = self.apply(live)

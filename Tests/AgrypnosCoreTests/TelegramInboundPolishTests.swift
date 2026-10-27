@@ -44,7 +44,7 @@ final class TelegramInboundHelpCopyTests: XCTestCase {
         XCTAssertTrue(help.contains("/disarm"))
         XCTAssertTrue(help.contains("/status"))
         XCTAssertTrue(help.contains("/help"))
-        XCTAssertTrue(lower.contains("keep the watch"))
+        XCTAssertTrue(lower.contains("keep awake"))
         XCTAssertTrue(lower.contains("asleep"))
         XCTAssertTrue(lower.contains("polling") || lower.contains("not polling"))
         XCTAssertTrue(lower.contains("lid"))
@@ -56,7 +56,7 @@ final class TelegramInboundHelpCopyTests: XCTestCase {
         XCTAssertFalse(lower.contains("still thinking"))
         XCTAssertFalse(lower.contains("eta"))
         XCTAssertFalse(lower.contains("always sleep"))
-        XCTAssertTrue(lower.contains("watch facts") || lower.contains("keep the watch, how long"))
+        XCTAssertTrue(lower.contains("watch facts") || lower.contains("keep awake, how long"))
         XCTAssertTrue(lower.contains("live battery"))
         XCTAssertTrue(lower.contains("when known"))
     }

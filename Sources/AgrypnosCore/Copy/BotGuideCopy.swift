@@ -130,15 +130,15 @@ public enum BotGuide {
     )
 
     static let watchAndExpiry = BotGuideStep(
-        "Watch and expiry",
-        "Forwarding never arms Keep the watch. While already armed, a question holds it for up to 10 minutes; other busy or unknown agent activity delays auto-off. Manual off and safety still win. App restart and sleep invalidate phone controls and leave existing pending questions local; new questions can forward when connected again. Screen lock alone does not cancel forwarding."
+        "Keep awake and expiry",
+        "Forwarding never arms Keep awake. While already armed, a question holds it for up to 10 minutes; other busy or unknown agent activity delays auto-off. Manual off and safety still win. App restart and sleep invalidate phone controls and leave existing pending questions local; new questions can forward when connected again. Screen lock alone does not cancel forwarding."
     )
 
     static let telegramAsleep = "If the bot isn’t replying, the Mac is likely asleep / Agrypnos isn’t polling."
     static let discordAsleep = "If the bot isn’t replying, the Mac is likely asleep / Agrypnos isn’t receiving updates."
 
     static let idleAfterWait =
-        "Arm Keep the watch with How long set to Agents and run an agent so Agrypnos sees a local busy signal. When those signals stay idle through the wait (the idle wait in Agents), expect one message. Then Keep the watch turns off."
+        "Arm Keep awake with How long set to Agents and run an agent so Agrypnos sees a local busy signal. When the wait after agent signals stop ends, expect one message. Then Keep awake turns off."
 
     static let telegramSetup = BotGuideSection(
         title: "Create your Telegram bot",
@@ -177,8 +177,8 @@ public enum BotGuide {
         numbered: true,
         steps: [
             BotGuideStep(
-                "Get a message when the watch ends",
-                "Switch on Watch-end POST. Agrypnos messages your Telegram bot when the timer ends or Agents stay idle through the wait."
+                "Get a message when Keep awake turns off",
+                "Switch on Watch-end POST. Agrypnos messages your Telegram bot when the timer ends or the wait after agent signals stop ends."
             ),
             BotGuideStep(
                 "Send commands from Telegram",
@@ -223,8 +223,8 @@ public enum BotGuide {
                 "An old webhook URL is unused. Paste the bot token and channel id."
             ),
             BotGuideStep(
-                "Get a message when the watch ends",
-                "Switch on Watch-end POST. Agrypnos messages this channel when the timer ends, when Agents stay idle through the wait, or when it asks the Mac to sleep."
+                "Get a message when Keep awake turns off",
+                "Switch on Watch-end POST. Agrypnos messages this channel when the timer ends, when the wait after agent signals stop ends, or when it asks the Mac to sleep."
             ),
             BotGuideStep(
                 "Turn inbound on",
@@ -239,14 +239,14 @@ public enum BotGuide {
             note: nil,
             numbered: false,
             steps: [
-                BotGuideStep("/arm", "Turns Keep the watch on."),
+                BotGuideStep("/arm", "Turns Keep awake on."),
                 BotGuideStep(
                     "/disarm",
-                    "Turns Keep the watch off. With the lid open it does not sleep the Mac. With the lid confirmed closed it turns Keep the watch off and sends the Mac to sleep."
+                    "Turns Keep awake off. With the lid open it does not sleep the Mac. With the lid confirmed closed it turns Keep awake off and sends the Mac to sleep."
                 ),
                 BotGuideStep(
                     "/status",
-                    "Returns Keep the watch, How long, lid, Agents facts when relevant, last watch end, and safety prefs. Includes live battery when known, like Battery 62% · on AC."
+                    "Returns Keep awake, How long, lid, Agents facts when relevant, the last time Keep awake turned off, and safety prefs. Includes live battery when known, like Battery 62% · on AC."
                 ),
                 BotGuideStep("/help", "Lists these commands."),
                 BotGuideStep(

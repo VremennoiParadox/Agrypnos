@@ -2,7 +2,7 @@
   <img src="Apps/Agrypnos/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png" width="128" alt="Agrypnos icon">
   <h1>Agrypnos</h1>
   <p><b>Close the lid. Your coding agents keep working.</b></p>
-  <p>A small macOS menu-bar app that keeps your Mac awake with the lid shut while your agents run, and lets it sleep again when they go idle or when you say so.</p>
+  <p>A small macOS menu-bar app that keeps your Mac awake with the lid shut while your agents run, and lets it sleep again when the wait after agent signals stop ends, or when you say so.</p>
   <p>
     <a href="https://github.com/VremennoiParadox/Agrypnos/actions/workflows/core.yml"><img src="https://github.com/VremennoiParadox/Agrypnos/actions/workflows/core.yml/badge.svg" alt="Core tests"></a>
     <img src="https://img.shields.io/badge/macOS-14%2B-black?logo=apple" alt="macOS 14+">
@@ -30,16 +30,16 @@
 
 You start a long agent run, close the laptop, and walk away. macOS goes to sleep and the run dies with it.
 
-The usual keep-awake tricks don't help here. Power assertions (what `caffeinate` uses) stop working the moment the lid closes. The one switch that does hold is `pmset disablesleep`, and it's easy to forget to turn off again. Agrypnos flips it for you, turns the screen down while the lid is shut, and flips it back once your timer ends, your agents have been idle for a while, or you turn it off.
+The usual keep-awake tricks don't help here. Power assertions (what `caffeinate` uses) stop working the moment the lid closes. The one switch that does hold is `pmset disablesleep`, and it's easy to forget to turn off again. Agrypnos flips it for you, turns the screen down while the lid is shut, and flips it back once your timer ends, the wait after agent signals stop ends, or you turn it off.
 
 ## What you get
 
-- Turn on **Keep the watch** from the menu bar or with `⌥⌘A`. Nothing changes on screen until you close the lid.
+- Turn on **Keep awake** from the menu bar or with `⌥⌘A`. Nothing changes on screen until you close the lid.
 - On lid close, the keyboard backlight goes off and the panel dims to a floor you choose. If you prefer, the panel sleeps instead.
-- Set How long to **1h**, **3h**, or custom minutes for a countdown that starts when you turn the watch on.
-- Set How long to **Agents** and the watch ends by itself once your agents have been idle for a few minutes.
-- Low battery and thermal pressure end the watch too, and a reboot always clears it.
-- If you want, *your* Telegram or Discord bot gets a message when the timer ends or the agents go idle. Discord also messages when Agrypnos asks the Mac to sleep. Either bot takes `/arm`, `/disarm`, and `/status` from your phone.
+- Set How long to **1h**, **3h**, or custom minutes for a countdown that starts when you turn Keep awake on.
+- Set How long to **Agents** and Keep awake turns off by itself when the wait after agent signals stop ends.
+- Low battery and thermal pressure turn Keep awake off too, and a reboot always clears it.
+- If you want, *your* Telegram or Discord bot gets a message when the timer ends or the wait after agent signals stop ends. Discord also messages when Agrypnos asks the Mac to sleep. Either bot takes `/arm`, `/disarm`, and `/status` from your phone.
 - No analytics, no accounts, no shared bot. The only privileged piece is a two-command sudoers rule, spelled out in [SECURITY.md](SECURITY.md).
 
 ## Install
@@ -55,7 +55,7 @@ open dist/Agrypnos.app
 
 An eye appears in the menu bar. That's Agrypnos. It has no Dock icon and no settings window. Everything lives in the menu-bar popover.
 
-The first time you turn the watch on, Agrypnos asks to install a small sudoers rule so it can run exactly these two commands without a password:
+The first time you turn Keep awake on, Agrypnos asks to install a small sudoers rule so it can run exactly these two commands without a password:
 
 ```
 /usr/bin/pmset -a disablesleep 1
@@ -68,15 +68,15 @@ macOS asks for your password once. To remove the rule later, run `./Scripts/ungr
 
 1. Click the eye in the menu bar. The popover opens on **Watch**.
 2. Under **How long**, pick **Agents**.
-3. Turn on **Keep the watch**. The menu-bar eye turns **purple**. The icon stays the same size in every mode: gray when off, blue for ∞, gold for timed watches, and purple for Agents.
+3. Turn on **Keep awake**. The menu-bar eye turns **purple**. The icon stays the same size in every mode: gray when off, blue for ∞, gold when Keep awake is on a timer, and purple for Agents.
 4. Start your agent and close the lid.
 
-Agrypnos waits until the lid has really closed (a single flicker of the lid sensor doesn't count), then turns the keyboard backlight off and dims the panel. When your agents have been idle for the idle wait (2 minutes by default), the watch turns off and the Mac is free to sleep.
+Agrypnos waits until the lid has really closed (a single flicker of the lid sensor doesn't count), then turns the keyboard backlight off and dims the panel. When the wait after agent signals stop ends (2 minutes by default), Keep awake turns off and the Mac is free to sleep.
 
 Want it on until you say stop? Pick `∞` instead and turn it off yourself.
 
 > [!NOTE]
-> `1h`, `3h`, and custom minutes start a countdown when Keep the watch turns on. Time left appears in the same How long card. Opening the lid keeps the timer running. Changing the duration while on starts a fresh interval. At expiry the watch turns off and the Mac sleeps unless the lid is known open; if the lid reading is unavailable, Agrypnos requests sleep. The selected duration stays saved. Battery and thermal limits still apply.
+> `1h`, `3h`, and custom minutes start a countdown when Keep awake turns on. Time left appears in the same How long card. Opening the lid keeps the timer running. Changing the duration while on starts a fresh interval. At expiry Keep awake turns off and the Mac sleeps unless the lid is known open; if the lid reading is unavailable, Agrypnos requests sleep. The selected duration stays saved. Battery and thermal limits still apply.
 
 ## How it works
 
@@ -89,7 +89,7 @@ The **Power** section has two panel modes. You pick one.
 | **Dim panel** (default) | Brightness drops to your floor (15% by default, 1–40%). The panel stays on. | Brightness fades back over 1, 2, or 3 seconds (2 by default). |
 | **Sleep panel** | The display itself sleeps (`displaysleepnow`). | The display wakes. No fade, so that setting is hidden. |
 
-Both modes turn the keyboard backlight off. Neither one puts the Mac to sleep or turns the watch off, so your agents keep running either way. Turning the watch on with the lid open never touches the screen.
+Both modes turn the keyboard backlight off. Neither one puts the Mac to sleep or turns Keep awake off, so your agents keep running either way. Turning Keep awake on with the lid open never touches the screen.
 
 If Agrypnos never saw your brightness before the lid closed, it won't guess one when the lid opens. It leaves the screen alone.
 
@@ -106,28 +106,28 @@ It only looks at your own Mac. For each tool you leave checked under **Agents**,
 
 It reads file modification times, not what's inside the files.
 
-Once it has seen work during this watch, it starts counting when the signals stop. If they stay quiet through the idle wait (1 minute 30 seconds–10 minutes), the watch ends. If it never saw any work since you turned it on, it keeps the watch on. The idle wait exists because an agent can pause for a while between file writes, and that shouldn't look like the end of the run.
+Once it has seen work while Keep awake is on, it starts the wait after agent signals stop. When that wait ends (1 minute 30 seconds–10 minutes), Keep awake turns off. If it never saw any work since you turned it on, Keep awake stays on. That wait exists because an agent can pause for a while between file writes, and that shouldn't look like the end of the run.
 
-Agrypnos can't tell whether a model is "thinking". It only sees processes and files, so pick an idle wait that fits how your agents work.
+Agrypnos can't tell whether a model is "thinking". It only sees processes and files, so pick a wait after agent signals stop that fits how your agents work.
 
 > [!TIP]
 > Terminal session files don't count as busy by default, so a chatty terminal can't hold the Mac awake forever. Turn on **Count terminal sessions as busy** in **Agents** if you want them to.
 
-### When the watch turns itself off
+### When Keep awake turns itself off
 
 - **Timer ended.** For **1h**, **3h**, or custom minutes. Opening the lid does not stop the timer; expiry sleeps the Mac unless the lid is known open.
-- **Agents went idle.** Only when How long is **Agents**.
+- **Wait after agent signals stop.** Only when How long is **Agents**.
 - **Low battery.** On battery, at the level you set (15% by default, 5–100%).
 - **Thermal pressure.** When macOS reports serious or critical thermal state. You can turn this off in **Power**.
-- **Low Power Mode.** On battery, a watch Agrypnos inherited from an earlier session ends. A watch you turned on yourself keeps going.
-- **Reboot.** macOS clears the setting. Launch at login never turns the watch back on.
+- **Low Power Mode.** On battery, Keep awake inherited from an earlier session turns off. Keep awake you turned on yourself stays on.
+- **Reboot.** macOS clears the setting. Launch at login never turns Keep awake back on.
 - **Quit or crash.** Quitting Agrypnos turns the setting off. If the app crashes or gets force-quit, a small helper it started at launch turns it off right after.
 
-The **Watch** section shows when the last watch ended and why.
+The **Watch** section shows when Keep awake last ended and why.
 
 ### Turning it off yourself
 
-Click the toggle or press `⌥⌘A`. If the lid is open, the watch turns off and the Mac stays awake. If the lid is confirmed closed (say you're doing it from a bot or the hotkey on an external keyboard), the watch turns off and the Mac goes to sleep.
+Click the toggle or press `⌥⌘A`. If the lid is open, Keep awake turns off and the Mac stays awake. If the lid is confirmed closed (say you're doing it from a bot or the hotkey on an external keyboard), Keep awake turns off and the Mac goes to sleep.
 
 ## Messages and remote commands
 
@@ -135,7 +135,7 @@ This part is optional and off by default. It lives in the **Notif** section. You
 
 There are two separate pieces:
 
-- **Watch-end message.** With **Watch-end POST** on, timer expiry sends “Agrypnos: your watch timer ended.” **Agents** mode sends its existing idle-after-wait message only after seeing local busy signals this arm. Both use your Discord bot channel (bot token + channel id), your Telegram bot, or both. Discord also messages when Agrypnos asks the Mac to sleep (`pmset sleepnow`). Telegram does not message for battery, thermal, Low Power Mode, or turning Keep the watch off. An Agents watch that never saw work does not message either. Discord commands and this Discord sleep message have not been checked on a real Mac yet.
+- **Watch-end message.** With **Watch-end POST** on, timer expiry sends “Agrypnos: your Keep awake timer ended.” **Agents** mode sends “the wait after agent signals stop ended” only after seeing local busy signals this arm. Both use your Discord bot channel (bot token + channel id), your Telegram bot, or both. Discord also messages when Agrypnos asks the Mac to sleep (`pmset sleepnow`). Telegram does not message for battery, thermal, Low Power Mode, or turning Keep awake off. With How long set to Agents, a session that never saw work does not message either. Discord commands and this Discord sleep message have not been checked on a real Mac yet.
 - **Commands.** Send `/arm`, `/disarm`, `/status`, or `/help` to your own Telegram or Discord bot, and Agrypnos acts on them while the Mac is awake. Discord commands have not been checked on a real Mac yet.
 
 The app has the same steps as below, with screenshots. Click **Setup instructions…**, the first card in **Notif**.
@@ -144,9 +144,9 @@ The app has the same steps as below, with screenshots. Click **Setup instruction
 
 | Command | What happens |
 |---|---|
-| `/arm` | Turns on Keep the watch. |
-| `/disarm` | Turns off Keep the watch. Lid open: the Mac stays awake. Lid confirmed closed: the Mac also goes to sleep. |
-| `/status` | Replies with what Agrypnos knows right now: watch on or off, How long, lid state, agent activity, the last watch end, your safety settings, and battery (for example `Battery 62% · on AC`) when it can read it. |
+| `/arm` | Turns on Keep awake. |
+| `/disarm` | Turns off Keep awake. Lid open: the Mac stays awake. Lid confirmed closed: the Mac also goes to sleep. |
+| `/status` | Replies with what Agrypnos knows right now: Keep awake on or off, How long, lid state, agent activity, the last time Keep awake turned off, your safety settings, and battery (for example `Battery 62% · on AC`) when it can read it. |
 | `/help` | Lists these commands. |
 
 Agrypnos registers these four with your bot, so they show up in the `/` menu.
@@ -170,7 +170,7 @@ If the bot doesn't answer, the Mac is probably asleep. Nothing relays commands w
 
    If you see `"result":[]`, the bot hasn't seen a message yet. Message it again and reload. A private chat id is a positive number. A group id is usually negative.
 5. Paste the number into **Notif → Telegram → Chat id**.
-6. Turn on **Watch-end POST** for the idle message. Turn on the switch on **Telegram** for commands. They stay separate.
+6. Turn on **Watch-end POST** for messages when the timer ends or the wait after agent signals stop ends. Turn on the switch on **Telegram** for commands. They stay separate.
 
 Commands only count from the chat id you saved. If that's a group, anyone in the group can send them.
 
@@ -191,7 +191,7 @@ This one bot messages the channel and receives commands. Discord commands haven'
 
 4. In Discord, turn on **User Settings → Advanced → Developer Mode**.
 5. Right-click the channel the bot should listen in and choose **Copy Channel ID**. Paste it into **Notif → Discord → Channel**.
-6. Turn on **Watch-end POST**. Agrypnos messages this channel when the timer ends, when Agents stay idle through the wait, or when it asks the Mac to sleep.
+6. Turn on **Watch-end POST**. Agrypnos messages this channel when the timer ends, when the wait after agent signals stop ends, or when it asks the Mac to sleep.
 7. Turn on **Discord inbound**, then type `/help` in that channel.
 
 An old webhook URL is unused. Paste the bot token and channel id.
@@ -217,17 +217,17 @@ Use any mix. Leave a field empty to skip that channel.
 </details>
 
 <details>
-<summary><b>Test the idle message</b></summary>
+<summary><b>Test Watch-end POST</b></summary>
 
 <br>
 
 1. Turn on **Watch-end POST** and save at least one channel.
-2. In **Watch**, set How long to **Agents** and turn on Keep the watch.
+2. In **Watch**, set How long to **Agents** and turn on Keep awake.
 3. Start an agent from one of the checked tools, so Agrypnos sees it working.
-4. Let it finish, then wait out the idle wait (2 minutes by default).
-5. You should get exactly one message, and Keep the watch turns off.
+4. Let it finish, then wait out the wait after agent signals stop (2 minutes by default).
+5. You should get exactly one message, and Keep awake turns off.
 
-To test timer messages, select **1 custom minute**, turn on Keep the watch, and leave the lid open. After a minute the watch turns off and you get the timer message; the open Mac stays awake. `/status` includes the actual time left while a timed watch is on.
+To test timer messages, select **1 custom minute**, turn on Keep awake, and leave the lid open. After a minute Keep awake turns off and you get the timer message; the open Mac stays awake. `/status` includes the actual time left while Keep awake is on a timer.
 
 Nothing arrived? Check that Watch-end POST is on and the secrets are right. For the Agents test, check that How long is **Agents** and the agent was one of the tools checked under **Agents**.
 
@@ -262,8 +262,8 @@ Codex Enable adds a hook and does not answer. There is no `codex hooks`
 shell command, and the ChatGPT app has no documented trust screen. The bot
 message is `Codex is waiting on you.` or `Codex is waiting for an approval.`
 Not proven in the ChatGPT app yet. Codex alerts use your
-saved Discord bot token and channel id or Telegram token and chat id. They do not require the
-idle-after-wait switch.
+saved Discord bot token and channel id or Telegram token and chat id. They do not require
+Watch-end POST.
 
 Cursor has no question forwarding and no waiting alert. The question stays in
 Cursor.
@@ -275,14 +275,14 @@ existing Telegram/Discord bot. Live bot/Mac verification is pending. Ordinary
 prose questions, free text and permission/plan approvals stay on the Mac.
 
 1. Configure your own Telegram or Discord bot using the steps above, and
-   enable its **inbound** switch. Idle-after-wait POST is independent.
+   enable its **inbound** switch. Watch-end POST is separate.
    Question forwarding stays off until that bot token and chat or channel id
    are saved.
 2. Include **OpenCode** in Agents. In **Notif → Question notifications**
    (BETA, under Telegram), turn on **Forward agent questions**, then click
    **Enable OpenCode forwarding**.
    Setup installs and registers a global terminal plugin without changing
-   your other OpenCode settings. It enables forwarding without arming the watch.
+   your other OpenCode settings. It enables forwarding without turning Keep awake on.
 3. **Restart OpenCode once to load forwarding**, then use your normal terminal
    chats in any project. Wait for a real connected terminal count in that Notif card.
    No server address, project directory, port or password is needed.
@@ -318,11 +318,11 @@ reconnect, with its original deadline. App restart or system sleep leaves
 existing pending questions local; new questions forward after reconnect.
 Screen lock alone does not cancel them. There is no asleep relay.
 
-Forwarding never arms Keep the watch. While it is already armed, a pending
-question holds it for up to **10 minutes**. An unanswered expiry ends the
-watch when selected agents are observably idle; busy or unknown activity
-defers that end. After a busy/unknown deferral, the usual continuous idle
-wait applies. Manual off, battery, thermal and LPM safety still win. On a
+Forwarding never arms Keep awake. While it is already armed, a pending
+question holds it for up to **10 minutes**. An unanswered expiry turns
+Keep awake off when selected agents are observably idle; busy or unknown activity
+defers that. After a busy or unknown deferral, the usual wait after agent signals
+stop applies. Manual off, battery, thermal and LPM safety still win. On a
 successful unanswered end, Agrypnos attempts a plain bot notification before
 the existing confirmed-lid sleep path. Network delivery is best effort.
 
@@ -375,7 +375,7 @@ One click merges a `PreToolUse` / `PermissionRequest` command hook into
 and does not answer. There is no `codex hooks` shell command.
 
 1. Save a Discord bot token and channel id, or a Telegram token and chat id, in Notif.
-   The idle-after-wait switch is not required.
+   Watch-end POST is not required.
 2. Open **Notif → Question notifications** and click **Enable Codex alerts**.
 3. Use Codex as you already do. Until that session runs the new hook, no
    alert is sent. The ChatGPT app has no documented trust screen.
@@ -391,17 +391,17 @@ Everything is in the popover, one section at a time.
 
 | Section | What's in it |
 |---|---|
-| **Watch** | Keep the watch, How long (`∞`, `1h`, `3h`, custom minutes, **Agents**), and the last watch end |
+| **Watch** | Keep awake, How long (`∞`, `1h`, `3h`, custom minutes, **Agents**), and when Keep awake last ended |
 | **Power** | Dim panel or Sleep panel, brightness floor, keyboard backlight off, low-battery auto-off, brightness return time, thermal auto-off |
-| **Agents** | Idle wait (1m 30s–10m), which tools count as busy (at least one), count terminal sessions as busy |
-| **Notif** | Setup instructions, idle message switch, Discord bot token and channel id, Telegram token, chat id, and switch, Question notifications (BETA), Discord inbound, clear secrets |
+| **Agents** | Wait after agent signals stop (1m 30s–10m), which tools count as busy (at least one), count terminal sessions as busy |
+| **Notif** | Setup instructions, Watch-end POST, Discord bot token and channel id, Telegram token, chat id, and switch, Question notifications (BETA), Discord inbound, clear secrets |
 | **General** | Global shortcut (default `⌥⌘A`, remappable), launch at login, quit |
 
 ## What it won't do
 
 - Detect every AI tool. It knows the four above.
 - Turn off Wi-Fi or Bluetooth.
-- Blank the screen when you turn the watch on.
+- Blank the screen when you turn Keep awake on.
 - Claim power savings nobody measured.
 - Upload your transcripts or run a shared bot. Opted-in question forwarding sends the structured question/options to your own bot.
 - Report what your agent is doing or when it will finish. `/status` only reports what Agrypnos can see.

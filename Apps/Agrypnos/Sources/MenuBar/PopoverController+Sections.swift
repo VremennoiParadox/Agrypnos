@@ -15,14 +15,16 @@ extension PopoverController {
             animated: popover.isShown && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
             currentHeight: Int((popoverRoot.window?.frame.height ?? popover.contentSize.height).rounded()),
             panelPowerMode: runtime?.preferences.panelPowerMode ?? .default,
-            showQuestionNotifications: showQuestionNotifications
+            showQuestionNotifications: showQuestionNotifications,
+            showsWatchCaption: watchCaptionShown
         )
         if section != .notif { showQuestionNotifications = false }
         currentSection = section
         let layout = PopoverStackLayout.make(
             section: section,
             panelPowerMode: runtime?.preferences.panelPowerMode ?? .default,
-            showQuestionNotifications: section == .notif && showQuestionNotifications
+            showQuestionNotifications: section == .notif && showQuestionNotifications,
+            showsWatchCaption: watchCaptionShown
         )
         let pad = CGFloat(PopoverStackLayout.pad)
         let width = CGFloat(PopoverStackLayout.width)

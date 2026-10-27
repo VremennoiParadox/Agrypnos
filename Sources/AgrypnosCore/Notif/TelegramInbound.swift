@@ -176,16 +176,16 @@ public enum TelegramInboundGeneration: Sendable {
 public enum TelegramInboundCopy: Sendable {
     public static let armed = "Armed."
     public static let disarmed = "Disarmed."
-    public static let keepOn = "Keep the watch is on."
-    public static let keepOff = "Keep the watch is off."
-    public static let armFailed = "Couldn't keep the watch."
+    public static let keepOn = "Keep awake is on."
+    public static let keepOff = "Keep awake is off."
+    public static let armFailed = "Couldn't turn Keep awake on."
     public static let disarmFailed = "Couldn't drop SleepDisabled."
     public static let commandsHelp = "Commands on your Telegram bot: arm, disarm, status."
     public static let missedWhileAsleep = "Missed while asleep."
     public static let help = """
-    /arm — turn Keep the watch on.
-    /disarm — turn Keep the watch off. Always clears Keep the watch. Puts the Mac to sleep only when the lid is closed (confirmed). Never sleeps the Mac when the lid is open.
-    /status — watch facts Agrypnos already knows: Keep the watch, How long, lid, Agents, last end, and safety prefs. Includes live battery when known. Includes time left while a timed watch is on.
+    /arm — turn Keep awake on.
+    /disarm — turn Keep awake off. Always clears Keep awake. Puts the Mac to sleep only when the lid is closed (confirmed). Never sleeps the Mac when the lid is open.
+    /status — facts Agrypnos already knows: Keep awake, How long, lid, Agents, last end, and safety prefs. Includes live battery when known. Includes time left while Keep awake is on a timer.
     /help — this list.
     If the bot does not reply, the Mac is likely asleep or Agrypnos is not polling.
     """

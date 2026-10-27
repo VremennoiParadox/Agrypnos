@@ -15,8 +15,11 @@ extension WatchRuntime {
             }
         }
         guard result == .ok, readKernel() == .held else {
+            if result == .ok {
+                _ = setKernel(false)
+            }
             if case .failed(let message) = result {
-                notify("Couldn't keep the watch. \(message)")
+                notify("Couldn't turn Keep awake on. \(message)")
             } else if result == .grantMissing {
                 notify(AgrypnosCopy.grantNeeded)
             } else {
@@ -77,27 +80,33 @@ extension WatchRuntime {
 
     func reconcileKernel(preferClearLeftover: Bool) {
         let kernel = readKernel()
-        if kernel == .held, !engine.engaged {
+        guard !engine.engaged else { return }
+        if kernel == .unknown {
             if preferClearLeftover {
                 _ = setKernel(false)
             }
-            if readKernel() == .held {
-                let rawClosed = readLid() == true
-                if LidCloseConfirm.shouldCaptureBeforeClosedHygiene(rawClosed: rawClosed) {
-                    recaptureOpenLidHygiene()
-                }
-                apply(engine.adoptLeftoverKernel(now: Date(), lidClosed: false))
-                apply(engine.observeLid(closed: rawClosed, now: Date()))
-                if LidCloseConfirm.shouldRecaptureOpenBrightness(
-                    rawClosed: rawClosed,
-                    confirmedClosed: engine.lidClosed
-                ) {
-                    recaptureOpenLidHygiene()
-                }
-                startLidPulse()
-                syncDeadlineTimer()
-                notify(AgrypnosCopy.leftoverNotify(for: engine.preferences.panelPowerMode))
+            return
+        }
+        guard kernel == .held else { return }
+        if preferClearLeftover {
+            _ = setKernel(false)
+        }
+        if readKernel() == .held {
+            let rawClosed = readLid() == true
+            if LidCloseConfirm.shouldCaptureBeforeClosedHygiene(rawClosed: rawClosed) {
+                recaptureOpenLidHygiene()
             }
+            apply(engine.adoptLeftoverKernel(now: Date(), lidClosed: false))
+            apply(engine.observeLid(closed: rawClosed, now: Date()))
+            if LidCloseConfirm.shouldRecaptureOpenBrightness(
+                rawClosed: rawClosed,
+                confirmedClosed: engine.lidClosed
+            ) {
+                recaptureOpenLidHygiene()
+            }
+            startLidPulse()
+            syncDeadlineTimer()
+            notify(AgrypnosCopy.leftoverNotify(for: engine.preferences.panelPowerMode))
         }
     }
 

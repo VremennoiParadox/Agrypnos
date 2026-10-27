@@ -7,7 +7,7 @@ limit=600
 fail=0
 while IFS= read -r file; do
   case "$file" in
-    .build/*|.git/*|*.xcodeproj/*|*.png) continue ;;
+    .build/*|.git/*|*.xcodeproj/*|*.png|docs/superpowers/*) continue ;;
   esac
   lines=$(wc -l < "$file")
   if [ "$lines" -gt "$limit" ]; then

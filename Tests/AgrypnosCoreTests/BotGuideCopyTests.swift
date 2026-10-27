@@ -54,7 +54,7 @@ final class BotGuideCopyTests: XCTestCase {
         XCTAssertTrue(text.contains("Watch-end POST"))
         XCTAssertTrue(text.contains("asks the Mac to sleep"))
         XCTAssertTrue(
-            text.contains("Switch on Watch-end POST. Agrypnos messages this channel when the timer ends, when Agents stay idle through the wait, or when it asks the Mac to sleep.")
+            text.contains("Switch on Watch-end POST. Agrypnos messages this channel when the timer ends, when the wait after agent signals stop ends, or when it asks the Mac to sleep.")
         )
         XCTAssertTrue(text.contains("Paste it into Notif → Discord → Token."))
         let lower = text.lowercased()
@@ -79,16 +79,16 @@ final class BotGuideCopyTests: XCTestCase {
                 XCTAssertTrue(text.contains(command), "\(tab) guide misses \(command)")
             }
             XCTAssertTrue(lower.contains("with the lid open it does not sleep the mac"))
-            XCTAssertTrue(lower.contains("with the lid confirmed closed it turns keep the watch off and sends the mac to sleep"))
+            XCTAssertTrue(lower.contains("with the lid confirmed closed it turns keep awake off and sends the mac to sleep"))
             XCTAssertTrue(lower.contains("likely asleep"))
             XCTAssertTrue(text.contains("Missed while asleep."))
             XCTAssertTrue(lower.contains("not run later"))
             XCTAssertTrue(lower.contains("live battery when known"))
             XCTAssertTrue(text.contains(
-                "Keep the watch, How long, lid, Agents facts when relevant, last watch end, and safety prefs"
+                "Keep awake, How long, lid, Agents facts when relevant, the last time Keep awake turned off, and safety prefs"
             ))
             XCTAssertTrue(lower.contains("clear secrets"))
-            XCTAssertTrue(lower.contains("idle through the wait"))
+            XCTAssertTrue(lower.contains("wait after agent signals stop"))
         }
         XCTAssertTrue(BotGuide.text(for: .telegram).contains("isn’t polling"))
         let discord = BotGuide.text(for: .discord).lowercased()

@@ -410,7 +410,7 @@ final class WatchRuntime {
         )
         if !willWait {
             guard disarmKernel() else {
-                notify("Couldn't verify SleepDisabled was cleared. The watch state is unchanged.")
+                notify("Couldn't verify SleepDisabled was cleared. Keep awake is unchanged.")
                 delegate?.watchRuntimeDidChange(self)
                 return nil
             }
@@ -430,6 +430,10 @@ final class WatchRuntime {
             if case .assertSleepDisabled = command {
                 guard armKernel(allowInstall: false) else {
                     engine.endForWakeHoldFailure(now: Date())
+                    if !disarmKernel() {
+                        rollbackFailedKernelClear(reason: .wakeHoldFailed)
+                        return HygieneApplyResult()
+                    }
                     syncDeadlineTimer()
                     idlePostTask?.cancel()
                     idlePostTask = nil

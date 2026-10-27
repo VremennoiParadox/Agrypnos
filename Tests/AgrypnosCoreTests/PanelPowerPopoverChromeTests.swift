@@ -76,10 +76,9 @@ final class PanelPowerPopoverChromeTests: XCTestCase {
             PopoverStackLayout.inset
                 + PopoverStackLayout.segmentRowHeight
                 + PopoverCopyLayout.panelPowerCaptionHeightPoints
-                + PopoverCopyLayout.panelPowerHelpHeightPoints
                 + PopoverStackLayout.inset
         )
-        XCTAssertGreaterThan(sleep.panelPower!.height, dim.panelPower!.height)
+        XCTAssertEqual(sleep.panelPower!.height, dim.panelPower!.height)
         XCTAssertLessThan(sleep.contentHeight, dim.contentHeight)
         XCTAssertEqual(sleep.contentHeight, sleep.thermal!.maxY + PopoverStackLayout.pad)
         XCTAssertLessThanOrEqual(sleep.contentHeight, PopoverStackLayout.maxVisibleHeight)
@@ -95,20 +94,15 @@ final class PanelPowerPopoverChromeTests: XCTestCase {
         XCTAssertEqual(PanelPowerChrome.mode(selectingSegment: 1), .displaySleep)
         XCTAssertEqual(
             PanelPowerChrome.caption(.floor),
-            "Brightness floor on confirmed lid close + lid-open ramp. Panel stays on, dimmed."
+            "Lowers brightness to a set point instead of fully shutting off the screen."
         )
         XCTAssertEqual(
             PanelPowerChrome.caption(.displaySleep),
-            "Panel sleeps on confirmed lid close. Keep the watch still holds the Mac awake."
+            "Shuts off the screen fully to minimize battery usage, the Mac still stays awake and agents aren't interrupted in any way."
         )
-        XCTAssertEqual(
-            PanelPowerChrome.help(.displaySleep),
-            "Confirmed lid close sleeps the panel. Keep the watch still holds the Mac awake. Brightness return is hidden because it only applies after the floor path."
-        )
+        XCTAssertEqual(PanelPowerChrome.help(.displaySleep), PanelPowerChrome.caption(.displaySleep))
         XCTAssertFalse(PanelPowerChrome.caption(.floor).lowercased().contains("display asleep"))
         XCTAssertFalse(PanelPowerChrome.caption(.floor).lowercased().contains("screen off"))
-        XCTAssertTrue(PanelPowerChrome.help(.displaySleep).lowercased().contains("hidden"))
-        XCTAssertTrue(PanelPowerChrome.help(.displaySleep).lowercased().contains("floor path"))
         let banned = [
             "mac asleep",
             "agents stopped",
@@ -134,13 +128,9 @@ final class PanelPowerPopoverChromeTests: XCTestCase {
         )
         XCTAssertEqual(
             CopyWrap.lineCount(PanelPowerChrome.caption(.displaySleep), columns: PopoverCopyLayout.innerColumns),
-            3
+            4
         )
-        XCTAssertEqual(
-            CopyWrap.lineCount(PanelPowerChrome.help(.displaySleep), columns: PopoverCopyLayout.innerColumns),
-            5
-        )
-        XCTAssertEqual(PopoverCopyLayout.panelPowerCaptionMaxLines, 3)
+        XCTAssertEqual(PopoverCopyLayout.panelPowerCaptionMaxLines, 4)
         XCTAssertEqual(PopoverCopyLayout.panelPowerHelpMaxLines, 5)
         XCTAssertLessThanOrEqual(
             CopyWrap.lineCount(PanelPowerChrome.caption(.floor), columns: PopoverCopyLayout.innerColumns),

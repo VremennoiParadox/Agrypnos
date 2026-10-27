@@ -130,7 +130,7 @@ public enum TelegramWatchStatusCopy: Sendable {
     static func lpmLine(_ status: TelegramWatchStatus) -> String? {
         guard status.lowPowerMode == true else { return nil }
         if status.engaged, status.userForcedThisSession {
-            return "Low Power Mode is on. Keep the watch is still on."
+            return "Low Power Mode is on. Keep awake is still on."
         }
         return "Low Power Mode is on."
     }

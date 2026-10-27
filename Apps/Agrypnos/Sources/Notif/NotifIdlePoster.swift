@@ -69,7 +69,7 @@ enum NotifIdlePoster {
     private static func telegramBody(reason: DisengageReason?) -> String? {
         switch reason {
         case .timerExpired:
-            return "Agrypnos: your watch timer ended."
+            return "Agrypnos: your Keep awake timer ended."
         case .agentsSettled:
             return AgrypnosCopy.notifIdleBody
         default:

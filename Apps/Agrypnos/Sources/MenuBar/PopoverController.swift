@@ -105,6 +105,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var quitButton: NSButton!
     var currentSection: PopoverSection = .default
     var sectionMotion = 0
+    var watchCaptionShown = false
 
     init(runtime: WatchRuntime) {
         self.runtime = runtime
@@ -147,13 +148,20 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         watchSwitch?.state = on ? .on : .off
         mainCard?.active = on
         headerMark?.contentTintColor = on ? AgrypnosPalette.gold : .labelColor
-        caption?.stringValue = AgrypnosCopy.watchCaption(
+        let watchCaption = AgrypnosCopy.watchCaption(
             engaged: on,
             leftover: runtime.adoptedLeftover,
             floor: runtime.preferences.batteryFloorPercent,
             lidClosed: runtime.engine.lidClosed,
             panelPowerMode: runtime.preferences.panelPowerMode
         )
+        caption?.stringValue = watchCaption
+        let showWatchCaption = !watchCaption.isEmpty
+        caption?.isHidden = !showWatchCaption
+        if caption != nil, showWatchCaption != watchCaptionShown {
+            watchCaptionShown = showWatchCaption
+            applySection(currentSection)
+        }
         lastWatchEndLabel?.stringValue = AgrypnosCopy.lastWatchEndCaption(
             event: runtime.preferences.lastWatchEnd, now: Date()
         )
@@ -193,12 +201,8 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         panelPowerControl?.selectedSegment = PanelPowerChrome.selectedSegment(mode: panelMode)
         panelPowerCaption?.stringValue = PanelPowerChrome.caption(panelMode)
         panelPowerHelp?.stringValue = PanelPowerChrome.help(panelMode)
-        panelPowerHelp?.isHidden = PanelPowerChrome.showsLidOpenRamp(panelMode)
-        panelPowerControl?.setAccessibilityHelp(
-            PanelPowerChrome.showsLidOpenRamp(panelMode)
-                ? PanelPowerChrome.caption(panelMode)
-                : PanelPowerChrome.help(panelMode)
-        )
+        panelPowerHelp?.isHidden = true
+        panelPowerControl?.setAccessibilityHelp(PanelPowerChrome.caption(panelMode))
         thermalSwitch?.state = runtime.preferences.thermalAutoOff ? .on : .off
         refreshNotifChrome(runtime: runtime)
         let batteryRange = UserPreferences.batteryFloorRange

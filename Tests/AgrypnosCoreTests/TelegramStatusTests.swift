@@ -12,7 +12,7 @@ final class TelegramStatusCopyTests: XCTestCase {
 
     func testArmedIndefiniteNamesModeAndOmitsCountdown() {
         let text = TelegramWatchStatusCopy.reply(base(engaged: true, duration: .indefinite), now: now)
-        XCTAssertTrue(text.contains("Keep the watch is on."))
+        XCTAssertTrue(text.contains("Keep awake is on."))
         XCTAssertTrue(text.contains("How long is ∞."))
         XCTAssertTrue(text.contains("Lid is open or unconfirmed."))
         XCTAssertTrue(text.contains("Auto-off at 15% battery."))
@@ -25,7 +25,7 @@ final class TelegramStatusCopyTests: XCTestCase {
 
     func testDisarmedStillNamesHowLong() {
         let text = TelegramWatchStatusCopy.reply(base(engaged: false, duration: .oneHour), now: now)
-        XCTAssertTrue(text.contains("Keep the watch is off."))
+        XCTAssertTrue(text.contains("Keep awake is off."))
         XCTAssertTrue(text.contains("How long is 1h."))
         XCTAssertFalse(text.lowercased().contains("left"))
         XCTAssertFalse(text.lowercased().contains("remaining"))
@@ -144,7 +144,7 @@ final class TelegramStatusCopyTests: XCTestCase {
             )
         )
         let none = TelegramWatchStatusCopy.reply(base(lastWatchEnd: nil), now: now)
-        XCTAssertFalse(none.contains("Last watch ended"))
+        XCTAssertFalse(none.contains("Keep awake ended"))
         XCTAssertFalse(none.contains(AgrypnosCopy.lastWatchEndNone))
     }
 
@@ -161,7 +161,7 @@ final class TelegramStatusCopyTests: XCTestCase {
             base(lowPowerMode: true, userForcedThisSession: true),
             now: now
         )
-        XCTAssertTrue(forced.contains("Low Power Mode is on. Keep the watch is still on."))
+        XCTAssertTrue(forced.contains("Low Power Mode is on. Keep awake is still on."))
         XCTAssertFalse(forced.lowercased().contains("ended"))
         XCTAssertFalse(forced.lowercased().contains("standing down"))
 
@@ -425,15 +425,15 @@ final class TelegramStatusSnapshotTests: XCTestCase {
             engine.telegramWatchStatus(now: t0, agentsBusy: true, lowPowerMode: true),
             now: t0
         )
-        XCTAssertTrue(text.contains("Keep the watch is on."))
+        XCTAssertTrue(text.contains("Keep awake is on."))
         XCTAssertTrue(text.contains("How long is Agents."))
         XCTAssertTrue(text.contains("Lid is open or unconfirmed."))
         XCTAssertTrue(text.contains("Selected tools: Cursor, OpenCode."))
         XCTAssertTrue(text.contains("Local busy signals seen this arm."))
         XCTAssertTrue(text.contains("Auto-off at 18% battery."))
         XCTAssertTrue(text.contains("Thermal auto-off is off."))
-        XCTAssertTrue(text.contains("Low Power Mode is on. Keep the watch is still on."))
-        XCTAssertTrue(text.contains("Last watch ended"))
+        XCTAssertTrue(text.contains("Low Power Mode is on. Keep awake is still on."))
+        XCTAssertTrue(text.contains("Keep awake ended"))
         XCTAssertFalse(text.lowercased().contains("remaining"))
         XCTAssertFalse(text.lowercased().contains("still thinking"))
     }
