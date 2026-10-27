@@ -75,6 +75,8 @@ final class WatchRuntime {
     var hotkeySuspendedForRecord = false
     var idleOutbound = NotifIdleOutboundCoordinator()
     var idlePostTask: Task<Void, Never>?
+    /// User-off already chose sleep, then quit cancelled the Discord send before `sleepnow`.
+    var userOffSleepDecided = false
     let inboundPoller = TelegramInboundPoller()
     let discordGateway = DiscordInboundGatewayClient()
     lazy var questionRelay = makeQuestionRelay()
@@ -87,7 +89,7 @@ final class WatchRuntime {
     var probeInFlight = false
     var idleProbeTicks: Int = 0
     var diagnostics = WatchDiagnostics()
-    private(set) var ownsWakeHold = false
+    var ownsWakeHold = false
 
     init(
         store: PreferencesStore = PreferencesStore(),
@@ -292,6 +294,26 @@ final class WatchRuntime {
         return saved
     }
 
+    @discardableResult
+    func setNotifTelegramQuestionUserId(_ value: String?) -> Bool {
+        guard NotifSecretsPayload.present(value) != readNotifSecrets().telegramQuestionUserId else { return true }
+        questionRelay.invalidateAll()
+        let saved = NotifSecretsStore.setTelegramQuestionUserId(value)
+        clearQuestionWatch()
+        dropQuestionForwardingWithoutBot()
+        return saved
+    }
+
+    @discardableResult
+    func setNotifDiscordQuestionUserId(_ value: String?) -> Bool {
+        guard NotifSecretsPayload.present(value) != readNotifSecrets().discordQuestionUserId else { return true }
+        questionRelay.invalidateAll()
+        let saved = NotifSecretsStore.setDiscordQuestionUserId(value)
+        clearQuestionWatch()
+        dropQuestionForwardingWithoutBot()
+        return saved
+    }
+
     func clearNotifSecrets() {
         questionRelay.invalidateAll()
         store.resetTelegramInboundCursor()
@@ -372,6 +394,7 @@ final class WatchRuntime {
             invalidateAgentProbe()
             idlePostTask?.cancel()
             idlePostTask = nil
+            userOffSleepDecided = false
             idleOutbound.noteUserArm()
             let rawClosed = readLid() == true
             if LidCloseConfirm.shouldCaptureBeforeClosedHygiene(rawClosed: rawClosed) {
@@ -437,6 +460,7 @@ final class WatchRuntime {
                     syncDeadlineTimer()
                     idlePostTask?.cancel()
                     idlePostTask = nil
+                    userOffSleepDecided = false
                     idleOutbound.cancelInFlight()
                     invalidateAgentProbe()
                     restoreHygiene()

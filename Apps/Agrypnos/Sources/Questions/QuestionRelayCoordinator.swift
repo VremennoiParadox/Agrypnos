@@ -7,15 +7,19 @@ import AgrypnosCore
 struct TelegramQuestionDestination: Equatable {
     let token: String
     let chatID: String
+    var userID: String = ""
 
-    var isComplete: Bool { !token.isEmpty && Int64(chatID) != nil }
+    var isComplete: Bool {
+        !token.isEmpty && Int64(chatID) != nil && !userID.isEmpty
+    }
 }
 
 struct DiscordQuestionDestination: Equatable {
     let token: String
     let channelID: String
+    var userID: String = ""
 
-    var isComplete: Bool { !token.isEmpty && !channelID.isEmpty }
+    var isComplete: Bool { !token.isEmpty && !channelID.isEmpty && !userID.isEmpty }
 }
 
 struct QuestionRelaySettings: Equatable {
@@ -97,7 +101,14 @@ final class QuestionRelayCoordinator {
         else { return false }
         // Validate every destination page before publishing controls for any of them.
         if let discord = currentSettings.discord, discord.isComplete,
-           !DiscordQuestionMessage.canRender(batch: batch, botToken: discord.token, channelID: discord.channelID) { return false }
+           !DiscordQuestionMessage.canRender(batch: batch, botToken: discord.token, channelID: discord.channelID) {
+            let sentence = "This question did not fit, so it stayed on your Mac."
+            if let notice = DiscordQuestionMessage.notice(
+                sentence, botToken: discord.token, channelID: discord.channelID) {
+                Task { [transport] in _ = await transport(notice) }
+                return false
+            }
+        }
         let previousDeadline = registry.pendingDeadlines[batch.key]
         if previousDeadline == nil, uptime() >= batch.deadlineUptime { return false }
         let handle = UUID()
@@ -143,7 +154,7 @@ final class QuestionRelayCoordinator {
         recentCallbacks.append(dedupeID)
         if recentCallbacks.count > 256 { recentCallbacks.removeFirst(recentCallbacks.count - 256) }
         let effect = registry.handle(QuestionCallback(reference: click.reference, senderID: click.senderID,
-            actionToken: click.actionToken, generation: registry.generation), authorizedUserID: click.senderID, now: uptime())
+            actionToken: click.actionToken, generation: registry.generation), authorizedUserID: target.userID, now: uptime())
         apply(effect)
     }
 
@@ -156,7 +167,7 @@ final class QuestionRelayCoordinator {
         recentCallbacks.append(dedupeID)
         if recentCallbacks.count > 256 { recentCallbacks.removeFirst(recentCallbacks.count - 256) }
         let effect = registry.handle(QuestionCallback(reference: click.reference, senderID: click.senderID,
-            actionToken: click.actionToken, generation: registry.generation), authorizedUserID: click.senderID, now: uptime())
+            actionToken: click.actionToken, generation: registry.generation), authorizedUserID: target.userID, now: uptime())
         apply(effect)
     }
 

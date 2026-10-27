@@ -59,6 +59,11 @@ public enum DiscordInboundPolicy: Sendable {
             && NotifSecretsPayload.present(fetchedToken) == NotifSecretsPayload.present(currentToken)
     }
 
+    public static func slashIgnoreReply(source: DiscordInboundSource) -> String? {
+        guard source == .slash else { return nil }
+        return "That command was not applied."
+    }
+
     static func channelMatches(saved: String?, incoming: String) -> Bool {
         guard let saved = NotifSecretsPayload.present(saved) else { return false }
         let incomingTrimmed = incoming.trimmingCharacters(in: .whitespacesAndNewlines)

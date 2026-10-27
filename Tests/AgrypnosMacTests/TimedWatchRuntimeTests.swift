@@ -245,12 +245,21 @@ final class TimedWatchRuntimeTests: XCTestCase {
         )
         XCTAssertEqual(
             try telegramText(closedRequests),
-            "Agrypnos: your Keep awake timer ended."
+            "Agrypnos: your Keep awake timer ended. Asking the Mac to sleep."
         )
 
         let agents = NotifIdlePoster.requests(secrets: secrets, reason: .agentsSettled, willSleep: false)
         XCTAssertEqual(agents.count, 2)
         XCTAssertEqual(try telegramText(agents), "Agrypnos: the wait after agent signals stop ended.")
+        let idleSleep = NotifIdlePoster.requests(secrets: secrets, reason: .agentsSettled, willSleep: true)
+        XCTAssertEqual(
+            try telegramText(idleSleep),
+            "Agrypnos: the wait after agent signals stop ended. Asking the Mac to sleep."
+        )
+        for reason in [DisengageReason.user, .batteryFloor, .thermal, .lowPowerMode] {
+            let posted = NotifIdlePoster.requests(secrets: secrets, reason: reason, willSleep: true)
+            XCTAssertNil(posted.first { $0.url.path.contains("/bot") })
+        }
         XCTAssertTrue(
             NotifIdlePoster.requests(secrets: NotifSecrets(), reason: .timerExpired, willSleep: false).isEmpty
         )
@@ -362,6 +371,65 @@ final class TimedWatchRuntimeTests: XCTestCase {
         XCTAssertEqual(fixture.sleepRequests, 0)
         XCTAssertEqual(fixture.messages, ["Couldn't verify SleepDisabled was cleared."])
         XCTAssertFalse(fixture.messages.contains { $0.contains("Keep awake is unchanged.") })
+    }
+
+    func testQuitAfterConfirmedClosedDiscordUserOffSleepsOnceAndClearsKernel() async {
+        let fixture = RuntimeFixture()
+        fixture.runtime.ownsWakeHold = true
+        fixture.notifSecrets = NotifSecrets(discordBotToken: "bot", discordChannelId: "123")
+        armConfirmedClosed(fixture)
+        XCTAssertNotNil(fixture.runtime.setEngaged(false))
+        let pending = fixture.runtime.idlePostTask
+        XCTAssertNotNil(pending)
+        XCTAssertEqual(fixture.sleepRequests, 0)
+        XCTAssertTrue(fixture.kernelHeld)
+        fixture.runtime.prepareForTermination()
+        XCTAssertEqual(fixture.sleepRequests, 1)
+        XCTAssertFalse(fixture.kernelHeld)
+        await fixture.waitForPost()
+        fixture.completePost()
+        await pending?.value
+        XCTAssertEqual(fixture.sleepRequests, 1)
+    }
+
+    func testQuitAfterOpenLidUserOffRequestsNoSleep() {
+        let fixture = RuntimeFixture()
+        fixture.runtime.ownsWakeHold = true
+        fixture.notifSecrets = NotifSecrets(discordBotToken: "bot", discordChannelId: "123")
+        fixture.lidClosed = false
+        fixture.runtime.engine.preferences.notifEnabled = true
+        fixture.kernelHeld = true
+        _ = fixture.runtime.engine.userSetEngaged(true, now: Date(), lidClosed: false)
+        XCTAssertNotNil(fixture.runtime.setEngaged(false))
+        fixture.runtime.prepareForTermination()
+        XCTAssertEqual(fixture.sleepRequests, 0)
+    }
+
+    func testTerminateWhileStillArmedSleepsOnlyWhenLidIsConfirmedClosed() {
+        let closed = RuntimeFixture()
+        closed.runtime.ownsWakeHold = true
+        armConfirmedClosed(closed)
+        closed.runtime.prepareForTermination()
+        XCTAssertEqual(closed.sleepRequests, 1)
+        XCTAssertFalse(closed.kernelHeld)
+
+        let open = RuntimeFixture()
+        open.runtime.ownsWakeHold = true
+        open.lidClosed = false
+        open.kernelHeld = true
+        _ = open.runtime.engine.userSetEngaged(true, now: Date(), lidClosed: false)
+        open.runtime.prepareForTermination()
+        XCTAssertEqual(open.sleepRequests, 0)
+    }
+
+    func testTerminateWhileStillArmedDoesNotSleepWhenKernelClearFails() {
+        let fixture = RuntimeFixture()
+        fixture.runtime.ownsWakeHold = true
+        armConfirmedClosed(fixture)
+        fixture.kernelWriteSucceeds = false
+        fixture.runtime.prepareForTermination()
+        XCTAssertEqual(fixture.sleepRequests, 0)
+        XCTAssertTrue(fixture.kernelHeld)
     }
 
     func armConfirmedClosed(_ fixture: RuntimeFixture) {

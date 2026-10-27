@@ -131,6 +131,8 @@ final class AgrypnosCopyTests: XCTestCase {
     }
 
     func testDurationHintsArePlainAndFitTheDurationCard() {
+        let lid = "Turning Keep awake off with the lid confirmed closed sends the Mac to sleep. With the lid open or unconfirmed it turns Keep awake off and does not sleep the Mac."
+        func withLid(_ base: String) -> String { base + " " + lid }
         XCTAssertEqual(
             AgrypnosCopy.agentsHint,
             "Keep awake turns off when the wait after agent signals stop ends (battery / thermal still apply)."
@@ -138,11 +140,11 @@ final class AgrypnosCopyTests: XCTestCase {
         XCTAssertNotEqual(AgrypnosCopy.agentsHint, AgrypnosCopy.indefiniteHint)
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .untilAgentsSettle, engaged: true, remainingSeconds: nil),
-            AgrypnosCopy.agentsHint
+            withLid(AgrypnosCopy.agentsHint)
         )
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .untilAgentsSettle, engaged: true, remainingSeconds: nil, thermalAutoOff: false),
-            "Keep awake turns off when the wait after agent signals stop ends (battery still applies)."
+            withLid("Keep awake turns off when the wait after agent signals stop ends (battery still applies).")
         )
         XCTAssertFalse(
             AgrypnosCopy.durationHint(option: .untilAgentsSettle, engaged: false, remainingSeconds: nil, thermalAutoOff: false)
@@ -151,15 +153,15 @@ final class AgrypnosCopyTests: XCTestCase {
         )
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .indefinite, engaged: false, remainingSeconds: nil),
-            "Stays on until you turn it off (battery / thermal still apply)."
+            withLid("Stays on until you turn it off (battery / thermal still apply).")
         )
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .indefinite, engaged: false, remainingSeconds: nil, thermalAutoOff: true),
-            AgrypnosCopy.indefiniteHint
+            withLid(AgrypnosCopy.indefiniteHint)
         )
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .indefinite, engaged: false, remainingSeconds: nil, thermalAutoOff: false),
-            AgrypnosCopy.indefiniteHint(thermalAutoOff: false)
+            withLid(AgrypnosCopy.indefiniteHint(thermalAutoOff: false))
         )
         XCTAssertEqual(
             AgrypnosCopy.indefiniteHint(thermalAutoOff: false),
@@ -171,22 +173,36 @@ final class AgrypnosCopyTests: XCTestCase {
         XCTAssertFalse(AgrypnosCopy.indefiniteHint.lowercased().contains("low power"))
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .oneHour, engaged: false, remainingSeconds: nil),
-            AgrypnosCopy.timedHint
+            withLid(AgrypnosCopy.timedHint)
         )
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .threeHours, engaged: false, remainingSeconds: nil),
-            AgrypnosCopy.timedHint
+            withLid(AgrypnosCopy.timedHint)
         )
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .oneHour, engaged: true, remainingSeconds: 125),
             AgrypnosCopy.timedHint
         )
+        for text in [
+            AgrypnosCopy.durationHint(option: .indefinite, engaged: true, remainingSeconds: nil),
+            AgrypnosCopy.durationHint(option: .untilAgentsSettle, engaged: true, remainingSeconds: nil),
+            AgrypnosCopy.durationHint(option: .oneHour, engaged: false, remainingSeconds: nil),
+        ] {
+            XCTAssertTrue(text.contains(lid))
+            XCTAssertFalse(text.lowercased().contains("disarm always sleeps"))
+        }
         assertFitsDurationHint(AgrypnosCopy.agentsHint)
         assertFitsDurationHint(
             AgrypnosCopy.durationHint(option: .untilAgentsSettle, engaged: false, remainingSeconds: nil, thermalAutoOff: false)
         )
         assertFitsDurationHint(AgrypnosCopy.timedHint)
         assertFitsDurationHint(AgrypnosCopy.indefiniteHint)
+        assertFitsDurationHint(
+            AgrypnosCopy.durationHint(option: .indefinite, engaged: true, remainingSeconds: nil)
+        )
+        assertFitsDurationHint(
+            AgrypnosCopy.durationHint(option: .oneHour, engaged: false, remainingSeconds: nil)
+        )
         assertFitsDurationHint(
             AgrypnosCopy.durationHint(option: .customMinutes(33), engaged: false, remainingSeconds: nil)
         )

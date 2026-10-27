@@ -319,11 +319,13 @@ extension WatchRuntime {
             return
         }
         if engine.holdingForIdlePost, reason != .timerExpired {
-            _ = engine.observeLid(closed: rawClosed == true, now: Date())
-            if !engine.userOffLidCloseConfirmed(rawClosed: rawClosed == true) {
-                applyCommands.removeAll { $0 == .requestSleep }
+            if let closed = rawClosed {
+                _ = engine.observeLid(closed: closed, now: Date())
+                if !engine.userOffLidCloseConfirmed(rawClosed: closed) {
+                    applyCommands.removeAll { $0 == .requestSleep }
+                }
             }
-        } else if reason == .timerExpired ? rawClosed == false : rawClosed != true {
+        } else if rawClosed == false {
             applyCommands.removeAll { $0 == .requestSleep }
         }
     }
@@ -357,7 +359,7 @@ extension WatchRuntime {
     }
 
     func finishDisengageHygiene(sleepResult: HygieneApplyResult) {
-        if sleepResult.sleepnow != nil {
+        if sleepResult.sleepnow == .ok {
             dropSavedHygieneWithoutWrite()
         } else {
             restoreHygiene()
@@ -394,6 +396,7 @@ extension WatchRuntime {
             if confirmed, readLid() == true {
                 _ = engine.lidDidClose(now: Date())
             }
+            userOffSleepDecided = willSleep
             idlePostTask = Task { @MainActor in
                 await self.postIdle(enabled, reason, willSleep)
                 guard !Task.isCancelled else { return }
@@ -404,6 +407,7 @@ extension WatchRuntime {
                     self.idlePostTask = nil
                     return
                 }
+                self.userOffSleepDecided = false
                 let result = self.apply(live)
                 self.finishDisengageHygiene(sleepResult: result)
                 self.store.save(self.engine.preferences)
@@ -412,6 +416,7 @@ extension WatchRuntime {
             }
             return HygieneApplyResult()
         }
+        userOffSleepDecided = false
         let result = apply(commands)
         finishDisengageHygiene(sleepResult: result)
         return result

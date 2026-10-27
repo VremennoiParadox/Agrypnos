@@ -135,7 +135,7 @@ private final class Fixture {
     var config: URL { root.appendingPathComponent("config") }
     var bridgeOverride: URL?
     var bridge: URL { bridgeOverride ?? root.appendingPathComponent("bridge") }
-    var secrets = NotifSecrets(telegramBotToken: "fixture", telegramChatId: "9")
+    var secrets = NotifSecrets(telegramBotToken: "fixture", telegramChatId: "9", telegramQuestionUserId: "42")
     var notices: [String] = []
     var writeHook: ((Data, URL) throws -> Void)?
     let defaults = UserDefaults(suiteName: "ag-plugin-runtime-" + UUID().uuidString)!

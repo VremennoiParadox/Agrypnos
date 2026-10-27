@@ -89,13 +89,13 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
             PopoverStackLayout.inset
                 + PopoverStackLayout.titleRowHeight
                 + PopoverCopyLayout.notifTelegramHelpHeightPoints
-                + 2 * PopoverStackLayout.secretFieldRowHeight
+                + 3 * PopoverStackLayout.secretFieldRowHeight
                 + PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset
         )
         XCTAssertEqual(
             PopoverStackLayout.notifTelegramInboundSwitchY,
-            PopoverStackLayout.notifTelegramChatY + PopoverStackLayout.secretFieldRowHeight
+            PopoverStackLayout.notifTelegramUserY + PopoverStackLayout.secretFieldRowHeight
         )
         XCTAssertEqual(
             layout.stackedCards.map(\.y),

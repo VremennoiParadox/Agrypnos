@@ -115,7 +115,7 @@ final class SettingsSliceTests: XCTestCase {
     func testTimedHintTreatsCustomMinutesLikeOtherTimers() {
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .customMinutes(33), engaged: false, remainingSeconds: nil),
-            AgrypnosCopy.timedHint
+            AgrypnosCopy.timedHint + " " + AgrypnosCopy.userOffSleepHint
         )
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .customMinutes(33), engaged: true, remainingSeconds: 125),

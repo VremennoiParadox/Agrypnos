@@ -212,10 +212,15 @@ public enum DiscordGatewayURLFactory: Sendable {
     public static func resumeURL(from raw: String?) -> URL? {
         guard let raw = NotifSecretsPayload.present(raw) else { return nil }
         guard let url = URL(string: raw), url.scheme == "wss" else { return nil }
-        guard let host = url.host?.lowercased(), host.hasSuffix("gateway.discord.gg") else {
+        guard let host = url.host?.lowercased(), isResumeHost(host) else {
             return nil
         }
         return withGatewayQuery(url)
+    }
+
+    static func isResumeHost(_ host: String) -> Bool {
+        if host == "gateway.discord.gg" || host.hasSuffix(".gateway.discord.gg") { return true }
+        return host.hasPrefix("gateway-") && host.hasSuffix(".discord.gg")
     }
 
     public static func withGatewayQuery(_ url: URL) -> URL {

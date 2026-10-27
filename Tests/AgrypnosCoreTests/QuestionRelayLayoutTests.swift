@@ -2,6 +2,19 @@ import XCTest
 @testable import AgrypnosCore
 
 final class QuestionRelayLayoutTests: XCTestCase {
+    func testQuestionHelpDoesNotClaimDesktopApps() {
+        XCTAssertFalse(QuestionSetupChrome.help.contains("desktop apps"))
+    }
+
+    func testQuestionPolicySleepsOnlyWhenTheLidIsConfirmedClosed() {
+        let policy = QuestionSetupChrome.policy
+        XCTAssertTrue(policy.contains("10 minutes"))
+        XCTAssertTrue(policy.contains("A busy agent delays that"))
+        XCTAssertTrue(policy.contains("Keep awake turns off"))
+        XCTAssertTrue(policy.contains("only when the lid is confirmed closed"))
+        XCTAssertFalse(policy.lowercased().contains("always sleeps"))
+    }
+
     func testForwardingSettingsReuseOpenCodeCopyAndSitUnderBusyTools() {
         XCTAssertEqual(QuestionSetupChrome.title, "Forward agent questions")
         XCTAssertEqual(QuestionSetupChrome.enableTitle, "Enable OpenCode forwarding")

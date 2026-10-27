@@ -212,6 +212,9 @@ public struct WatchEngine: Equatable, Sendable {
         ), reason.turnsWatchOff {
             return disengage(reason, at: now)
         }
+        if questionWait.action == .endUnanswered {
+            return disengage(.questionUnanswered, at: now)
+        }
         if questionWait.action == .hold || questionWait.action == .deferTimeout {
             if observeAgents, agents.anyBusy(included: preferences.includedAgentKinds) {
                 _ = settle.observe(busy: true, now: now)

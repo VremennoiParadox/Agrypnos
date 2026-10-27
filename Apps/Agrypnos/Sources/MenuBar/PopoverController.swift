@@ -47,8 +47,10 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var discordInboundSwitch: NSSwitch!
     var discordInboundTokenSecrets: SecretRevealRow!
     var discordInboundChannelSecrets: SecretRevealRow!
+    var discordUserSecrets: SecretRevealRow!
     var telegramTokenSecrets: SecretRevealRow!
     var telegramChatSecrets: SecretRevealRow!
+    var telegramUserSecrets: SecretRevealRow!
     var loginSwitch: NSSwitch!
     var hotkeyHint: NSTextField!
     let recorder = HotkeyRecorderControl()
@@ -300,9 +302,13 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
 
     func refreshCountdown() {
         guard let runtime else { return }
-        durationHint?.stringValue = hintCopy(for: runtime)
-        let timed = runtime.preferences.duration.minutes != nil
-        durationHint?.frame.size.height = timed ? 32 : PopoverMetrics.durationHintHeight
+        let hint = hintCopy(for: runtime)
+        durationHint?.stringValue = hint
+        let lines = max(CopyWrap.lineCount(hint, columns: PopoverCopyLayout.innerColumns), 1)
+        durationHint?.frame.size.height = CGFloat(lines * PopoverCopyLayout.lineHeightPoints)
+        if let durationHint, let countdownLabel {
+            countdownLabel.frame.origin.y = durationHint.frame.maxY + 4
+        }
         let remaining = runtime.engine.statusItemRemainingSeconds(now: Date())
             ?? (runtime.engine.holdingForIdlePost ? 0 : nil)
         let text = AgrypnosCopy.durationCountdown(option: runtime.preferences.duration,

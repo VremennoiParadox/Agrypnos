@@ -467,10 +467,15 @@ final class NotifCopyTests: XCTestCase {
             AgrypnosCopy.notifIdleBody.lowercased().contains("keep awake turned off"),
             "outbound body is idle-after-wait only"
         )
-        XCTAssertEqual(
-            AgrypnosCopy.notifEnabledHelp,
-            "Message your Discord bot and/or your Telegram bot when the timer ends, when the wait after agent signals stop ends, or when Agrypnos asks the Mac to sleep. Off by default."
+        let help = AgrypnosCopy.notifEnabledHelp
+        XCTAssertTrue(help.contains("timer"))
+        XCTAssertTrue(help.contains("wait after agent signals stop"))
+        let telegram = help.split(separator: ".").first { $0.contains("Telegram") }.map(String.init) ?? help
+        XCTAssertFalse(
+            telegram.localizedCaseInsensitiveContains("asks the Mac to sleep"),
+            "Telegram is not messaged when Agrypnos asks the Mac to sleep"
         )
+        XCTAssertTrue(help.contains("asks the Mac to sleep"))
         XCTAssertFalse(AgrypnosCopy.notifDiscordHelp.lowercased().contains("webhook"))
         XCTAssertFalse(AgrypnosCopy.notifEnabledHelp.lowercased().contains("webhook"))
         XCTAssertTrue(AgrypnosCopy.notifTelegramHelp.lowercased().contains("your telegram bot"))

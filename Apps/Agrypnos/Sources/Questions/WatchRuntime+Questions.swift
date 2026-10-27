@@ -18,14 +18,16 @@ extension WatchRuntime {
         let telegram: TelegramQuestionDestination?
         if engine.preferences.telegramInboundEnabled,
            let token = secrets.telegramBotToken,
-           let chatID = secrets.telegramChatId {
-            telegram = TelegramQuestionDestination(token: token, chatID: chatID)
+           let chatID = secrets.telegramChatId,
+           let userID = secrets.telegramQuestionUserId {
+            telegram = TelegramQuestionDestination(token: token, chatID: chatID, userID: userID)
         } else { telegram = nil }
         let discord: DiscordQuestionDestination?
         if engine.preferences.discordInboundEnabled,
            let token = secrets.discordBotToken,
-           let channelID = secrets.discordChannelId {
-            discord = DiscordQuestionDestination(token: token, channelID: channelID)
+           let channelID = secrets.discordChannelId,
+           let userID = secrets.discordQuestionUserId {
+            discord = DiscordQuestionDestination(token: token, channelID: channelID, userID: userID)
         } else { discord = nil }
         return QuestionRelaySettings(enabled: engine.preferences.forwardAgentQuestions,
             includedKinds: engine.preferences.includedAgentKinds, telegram: telegram, discord: discord)

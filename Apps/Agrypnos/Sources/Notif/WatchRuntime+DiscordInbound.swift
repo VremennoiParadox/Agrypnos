@@ -177,7 +177,7 @@ extension WatchRuntime {
         let reply: String?
         switch effect {
         case .ignore:
-            reply = update.source == .slash ? "\u{200b}" : nil
+            reply = DiscordInboundPolicy.slashIgnoreReply(source: update.source)
         case .missedWhileAsleep:
             reply = DiscordInboundCopy.missedWhileAsleep
         case .apply(.help):
@@ -202,7 +202,7 @@ extension WatchRuntime {
         case .apply(.disarm):
             reply = applyDiscordDisarm()
         case .apply(.ignore):
-            reply = update.source == .slash ? "\u{200b}" : nil
+            reply = DiscordInboundPolicy.slashIgnoreReply(source: update.source)
         }
         if let reply {
             sendDiscordInboundReply(

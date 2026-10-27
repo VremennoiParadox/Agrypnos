@@ -7,8 +7,8 @@ public enum QuestionSetupChrome {
     public static let codexTrustStatus = "Added the hook. Codex has to run it before an alert is sent."
     public static let title = "Forward agent questions"
     public static let needsBot = "You must have a Discord or Telegram bot configured to activate this feature."
-    public static let help = "Full question forwarding with answering through the bot for OpenCode and Claude Code. Codex only pings you through the bot. It does not forward or answer. Cursor is unavailable because it does not have the signals this needs. This works in the CLI and the desktop apps."
-    public static let policy = "After a question is recognized, Agrypnos waits 10 minutes for an answer. If none comes, and Keep awake is already on, Agrypnos asks the Mac to sleep. A busy agent delays that. " + needsBot
+    public static let help = "Full question forwarding with answering through the bot for OpenCode and Claude Code. Codex only pings you through the bot. It does not forward or answer. Cursor is unavailable because it does not have the signals this needs."
+    public static let policy = "After a question is recognized, Agrypnos waits 10 minutes for an answer. If none comes, and Keep awake is already on, Keep awake turns off. The Mac is asked to sleep only when the lid is confirmed closed. A busy agent delays that. " + needsBot
     public static let helpY = 40
     public static var helpMaxLines: Int {
         max(CopyWrap.lineCount(help, columns: PopoverCopyLayout.innerColumns), 1)

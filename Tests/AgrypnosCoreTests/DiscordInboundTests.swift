@@ -203,6 +203,35 @@ final class DiscordInboundPolicyTests: XCTestCase {
         )
     }
 
+    func testWrongChannelSlashRepliesWithoutArmingOrDisarming() {
+        let foreignArm = DiscordInboundUpdate(
+            channelId: "100", text: "/arm", interactionId: "i", interactionToken: "t", source: .slash)
+        let armIntent = DiscordInboundPolicy.intent(
+            enabled: true, botToken: token, savedChannelId: saved, update: foreignArm)
+        XCTAssertEqual(armIntent, .ignore)
+        XCTAssertEqual(TelegramInboundDispatch.effect(drain: .live, intent: armIntent), .ignore)
+        let reply = DiscordInboundPolicy.slashIgnoreReply(source: .slash) ?? ""
+        XCTAssertFalse(reply.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        XCTAssertNotEqual(reply, "\u{200b}")
+        XCTAssertNil(DiscordInboundPolicy.slashIgnoreReply(source: .message))
+        let foreignDisarm = DiscordInboundUpdate(channelId: "100", text: "/disarm", source: .slash)
+        XCTAssertEqual(
+            DiscordInboundPolicy.intent(
+                enabled: true, botToken: token, savedChannelId: saved, update: foreignDisarm),
+            .ignore
+        )
+        let home = DiscordInboundUpdate(channelId: saved, text: "/arm", source: .slash)
+        XCTAssertEqual(
+            DiscordInboundPolicy.intent(
+                enabled: true, botToken: token, savedChannelId: saved, update: home),
+            .arm
+        )
+        var engine = WatchEngine(preferences: .default)
+        XCTAssertFalse(engine.engaged)
+        XCTAssertTrue(engine.applyInbound(.ignore, now: Date(timeIntervalSince1970: 1)).isEmpty)
+        XCTAssertFalse(engine.engaged)
+    }
+
     func testMatchingChannelRoutesArmDisarmStatusHelp() {
         XCTAssertEqual(intent("arm"), .arm)
         XCTAssertEqual(intent("/arm"), .arm)

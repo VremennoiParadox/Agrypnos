@@ -27,7 +27,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static let titleRowHeight = 24
     public static let segmentRowHeight = 28
     public static let sliderBlockHeight = 48
-    public static let durationCardHeight = 136
+    public static let durationCardHeight = 232
     public static let batteryCardHeight = 88
     public static let loginCardHeight = 44
     public static let secretFieldRowHeight = 28
@@ -72,8 +72,9 @@ public struct PopoverStackLayout: Equatable, Sendable {
         prefTitleY + titleRowHeight + PopoverCopyLayout.notifTelegramHelpHeightPoints
     }
     public static var notifTelegramChatY: Int { notifTelegramTokenY + secretFieldRowHeight }
+    public static var notifTelegramUserY: Int { notifTelegramChatY + secretFieldRowHeight }
     public static var notifTelegramInboundSwitchY: Int {
-        notifTelegramChatY + secretFieldRowHeight
+        notifTelegramUserY + secretFieldRowHeight
     }
     public static var notifDiscordInboundTokenY: Int {
         prefHelpY + PopoverCopyLayout.notifDiscordHelpHeightPoints
@@ -81,8 +82,11 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static var notifDiscordInboundChannelY: Int {
         notifDiscordInboundTokenY + secretFieldRowHeight
     }
-    public static var notifDiscordInboundSwitchY: Int {
+    public static var notifDiscordUserY: Int {
         notifDiscordInboundChannelY + secretFieldRowHeight
+    }
+    public static var notifDiscordInboundSwitchY: Int {
+        notifDiscordUserY + secretFieldRowHeight
     }
     public let section: PopoverSection
     public let sectionSwitcher: PopoverSlot
@@ -210,14 +214,14 @@ public struct PopoverStackLayout: Equatable, Sendable {
             inset
             + titleRowHeight
             + PopoverCopyLayout.notifDiscordHelpHeightPoints
-            + 2 * secretFieldRowHeight
+            + 3 * secretFieldRowHeight
             + switchRowHeight
             + inset
         let notifTelegramHeight =
             inset
             + titleRowHeight
             + PopoverCopyLayout.notifTelegramHelpHeightPoints
-            + 2 * secretFieldRowHeight
+            + 3 * secretFieldRowHeight
             + switchRowHeight
             + inset
         let notifDiscordInboundHeight =

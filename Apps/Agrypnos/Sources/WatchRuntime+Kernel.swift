@@ -56,6 +56,7 @@ extension WatchRuntime {
             engineEngaged: engine.engaged,
             kernelSleepDisabled: kernelHeld != .clear
         )
+        let userOffWillSleep = userOffSleepDecided
         idlePostTask?.cancel()
         idlePostTask = nil
         idleOutbound.cancelInFlight()
@@ -68,9 +69,23 @@ extension WatchRuntime {
             }
         }
         if engine.engaged {
-            apply(engine.userSetEngaged(false, now: Date(), lidClosed: false))
+            let confirmed = cleared && engine.userOffLidCloseConfirmed(rawClosed: readLid() == true)
+            let result = apply(engine.userSetEngaged(false, now: Date(), lidClosed: confirmed))
             store.save(engine.preferences)
+            if result.sleepnow != nil {
+                userOffSleepDecided = false
+                finishDisengageHygiene(sleepResult: result)
+                return
+            }
         }
+        if userOffWillSleep, cleared,
+           engine.userOffLidCloseConfirmed(rawClosed: readLid() == true) {
+            userOffSleepDecided = false
+            let result = apply([.requestSleep])
+            finishDisengageHygiene(sleepResult: result)
+            return
+        }
+        userOffSleepDecided = false
         if KernelQuitPolicy.shouldRestoreHygiene(kernelCleared: cleared) {
             restoreHygiene()
         } else {
@@ -118,7 +133,10 @@ extension WatchRuntime {
                 object: nil,
                 queue: .main
             ) { [weak self] _ in
-                Task { @MainActor in self?.noteMacWillSleep() }
+                // On this queue, before the block returns. A later Task lets the in-flight poll ack live.
+                MainActor.assumeIsolated {
+                    self?.noteMacWillSleep()
+                }
             }
         )
         workspaceObservers.append(

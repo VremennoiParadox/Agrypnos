@@ -153,17 +153,27 @@ public struct TelegramInboundCursor: Equatable, Sendable {
         TelegramInboundCursor(offset: offset, seeded: false, wakeMiss: false)
     }
 
+    /// Cold start. A stored wake-miss stays wake-miss. Any other cursor is leftover.
+    public func startingLaunch() -> TelegramInboundCursor {
+        wakeMiss ? startingWakeMiss() : startingSession()
+    }
+
     /// Sleep wake: drain queued commands without applying, then reply missed-while-asleep.
     public func startingWakeMiss() -> TelegramInboundCursor {
         TelegramInboundCursor(offset: offset, seeded: false, wakeMiss: true)
     }
 
     public func acknowledging(_ updates: [TelegramInboundUpdate]) -> TelegramInboundCursor {
-        TelegramInboundCursor(
-            offset: TelegramInboundOffset.next(current: offset, updates: updates),
-            seeded: true,
-            wakeMiss: false
-        )
+        let next = TelegramInboundOffset.next(current: offset, updates: updates)
+        if wakeMiss {
+            return TelegramInboundCursor(offset: next, seeded: false, wakeMiss: true)
+        }
+        return TelegramInboundCursor(offset: next, seeded: true, wakeMiss: false)
+    }
+
+    /// After the wake-miss drain has been acked, the next poll is live.
+    public func promotedAfterWake() -> TelegramInboundCursor {
+        TelegramInboundCursor(offset: offset, seeded: true, wakeMiss: false)
     }
 }
 

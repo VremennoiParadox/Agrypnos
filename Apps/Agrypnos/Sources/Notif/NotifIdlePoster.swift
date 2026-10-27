@@ -48,7 +48,7 @@ enum NotifIdlePoster {
             requests.append(request)
         }
         if channels.contains(.telegram),
-           let telegramBody = Self.telegramBody(reason: reason)
+           let telegramBody = Self.telegramBody(reason: reason, willSleep: willSleep)
         {
             if let token = secrets.telegramBotToken,
                let chat = secrets.telegramChatId,
@@ -66,15 +66,18 @@ enum NotifIdlePoster {
         return requests
     }
 
-    private static func telegramBody(reason: DisengageReason?) -> String? {
+    private static func telegramBody(reason: DisengageReason?, willSleep: Bool) -> String? {
+        let base: String
         switch reason {
         case .timerExpired:
-            return "Agrypnos: your Keep awake timer ended."
+            base = "Agrypnos: your Keep awake timer ended."
         case .agentsSettled:
-            return AgrypnosCopy.notifIdleBody
+            base = AgrypnosCopy.notifIdleBody
         default:
             return nil
         }
+        if willSleep { return base + " Asking the Mac to sleep." }
+        return base
     }
 
     static func fire(_ request: NotifOutboundRequest) async {

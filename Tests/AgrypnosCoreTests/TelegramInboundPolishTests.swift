@@ -75,6 +75,26 @@ final class TelegramInboundHelpCopyTests: XCTestCase {
 }
 
 final class TelegramInboundWakeMissTests: XCTestCase {
+    func testColdStartKeepsStoredWakeMissAndUnsetStaysLeftover() {
+        let stored = TelegramInboundCursor(offset: 40, seeded: false, wakeMiss: true)
+        let resumed = stored.startingLaunch()
+        XCTAssertFalse(resumed.seeded)
+        XCTAssertTrue(resumed.wakeMiss)
+        XCTAssertEqual(resumed.drain, .wakeMiss)
+        XCTAssertEqual(
+            TelegramInboundDispatch.effect(drain: resumed.drain, intent: .arm),
+            .missedWhileAsleep
+        )
+        let unset = TelegramInboundCursor.unset.startingLaunch()
+        XCTAssertEqual(unset.drain, .leftover)
+        XCTAssertFalse(unset.wakeMiss)
+        XCTAssertEqual(
+            TelegramInboundDispatch.effect(drain: unset.drain, intent: .arm),
+            .ignore
+        )
+        XCTAssertEqual(stored.startingSession().drain, .leftover)
+    }
+
     func testLeftoverDrainDoesNotApplyOrReply() {
         let cursor = TelegramInboundCursor(offset: 40, seeded: true).startingSession()
         XCTAssertEqual(cursor.drain, .leftover)
@@ -153,15 +173,55 @@ final class TelegramInboundWakeMissTests: XCTestCase {
         )
     }
 
-    func testWakeMissAckSeedsLiveAndClearsMiss() {
+    func testWakeMissAckStaysUnseededAndDoesNotApply() {
         let drained = TelegramInboundCursor(offset: 40, seeded: false, wakeMiss: true).acknowledging([
             TelegramInboundUpdate(updateId: 41, chatId: "99", text: "/arm"),
         ])
-        XCTAssertTrue(drained.seeded)
-        XCTAssertEqual(drained.drain, .live)
-        XCTAssertTrue(drained.shouldApplyCommands)
+        XCTAssertFalse(drained.seeded)
+        XCTAssertTrue(drained.wakeMiss)
+        XCTAssertEqual(drained.offset, 42)
+        XCTAssertEqual(drained.drain, .wakeMiss)
+        XCTAssertFalse(drained.shouldApplyCommands)
         XCTAssertEqual(
             TelegramInboundDispatch.effect(drain: drained.drain, intent: .arm),
+            .missedWhileAsleep
+        )
+    }
+
+    func testStoredWakeMissStaysWakeMissAcrossAckUntilPostWakePromotion() {
+        let stored = TelegramInboundCursor(offset: 40, seeded: true).startingWakeMiss()
+        let updates = [TelegramInboundUpdate(updateId: 41, chatId: "99", text: "/arm")]
+        let acked = stored.acknowledging(updates)
+        XCTAssertFalse(acked.seeded)
+        XCTAssertTrue(acked.wakeMiss)
+        XCTAssertEqual(acked.offset, 42)
+        XCTAssertEqual(acked.drain, .wakeMiss)
+        XCTAssertEqual(
+            TelegramInboundDispatch.effect(drain: acked.drain, intent: .arm),
+            .missedWhileAsleep
+        )
+
+        let promoted = acked.promotedAfterWake()
+        XCTAssertTrue(promoted.seeded)
+        XCTAssertFalse(promoted.wakeMiss)
+        XCTAssertEqual(promoted.drain, .live)
+        XCTAssertEqual(promoted.offset, 42)
+        XCTAssertEqual(
+            TelegramInboundDispatch.effect(drain: promoted.drain, intent: .arm),
+            .apply(.arm)
+        )
+    }
+
+    func testLiveAckStillSeedsAndApplies() {
+        let live = TelegramInboundCursor(offset: 40, seeded: true).acknowledging([
+            TelegramInboundUpdate(updateId: 41, chatId: "99", text: "/arm"),
+        ])
+        XCTAssertTrue(live.seeded)
+        XCTAssertFalse(live.wakeMiss)
+        XCTAssertEqual(live.offset, 42)
+        XCTAssertEqual(live.drain, .live)
+        XCTAssertEqual(
+            TelegramInboundDispatch.effect(drain: live.drain, intent: .arm),
             .apply(.arm)
         )
     }

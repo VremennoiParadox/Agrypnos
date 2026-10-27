@@ -115,7 +115,7 @@ public enum PanelPowerChrome: Sendable {
         case .floor:
             return "Lowers brightness to a set point instead of fully shutting off the screen."
         case .displaySleep:
-            return "Shuts off the screen fully to minimize battery usage, the Mac still stays awake and agents aren't interrupted in any way."
+            return "Shuts off the screen fully. The Mac stays awake and agents keep running. Brightness return only applies when restoring from the floor path."
         }
     }
 

@@ -33,6 +33,8 @@ public enum AgrypnosCopy: Sendable {
         "Keep awake turns off when the wait after agent signals stop ends (battery / thermal still apply)."
     public static let timedHint =
         "Sends the Mac to sleep by the end of the timer unless the lid is open."
+    public static let userOffSleepHint =
+        "Turning Keep awake off with the lid confirmed closed sends the Mac to sleep. With the lid open or unconfirmed it turns Keep awake off and does not sleep the Mac."
     // User-armed watches do not auto-off on Low Power Mode, so it is not listed here.
     public static let indefiniteHint =
         "Stays on until you turn it off (battery / thermal still apply)."
@@ -94,14 +96,17 @@ public enum AgrypnosCopy: Sendable {
         thermalAutoOff: Bool = true
     ) -> String {
         _ = remainingSeconds
+        let mode: String
         switch option {
         case .untilAgentsSettle:
-            return agentsHint(thermalAutoOff: thermalAutoOff)
+            mode = agentsHint(thermalAutoOff: thermalAutoOff)
         case .oneHour, .threeHours, .custom:
-            return timedHint
+            mode = timedHint
         case .indefinite:
-            return indefiniteHint(thermalAutoOff: thermalAutoOff)
+            mode = indefiniteHint(thermalAutoOff: thermalAutoOff)
         }
+        if engaged, option.minutes != nil { return mode }
+        return mode + " " + userOffSleepHint
     }
 
     public static func countdown(seconds: Int) -> String {
@@ -184,15 +189,17 @@ public enum AgrypnosCopy: Sendable {
 
     public static let notifEnabled = "Watch-end POST"
     public static let notifEnabledHelp =
-        "Message your Discord bot and/or your Telegram bot when the timer ends, when the wait after agent signals stop ends, or when Agrypnos asks the Mac to sleep. Off by default."
+        "Message your Telegram bot when the timer ends, and when the wait after agent signals stop ends. Message your Discord bot for those, and when Agrypnos asks the Mac to sleep. Off by default."
     public static let notifDiscord = "Discord"
     public static let notifDiscordHelp =
         "Messages this channel when Watch-end POST is on, including when Agrypnos asks the Mac to sleep. Commands: /arm, /disarm, /status, /help, when Discord inbound is on. Needs your bot token + channel id. Details in Setup instructions."
     public static let notifTelegramToken = "Telegram bot token"
     public static let notifTelegramChatId = "Telegram chat id"
+    public static let notifTelegramUserId = "Telegram user id"
     public static let notifTelegram = "Telegram"
     public static let notifTelegramTokenShort = "Token"
     public static let notifTelegramChatShort = "Chat id"
+    public static let notifTelegramUserPlaceholder = "your user id"
     public static let notifTelegramTokenPlaceholder = "paste bot token"
     public static let notifTelegramChatPlaceholder = "from getUpdates"
     public static let notifTelegramHelp =
@@ -207,6 +214,8 @@ public enum AgrypnosCopy: Sendable {
     public static let notifDiscordInboundChannelShort = "Channel"
     public static let notifDiscordInboundToken = "Discord bot token"
     public static let notifDiscordInboundChannelId = "Discord channel id"
+    public static let notifDiscordUserId = "Discord user id"
+    public static let notifDiscordUserPlaceholder = "your user id"
     public static let notifDiscordInboundTokenPlaceholder = "paste bot token"
     public static let notifDiscordInboundChannelPlaceholder = "channel id"
     public static let notifDiscordInboundTokenInvalid =
@@ -222,6 +231,10 @@ public enum AgrypnosCopy: Sendable {
     public static let notifTelegramPostFailed = "Couldn't message your Telegram bot."
     public static let notifTelegramChatInvalid =
         "That is not a Telegram chat id. Nothing was saved."
+    public static let notifTelegramUserInvalid =
+        "That is not a Telegram user id. Nothing was saved."
+    public static let notifDiscordUserInvalid =
+        "That is not a Discord user id. Nothing was saved."
     public static let notifTelegramTokenInvalid =
         "That is not a Telegram bot token. Nothing was saved."
     public static let notifSetup = "Setup instructions…"

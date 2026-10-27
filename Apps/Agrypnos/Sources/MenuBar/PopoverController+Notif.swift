@@ -80,11 +80,26 @@ extension PopoverController {
             action: #selector(discordInboundChannelCommitted(_:)),
             delegate: self
         )
-        discordInboundSwitch = PopoverForm.switchControl(
+        discordUserSecrets = PopoverForm.labeledSecretField(
+            in: card,
+            y: CGFloat(PopoverStackLayout.notifDiscordUserY),
+            x: ci,
+            width: cw,
+            caption: AgrypnosCopy.notifDiscordUserId,
+            placeholder: AgrypnosCopy.notifDiscordUserPlaceholder,
+            label: AgrypnosCopy.notifDiscordUserId,
+            help: AgrypnosCopy.notifDiscordHelp,
+            target: self,
+            action: #selector(discordUserCommitted(_:)),
+            delegate: self
+        )
+        discordInboundSwitch = PopoverForm.switchRow(
             in: card,
             y: CGFloat(PopoverStackLayout.notifDiscordInboundSwitchY),
+            title: AgrypnosCopy.notifDiscordInbound,
             contentW: contentW,
             ci: ci,
+            cw: cw,
             swW: swW,
             swH: swH,
             target: self,
@@ -138,18 +153,33 @@ extension PopoverController {
             action: #selector(telegramChatCommitted(_:)),
             delegate: self
         )
-        telegramInboundSwitch = PopoverForm.switchControl(
+        telegramUserSecrets = PopoverForm.labeledSecretField(
+            in: card,
+            y: CGFloat(PopoverStackLayout.notifTelegramUserY),
+            x: ci,
+            width: cw,
+            caption: AgrypnosCopy.notifTelegramUserId,
+            placeholder: AgrypnosCopy.notifTelegramUserPlaceholder,
+            label: AgrypnosCopy.notifTelegramUserId,
+            help: AgrypnosCopy.notifTelegramHelp,
+            target: self,
+            action: #selector(telegramUserCommitted(_:)),
+            delegate: self
+        )
+        telegramInboundSwitch = PopoverForm.switchRow(
             in: card,
             y: CGFloat(PopoverStackLayout.notifTelegramInboundSwitchY),
+            title: AgrypnosCopy.notifTelegramInbound,
             contentW: contentW,
             ci: ci,
+            cw: cw,
             swW: swW,
             swH: swH,
             target: self,
             action: #selector(telegramInboundToggled(_:))
         )
         telegramInboundSwitch.state = TelegramInboundChrome.defaultEnabled ? .on : .off
-        telegramInboundSwitch.setAccessibilityLabel(AgrypnosCopy.notifTelegram)
+        telegramInboundSwitch.setAccessibilityLabel(AgrypnosCopy.notifTelegramInbound)
         telegramInboundSwitch.setAccessibilityHelp(AgrypnosCopy.notifTelegramHelp)
     }
 
@@ -194,19 +224,25 @@ extension PopoverController {
         let secrets = runtime.notifSecrets()
         discordInboundTokenSecrets?.stringValue = secrets.discordBotToken ?? ""
         discordInboundChannelSecrets?.stringValue = secrets.discordChannelId ?? ""
+        discordUserSecrets?.stringValue = secrets.discordQuestionUserId ?? ""
         telegramTokenSecrets?.stringValue = secrets.telegramBotToken ?? ""
         telegramChatSecrets?.stringValue = secrets.telegramChatId ?? ""
+        telegramUserSecrets?.stringValue = secrets.telegramQuestionUserId ?? ""
     }
 
     func commitNotifFields() {
         flushSecretFieldEditor(discordInboundTokenSecrets?.field)
         flushSecretFieldEditor(discordInboundChannelSecrets?.field)
+        flushSecretFieldEditor(discordUserSecrets?.field)
         flushSecretFieldEditor(telegramTokenSecrets?.field)
         flushSecretFieldEditor(telegramChatSecrets?.field)
+        flushSecretFieldEditor(telegramUserSecrets?.field)
         if let discordInboundTokenSecrets { discordInboundTokenCommitted(discordInboundTokenSecrets.field) }
         if let discordInboundChannelSecrets { discordInboundChannelCommitted(discordInboundChannelSecrets.field) }
+        if let discordUserSecrets { discordUserCommitted(discordUserSecrets.field) }
         if let telegramTokenSecrets { telegramTokenCommitted(telegramTokenSecrets.field) }
         if let telegramChatSecrets { telegramChatCommitted(telegramChatSecrets.field) }
+        if let telegramUserSecrets { telegramUserCommitted(telegramUserSecrets.field) }
     }
 
     func flushSecretFieldEditor(_ field: NSTextField?) {
@@ -283,6 +319,40 @@ extension PopoverController {
         }
     }
 
+    @objc func discordUserCommitted(_ sender: NSTextField) {
+        stopRecordingIfNeeded()
+        flushSecretFieldEditor(sender)
+        switch DiscordChannelIdChrome.commit(sender.stringValue) {
+        case .persist(let id):
+            let saved = runtime?.setNotifDiscordQuestionUserId(id) ?? true
+            discordUserSecrets.stringValue = id
+            if !saved {
+                UserNotify.post(AgrypnosCopy.notifSaveFailed)
+            }
+        case .clear:
+            break
+        case .reject:
+            UserNotify.post(AgrypnosCopy.notifDiscordUserInvalid)
+        }
+    }
+
+    @objc func telegramUserCommitted(_ sender: NSTextField) {
+        stopRecordingIfNeeded()
+        flushSecretFieldEditor(sender)
+        switch DiscordChannelIdChrome.commit(sender.stringValue) {
+        case .persist(let id):
+            let saved = runtime?.setNotifTelegramQuestionUserId(id) ?? true
+            telegramUserSecrets.stringValue = id
+            if !saved {
+                UserNotify.post(AgrypnosCopy.notifSaveFailed)
+            }
+        case .clear:
+            break
+        case .reject:
+            UserNotify.post(AgrypnosCopy.notifTelegramUserInvalid)
+        }
+    }
+
     @objc func telegramChatCommitted(_ sender: NSTextField) {
         stopRecordingIfNeeded()
         flushSecretFieldEditor(sender)
@@ -306,8 +376,10 @@ extension PopoverController {
         runtime?.clearNotifSecrets()
         discordInboundTokenSecrets?.stringValue = ""
         discordInboundChannelSecrets?.stringValue = ""
+        discordUserSecrets?.stringValue = ""
         telegramTokenSecrets?.stringValue = ""
         telegramChatSecrets?.stringValue = ""
+        telegramUserSecrets?.stringValue = ""
         refresh()
     }
 }

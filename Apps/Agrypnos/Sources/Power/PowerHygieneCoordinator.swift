@@ -40,7 +40,16 @@ enum PowerHygieneCoordinator {
             case .engage, .disengage, .assertSleepDisabled, .postIdleAfterWaitNotif, .postTimerExpiredNotif:
                 break
             case .requestSleep:
-                guard timerExpired ? readLid() != false : readLid() == true else { break }
+                // Timer, safety, and agents sleep unless the lid is known open.
+                // User-off still needs a closed read, so a nil sample does not sleep.
+                let missingLidStillSleeps = timerExpired || commands.contains { command in
+                    if case .disengage(let reason) = command {
+                        return reason == .batteryFloor || reason == .thermal
+                            || reason == .lowPowerMode || reason == .agentsSettled
+                    }
+                    return false
+                }
+                guard missingLidStillSleeps ? readLid() != false : readLid() == true else { break }
                 let exit = runCommand("/usr/bin/pmset", ["sleepnow"]).exit
                 result.sleepnow = PmsetCommandOutcome.from(exit: exit)
             case .requestDisplaySleep:

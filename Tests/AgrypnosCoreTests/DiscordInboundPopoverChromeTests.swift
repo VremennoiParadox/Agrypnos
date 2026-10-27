@@ -103,7 +103,7 @@ final class DiscordInboundPopoverChromeTests: XCTestCase {
             PopoverStackLayout.inset
                 + PopoverStackLayout.titleRowHeight
                 + discordHelpHeight
-                + 2 * PopoverStackLayout.secretFieldRowHeight
+                + 3 * PopoverStackLayout.secretFieldRowHeight
                 + PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset
         )
@@ -116,8 +116,12 @@ final class DiscordInboundPopoverChromeTests: XCTestCase {
             PopoverStackLayout.notifDiscordInboundTokenY + PopoverStackLayout.secretFieldRowHeight
         )
         XCTAssertEqual(
-            PopoverStackLayout.notifDiscordInboundSwitchY,
+            PopoverStackLayout.notifDiscordUserY,
             PopoverStackLayout.notifDiscordInboundChannelY + PopoverStackLayout.secretFieldRowHeight
+        )
+        XCTAssertEqual(
+            PopoverStackLayout.notifDiscordInboundSwitchY,
+            PopoverStackLayout.notifDiscordUserY + PopoverStackLayout.secretFieldRowHeight
         )
         XCTAssertEqual(
             layout.stackedCards.map(\.y),

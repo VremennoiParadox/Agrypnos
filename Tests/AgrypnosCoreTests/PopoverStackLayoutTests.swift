@@ -88,7 +88,7 @@ final class PopoverStackLayoutTests: XCTestCase {
                 + PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset
         )
-        XCTAssertEqual(watch.duration!.height, 136)
+        XCTAssertEqual(watch.duration!.height, 232)
         XCTAssertEqual(power.battery!.height, 88)
         XCTAssertEqual(general.login!.height, 44)
         XCTAssertEqual(general.hotkeyHint!.height, PopoverCopyLayout.hotkeyHintHeightPoints)

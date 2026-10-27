@@ -5,6 +5,8 @@ public struct NotifSecretsPayload: Codable, Equatable, Sendable {
     public var telegramChatId: String?
     public var discordBotToken: String?
     public var discordChannelId: String?
+    public var telegramQuestionUserId: String?
+    public var discordQuestionUserId: String?
     public var openCodeQuestions: OpenCodeQuestionSettings?
 
     enum CodingKeys: String, CodingKey {
@@ -12,6 +14,8 @@ public struct NotifSecretsPayload: Codable, Equatable, Sendable {
         case telegramChatId
         case discordBotToken
         case discordChannelId
+        case telegramQuestionUserId
+        case discordQuestionUserId
         case openCodeQuestions
     }
 
@@ -20,12 +24,16 @@ public struct NotifSecretsPayload: Codable, Equatable, Sendable {
         telegramChatId: String? = nil,
         discordBotToken: String? = nil,
         discordChannelId: String? = nil,
+        telegramQuestionUserId: String? = nil,
+        discordQuestionUserId: String? = nil,
         openCodeQuestions: OpenCodeQuestionSettings? = nil
     ) {
         self.telegramBotToken = Self.present(telegramBotToken)
         self.telegramChatId = Self.present(telegramChatId)
         self.discordBotToken = Self.present(discordBotToken)
         self.discordChannelId = Self.present(discordChannelId)
+        self.telegramQuestionUserId = Self.present(telegramQuestionUserId)
+        self.discordQuestionUserId = Self.present(discordQuestionUserId)
         self.openCodeQuestions = openCodeQuestions
     }
 
@@ -36,6 +44,8 @@ public struct NotifSecretsPayload: Codable, Equatable, Sendable {
             telegramChatId: try container.decodeIfPresent(String.self, forKey: .telegramChatId),
             discordBotToken: try container.decodeIfPresent(String.self, forKey: .discordBotToken),
             discordChannelId: try container.decodeIfPresent(String.self, forKey: .discordChannelId),
+            telegramQuestionUserId: try container.decodeIfPresent(String.self, forKey: .telegramQuestionUserId),
+            discordQuestionUserId: try container.decodeIfPresent(String.self, forKey: .discordQuestionUserId),
             openCodeQuestions: try container.decodeIfPresent(OpenCodeQuestionSettings.self, forKey: .openCodeQuestions)
         )
     }
@@ -46,6 +56,8 @@ public struct NotifSecretsPayload: Codable, Equatable, Sendable {
         try container.encodeIfPresent(telegramChatId, forKey: .telegramChatId)
         try container.encodeIfPresent(discordBotToken, forKey: .discordBotToken)
         try container.encodeIfPresent(discordChannelId, forKey: .discordChannelId)
+        try container.encodeIfPresent(telegramQuestionUserId, forKey: .telegramQuestionUserId)
+        try container.encodeIfPresent(discordQuestionUserId, forKey: .discordQuestionUserId)
         try container.encodeIfPresent(openCodeQuestions, forKey: .openCodeQuestions)
     }
 
@@ -71,6 +83,8 @@ public struct NotifSecretsPayload: Codable, Equatable, Sendable {
         if let value = payload.telegramChatId { object["telegramChatId"] = value }
         if let value = payload.discordBotToken { object["discordBotToken"] = value }
         if let value = payload.discordChannelId { object["discordChannelId"] = value }
+        if let value = payload.telegramQuestionUserId { object["telegramQuestionUserId"] = value }
+        if let value = payload.discordQuestionUserId { object["discordQuestionUserId"] = value }
         if let value = payload.openCodeQuestions,
            let data = try? JSONEncoder().encode(value),
            let connection = try? JSONSerialization.jsonObject(with: data) {
@@ -93,6 +107,8 @@ public struct NotifSecretsPayload: Codable, Equatable, Sendable {
             telegramChatId: object["telegramChatId"] as? String,
             discordBotToken: object["discordBotToken"] as? String,
             discordChannelId: object["discordChannelId"] as? String,
+            telegramQuestionUserId: object["telegramQuestionUserId"] as? String,
+            discordQuestionUserId: object["discordQuestionUserId"] as? String,
             openCodeQuestions: connection
         )
     }

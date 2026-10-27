@@ -98,8 +98,11 @@ final class PanelPowerPopoverChromeTests: XCTestCase {
         )
         XCTAssertEqual(
             PanelPowerChrome.caption(.displaySleep),
-            "Shuts off the screen fully to minimize battery usage, the Mac still stays awake and agents aren't interrupted in any way."
+            "Shuts off the screen fully. The Mac stays awake and agents keep running. Brightness return only applies when restoring from the floor path."
         )
+        XCTAssertTrue(PanelPowerChrome.caption(.displaySleep).lowercased().contains("floor path"))
+        XCTAssertFalse(PanelPowerChrome.caption(.floor).lowercased().contains("display asleep"))
+        XCTAssertFalse(PanelPowerChrome.caption(.floor).lowercased().contains("screen off"))
         XCTAssertEqual(PanelPowerChrome.help(.displaySleep), PanelPowerChrome.caption(.displaySleep))
         XCTAssertFalse(PanelPowerChrome.caption(.floor).lowercased().contains("display asleep"))
         XCTAssertFalse(PanelPowerChrome.caption(.floor).lowercased().contains("screen off"))

@@ -4,9 +4,9 @@ import AgrypnosCore
 
 @MainActor
 final class QuestionRelayCoordinatorTests: XCTestCase {
-    func testUnrenderableLaterDiscordPanelStaysLocalBeforeOfferingControls() async {
+    func testUnrenderableLaterDiscordPanelStaysLocalBeforeOfferingControls() async throws {
         let fixture = QuestionRelayFixture()
-        fixture.use(.discord)
+        fixture.settings.discord = DiscordQuestionDestination(token: "discord", channelID: "10", userID: "43")
         let later = AgentQuestion(id: "later", prompt: String(repeating: "[]()", count: 300),
             options: [QuestionOption(id: "a", label: "Alpha")])
         fixture.batch = QuestionBatch(key: fixture.batch.key, questions: fixture.batch.questions + [later],
@@ -15,7 +15,15 @@ final class QuestionRelayCoordinatorTests: XCTestCase {
         XCTAssertTrue(registry.insert(fixture.batch, handle: UUID()))
         XCTAssertFalse(fixture.receive())
         await fixture.yieldTasks()
-        XCTAssertTrue(fixture.requests.isEmpty)
+        XCTAssertEqual(fixture.requests.count, 1)
+        let request = try XCTUnwrap(fixture.requests.first)
+        let body = try XCTUnwrap(JSONSerialization.jsonObject(with: request.body) as? [String: Any])
+        let text = try XCTUnwrap(body["content"] as? String)
+        XCTAssertTrue(text.contains("did not fit"))
+        XCTAssertTrue(text.localizedCaseInsensitiveContains("mac"))
+        XCTAssertNil(body["components"])
+        XCTAssertNil(body["reply_markup"])
+        XCTAssertFalse(fixture.requests.contains { $0.url.path.hasSuffix("/sendMessage") })
         XCTAssertTrue(fixture.relay.pendingDeadlines.isEmpty)
         XCTAssertTrue(fixture.events.isEmpty)
     }
@@ -112,7 +120,7 @@ final class QuestionRelayCoordinatorTests: XCTestCase {
 
     func testNativeCancellationEditsBothMessagesToUnavailable() async {
         let fixture = QuestionRelayFixture()
-        fixture.settings.discord = DiscordQuestionDestination(token: "discord", channelID: "10")
+        fixture.settings.discord = DiscordQuestionDestination(token: "discord", channelID: "10", userID: "43")
         XCTAssertTrue(fixture.receive())
         await fixture.waitForEdits(2)
         fixture.relay.cancel(key: fixture.batch.key)
@@ -151,13 +159,24 @@ final class QuestionRelayCoordinatorTests: XCTestCase {
     }
 
     func testSameChatClickSelectsAndWakeMissOrOtherChatDoesNot() async throws {
+        let missing = QuestionRelayFixture()
+        missing.settings.telegram = TelegramQuestionDestination(token: "fixture", chatID: "9", userID: "")
+        XCTAssertFalse(missing.receive())
+        let missingDiscord = QuestionRelayFixture()
+        missingDiscord.settings.telegram = nil
+        missingDiscord.settings.discord = DiscordQuestionDestination(token: "discord", channelID: "10", userID: "")
+        XCTAssertFalse(missingDiscord.receive())
+
         let fixture = QuestionRelayFixture()
+        fixture.settings.telegram = TelegramQuestionDestination(token: "fixture", chatID: "9", userID: "42")
         XCTAssertTrue(fixture.receive())
         await fixture.waitForEdits(1)
         let click = try fixture.callback("1")
         let outsider = TelegramQuestionCallback(id: "outsider", senderID: "99", reference: click.reference, actionToken: click.actionToken)
         fixture.relay.handleTelegram(outsider, drain: .live)
-        await fixture.waitForEdits(2)
+        await fixture.yieldTasks()
+        XCTAssertEqual(fixture.editCount, 1)
+        XCTAssertTrue(fixture.submissions.isEmpty)
         let otherChat = TelegramQuestionCallback(
             id: "other-chat", senderID: "42",
             reference: QuestionMessageRef(destination: .telegram, destinationID: "8", messageID: click.reference.messageID),
@@ -165,8 +184,32 @@ final class QuestionRelayCoordinatorTests: XCTestCase {
         fixture.relay.handleTelegram(otherChat, drain: .live)
         fixture.relay.handleTelegram(click, drain: .wakeMiss)
         await fixture.yieldTasks()
-        XCTAssertEqual(fixture.editCount, 2)
+        XCTAssertEqual(fixture.editCount, 1)
         XCTAssertTrue(fixture.submissions.isEmpty)
+        fixture.relay.handleTelegram(click, drain: .live)
+        await fixture.waitForEdits(2)
+        try fixture.click("Review / next")
+        await fixture.waitForEdits(3)
+        let send = try fixture.callback("Send answers")
+        let outsiderSend = TelegramQuestionCallback(
+            id: "outsider-send", senderID: "99", reference: send.reference, actionToken: send.actionToken)
+        fixture.relay.handleTelegram(outsiderSend, drain: .live)
+        await fixture.yieldTasks()
+        XCTAssertTrue(fixture.submissions.isEmpty)
+        fixture.relay.handleTelegram(send, drain: .live)
+        await fixture.waitForSubmissions(1)
+
+        let discord = QuestionRelayFixture()
+        discord.use(.discord)
+        discord.settings.discord = DiscordQuestionDestination(token: "discord", channelID: "10", userID: "43")
+        XCTAssertTrue(discord.receive())
+        await discord.waitForEdits(1)
+        discord.relay.handleDiscord(try XCTUnwrap(discord.discordCallback("1", senderID: "99")), drain: .live)
+        await discord.yieldTasks()
+        XCTAssertEqual(discord.editCount, 1)
+        XCTAssertTrue(discord.submissions.isEmpty)
+        discord.relay.handleDiscord(try XCTUnwrap(discord.discordCallback("1")), drain: .live)
+        await discord.waitForEdits(2)
     }
 
     func testLocalCancellationDuringNativeSendRejectsLateCompletion() async throws {
@@ -229,7 +272,7 @@ final class QuestionRelayCoordinatorTests: XCTestCase {
 
     func testFirstCompleteAnswerWinsAcrossTelegramAndDiscord() async throws {
         let fixture = QuestionRelayFixture()
-        fixture.settings.discord = DiscordQuestionDestination(token: "discord", channelID: "10")
+        fixture.settings.discord = DiscordQuestionDestination(token: "discord", channelID: "10", userID: "43")
         XCTAssertTrue(fixture.receive())
         await fixture.waitForEdits(2)
         XCTAssertNotNil(fixture.discordCallback("1"))
@@ -317,7 +360,7 @@ final class QuestionRelayCoordinatorTests: XCTestCase {
 @MainActor
 private final class QuestionRelayFixture {
     var now: TimeInterval = 0
-    var settings = QuestionRelaySettings(enabled: true, includedKinds: [.cursor], telegram: TelegramQuestionDestination(token: "fixture", chatID: "9"))
+    var settings = QuestionRelaySettings(enabled: true, includedKinds: [.cursor], telegram: TelegramQuestionDestination(token: "fixture", chatID: "9", userID: "42"))
     var requests: [NotifOutboundRequest] = []
     var submissions: [QuestionAnswer] = []
     var delivery: CheckedContinuation<QuestionDelivery, Never>?
@@ -364,7 +407,7 @@ private final class QuestionRelayFixture {
     func use(_ destination: QuestionDestination) {
         if destination == .discord {
             settings.telegram = nil
-            settings.discord = DiscordQuestionDestination(token: "discord", channelID: "10")
+            settings.discord = DiscordQuestionDestination(token: "discord", channelID: "10", userID: "43")
         }
     }
     func click(_ label: String, on destination: QuestionDestination) throws {
@@ -390,7 +433,7 @@ private final class QuestionRelayFixture {
         return TelegramQuestionCallback(id: UUID().uuidString, senderID: "42", reference: QuestionMessageRef(destination: .telegram, destinationID: "9", messageID: "18"), actionToken: String(data.dropFirst(3)))
     }
     func click(_ label: String) throws { relay.handleTelegram(try callback(label), drain: .live) }
-    func discordCallback(_ label: String) -> DiscordQuestionInteraction? {
+    func discordCallback(_ label: String, senderID: String = "43") -> DiscordQuestionInteraction? {
         guard let request = requests.last(where: { $0.httpMethod == "PATCH" && $0.url.path.hasSuffix("/messages/19") }),
               let body = try? JSONSerialization.jsonObject(with: request.body) as? [String: Any],
               let rows = body["components"] as? [[String: Any]],
@@ -398,7 +441,7 @@ private final class QuestionRelayFixture {
                   .first(where: { $0["label"] as? String == label })?["custom_id"] as? String
         else { return nil }
         interactionCounter += 1
-        let wire: [String: Any] = ["type": 3, "id": String(interactionCounter), "token": "interaction", "channel_id": "10", "message": ["id": "19"], "user": ["id": "43", "bot": false], "data": ["custom_id": token]]
+        let wire: [String: Any] = ["type": 3, "id": String(interactionCounter), "token": "interaction", "channel_id": "10", "message": ["id": "19"], "user": ["id": senderID, "bot": false], "data": ["custom_id": token]]
         return DiscordQuestionInteraction.parse(wire)
     }
 
