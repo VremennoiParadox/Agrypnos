@@ -39,12 +39,13 @@ The usual keep-awake tricks don't help here. Power assertions (what `caffeinate`
 - Set How long to **1h**, **3h**, or custom minutes for a countdown that starts when you turn Keep awake on.
 - Set How long to **Agents** and Keep awake turns off by itself when the wait after agent signals stop ends.
 - Low battery and thermal pressure turn Keep awake off too, and a reboot always clears it.
-- If you want, *your* Telegram or Discord bot gets a message when the timer ends or the wait after agent signals stop ends. Discord also messages when Agrypnos asks the Mac to sleep. Either bot takes `/arm`, `/disarm`, and `/status` from your phone.
+- If you want, *your* Telegram or Discord bot gets a message when the timer ends or the wait after agent signals stop ends. Discord also messages when Agrypnos asks the Mac to sleep. Either bot takes `/arm`, `/disarm`, `/status`, and `/help` from your phone.
+- When OpenCode or Claude Code asks you a multiple-choice question, your bot can show it and send your answer back (BETA). Codex can ping your bot when it's waiting on you.
 - No analytics, no accounts, no shared bot. The only privileged piece is a two-command sudoers rule, spelled out in [SECURITY.md](SECURITY.md).
 
 ## Install
 
-There's no signed download yet, so you build it yourself. You need macOS 14 or later and Xcode (or the Xcode command-line tools).
+There's no signed download yet, so you build it yourself. You need macOS 14 or later and Xcode.
 
 ```bash
 git clone https://github.com/VremennoiParadox/Agrypnos.git
@@ -71,12 +72,12 @@ macOS asks for your password once. To remove the rule later, run `./Scripts/ungr
 3. Turn on **Keep awake**. The menu-bar eye turns **purple**. The icon stays the same size in every mode: gray when off, blue for ∞, gold when Keep awake is on a timer, and purple for Agents.
 4. Start your agent and close the lid.
 
-Agrypnos waits until the lid has really closed (a single flicker of the lid sensor doesn't count), then turns the keyboard backlight off and dims the panel. When the wait after agent signals stop ends (2 minutes by default), Keep awake turns off and the Mac is free to sleep.
+Agrypnos waits until the lid has really closed (a single flicker of the lid sensor doesn't count), then turns the keyboard backlight off and dims the panel. When the wait after agent signals stop ends (2 minutes by default), Keep awake turns off. If the lid is still closed, Agrypnos also asks the Mac to sleep.
 
 Want it on until you say stop? Pick `∞` instead and turn it off yourself.
 
 > [!NOTE]
-> `1h`, `3h`, and custom minutes start a countdown when Keep awake turns on. Time left appears in the same How long card. Opening the lid keeps the timer running. Changing the duration while on starts a fresh interval. At expiry Keep awake turns off and the Mac sleeps unless the lid is known open; if the lid reading is unavailable, Agrypnos requests sleep. The selected duration stays saved. Battery and thermal limits still apply.
+> `1h`, `3h`, and custom minutes start a countdown when Keep awake turns on. The time left shows in the How long card. Opening the lid doesn't pause the timer, and changing the duration while Keep awake is on starts a fresh countdown. When the timer ends, Keep awake turns off and Agrypnos asks the Mac to sleep unless the lid is known to be open. If the lid reading is unavailable, it still asks. How long keeps your choice for next time.
 
 ## How it works
 
@@ -87,41 +88,48 @@ The **Power** section has two panel modes. You pick one.
 | Mode | On a confirmed lid close | When you open the lid again |
 |---|---|---|
 | **Dim panel** (default) | Brightness drops to your floor (15% by default, 1–40%). The panel stays on. | Brightness fades back over 1, 2, or 3 seconds (2 by default). |
-| **Sleep panel** | The display itself sleeps (`displaysleepnow`). | The display wakes. No fade, so that setting is hidden. |
+| **Sleep panel** | The display itself sleeps (`displaysleepnow`). | The display wakes. Nothing fades back, so the brightness floor and fade settings are hidden. |
 
-Both modes turn the keyboard backlight off. Neither one puts the Mac to sleep or turns Keep awake off, so your agents keep running either way. Turning Keep awake on with the lid open never touches the screen.
+Both modes turn the keyboard backlight off by default, and **Power** has a switch for that. Dim panel also has a switch for the brightness floor. Neither mode puts the Mac to sleep or turns Keep awake off, so your agents keep running either way. Turning Keep awake on with the lid open never touches the screen.
 
 If Agrypnos never saw your brightness before the lid closed, it won't guess one when the lid opens. It leaves the screen alone.
 
 ### How it knows your agents are busy
 
-It only looks at your own Mac. For each tool you leave checked under **Agents**, it watches two things: whether the tool's process is running, and whether its session files changed in the last 45 seconds. Claude Code and Codex also count CPU use.
+It only looks at your own Mac, and only at the tools you leave checked under **Agents**. A tool counts as busy when its process is running and one of its session files changed in the last 45 seconds. For Claude Code and the Codex CLI, a running process that uses 5% CPU or more also counts. CPU use in the Codex desktop app doesn't.
 
 | Tool | Session files it watches |
 |---|---|
-| Cursor | `~/.cursor/projects`, `~/.cursor/chats`, `~/.cursor/acp-sessions` |
+| Cursor | `~/.cursor/projects`, `~/.cursor/chats`, `~/.cursor/acp-sessions` (and the same folders under `$XDG_CONFIG_HOME/cursor`) |
 | Claude Code | `~/.claude/projects` (or `$CLAUDE_CONFIG_DIR`) |
 | Codex | `~/.codex/sessions` (or `$CODEX_HOME`) |
 | OpenCode | `~/.local/share/opencode` (or `$XDG_DATA_HOME/opencode`) |
 
 It reads file modification times, not what's inside the files.
 
-Once it has seen work while Keep awake is on, it starts the wait after agent signals stop. When that wait ends (1 minute 30 seconds–10 minutes), Keep awake turns off. If it never saw any work since you turned it on, Keep awake stays on. That wait exists because an agent can pause for a while between file writes, and that shouldn't look like the end of the run.
+Once Agrypnos has seen work since you turned Keep awake on, it starts the wait after agent signals stop each time the busy signals stop. New activity starts the wait over. You can set it from 1 minute 30 seconds to 10 minutes. When the wait runs out, Keep awake turns off. If Agrypnos never saw any work since you turned it on, Keep awake stays on. The wait is there because an agent can go quiet for a while between file writes, and that shouldn't look like the end of the run.
 
 Agrypnos can't tell whether a model is "thinking". It only sees processes and files, so pick a wait after agent signals stop that fits how your agents work.
 
 > [!TIP]
-> Terminal session files don't count as busy by default, so a chatty terminal can't hold the Mac awake forever. Turn on **Count terminal sessions as busy** in **Agents** if you want them to.
+> Terminal session files don't count as busy by default, so a terminal left open can't hold the Mac awake on its own. Some agents run commands like tests in a terminal and go quiet while they wait for it. Turn on **Count terminal sessions as busy** in **Agents** if you want that terminal to count.
 
 ### When Keep awake turns itself off
 
-- **Timer ended.** For **1h**, **3h**, or custom minutes. Opening the lid does not stop the timer; expiry sleeps the Mac unless the lid is known open.
-- **Wait after agent signals stop.** Only when How long is **Agents**.
+- **Timer ended.** For **1h**, **3h**, or custom minutes.
+- **Wait after agent signals stop ended.** Only when How long is **Agents**.
 - **Low battery.** On battery, at the level you set (15% by default, 5–100%).
-- **Thermal pressure.** When macOS reports serious or critical thermal state. You can turn this off in **Power**.
-- **Low Power Mode.** On battery, Keep awake inherited from an earlier session turns off. Keep awake you turned on yourself stays on.
+- **Thermal pressure.** When macOS reports a serious or critical thermal state. You can turn this off in **Power**.
+- **Low Power Mode.** On battery, Keep awake left over from an earlier session turns off. Keep awake you turned on yourself stays on.
+- **Unanswered question.** A forwarded agent question got no answer for 10 minutes. See [Question notifications](#question-notifications-beta).
+
+If the lid is confirmed closed when one of these happens, Agrypnos also asks the Mac to sleep. The timer asks unless the lid is known to be open.
+
+Keep awake also ends in these cases:
+
 - **Reboot.** macOS clears the setting. Launch at login never turns Keep awake back on.
-- **Quit or crash.** Quitting Agrypnos turns the setting off. If the app crashes or gets force-quit, a small helper it started at launch turns it off right after.
+- **Quit or crash.** Quitting Agrypnos turns the setting off. If the lid is confirmed closed, quitting also asks the Mac to sleep. If the app crashes or gets force-quit, a small helper it started at launch turns the setting off right after.
+- **Wake hold lost.** If Agrypnos can't set `disablesleep` again and read it back, it turns Keep awake off instead of showing it as on.
 
 The **Watch** section shows when Keep awake last ended and why.
 
@@ -135,8 +143,8 @@ This part is optional and off by default. It lives in the **Notif** section. You
 
 There are two separate pieces:
 
-- **Watch-end message.** With **Watch-end POST** on, timer expiry sends “Agrypnos: your Keep awake timer ended.” **Agents** mode sends “the wait after agent signals stop ended” only after seeing local busy signals this arm. Both use your Discord bot channel (bot token + channel id), your Telegram bot, or both. Discord also messages when Agrypnos asks the Mac to sleep (`pmset sleepnow`). Telegram does not message for battery, thermal, Low Power Mode, or turning Keep awake off. With How long set to Agents, a session that never saw work does not message either. Discord commands and this Discord sleep message have not been checked on a real Mac yet.
-- **Commands.** Send `/arm`, `/disarm`, `/status`, or `/help` to your own Telegram or Discord bot, and Agrypnos acts on them while the Mac is awake. Discord commands have not been checked on a real Mac yet.
+- **Watch-end message.** With **Watch-end POST** on, timer expiry sends "Agrypnos: your Keep awake timer ended." In **Agents** mode, the end of the wait sends "Agrypnos: the wait after agent signals stop ended." That one only goes out if Agrypnos saw your agents working since you turned Keep awake on. When Agrypnos is also asking the Mac to sleep, the message ends with "Asking the Mac to sleep." Discord also gets one message when Agrypnos asks the Mac to sleep for any other reason, such as `/disarm` or low battery with the lid confirmed closed. Telegram doesn't message for those.
+- **Commands.** Send `/arm`, `/disarm`, `/status`, or `/help` to your own Telegram or Discord bot, and Agrypnos acts on them while the Mac is awake.
 
 The app has the same steps as below, with screenshots. Click **Setup instructions…**, the first card in **Notif**.
 
@@ -146,7 +154,7 @@ The app has the same steps as below, with screenshots. Click **Setup instruction
 |---|---|
 | `/arm` | Turns on Keep awake. |
 | `/disarm` | Turns off Keep awake. Lid open: the Mac stays awake. Lid confirmed closed: the Mac also goes to sleep. |
-| `/status` | Replies with what Agrypnos knows right now: Keep awake on or off, How long, lid state, agent activity, the last time Keep awake turned off, your safety settings, and battery (for example `Battery 62% · on AC`) when it can read it. |
+| `/status` | Replies with what Agrypnos knows right now: Keep awake on or off, How long and the time left on a timer, lid state, panel mode, agent activity in **Agents** mode, the last time Keep awake turned off, your safety settings, and battery (for example `Battery 62% · on AC`) when it can read it. |
 | `/help` | Lists these commands. |
 
 Agrypnos registers these four with your bot, so they show up in the `/` menu.
@@ -164,13 +172,14 @@ If the bot doesn't answer, the Mac is probably asleep. Nothing relays commands w
    <img src="Apps/Agrypnos/Resources/Assets.xcassets/guide-telegram-botfather.imageset/guide-telegram-botfather.png" width="520" alt="BotFather reply with the bot token">
 
 3. Open your new bot and tap **Start** (or send it anything). Telegram only knows your chat id after you've messaged the bot.
-4. In a browser, open `https://api.telegram.org/bot<token>/getUpdates` with your token in place of `<token>`. Find `"chat":{"id":` and copy the number after it. Close the tab when you're done, since the token stays in its history.
+4. In a browser, open `https://api.telegram.org/bot<token>/getUpdates` with your token in place of `<token>`. Find `"chat":{"id":` and copy the number after it. The number after `"from":{"id":` is your Telegram user id. In a private chat with the bot, the two numbers match.
 
    <img src="Apps/Agrypnos/Resources/Assets.xcassets/guide-telegram-getupdates.imageset/guide-telegram-getupdates.png" width="520" alt="getUpdates response with the chat id highlighted">
 
-   If you see `"result":[]`, the bot hasn't seen a message yet. Message it again and reload. A private chat id is a positive number. A group id is usually negative.
-5. Paste the number into **Notif → Telegram → Chat id**.
-6. Turn on **Watch-end POST** for messages when the timer ends or the wait after agent signals stop ends. Turn on the switch on **Telegram** for commands. They stay separate.
+   If you see `"result":[]`, the bot hasn't seen a message yet. Message it again and reload. A private chat id is a positive number. A group id is usually negative. Close the tab when you're done, since the token stays in its history.
+5. Paste the chat id into **Notif → Telegram → Chat id**.
+6. To answer agent questions from Telegram, paste your user id into **Notif → Telegram → Telegram user id**. Skip this if you only want messages and commands.
+7. Turn on **Watch-end POST** for messages when the timer ends or the wait after agent signals stop ends. Turn on **Telegram inbound** for commands. They stay separate.
 
 Commands only count from the chat id you saved. If that's a group, anyone in the group can send them.
 
@@ -181,7 +190,7 @@ Commands only count from the chat id you saved. If that's a group, anyone in the
 
 <br>
 
-This one bot messages the channel and receives commands. Discord commands haven't been checked on a real Mac yet (Telegram commands have). The Discord sleep message hasn't been checked on a real Mac yet.
+This one bot messages the channel and receives commands.
 
 1. Open the [Discord Developer Portal](https://discord.com/developers/applications), click **New Application**, name it, and click **Create**.
 2. Go to **Bot → Reset Token** and copy the token. Paste it into **Notif → Discord → Token**.
@@ -191,12 +200,11 @@ This one bot messages the channel and receives commands. Discord commands haven'
 
 4. In Discord, turn on **User Settings → Advanced → Developer Mode**.
 5. Right-click the channel the bot should listen in and choose **Copy Channel ID**. Paste it into **Notif → Discord → Channel**.
-6. Turn on **Watch-end POST**. Agrypnos messages this channel when the timer ends, when the wait after agent signals stop ends, or when it asks the Mac to sleep.
-7. Turn on **Discord inbound**, then type `/help` in that channel.
+6. To answer agent questions from Discord, right-click your own name and choose **Copy User ID**. Paste it into **Notif → Discord → Discord user id**. Skip this if you only want messages and commands.
+7. Turn on **Watch-end POST**. Agrypnos messages this channel when the timer ends, when the wait after agent signals stop ends, or when it asks the Mac to sleep.
+8. Turn on **Discord inbound**, then type `/help` in that channel.
 
-An old webhook URL is unused. Paste the bot token and channel id.
-
-Commands only count from that channel, so anyone who can post there can use them. Agrypnos talks to Discord from your Mac over the normal bot connection. It doesn't open a port or use an Interactions Endpoint URL.
+Commands only count from that channel, so anyone who can post there can use them. Messages go out as your bot posting in that channel. There's no webhook to set up. Agrypnos talks to Discord from your Mac over the normal bot connection. It doesn't open a port or use an Interactions Endpoint URL.
 
 </details>
 
@@ -209,10 +217,12 @@ Commands only count from that channel, so anyone who can post there can use them
 |---|---|
 | Discord bot token | **Discord → Token** |
 | Discord channel id | **Discord → Channel** |
+| Your Discord user id (for question answers) | **Discord → Discord user id** |
 | Telegram bot token | **Telegram → Token** |
 | Telegram chat id | **Telegram → Chat id** |
+| Your Telegram user id (for question answers) | **Telegram → Telegram user id** |
 
-Use any mix. Leave a field empty to skip that channel.
+Use either bot or both. Leave a bot's fields empty to skip it.
 
 </details>
 
@@ -221,15 +231,15 @@ Use any mix. Leave a field empty to skip that channel.
 
 <br>
 
-1. Turn on **Watch-end POST** and save at least one channel.
+1. Turn on **Watch-end POST** and save at least one bot.
 2. In **Watch**, set How long to **Agents** and turn on Keep awake.
 3. Start an agent from one of the checked tools, so Agrypnos sees it working.
-4. Let it finish, then wait out the wait after agent signals stop (2 minutes by default).
+4. Let it finish, then let the wait after agent signals stop run out (2 minutes by default).
 5. You should get exactly one message, and Keep awake turns off.
 
-To test timer messages, select **1 custom minute**, turn on Keep awake, and leave the lid open. After a minute Keep awake turns off and you get the timer message; the open Mac stays awake. `/status` includes the actual time left while Keep awake is on a timer.
+To test the timer message, set a custom duration of 1 minute, turn on Keep awake, and leave the lid open. After a minute Keep awake turns off and you get the timer message. With the lid open, the Mac stays awake.
 
-Nothing arrived? Check that Watch-end POST is on and the secrets are right. For the Agents test, check that How long is **Agents** and the agent was one of the tools checked under **Agents**.
+Nothing arrived? Check that Watch-end POST is on and the token and id are right. For the Agents test, check that How long is **Agents** and the agent was one of the tools checked under **Agents**.
 
 </details>
 
@@ -238,152 +248,85 @@ Nothing arrived? Check that Watch-end POST is on and the secrets are right. For 
 
 <br>
 
-- Switch off **Watch-end POST**, the **Telegram** switch, or **Discord inbound** to stop that piece.
-- **Clear secrets** in **Notif** deletes every saved token and id from this Mac.
+- Switch off **Watch-end POST**, **Telegram inbound**, or **Discord inbound** to stop that piece.
+- **Clear secrets** in **Notif** deletes every saved token and id from this Mac. Question forwarding stops with them.
 - To kill a bot for good: `/revoke` or `/deletebot` in BotFather, or **Bot → Reset Token** in the Discord Developer Portal.
 
 Secrets live in `~/Library/Application Support/Agrypnos/notif-secrets.json` with mode `0600`. They're not in the Keychain on purpose: an unsigned app asking for your login password looks like exactly the thing you shouldn't trust.
 
-When you first turn inbound on, or quit and relaunch, Agrypnos quietly skips any old messages still waiting for the bot. It doesn't run them.
+When you first turn inbound on, or quit and relaunch, Agrypnos skips any old messages still waiting for the bot without running them. If the Mac was asleep when they arrived, the bot replies "Missed while asleep."
 
 </details>
 
 ## Question notifications (BETA)
 
-Question notifications live in **Notif**, under Telegram. The row is
-marked **BETA**. **Setup instructions…** opens Bot setup for Telegram and Discord.
-The info button on a tool card opens Question setup for that tool.
+When an agent stops to ask you a multiple-choice question, Agrypnos can send it to your own bot so you can answer from your phone. This is off by default. It lives in **Notif → Question notifications**, marked **BETA**.
 
-OpenCode and Claude Code forward the question after their Enable button.
-OpenCode needs one restart. Claude needs the folder trusted. Claude forwarding
-is not Mac-proven.
+| Tool | What you get |
+|---|---|
+| OpenCode | The question and its options on your bot. Your answer goes back to the same chat. |
+| Claude Code | The question and its options on your bot. Your answer goes back to the same session. |
+| Codex | A message that Codex is waiting on you. You still answer in Codex. |
+| Cursor | Nothing. The question stays in Cursor. |
 
-Codex Enable adds a hook and does not answer. There is no `codex hooks`
-shell command, and the ChatGPT app has no documented trust screen. The bot
-message is `Codex is waiting on you.` or `Codex is waiting for an approval.`
-Not proven in the ChatGPT app yet. Codex alerts use your
-saved Discord bot token and channel id or Telegram token and chat id. They do not require
-Watch-end POST.
+Each tool card has an info button that opens **Question setup** with the steps for that tool.
 
-Cursor has no question forwarding and no waiting alert. The question stays in
-Cursor.
+### Before you start
 
-## OpenCode question forwarding (test build)
+OpenCode and Claude Code forwarding needs one complete bot from the steps above:
 
-This branch connects **OpenCode 1.18.32** native structured questions to your
-existing Telegram/Discord bot. Live bot/Mac verification is pending. Ordinary
-prose questions, free text and permission/plan approvals stay on the Mac.
+- **Telegram:** token, chat id, **Telegram user id**, and **Telegram inbound** on.
+- **Discord:** token, channel id, **Discord user id**, and **Discord inbound** on.
 
-1. Configure your own Telegram or Discord bot using the steps above, and
-   enable its **inbound** switch. Watch-end POST is separate.
-   Question forwarding stays off until that bot token and chat or channel id
-   are saved.
-2. Include **OpenCode** in Agents. In **Notif → Question notifications**
-   (BETA, under Telegram), turn on **Forward agent questions**, then click
-   **Enable OpenCode forwarding**.
-   Setup installs and registers a global terminal plugin without changing
-   your other OpenCode settings. It enables forwarding without turning Keep awake on.
-3. **Restart OpenCode once to load forwarding**, then use your normal terminal
-   chats in any project. Wait for a real connected terminal count in that Notif card.
-   No server address, project directory, port or password is needed.
-   This test build supports OpenCode **1.18.32** interactive terminals;
-   headless and desktop clients have not been verified.
+**Forward agent questions** stays off until one bot has all four. Watch-end POST isn't needed. The user id is there so only you can answer. Anyone else in the chat or channel can see the question but can't send answers.
 
-The plugin is registered in `~/.config/opencode/tui.json` (or
-`$XDG_CONFIG_HOME/opencode/tui.json`) and stored beside it as
-`agrypnos-opencode.js`. Existing `tui.jsonc` stays unchanged. Setup refuses
-symlinks, edited Agrypnos files and unsupported `tui.json` content; it reports
-why instead of overwriting them. The app must see the same config root as
-OpenCode. A shell-only custom XDG root must also be supplied when launching
-Agrypnos.
+### OpenCode
 
-**Manual server connection…** reveals the existing fallback. For a chat
-already hosted by a loopback server, save its `http://127.0.0.1:PORT`,
-absolute project directory, username and optional `OPENCODE_SERVER_PASSWORD`.
-Saving switches to manual mode and revokes the plugin bridge. Turn **Forward
-agent questions** on to use it. The modes are exclusive; a failed plugin
-connection never silently switches to a server. See [OpenCode server setup](https://opencode.ai/docs/server/).
+1. Check **OpenCode** under **Agents**.
+2. In **Notif → Question notifications**, click **Enable OpenCode forwarding**. This also turns on **Forward agent questions**.
+3. Restart OpenCode once. The card shows a connected terminal count when forwarding is live.
 
-To test, ask OpenCode in that same chat: “Use your native question tool to
-ask which letter, A or B. After the answer, print OPENCODE_RELAY_TEST_A or
-OPENCODE_RELAY_TEST_B for the selected letter.” On your bot select B, review
-the complete selection, then **Send answers**. Expect the original chat to
-continue once with `OPENCODE_RELAY_TEST_B`. Repeat for the other bot if you
-use both. A local answer must make the old phone buttons harmless.
+Setup installs a small plugin, `agrypnos-opencode.js`, in `~/.config/opencode` (or `$XDG_CONFIG_HOME/opencode`) and registers it in `tui.json`. Your other OpenCode settings stay as they are, and `tui.jsonc` isn't touched. If setup finds a symlink, a plugin file you edited, or a `tui.json` it can't safely change, it stops and tells you why instead of overwriting anything. This covers OpenCode 1.18.32 in the terminal. It doesn't set up the OpenCode desktop app.
 
-**Answer on Mac** relinquishes remote answering without rejecting or
-answering OpenCode's question. Disconnection invalidates old controls; a
-verified, previously observed pending question may get fresh controls on
-reconnect, with its original deadline. App restart or system sleep leaves
-existing pending questions local; new questions forward after reconnect.
-Screen lock alone does not cancel them. There is no asleep relay.
+The plugin talks to Agrypnos over a private Unix socket. There's no network port, server address, or password to enter.
 
-Forwarding never arms Keep awake. While it is already armed, a pending
-question holds it for up to **10 minutes**. An unanswered expiry turns
-Keep awake off when selected agents are observably idle; busy or unknown activity
-defers that. After a busy or unknown deferral, the usual wait after agent signals
-stop applies. Manual off, battery, thermal and LPM safety still win. On a
-successful unanswered end, Agrypnos attempts a plain bot notification before
-the existing confirmed-lid sleep path. Network delivery is best effort.
+To try it, ask OpenCode in a terminal chat to use its native question tool to ask whether you want A or B. Answer on your bot, and the same chat carries on with your choice.
 
-**Disable** turns forwarding off while leaving the plugin installed and inactive.
-**Remove integration** also removes its registration and unchanged owned plugin
-file. It keeps bot secrets and the saved manual connection. Edited files are
-kept and forwarding stays off. **Clear secrets** deletes saved bot secrets,
-answering IDs and the manual connection, and revokes the local bridge.
+**Disable** turns forwarding off and leaves the plugin installed but inactive. **Remove integration** also removes the registration and the plugin file. If you edited the plugin file, it stays. Your bot secrets stay either way.
 
-Bot credentials and manual server credentials stay in the existing mode-0600
-secrets file. The plugin receives only a separate local bridge token, stored
-in a private mode-0700 Application Support directory. The bridge uses a short
-private Unix socket, with no TCP listening port. Question content stays in
-memory and on your opted-in messaging service, without local history or content
-logs. The OpenCode info button opens Question setup with these steps.
+### Claude Code
 
-Automated tests have answered a real native question through the production
-plugin and Swift socket source, continuing the original isolated conversation
-once. New live bot, Mac optical and energy checks remain pending; the earlier
-human-confirmed manual HTTP/Telegram flow is separate evidence. See the
-[one-button verification record](docs/reviews/2026-10-01-opencode-one-button-verification.md).
+1. Check **Claude Code** under **Agents**.
+2. In **Notif → Question notifications**, click **Enable Claude Code forwarding**. This also turns on **Forward agent questions**.
+3. In a project folder you've trusted, ask Claude Code something that makes it offer you choices. Answer on your bot, and the same session continues with your choice.
 
-## Claude Code question forwarding (test build)
+Setup adds a `PreToolUse` hook for `AskUserQuestion` to `~/.claude/settings.json`. It merges into the file and keeps your other hooks. In an interactive session, Claude Code holds hooks until you trust the folder. If Agrypnos isn't running, the hook gives up within 2 seconds and Claude Code asks in the terminal as usual. **Disable** removes only the Agrypnos hook.
 
-One click merges a `PreToolUse` hook matching `AskUserQuestion` into
-`~/.claude/settings.json`. It does not replace that file. Existing
-`UserPromptSubmit` / `Stop` / `StopFailure` hooks (including
-`~/.brainrot/brainrot-state.sh` on this Mac) stay. Interactive Claude Code
-sessions hold hooks until you trust the folder.
+### Codex waiting alerts
 
-1. Configure your own Telegram or Discord bot and turn its inbound switch on.
-   **Forward agent questions** stays off until that bot token and chat or
-   channel id are saved.
-2. Select **Claude Code** in Agents. In Question notifications, turn on
-   **Forward agent questions**, then click
-   **Enable Claude Code forwarding**.
-3. In an already-trusted project, ask Claude Code a structured choice in the
-   session you already started. Answer on your bot. That same session should
-   continue with the chosen label.
+Codex alerts tell you Codex is waiting. They don't forward or answer the question.
 
-Live AskUserQuestion round-trip on Claude Code 2.1.183 is not proven until
-you run that check. Disable removes only the Agrypnos `--claude-question-hook`
-entry.
+1. Save a Telegram token and chat id, or a Discord token and channel id. Inbound, user ids, and Watch-end POST aren't needed.
+2. In **Notif → Question notifications**, click **Enable Codex alerts**.
+3. Use Codex as you already do. No alert arrives until Codex runs the new hook.
 
-## Codex waiting alert (test build)
+Setup adds a hook to `~/.codex/hooks.json` for questions (`request_user_input`) and approvals (`Bash`, `apply_patch`). It keeps your other hooks. There's no trust step to do: Codex has no `codex hooks` command, and the ChatGPT app has no documented trust screen. The bot message is "Codex is waiting on you." with the question text (left out if Codex marks it secret), or "Codex is waiting for an approval." If Agrypnos isn't running, Codex works as usual. **Disable** removes the Agrypnos hook.
 
-One click merges a `PreToolUse` / `PermissionRequest` command hook into
-`~/.codex/hooks.json`. It does not replace that file. Existing
-`UserPromptSubmit` and `Stop` hooks stay. The hook prints nothing, exits 0,
-and does not answer. There is no `codex hooks` shell command.
+The Claude Code and Codex hooks run Agrypnos from where it is now. If you move `Agrypnos.app`, click the Enable button again.
 
-1. Save a Discord bot token and channel id, or a Telegram token and chat id, in Notif.
-   Watch-end POST is not required.
-2. Open **Notif → Question notifications** and click **Enable Codex alerts**.
-3. Use Codex as you already do. Until that session runs the new hook, no
-   alert is sent. The ChatGPT app has no documented trust screen.
+### How answering works
 
-The bot message is `Codex is waiting on you.` or `Codex is waiting for an
-approval.` Optional question text is included unless it is marked secret.
-Not checked in the ChatGPT app yet. If Agrypnos is not running, Codex still
-shows its own picker. Cursor has no waiting alert.
+The bot shows the question with its options as buttons. Pick your answers, review them, then press **Send answers**. **Answer on Mac** leaves the question for you to answer on the Mac, without answering or rejecting it. If you answer on the Mac first, the buttons on your phone stop doing anything.
+
+Only questions with listed options go to the bot. Questions that need typed text, and permission or plan approvals, stay on the Mac. If a question is too big for a Discord message, it stays on the Mac and the bot says so.
+
+After Agrypnos restarts or the Mac sleeps, questions that were already waiting stay on the Mac. New ones forward once the connection is back. Locking the screen doesn't stop forwarding. Nothing relays questions while the Mac sleeps.
+
+Question text stays in memory and on your messaging service. Agrypnos keeps no question history or logs.
+
+### Keep awake and unanswered questions
+
+Forwarding never turns Keep awake on. If Keep awake is already on, a waiting question holds it on for up to 10 minutes. If nobody answers by then and your selected agents look idle, Keep awake turns off. Agrypnos tries to send your bot a short note first. With the lid confirmed closed, it then asks the Mac to sleep. If an agent still looks busy, or Agrypnos can't tell, it waits for the usual wait after agent signals stop first. Turning Keep awake off yourself, and the battery, thermal, and Low Power Mode limits, still work at any time.
 
 ## Settings
 
@@ -391,11 +334,11 @@ Everything is in the popover, one section at a time.
 
 | Section | What's in it |
 |---|---|
-| **Watch** | Keep awake, How long (`∞`, `1h`, `3h`, custom minutes, **Agents**), and when Keep awake last ended |
-| **Power** | Dim panel or Sleep panel, brightness floor, keyboard backlight off, low-battery auto-off, brightness return time, thermal auto-off |
-| **Agents** | Wait after agent signals stop (1m 30s–10m), which tools count as busy (at least one), count terminal sessions as busy |
-| **Notif** | Setup instructions, Watch-end POST, Discord bot token and channel id, Telegram token, chat id, and switch, Question notifications (BETA), Discord inbound, clear secrets |
-| **General** | Global shortcut (default `⌥⌘A`, remappable), launch at login, quit |
+| **Watch** | Keep awake, How long (`∞`, `1h`, `3h`, custom minutes, **Agents**) with the time left on a timer, and when Keep awake last ended |
+| **Power** | Dim panel or Sleep panel, keyboard backlight off, brightness floor (Dim panel only), low-battery auto-off, brightness return time (Dim panel only), thermal auto-off |
+| **Agents** | Which tools count as busy (at least one), wait after agent signals stop (1m 30s–10m), count terminal sessions as busy |
+| **Notif** | Setup instructions, Watch-end POST, Discord (token, channel, user id, Discord inbound), Telegram (token, chat id, user id, Telegram inbound), Question notifications (BETA), Clear secrets |
+| **General** | Launch at login, global shortcut (default `⌥⌘A`, remappable), quit |
 
 ## What it won't do
 
@@ -403,7 +346,7 @@ Everything is in the popover, one section at a time.
 - Turn off Wi-Fi or Bluetooth.
 - Blank the screen when you turn Keep awake on.
 - Claim power savings nobody measured.
-- Upload your transcripts or run a shared bot. Opted-in question forwarding sends the structured question/options to your own bot.
+- Upload your transcripts or run a shared bot. Question forwarding, if you turn it on, sends the question and its options to your own bot.
 - Report what your agent is doing or when it will finish. `/status` only reports what Agrypnos can see.
 
 ## Development
@@ -431,4 +374,4 @@ Security details, including exactly what the sudoers rule allows, are in [SECURI
 
 ### Custom agent session directories
 
-Agrypnos reads session locations from its own launch environment (`CLAUDE_CONFIG_DIR`, `CODEX_HOME`, `XDG_DATA_HOME`, and Cursor's `XDG_CONFIG_HOME`). An override set only in a terminal running an agent is not automatically available to a menu-bar app launched from Finder or at login. Agrypnos must be launched with the same supported overrides to observe those custom locations. No process-environment scraping is performed.
+Agrypnos reads session locations from its own launch environment: `CLAUDE_CONFIG_DIR`, `CODEX_HOME`, `XDG_DATA_HOME`, and `XDG_CONFIG_HOME` (for Cursor and the OpenCode plugin). A variable you set only in the terminal where an agent runs doesn't reach a menu-bar app launched from Finder or at login. To watch custom locations, launch Agrypnos with the same variables. Agrypnos doesn't read other processes' environments.
