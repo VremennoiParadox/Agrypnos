@@ -226,27 +226,32 @@ public struct DiscordInboundCursor: Equatable, Sendable {
 }
 
 public enum DiscordInboundCopy: Sendable {
-    public static let armed = TelegramInboundCopy.armed
-    public static let disarmed = TelegramInboundCopy.disarmed
+    public static func armed(duration: DurationOption) -> String {
+        TelegramInboundCopy.armed(duration: duration)
+    }
+    public static func disarmed(wasEngaged: Bool, sleepRequested: Bool) -> String {
+        TelegramInboundCopy.disarmed(wasEngaged: wasEngaged, sleepRequested: sleepRequested)
+    }
     public static let missedWhileAsleep = TelegramInboundCopy.missedWhileAsleep
     public static let commandsHelp = "Commands on your Discord bot: /arm, /disarm, /status, /help."
     public static let help = """
-    /arm — turn Keep awake on.
-    /disarm — turn Keep awake off. Always clears Keep awake. Puts the Mac to sleep only when the lid is closed (confirmed). Never sleeps the Mac when the lid is open.
-    /status — facts Agrypnos already knows: Keep awake, How long, lid, Agents, last end, and safety prefs. Includes live battery when known. Includes time left while Keep awake is on a timer.
-    /help — this list.
-    If the bot does not reply, the Mac is likely asleep or Agrypnos is not receiving updates.
+    /arm: turn Keep awake on.
+    /disarm: turn Keep awake off. With the lid open the Mac stays awake. With the lid confirmed closed it also goes to sleep, even if Keep awake was already off.
+    /status: what Agrypnos knows right now. Keep awake, How long, time left on a timer, lid, panel mode, agent activity in Agents mode, when Keep awake last turned off and why, live battery when known, and your safety settings.
+    /help: this list.
+
+    No reply usually means the Mac is asleep, or Agrypnos isn't receiving updates. Commands sent in the meantime don't run when it wakes. You get "Missed while asleep." instead.
     """
 
     public static func reply(
         intent: TelegramInboundIntent,
-        engaged _: Bool,
-        duration _: DurationOption
+        engaged: Bool,
+        duration: DurationOption
     ) -> String? {
         switch intent {
         case .ignore, .status: return nil
-        case .arm: return armed
-        case .disarm: return disarmed
+        case .arm: return armed(duration: duration)
+        case .disarm: return disarmed(wasEngaged: engaged, sleepRequested: false)
         case .help: return help
         }
     }
@@ -260,8 +265,8 @@ public enum DiscordInboundCopy: Sendable {
     ) -> String? {
         switch intent {
         case .ignore: return nil
-        case .arm: return armed
-        case .disarm: return disarmed
+        case .arm: return armed(duration: snapshot.duration)
+        case .disarm: return disarmed(wasEngaged: snapshot.engaged, sleepRequested: false)
         case .status: return TelegramInboundCopy.status(snapshot, now: now, calendar: calendar, locale: locale)
         case .help: return help
         }

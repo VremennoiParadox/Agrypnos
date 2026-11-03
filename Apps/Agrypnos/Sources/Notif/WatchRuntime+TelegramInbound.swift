@@ -159,17 +159,23 @@ extension WatchRuntime {
         if TelegramInboundIntent.arm.shouldSetEngaged(currentlyEngaged: engine.engaged) == true {
             setEngaged(true)
         }
-        let text = engine.engaged ? TelegramInboundCopy.armed : TelegramInboundCopy.armFailed
+        let text = engine.engaged
+            ? TelegramInboundCopy.armed(duration: engine.preferences.duration)
+            : TelegramInboundCopy.armFailed
         sendTelegramInboundReply(text, token: token, chatId: chatId)
     }
 
     func applyTelegramDisarm(token: String?, chatId: String?) {
+        let wasEngaged = engine.engaged
         guard let sleepResult = disarmWatch() else {
             sendTelegramInboundReply(TelegramInboundCopy.disarmFailed, token: token, chatId: chatId)
             return
         }
         sendTelegramInboundReply(
-            inboundDisarmReply(TelegramInboundCopy.disarmed, sleepResult: sleepResult),
+            inboundDisarmReply(
+                TelegramInboundCopy.disarmed(wasEngaged: wasEngaged, sleepRequested: disarmRequestedSleep(sleepResult)),
+                sleepResult: sleepResult
+            ),
             token: token,
             chatId: chatId
         )

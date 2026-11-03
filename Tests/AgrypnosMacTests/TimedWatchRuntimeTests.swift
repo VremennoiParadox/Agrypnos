@@ -179,7 +179,7 @@ final class TimedWatchRuntimeTests: XCTestCase {
         fixture.runtime.engine.preferences.notifEnabled = true
         expire(fixture, start: start)
         await fixture.waitForPost()
-        XCTAssertEqual(fixture.runtime.applyDiscordArm(), DiscordInboundCopy.armed)
+        XCTAssertEqual(fixture.runtime.applyDiscordArm(), DiscordInboundCopy.armed(duration: fixture.runtime.engine.preferences.duration))
         let renewedDeadline = fixture.runtime.engine.timerEnd
         fixture.completePost()
         await fixture.waitForCompletion()

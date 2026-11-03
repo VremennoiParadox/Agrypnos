@@ -520,6 +520,11 @@ final class WatchRuntime {
         savedKeyboard = hygieneDevices.keyboard()
     }
 
+    /// True when this user-off asked the Mac to sleep, now or after the pending watch-end message.
+    func disarmRequestedSleep(_ result: HygieneApplyResult) -> Bool {
+        result.sleepnow != nil || userOffSleepDecided
+    }
+
     func inboundDisarmReply(_ base: String, sleepResult: HygieneApplyResult? = nil) -> String {
         let extra = (sleepResult?.notifications ?? []).joined(separator: "\n")
         if extra.isEmpty { return base }

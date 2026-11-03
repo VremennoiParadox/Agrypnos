@@ -70,9 +70,9 @@ public enum TelegramBotCommandMenu: Sendable {
         TelegramBotCommand(command: "arm", description: "Turn Keep awake on."),
         TelegramBotCommand(
             command: "disarm",
-            description: "Turn Keep awake off. Sleeps the Mac only if the lid is closed."
+            description: "Turn Keep awake off. Also sleeps the Mac if the lid is confirmed closed."
         ),
-        TelegramBotCommand(command: "status", description: "Keep awake, How long, lid, and safety facts."),
-        TelegramBotCommand(command: "help", description: "Explain /arm, /disarm, /status, and /help."),
+        TelegramBotCommand(command: "status", description: "Show Keep awake, How long, lid, and safety facts."),
+        TelegramBotCommand(command: "help", description: "List the commands."),
     ]
 }

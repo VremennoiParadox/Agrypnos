@@ -62,7 +62,10 @@ final class TelegramInboundHelpCopyTests: XCTestCase {
     }
 
     func testMissedWhileAsleepCopyIsFactsOnly() {
-        XCTAssertEqual(TelegramInboundCopy.missedWhileAsleep, "Missed while asleep.")
+        XCTAssertEqual(
+            TelegramInboundCopy.missedWhileAsleep,
+            "Missed while asleep. That command didn't run. Send it again if you still want it."
+        )
         let lower = TelegramInboundCopy.missedWhileAsleep.lowercased()
         XCTAssertTrue(lower.contains("missed"))
         XCTAssertTrue(lower.contains("asleep"))
