@@ -169,8 +169,8 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
     func testSetupGuideNamesInboundOnOffWithoutClaimingMacProve() {
         let help = BotGuide.text(for: .telegram)
         let lower = help.lowercased()
-        XCTAssertTrue(lower.contains("telegram card"))
-        XCTAssertTrue(lower.contains("commands turn on"))
+        XCTAssertTrue(lower.contains("telegram inbound"))
+        XCTAssertTrue(lower.contains("can send commands"))
         XCTAssertTrue(help.contains("/arm") && help.contains("/disarm") && help.contains("/status") && help.contains("/help"))
         XCTAssertTrue(lower.contains("live battery"))
         XCTAssertTrue(lower.contains("when known"))

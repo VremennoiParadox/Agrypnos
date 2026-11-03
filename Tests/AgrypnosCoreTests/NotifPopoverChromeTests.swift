@@ -187,7 +187,7 @@ final class NotifPopoverChromeTests: XCTestCase {
         XCTAssertTrue(help.contains("Copy Channel ID"))
         XCTAssertTrue(help.contains("Watch-end POST"))
         XCTAssertTrue(help.contains("asks the Mac to sleep"))
-        XCTAssertTrue(lower.contains("old webhook url is unused"))
+        XCTAssertFalse(lower.contains("webhook"))
         XCTAssertTrue(help.contains("BotFather"))
         XCTAssertTrue(help.contains("/newbot"))
         XCTAssertTrue(help.contains("getUpdates"))

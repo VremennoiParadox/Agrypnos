@@ -226,7 +226,7 @@ final class DiscordInboundPopoverChromeTests: XCTestCase {
         let help = BotGuide.text(for: .discord)
         let lower = help.lowercased()
         XCTAssertTrue(lower.contains("discord inbound"))
-        XCTAssertTrue(lower.contains("webhook"))
+        XCTAssertFalse(lower.contains("webhook"))
         XCTAssertTrue(help.contains("/arm") && help.contains("/disarm") && help.contains("/status") && help.contains("/help"))
         XCTAssertFalse(lower.contains("mac-proven"))
         XCTAssertFalse(lower.contains("mac proven"))
