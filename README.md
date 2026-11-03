@@ -69,7 +69,7 @@ macOS asks for your password once. To remove the rule later, run `./Scripts/ungr
 
 1. Click the eye in the menu bar. The popover opens on **Watch**.
 2. Under **How long**, pick **Agents**.
-3. Turn on **Keep awake**. The menu-bar eye turns **purple**. The icon stays the same size in every mode: gray when off, blue for ∞, gold when Keep awake is on a timer, and purple for Agents.
+3. Turn on **Keep awake**. The menu-bar eye turns **purple** for Agents. The eye is gray when off, blue for ∞, and gold on a timer. It stays the same size in every mode.
 4. Start your agent and close the lid.
 
 Agrypnos waits until the lid has really closed (a single flicker of the lid sensor doesn't count), then turns the keyboard backlight off and dims the panel. When the wait after agent signals stop ends (2 minutes by default), Keep awake turns off. If the lid is still closed, Agrypnos also asks the Mac to sleep.
@@ -145,7 +145,12 @@ This part is optional and off by default. It lives in the **Notif** section. You
 
 There are two separate pieces:
 
-- **Watch-end message.** With **Watch-end POST** on, timer expiry sends "Agrypnos: your Keep awake timer ended." In **Agents** mode, the end of the wait sends "Agrypnos: the wait after agent signals stop ended." That one only goes out if Agrypnos saw your agents working since you turned Keep awake on. When Agrypnos is also asking the Mac to sleep, the message ends with "Asking the Mac to sleep." Discord also gets one message when Agrypnos asks the Mac to sleep after you turn Keep awake off (popover, hotkey, or `/disarm`) or after low battery, thermal pressure, or Low Power Mode turns it off. That only happens with the lid confirmed closed. Telegram doesn't message for those.
+- **Watch-end message.** With **Watch-end POST** on, your bot messages you when:
+  - **The timer ends.** "Agrypnos: your Keep awake timer ended."
+  - **The wait ends in Agents mode.** "Agrypnos: the wait after agent signals stop ended." This only goes out if Agrypnos saw your agents working since you turned Keep awake on.
+  - **Discord only: Agrypnos asks the Mac to sleep** after you turn Keep awake off (popover, hotkey, or `/disarm`) or after low battery, thermal pressure, or Low Power Mode turns it off. This needs the lid confirmed closed. Telegram doesn't message for these.
+
+  When the timer or the wait is also asking the Mac to sleep, its message ends with "Asking the Mac to sleep."
 - **Commands.** Send `/arm`, `/disarm`, `/status`, or `/help` to your own Telegram or Discord bot, and Agrypnos acts on them while the Mac is awake.
 
 The app has the same steps as below, with screenshots. Click **Setup instructions…**, the first card in **Notif**.
