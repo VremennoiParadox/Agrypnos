@@ -433,7 +433,7 @@ final class WatchRuntime {
         )
         if !willWait {
             guard disarmKernel() else {
-                notify("Couldn't verify SleepDisabled was cleared. Keep awake is unchanged.")
+                notify("Couldn't verify the wake hold was cleared. Keep awake is unchanged.")
                 delegate?.watchRuntimeDidChange(self)
                 return nil
             }

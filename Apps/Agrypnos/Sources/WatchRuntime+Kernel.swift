@@ -23,7 +23,7 @@ extension WatchRuntime {
             } else if result == .grantMissing {
                 notify(AgrypnosCopy.grantNeeded)
             } else {
-                notify("pmset ran but SleepDisabled did not read back as on.")
+                notify("pmset ran but the wake hold did not read back as on.")
             }
             WatchDiagnostics.event("kernel arm failed")
             return false

@@ -69,15 +69,15 @@ final class WatchCaptionPanelModeTests: XCTestCase {
         )
         XCTAssertEqual(
             open,
-            "Leftover SleepDisabled. Lid close — then the panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake."
+            "Leftover wake hold. Lid close — then the panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake."
         )
         XCTAssertEqual(
             closed,
-            "Leftover SleepDisabled. Lid closed. Panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake. Auto-off at 15% battery."
+            "Leftover wake hold. Lid closed. Panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake. Auto-off at 15% battery."
         )
         XCTAssertEqual(
             AgrypnosCopy.leftoverNotify(for: .displaySleep),
-            "SleepDisabled was already on. Agrypnos adopted it. Lid close still sleeps the panel + keyboard backlight off. Keep awake still holds the Mac awake."
+            "The wake hold was already on from before. Agrypnos took it over as Keep awake. Lid close still sleeps the panel + keyboard backlight off. Keep awake still holds the Mac awake."
         )
         XCTAssertEqual(
             AgrypnosCopy.leftoverNotify(for: .floor),
@@ -105,13 +105,13 @@ final class WatchCaptionPanelModeTests: XCTestCase {
             AgrypnosCopy.menuTooltip(
                 engaged: true, leftover: true, onBattery: false, lidClosed: false, panelPowerMode: .displaySleep
             ),
-            "Agrypnos: adopted leftover SleepDisabled. Waiting for lid close — then the panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake."
+            "Agrypnos: took over a leftover wake hold. Waiting for lid close — then the panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake."
         )
         XCTAssertEqual(
             AgrypnosCopy.menuTooltip(
                 engaged: true, leftover: true, onBattery: false, lidClosed: true, panelPowerMode: .displaySleep
             ),
-            "Agrypnos: adopted leftover SleepDisabled. Lid closed. Panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake."
+            "Agrypnos: took over a leftover wake hold. Lid closed. Panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake."
         )
         XCTAssertEqual(
             AgrypnosCopy.menuTooltip(

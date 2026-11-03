@@ -7,8 +7,7 @@ final class AgrypnosCopyTests: XCTestCase {
         XCTAssertFalse(caption.lowercased().contains("watt"))
         XCTAssertFalse(caption.lowercased().contains("1.76"))
         XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("local busy signals"))
-        XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("settle buffer")
-            || AgrypnosCopy.settleGraceHelp.lowercased().contains("idle-after-wait"))
+        XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("keeps it from ending early"))
         XCTAssertEqual(AgrypnosCopy.quit, "Quit Agrypnos")
         XCTAssertEqual(AgrypnosCopy.hotkeyHint(.defaultToggle), "⌥⌘A toggles Keep awake")
     }
@@ -122,11 +121,11 @@ final class AgrypnosCopyTests: XCTestCase {
         )
         XCTAssertEqual(
             AgrypnosCopy.menuTooltipLeftover,
-            "Agrypnos: adopted leftover SleepDisabled. Waiting for lid close — then brightness floor + keyboard backlight off."
+            "Agrypnos: took over a leftover wake hold. Waiting for lid close — then brightness floor + keyboard backlight off."
         )
         XCTAssertEqual(
             AgrypnosCopy.menuTooltip(engaged: true, leftover: true, onBattery: false, lidClosed: true),
-            "Agrypnos: adopted leftover SleepDisabled. Lid closed. Brightness floor + keyboard backlight off."
+            "Agrypnos: took over a leftover wake hold. Lid closed. Brightness floor + keyboard backlight off."
         )
     }
 
@@ -234,7 +233,7 @@ final class AgrypnosCopyTests: XCTestCase {
         XCTAssertEqual(AgrypnosCopy.notification(for: .timerExpired), "Timer ended. Keep awake turned off.")
         XCTAssertEqual(
             AgrypnosCopy.notification(for: .batteryFloor),
-            "Battery floor reached. Keep awake turned off."
+            "Low battery. Keep awake turned off."
         )
         XCTAssertEqual(
             AgrypnosCopy.notification(for: .thermal),
@@ -244,7 +243,7 @@ final class AgrypnosCopyTests: XCTestCase {
         XCTAssertEqual(AgrypnosCopy.notification(for: .lowPowerMode), "Low Power Mode. Keep awake turned off.")
         XCTAssertEqual(AgrypnosCopy.notification(for: .lowPowerMode), AgrypnosCopy.lpmEnded)
         XCTAssertEqual(AgrypnosCopy.timerEnded, "Timer ended. Keep awake turned off.")
-        XCTAssertEqual(AgrypnosCopy.batteryEnded, "Battery floor reached. Keep awake turned off.")
+        XCTAssertEqual(AgrypnosCopy.batteryEnded, "Low battery. Keep awake turned off.")
         XCTAssertEqual(AgrypnosCopy.thermalEnded, "Thermal pressure. Keep awake turned off.")
         XCTAssertEqual(AgrypnosCopy.agentsEnded, "The wait after agent signals stop ended. Keep awake turned off.")
     }
@@ -298,23 +297,23 @@ final class AgrypnosCopyTests: XCTestCase {
         let notify = AgrypnosCopy.leftoverNotify
         XCTAssertEqual(
             open,
-            "Leftover SleepDisabled. Lid close — then brightness floor, keyboard backlight off. Auto-off at 15% battery."
+            "Leftover wake hold. Lid close — then brightness floor, keyboard backlight off. Auto-off at 15% battery."
         )
         XCTAssertEqual(
             closed,
-            "Leftover SleepDisabled. Lid closed. Brightness floor, keyboard backlight off. Auto-off at 15% battery."
+            "Leftover wake hold. Lid closed. Brightness floor, keyboard backlight off. Auto-off at 15% battery."
         )
         XCTAssertTrue(open.lowercased().contains("then"))
         XCTAssertFalse(closed.lowercased().contains("then"))
         XCTAssertTrue(closed.lowercased().contains("lid closed"))
         XCTAssertEqual(
             notify,
-            "SleepDisabled was already on. Agrypnos adopted it. Lid close still uses brightness floor + keyboard backlight off."
+            "The wake hold was already on from before. Agrypnos took it over as Keep awake. Lid close still uses brightness floor + keyboard backlight off."
         )
         XCTAssertTrue(open.lowercased().contains("leftover"))
-        XCTAssertTrue(open.lowercased().contains("sleepdisabled"))
+        XCTAssertTrue(open.lowercased().contains("wake hold"))
         XCTAssertTrue(notify.lowercased().contains("already on"))
-        XCTAssertTrue(notify.lowercased().contains("adopt"))
+        XCTAssertTrue(notify.lowercased().contains("took it over"))
         XCTAssertTrue(notify.lowercased().contains("brightness floor"))
         XCTAssertTrue(notify.lowercased().contains("keyboard"))
         XCTAssertFalse(open.lowercased().contains("watt"))
@@ -366,11 +365,12 @@ final class AgrypnosCopyTests: XCTestCase {
         XCTAssertEqual(AgrypnosCopy.settleGrace, "Wait after agent signals stop")
         XCTAssertEqual(
             AgrypnosCopy.settleGraceHelp,
-            "How long to wait after local busy signals stop, before the idle-after-wait POST. Then Keep awake turns off. Buffer so a quiet gap mid-run (no file write / low CPU) doesn’t look finished. Not still thinking — we only see local process and session activity."
+            "How long to wait after local busy signals stop before Keep awake turns off. A quiet gap mid-run, with no file writes or CPU use, can look finished, so this wait keeps it from ending early. Agrypnos sees only local process and session activity, not what an agent is doing."
         )
         XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("local busy signals"))
         XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("keep awake"))
-        XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("not still thinking"))
+        XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("not what an agent is doing"))
+        XCTAssertFalse(AgrypnosCopy.settleGraceHelp.lowercased().contains("idle-after-wait"))
         XCTAssertFalse(AgrypnosCopy.settleGraceHelp.lowercased().contains("agent finished"))
         XCTAssertTrue(AgrypnosCopy.lidOpenRamp.lowercased().contains("brightness"))
         XCTAssertTrue(AgrypnosCopy.lidOpenRampHelp.lowercased().contains("lid"))

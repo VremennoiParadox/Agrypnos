@@ -60,7 +60,7 @@ final class TimedWatchRuntimeTests: XCTestCase {
         XCTAssertEqual(fixture.sleepRequests, 0)
         XCTAssertEqual(fixture.runtime.engine.timerEnd, start.addingTimeInterval(60))
         XCTAssertNil(fixture.runtime.preferences.lastWatchEnd)
-        XCTAssertTrue(fixture.messages.contains("Couldn't verify SleepDisabled was cleared."))
+        XCTAssertTrue(fixture.messages.contains("Couldn't verify the wake hold was cleared."))
         XCTAssertFalse(fixture.messages.contains { $0.contains("Keep awake is unchanged.") })
     }
 
@@ -369,7 +369,7 @@ final class TimedWatchRuntimeTests: XCTestCase {
         XCTAssertTrue(fixture.runtime.engine.engaged)
         XCTAssertTrue(fixture.kernelHeld)
         XCTAssertEqual(fixture.sleepRequests, 0)
-        XCTAssertEqual(fixture.messages, ["Couldn't verify SleepDisabled was cleared."])
+        XCTAssertEqual(fixture.messages, ["Couldn't verify the wake hold was cleared."])
         XCTAssertFalse(fixture.messages.contains { $0.contains("Keep awake is unchanged.") })
     }
 

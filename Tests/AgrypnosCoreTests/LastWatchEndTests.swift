@@ -30,7 +30,7 @@ final class LastWatchEndTests: XCTestCase {
         let expected: [(DisengageReason, String)] = [
             (.user, "Keep awake ended at 23:04, because you turned it off."),
             (.timerExpired, "Keep awake ended at 23:04, because the timer ended."),
-            (.batteryFloor, "Keep awake ended at 23:04, because the battery floor was reached."),
+            (.batteryFloor, "Keep awake ended at 23:04, because the battery was low."),
             (.thermal, "Keep awake ended at 23:04, because thermal pressure turned Keep awake off."),
             (.agentsSettled, "Keep awake ended at 23:04, because the wait after agent signals stop ended."),
             (.lowPowerMode, "Keep awake ended at 23:04, because Low Power Mode was on."),

@@ -15,7 +15,7 @@ public enum AgrypnosCopy: Sendable {
         "Dim panel: when the lid closes, brightness drops to this percent."
     public static let settleGrace = "Wait after agent signals stop"
     public static let settleGraceHelp =
-        "How long to wait after local busy signals stop, before the idle-after-wait POST. Then Keep awake turns off. Buffer so a quiet gap mid-run (no file write / low CPU) doesn’t look finished. Not still thinking — we only see local process and session activity."
+        "How long to wait after local busy signals stop before Keep awake turns off. A quiet gap mid-run, with no file writes or CPU use, can look finished, so this wait keeps it from ending early. Agrypnos sees only local process and session activity, not what an agent is doing."
     public static let agentInclude = "Which tools count as busy."
     public static let countTerminalSessions = "Count terminal sessions as busy"
     public static let countTerminalSessionsHelp =
@@ -56,7 +56,7 @@ public enum AgrypnosCopy: Sendable {
     public static let captionOff = ""
     public static let grantNeeded = "The lid-close grant isn’t installed yet. macOS will ask once."
     public static let timerEnded = "Timer ended. Keep awake turned off."
-    public static let batteryEnded = "Battery floor reached. Keep awake turned off."
+    public static let batteryEnded = "Low battery. Keep awake turned off."
     public static let thermalEnded = "Thermal pressure. Keep awake turned off."
     public static let agentsEnded = "The wait after agent signals stop ended. Keep awake turned off."
     public static let lpmEnded = "Low Power Mode. Keep awake turned off."
@@ -142,7 +142,7 @@ public enum AgrypnosCopy: Sendable {
         switch reason {
         case .user: return "you turned it off"
         case .timerExpired: return "the timer ended"
-        case .batteryFloor: return "the battery floor was reached"
+        case .batteryFloor: return "the battery was low"
         case .thermal: return "thermal pressure turned Keep awake off"
         case .agentsSettled: return "the wait after agent signals stop ended"
         case .questionUnanswered: return "a question went unanswered for 10 minutes"
@@ -176,9 +176,9 @@ public enum AgrypnosCopy: Sendable {
     }
 
     public static let leftoverNotify =
-        "SleepDisabled was already on. Agrypnos adopted it. Lid close still uses brightness floor + keyboard backlight off."
+        "The wake hold was already on from before. Agrypnos took it over as Keep awake. Lid close still uses brightness floor + keyboard backlight off."
     public static let leftoverNotifySleepPanel =
-        "SleepDisabled was already on. Agrypnos adopted it. Lid close still sleeps the panel + keyboard backlight off. Keep awake still holds the Mac awake."
+        "The wake hold was already on from before. Agrypnos took it over as Keep awake. Lid close still sleeps the panel + keyboard backlight off. Keep awake still holds the Mac awake."
 
     public static func leftoverNotify(for panelPowerMode: PanelPowerMode) -> String {
         switch panelPowerMode {
@@ -203,7 +203,7 @@ public enum AgrypnosCopy: Sendable {
     public static let notifTelegramTokenPlaceholder = "paste bot token"
     public static let notifTelegramChatPlaceholder = "from getUpdates"
     public static let notifTelegramHelp =
-        "Message your Telegram bot. Needs token; chat id from getUpdates. Turn this on for commands: /arm, /disarm, /status, /help."
+        "Message your Telegram bot. Needs token; chat id from getUpdates. Commands need Telegram inbound on: /arm, /disarm, /status, /help."
     public static let notifTelegramInbound = "Telegram inbound"
     public static let notifTelegramInboundHelp =
         "Commands on your Telegram bot: /arm, /disarm, /status, /help. Details in Setup instructions."
@@ -250,9 +250,9 @@ public enum AgrypnosCopy: Sendable {
     public static let menuTooltipLidClosed =
         "Agrypnos: lid closed. Brightness floor + keyboard backlight off."
     public static let menuTooltipLeftover =
-        "Agrypnos: adopted leftover SleepDisabled. Waiting for lid close — then brightness floor + keyboard backlight off."
+        "Agrypnos: took over a leftover wake hold. Waiting for lid close — then brightness floor + keyboard backlight off."
     public static let menuTooltipLeftoverLidClosed =
-        "Agrypnos: adopted leftover SleepDisabled. Lid closed. Brightness floor + keyboard backlight off."
+        "Agrypnos: took over a leftover wake hold. Lid closed. Brightness floor + keyboard backlight off."
     public static let menuTooltipOnSleepPanel =
         "Agrypnos: armed. Waiting for lid close — then the panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake."
     public static let menuTooltipArmedSleepPanel =
@@ -260,9 +260,9 @@ public enum AgrypnosCopy: Sendable {
     public static let menuTooltipLidClosedSleepPanel =
         "Agrypnos: lid closed. Panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake."
     public static let menuTooltipLeftoverSleepPanel =
-        "Agrypnos: adopted leftover SleepDisabled. Waiting for lid close — then the panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake."
+        "Agrypnos: took over a leftover wake hold. Waiting for lid close — then the panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake."
     public static let menuTooltipLeftoverLidClosedSleepPanel =
-        "Agrypnos: adopted leftover SleepDisabled. Lid closed. Panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake."
+        "Agrypnos: took over a leftover wake hold. Lid closed. Panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake."
 
     public static func statusItemTitle(_ state: StatusItemState) -> String {
         switch state {
@@ -280,14 +280,14 @@ public enum AgrypnosCopy: Sendable {
         switch panelPowerMode {
         case .floor:
             if lidClosed {
-                return "Leftover SleepDisabled. Lid closed. Brightness floor, keyboard backlight off. Auto-off at \(floor)% battery."
+                return "Leftover wake hold. Lid closed. Brightness floor, keyboard backlight off. Auto-off at \(floor)% battery."
             }
-            return "Leftover SleepDisabled. Lid close — then brightness floor, keyboard backlight off. Auto-off at \(floor)% battery."
+            return "Leftover wake hold. Lid close — then brightness floor, keyboard backlight off. Auto-off at \(floor)% battery."
         case .displaySleep:
             if lidClosed {
-                return "Leftover SleepDisabled. Lid closed. Panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake. Auto-off at \(floor)% battery."
+                return "Leftover wake hold. Lid closed. Panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake. Auto-off at \(floor)% battery."
             }
-            return "Leftover SleepDisabled. Lid close — then the panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake."
+            return "Leftover wake hold. Lid close — then the panel sleeps + keyboard backlight off. Keep awake still holds the Mac awake."
         }
     }
 

@@ -122,7 +122,7 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
         )
         XCTAssertEqual(layout.notifSetup!.height, PopoverStackLayout.loginCardHeight)
         XCTAssertTrue(AgrypnosCopy.notifTelegramHelp.contains("/arm"))
-        XCTAssertTrue(AgrypnosCopy.notifTelegramHelp.contains("Turn this on for commands"))
+        XCTAssertTrue(AgrypnosCopy.notifTelegramHelp.contains("Commands need Telegram inbound on"))
     }
 
     func testInboundCopyBansJobFinishedPhoneNotifyAndRichStatus() {

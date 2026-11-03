@@ -272,7 +272,7 @@ extension WatchRuntime {
                 Task { await attemptQuestionNotice("Agrypnos couldn't turn Keep awake off after an unanswered question.") }
             }
         }
-        notify("Couldn't verify SleepDisabled was cleared.")
+        notify("Couldn't verify the wake hold was cleared.")
         store.save(engine.preferences)
     }
 
