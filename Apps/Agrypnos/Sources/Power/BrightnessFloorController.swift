@@ -24,7 +24,9 @@ enum BrightnessFloorController {
     static func set(_ value: Double) {
         guard let id = builtInID() else { return }
         let clamped = Float(min(max(value, 0), 1))
-        _ = displayServicesSet(id, clamped)
+        if !displayServicesSet(id, clamped) {
+            WatchDiagnostics.event("brightness write failed value=\(clamped)")
+        }
     }
 
     static func builtInID() -> CGDirectDisplayID? {

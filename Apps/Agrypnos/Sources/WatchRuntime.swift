@@ -516,8 +516,12 @@ final class WatchRuntime {
     }
 
     func recaptureOpenLidHygiene() {
+        let previous = savedBrightness
         savedBrightness = hygieneDevices.brightness()
         savedKeyboard = hygieneDevices.keyboard()
+        if savedBrightness != previous {
+            WatchDiagnostics.event("capture brightness=\(String(describing: savedBrightness)) keyboard=\(String(describing: savedKeyboard))")
+        }
     }
 
     /// True when this user-off asked the Mac to sleep, now or after the pending watch-end message.

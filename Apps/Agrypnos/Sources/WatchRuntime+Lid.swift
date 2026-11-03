@@ -18,6 +18,9 @@ extension WatchRuntime {
         guard let rawClosed = readLid() else { return }
         var lidChanged = false
         let commands = engine.observeLid(closed: rawClosed, now: Date())
+        if !commands.isEmpty {
+            WatchDiagnostics.event("lid edge raw=\(rawClosed) armed=\(engine.engaged) commands=\(commands)")
+        }
         if engine.engaged {
             if !commands.isEmpty {
                 apply(commands)

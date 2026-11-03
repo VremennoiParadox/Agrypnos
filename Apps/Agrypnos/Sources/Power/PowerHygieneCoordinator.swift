@@ -49,7 +49,12 @@ enum PowerHygieneCoordinator {
                     }
                     return false
                 }
-                guard missingLidStillSleeps ? readLid() != false : readLid() == true else { break }
+                let lid = readLid()
+                guard missingLidStillSleeps ? lid != false : lid == true else {
+                    WatchDiagnostics.event("sleepnow skipped lid=\(String(describing: lid)) sleepsWhenLidUnknown=\(missingLidStillSleeps)")
+                    break
+                }
+                WatchDiagnostics.event("sleepnow running lid=\(String(describing: lid)) sleepsWhenLidUnknown=\(missingLidStillSleeps)")
                 let exit = runCommand("/usr/bin/pmset", ["sleepnow"]).exit
                 result.sleepnow = PmsetCommandOutcome.from(exit: exit)
             case .requestDisplaySleep:
@@ -63,11 +68,17 @@ enum PowerHygieneCoordinator {
                 // would stall the menu extra and fight a following `sleepnow`.
                 devices.wakeDisplay()
             case .applyBrightnessFloor:
+                let lid = readLid()
                 guard preferences.applyBrightnessFloor,
                       PanelPowerMode.shouldWriteFloor(armed: armed, lidCloseConfirmed: lidCloseConfirmed,
-                                                       mode: preferences.panelPowerMode), readLid() == true else { break }
+                                                       mode: preferences.panelPowerMode), lid == true else {
+                    WatchDiagnostics.event("floor skipped armed=\(armed) confirmed=\(lidCloseConfirmed) lid=\(String(describing: lid)) mode=\(preferences.panelPowerMode)")
+                    break
+                }
                 ramp.cancel()
-                if devices.canSetBrightness() {
+                let canSet = devices.canSetBrightness()
+                WatchDiagnostics.event("floor write canSet=\(canSet) saved=\(String(describing: savedBrightness)) current=\(String(describing: devices.brightness())) floor=\(preferences.brightnessFloor)")
+                if canSet {
                     devices.setBrightness(preferences.brightnessFloor)
                     effects.floor = true
                 }
@@ -76,13 +87,23 @@ enum PowerHygieneCoordinator {
                 devices.setKeyboard(0)
                 effects.keyboard = true
             case .rampBrightnessRestore:
-                guard effects.floor, preferences.panelPowerMode.showsLidOpenRamp else { break }
-                guard devices.canSetBrightness() else { break }
+                guard effects.floor, preferences.panelPowerMode.showsLidOpenRamp else {
+                    WatchDiagnostics.event("ramp skipped floorApplied=\(effects.floor) mode=\(preferences.panelPowerMode)")
+                    break
+                }
+                guard devices.canSetBrightness() else {
+                    WatchDiagnostics.event("ramp skipped: built-in panel not settable")
+                    break
+                }
                 guard let target = HygieneRestore.displayBrightnessToRestore(
                     captured: savedBrightness,
                     floor: preferences.brightnessFloor
-                ) else { break }
+                ) else {
+                    WatchDiagnostics.event("ramp skipped: no captured brightness")
+                    break
+                }
                 let from = devices.brightness() ?? target
+                WatchDiagnostics.event("ramp start from=\(from) to=\(target) seconds=\(preferences.lidOpenRampSeconds)")
                 ramp.start(
                     from: from,
                     to: target,

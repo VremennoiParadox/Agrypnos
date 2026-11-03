@@ -311,6 +311,10 @@ extension WatchRuntime {
 
     func removeSleepIfLidOpen(_ applyCommands: inout [WatchCommand], reason: DisengageReason?) {
         let rawClosed = readLid()
+        let hadSleep = applyCommands.contains(.requestSleep)
+        defer {
+            WatchDiagnostics.event("sleep gate reason=\(String(describing: reason)) raw=\(String(describing: rawClosed)) confirmed=\(engine.lidCloseConfirmed) holding=\(engine.holdingForIdlePost) before=\(hadSleep) after=\(applyCommands.contains(.requestSleep))")
+        }
         if reason == nil || reason == .user {
             _ = engine.observeLid(closed: rawClosed == true, now: Date())
             if !engine.userOffLidCloseConfirmed(rawClosed: rawClosed == true) {
