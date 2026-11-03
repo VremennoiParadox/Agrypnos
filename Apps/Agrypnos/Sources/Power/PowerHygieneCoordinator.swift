@@ -84,6 +84,11 @@ enum PowerHygieneCoordinator {
                 }
             case .requestKeyboardBacklightOff:
                 guard armed, lidCloseConfirmed, preferences.keyboardBacklightOff, readLid() == true else { break }
+                // Without a readable level there is nothing to restore later, so do not turn it off.
+                guard devices.keyboard() != nil else {
+                    WatchDiagnostics.event("keyboard off skipped: level unreadable")
+                    break
+                }
                 devices.setKeyboard(0)
                 effects.keyboard = true
             case .rampBrightnessRestore:
@@ -102,7 +107,14 @@ enum PowerHygieneCoordinator {
                     WatchDiagnostics.event("ramp skipped: no captured brightness")
                     break
                 }
-                let from = devices.brightness() ?? target
+                let current = devices.brightness()
+                guard HygieneRestore.shouldRampBack(current: current, floor: preferences.brightnessFloor) else {
+                    // The floor is no longer in effect; a later disengage must not write the capture again.
+                    effects.floor = false
+                    WatchDiagnostics.event("ramp skipped: panel already at \(String(describing: current)), macOS restored it")
+                    break
+                }
+                let from = current ?? target
                 WatchDiagnostics.event("ramp start from=\(from) to=\(target) seconds=\(preferences.lidOpenRampSeconds)")
                 ramp.start(
                     from: from,

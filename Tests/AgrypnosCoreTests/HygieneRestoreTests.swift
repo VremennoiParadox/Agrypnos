@@ -63,4 +63,13 @@ final class HygieneRestoreTests: XCTestCase {
     func testDisplayRestoreSkipsWhenCaptureFailed() {
         XCTAssertNil(HygieneRestore.displayBrightnessToRestore(captured: nil, floor: 0.15))
     }
+
+    /// macOS often raises the panel itself when the lid opens. Only ramp back from the floor.
+    func testRampBackOnlyWhenThePanelIsStillAtTheFloor() {
+        XCTAssertTrue(HygieneRestore.shouldRampBack(current: 0.01, floor: 0.01))
+        XCTAssertTrue(HygieneRestore.shouldRampBack(current: 0.02, floor: 0.01))
+        XCTAssertFalse(HygieneRestore.shouldRampBack(current: 0.5625, floor: 0.01))
+        XCTAssertFalse(HygieneRestore.shouldRampBack(current: 0.20, floor: 0.15))
+        XCTAssertTrue(HygieneRestore.shouldRampBack(current: nil, floor: 0.15))
+    }
 }

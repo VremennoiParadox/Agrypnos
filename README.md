@@ -92,7 +92,7 @@ The **Power** section has two panel modes. You pick one.
 
 Both modes turn the keyboard backlight off by default, and **Power** has a switch for that. Dim panel also has a switch for the brightness floor. Neither mode puts the Mac to sleep or turns Keep awake off, so your agents keep running either way. Turning Keep awake on with the lid open never touches the screen.
 
-If Agrypnos never saw your brightness before the lid closed, it won't guess one when the lid opens. It leaves the screen alone.
+If Agrypnos never saw your brightness before the lid closed, it won't guess one when the lid opens. It leaves the screen alone. It also leaves it alone when macOS has already brought the brightness back up by the time Agrypnos notices the lid is open. The keyboard backlight only goes off when Agrypnos can read its current level, so it always has a level to put back.
 
 ### How it knows your agents are busy
 
