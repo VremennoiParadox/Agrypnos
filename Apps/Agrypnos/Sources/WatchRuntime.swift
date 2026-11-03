@@ -56,6 +56,8 @@ final class WatchRuntime {
     var pollTimer: Timer?
     var deadlineTimer: Timer?
     var savedBrightness: Double?
+    /// A closed-lid `sleepnow` skipped the restore. Put the capture back when the Mac wakes with the lid open.
+    var wakeRestorePending = false
     var savedKeyboard: Double?
     var hygieneDevices = HygieneDevices()
     var hygieneEffects = HygieneEffects()
@@ -508,6 +510,7 @@ final class WatchRuntime {
     }
 
     func dropSavedHygieneWithoutWrite() {
+        wakeRestorePending = false
         stopLidPulse()
         brightnessRamp.cancel()
         savedBrightness = nil

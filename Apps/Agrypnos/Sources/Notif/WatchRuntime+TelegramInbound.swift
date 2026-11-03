@@ -41,6 +41,7 @@ extension WatchRuntime {
 
     func noteMacDidWake() {
         WatchDiagnostics.event("lifecycle didWake")
+        restoreHygieneAfterWake()
         invalidateAgentProbe()
         inboundPoller.restartForWakeMiss()
         discordGateway.restartForWakeMiss()

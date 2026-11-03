@@ -1,3 +1,5 @@
+import Foundation
+
 #if canImport(AgrypnosCore)
 import AgrypnosCore
 #endif
@@ -143,6 +145,46 @@ enum PowerHygieneCoordinator {
     static func restoreKeyboard(effects: inout HygieneEffects, captured: Double?, devices: HygieneDevices) {
         if effects.keyboard, let captured { devices.setKeyboard(captured) }
         effects.keyboard = false
+    }
+
+    /// After a closed-lid `sleepnow`: put the capture back once the Mac is awake with the lid open.
+    /// Ramp only while the panel is still at the floor. The panel can still be waking and drop early
+    /// writes, so check again shortly after.
+    static func restoreAfterWake(
+        effects: inout HygieneEffects,
+        savedBrightness: inout Double?,
+        savedKeyboard: inout Double?,
+        preferences: UserPreferences,
+        ramp: BrightnessRampController,
+        devices: HygieneDevices
+    ) {
+        if effects.floor, devices.canSetBrightness(), let captured = savedBrightness {
+            let current = devices.brightness()
+            if HygieneRestore.shouldRampBack(current: current, floor: preferences.brightnessFloor) {
+                WatchDiagnostics.event("wake restore from=\(String(describing: current)) to=\(captured)")
+                ramp.start(
+                    from: current ?? captured,
+                    to: captured,
+                    duration: HygieneRestore.lidOpenRampDuration(seconds: preferences.lidOpenRampSeconds),
+                    setBrightness: devices.setBrightness
+                )
+                for delay in [1.5, 3.0] {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                        if let now = devices.brightness(),
+                           HygieneRestore.shouldRampBack(current: now, floor: preferences.brightnessFloor) {
+                            WatchDiagnostics.event("wake restore retry now=\(now) to=\(captured)")
+                            devices.setBrightness(captured)
+                        }
+                    }
+                }
+            } else {
+                WatchDiagnostics.event("wake restore skipped: panel already at \(String(describing: current))")
+            }
+        }
+        effects.floor = false
+        restoreKeyboard(effects: &effects, captured: savedKeyboard, devices: devices)
+        savedBrightness = nil
+        savedKeyboard = nil
     }
 
     static func restoreAfterDisengage(

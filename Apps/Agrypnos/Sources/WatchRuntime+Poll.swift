@@ -364,7 +364,7 @@ extension WatchRuntime {
 
     func finishDisengageHygiene(sleepResult: HygieneApplyResult) {
         if sleepResult.sleepnow == .ok {
-            dropSavedHygieneWithoutWrite()
+            deferHygieneRestoreToWake()
         } else {
             restoreHygiene()
             if engine.preferences.panelPowerMode == .displaySleep, readLid() != true {

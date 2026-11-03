@@ -41,8 +41,8 @@
 		B0C0CFCEE86F8D71B86ADB21 /* ClaudeQuestionHookProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A5DD98D5B5F27BDFB13BEC /* ClaudeQuestionHookProcess.swift */; };
 		04C7778A0C73432F88195BEB /* ClaudeQuestionHookSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDC5D2452EB7A687AEBD102F /* ClaudeQuestionHookSource.swift */; };
 		EC07AB0FC4B919E42C1A6E55 /* CodexAlertHookProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66360EE08998F484E04F9FCF /* CodexAlertHookProcess.swift */; };
-		A1C0DE110001000000000001 /* CodexAlertHookSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE110001000000000002 /* CodexAlertHookSource.swift */; };
-		A1C0DE110001000000000003 /* LocalHookSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE110001000000000004 /* LocalHookSocket.swift */; };
+		DB89363AB61C5D33E241619D /* CodexAlertHookSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE539762165D711B0059620F /* CodexAlertHookSource.swift */; };
+		8278BF1D0B9AD22BCC0C25A5 /* LocalHookSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10602194F3225CED49EAD687 /* LocalHookSocket.swift */; };
 		DC9A7A9AB93F0083BE28150F /* OpenCodeBridgeSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DC474EA636B5349E22D92E4 /* OpenCodeBridgeSocket.swift */; };
 		C13AF58296A206B4C6CB98D7 /* OpenCodeEventFrames.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B758FA4AA59BA763C06F474 /* OpenCodeEventFrames.swift */; };
 		D62103D186BB34D00D643A04 /* OpenCodePluginInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E311482565640C0F477A20C /* OpenCodePluginInstaller.swift */; };
@@ -61,6 +61,7 @@
 		EEE09B48690E2B1F79A7547C /* WatchRuntime+Kernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED750E218B81FEF5B2711348 /* WatchRuntime+Kernel.swift */; };
 		B61701CD7A9C7B8B971BBE35 /* WatchRuntime+Lid.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE46E54106185894B8859E55 /* WatchRuntime+Lid.swift */; };
 		E3E9E97E96936C3A956AAC68 /* WatchRuntime+Poll.swift in Sources */ = {isa = PBXBuildFile; fileRef = 779C1801A09C9D65CD3D4E70 /* WatchRuntime+Poll.swift */; };
+		9B92EA17C72B00361727B385 /* WatchRuntime+WakeRestore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0D2FC201B1C3A8681B55F7F /* WatchRuntime+WakeRestore.swift */; };
 		1A07C28A481816CBE4F20A60 /* WatchRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41663A701EAD0DB8779BE8A5 /* WatchRuntime.swift */; };
 		095E19E7CB28F7EE95D82908 /* AgrypnosCore in Frameworks */ = {isa = PBXBuildFile; productRef = C81CD5F22406E4B780AC870D /* AgrypnosCore */; };
 		6B8001DABC00C7B45D3BFA0C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8B40A3F1CAC9ADB66B78DD5C /* Assets.xcassets */; };
@@ -103,8 +104,8 @@
 		A3A5DD98D5B5F27BDFB13BEC /* ClaudeQuestionHookProcess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeQuestionHookProcess.swift; sourceTree = "<group>"; };
 		FDC5D2452EB7A687AEBD102F /* ClaudeQuestionHookSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeQuestionHookSource.swift; sourceTree = "<group>"; };
 		66360EE08998F484E04F9FCF /* CodexAlertHookProcess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexAlertHookProcess.swift; sourceTree = "<group>"; };
-		A1C0DE110001000000000002 /* CodexAlertHookSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexAlertHookSource.swift; sourceTree = "<group>"; };
-		A1C0DE110001000000000004 /* LocalHookSocket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalHookSocket.swift; sourceTree = "<group>"; };
+		BE539762165D711B0059620F /* CodexAlertHookSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexAlertHookSource.swift; sourceTree = "<group>"; };
+		10602194F3225CED49EAD687 /* LocalHookSocket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalHookSocket.swift; sourceTree = "<group>"; };
 		0DC474EA636B5349E22D92E4 /* OpenCodeBridgeSocket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenCodeBridgeSocket.swift; sourceTree = "<group>"; };
 		1B758FA4AA59BA763C06F474 /* OpenCodeEventFrames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenCodeEventFrames.swift; sourceTree = "<group>"; };
 		7E311482565640C0F477A20C /* OpenCodePluginInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenCodePluginInstaller.swift; sourceTree = "<group>"; };
@@ -123,6 +124,7 @@
 		ED750E218B81FEF5B2711348 /* WatchRuntime+Kernel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+Kernel.swift"; sourceTree = "<group>"; };
 		BE46E54106185894B8859E55 /* WatchRuntime+Lid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+Lid.swift"; sourceTree = "<group>"; };
 		779C1801A09C9D65CD3D4E70 /* WatchRuntime+Poll.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+Poll.swift"; sourceTree = "<group>"; };
+		E0D2FC201B1C3A8681B55F7F /* WatchRuntime+WakeRestore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+WakeRestore.swift"; sourceTree = "<group>"; };
 		41663A701EAD0DB8779BE8A5 /* WatchRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRuntime.swift; sourceTree = "<group>"; };
 		38ED30322495D02C679CFD76 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0111024D5CF6358695630612 /* Agrypnos.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Agrypnos.entitlements; sourceTree = "<group>"; };
@@ -151,6 +153,7 @@
 				ED750E218B81FEF5B2711348 /* WatchRuntime+Kernel.swift */,
 				BE46E54106185894B8859E55 /* WatchRuntime+Lid.swift */,
 				779C1801A09C9D65CD3D4E70 /* WatchRuntime+Poll.swift */,
+				E0D2FC201B1C3A8681B55F7F /* WatchRuntime+WakeRestore.swift */,
 				41663A701EAD0DB8779BE8A5 /* WatchRuntime.swift */,
 				7BC2CAB9094C6A3F6E6AF09E /* Agent */,
 				3E81BE9F451039AECD508BDD /* Hotkey */,
@@ -249,8 +252,8 @@
 				A3A5DD98D5B5F27BDFB13BEC /* ClaudeQuestionHookProcess.swift */,
 				FDC5D2452EB7A687AEBD102F /* ClaudeQuestionHookSource.swift */,
 				66360EE08998F484E04F9FCF /* CodexAlertHookProcess.swift */,
-				A1C0DE110001000000000002 /* CodexAlertHookSource.swift */,
-				A1C0DE110001000000000004 /* LocalHookSocket.swift */,
+				BE539762165D711B0059620F /* CodexAlertHookSource.swift */,
+				10602194F3225CED49EAD687 /* LocalHookSocket.swift */,
 				0DC474EA636B5349E22D92E4 /* OpenCodeBridgeSocket.swift */,
 				1B758FA4AA59BA763C06F474 /* OpenCodeEventFrames.swift */,
 				7E311482565640C0F477A20C /* OpenCodePluginInstaller.swift */,
@@ -409,8 +412,8 @@
 				B0C0CFCEE86F8D71B86ADB21 /* ClaudeQuestionHookProcess.swift in Sources */,
 				04C7778A0C73432F88195BEB /* ClaudeQuestionHookSource.swift in Sources */,
 				EC07AB0FC4B919E42C1A6E55 /* CodexAlertHookProcess.swift in Sources */,
-				A1C0DE110001000000000001 /* CodexAlertHookSource.swift in Sources */,
-				A1C0DE110001000000000003 /* LocalHookSocket.swift in Sources */,
+				DB89363AB61C5D33E241619D /* CodexAlertHookSource.swift in Sources */,
+				8278BF1D0B9AD22BCC0C25A5 /* LocalHookSocket.swift in Sources */,
 				DC9A7A9AB93F0083BE28150F /* OpenCodeBridgeSocket.swift in Sources */,
 				C13AF58296A206B4C6CB98D7 /* OpenCodeEventFrames.swift in Sources */,
 				D62103D186BB34D00D643A04 /* OpenCodePluginInstaller.swift in Sources */,
@@ -429,6 +432,7 @@
 				EEE09B48690E2B1F79A7547C /* WatchRuntime+Kernel.swift in Sources */,
 				B61701CD7A9C7B8B971BBE35 /* WatchRuntime+Lid.swift in Sources */,
 				E3E9E97E96936C3A956AAC68 /* WatchRuntime+Poll.swift in Sources */,
+				9B92EA17C72B00361727B385 /* WatchRuntime+WakeRestore.swift in Sources */,
 				1A07C28A481816CBE4F20A60 /* WatchRuntime.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

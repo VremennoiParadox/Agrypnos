@@ -146,7 +146,9 @@ final class HygieneTransitionTests: XCTestCase {
         XCTAssertEqual(ok.sleepnow, .ok)
         XCTAssertTrue(brightness.isEmpty)
         XCTAssertTrue(keyboard.isEmpty)
-        XCTAssertNil(f.runtime.savedBrightness)
-        XCTAssertNil(f.runtime.savedKeyboard)
+        // Nothing is written before the Mac sleeps. The capture waits for the wake.
+        XCTAssertEqual(f.runtime.savedBrightness, 0.8)
+        XCTAssertEqual(f.runtime.savedKeyboard, 0.6)
+        XCTAssertTrue(f.runtime.wakeRestorePending)
     }
 }
