@@ -106,7 +106,7 @@ The menu-bar item is always a fixed-size **eye icon only**, with no visible titl
   - **What:** settle buffer after **local busy signals** from selected tools stop (process + session/transcript mtimes, including nested `/subagents/*.jsonl` within 45s when that parent tool is selected; terminal session files only when I3 is on, default off; Claude Code and the Codex CLI may also use CPU, Codex desktop CPU does not count; OpenCode: local process + session files only, Mac-proven, not CPU).
   - **Why:** a quiet gap mid-run (tool pause, think with no file write) can look “done” and fire Notif / turn Keep awake off too soon. The buffer keeps that from happening between those gaps.
   - **Not:** not a stuck-agent detector; not mind-reading; we do **not** know “still thinking” or “agent finished the job.” Ban copy that claims that.
-  - Title may stay short (e.g. “Wait after agent signals stop” or “Idle wait”). Help carries the detail, in this spirit: “How long to wait after local busy signals stop, before the idle-after-wait POST. Then Keep awake turns off. Buffer so a quiet gap mid-run (no file write / low CPU) doesn’t look finished. Not still thinking — we only see local process and session activity.”
+  - Title may stay short (e.g. “Wait after agent signals stop” or “Idle wait”). Help carries the detail, in this spirit: “How long to wait after local busy signals stop before Keep awake turns off. A quiet gap mid-run, with no file writes or CPU use, can look finished, so this wait keeps it from ending early. Agrypnos sees only local process and session activity, not what an agent is doing.”
 - Brightness return when the lid opens — Core + popover control; **1 / 2 / 3 s**, default **2s**. **Power A:** restore captured brightness only; nil capture skips the write (do not fall back to floor). **Power B:** hide this ramp control/chrome and the brightness floor switch + slider while B is selected (both only apply on the floor path). Power help must say why the ramp is hidden.
 - Last-end honesty — Watch caption-only card. Last watch end from a real `DisengageReason` (time + reason). No history log, no invented reasons.
 - **Per-tool Agents include** — popover-only, **landed**. Do not grow it. No separate “track all” toggle.
@@ -162,7 +162,7 @@ The menu-bar item is always a fixed-size **eye icon only**, with no visible titl
 
 **Landed (Mac-proven):** Power A/B — mutually exclusive panel modes. Default **A**. Switching A↔B must be clear in **Power** (segmented or equivalent native control). Same gates as hygiene: armed + lid confirmed closed (`LidCloseConfirm` / stable closed — not a single raw `AppleClamshellState` edge). Unconfirmed close must not apply floor or `displaysleepnow`. Keyboard backlight off + battery / thermal / LPM safety still apply under both. Never floor + `displaysleepnow` together.
 - **A (default):** current path — brightness floor on confirmed lid-close + lid-open brightness return ramp. Panel stays on (dimmed). Ban copy that claims display sleep / screen off / asleep for mode A. Ramp chrome stays visible.
-- **B:** real **panel/display** sleep on confirmed lid-close via `displaysleepnow` (or equivalent — Core picks the smallest reliable path). Hide the lid-open ramp control/chrome and the brightness floor switch + slider while B is selected (both only apply on the floor path). This **is** display sleep for mode B only — do not claim it for A or for the Keep awake toggle. B sleeps the **panel/display only**. It does **not** turn Keep awake off and does **not** put the Mac to sleep by itself. Keep awake still holds closed-lid wake (IOPM / SleepDisabled as already specified). Agents keep running while B has the panel asleep. Plain copy: “Shuts off the screen fully. The Mac stays awake and agents keep running. Brightness return only applies when restoring from the floor path.” Ban for Power B: “Mac asleep,” “agents stopped,” “job finished,” “still thinking,” “puts the computer to sleep,” or any wording that implies B ends Keep awake or ends agent work.
+- **B:** real **panel/display** sleep on confirmed lid-close via `displaysleepnow` (or equivalent — Core picks the smallest reliable path). Hide the lid-open ramp control/chrome and the brightness floor switch + slider while B is selected (both only apply on the floor path). This **is** display sleep for mode B only — do not claim it for A or for the Keep awake toggle. B sleeps the **panel/display only**. It does **not** turn Keep awake off and does **not** put the Mac to sleep by itself. Keep awake still holds closed-lid wake (IOPM / SleepDisabled as already specified). Agents keep running while B has the panel asleep. Plain copy: “Shuts off the screen fully. The Mac stays awake and agents keep running. The brightness floor and fade-back settings don't apply in this mode.” Ban for Power B: “Mac asleep,” “agents stopped,” “job finished,” “still thinking,” “puts the computer to sleep,” or any wording that implies B ends Keep awake or ends agent work.
 - **In-app explanation (required — popover Power, not README-only).** Review blocks a Power A/B control with no in-app explanation of the difference. Ban watt claims. Ban marketing fluff.
   - **Picker labels:** short names (e.g. “Dim panel” / “Sleep panel” — or clearer plain equivalents UI may craft).
   - **Caption under the picker:** always visible when Power is open. One or two plain sentences that state the difference. **A (default):** brightness floor on confirmed lid-close + lid-open ramp. Panel stays on, dimmed. Do **not** say display asleep / screen off. **B:** on confirmed lid-close, panel sleeps (`displaysleepnow`). Keep awake still holds the Mac awake — agents keep running. Ban “Mac asleep” / “agents stopped.”
@@ -268,13 +268,13 @@ Good: “Armed. Waiting for lid close — then brightness floor + keyboard backl
 Good: “Armed and waiting for the lid to close.” (Power B, lid still open)
 Good: “Brightness floor. Panel stays on (dimmed).” (Power A)
 Good: “Display asleep.” (Power B)
-Good: “Shuts off the screen fully. The Mac stays awake and agents keep running. Brightness return only applies when restoring from the floor path.” (Power B)
+Good: “Shuts off the screen fully. The Mac stays awake and agents keep running. The brightness floor and fade-back settings don't apply in this mode.” (Power B)
 Good: “Stays on until you turn it off (battery / thermal still apply).”
 Good: “Keep awake turns off when the wait after agent signals stop ends (battery / thermal still apply).”
-Good: “How long to wait after local busy signals stop, before the idle-after-wait POST. Then Keep awake turns off. Buffer so a quiet gap mid-run (no file write / low CPU) doesn’t look finished. Not still thinking — we only see local process and session activity.”
+Good: “How long to wait after local busy signals stop before Keep awake turns off. A quiet gap mid-run, with no file writes or CPU use, can look finished, so this wait keeps it from ending early. Agrypnos sees only local process and session activity, not what an agent is doing.”
 Good: “High temperature turns Keep awake off and sends the Mac to sleep.”
 Good: “Message *your* Discord bot channel when the wait after agent signals stop ends.”
-Good: “Message your Telegram bot. Needs token; chat id from getUpdates. Turn this on for commands: /arm, /disarm, /status, /help.”
+Good: “Message your Telegram bot. Needs token; chat id from getUpdates. Commands need Telegram inbound on: /arm, /disarm, /status, /help.”
 Good: “Commands on *your* Telegram bot: /arm, /disarm, /status, /help.”
 Good: “Commands on *your* Discord bot: /arm, /disarm, /status, /help.”
 Good: “Discord outbound is a message on *your* bot’s channel. There is no incoming webhook.”
@@ -290,7 +290,7 @@ Good: “/status returns Keep awake, How long, lid, Agents facts when relevant, 
 Good: “/status includes live battery when known.” (`/help` — short; live battery Mac-proven)
 Good: “Dim panel” / “Sleep panel” (Power A/B picker — landed; or clearer plain equivalents)
 Good: “Lowers brightness to a set point instead of fully shutting off the screen.” (Dim panel caption)
-Good: “Shuts off the screen fully. The Mac stays awake and agents keep running. Brightness return only applies when restoring from the floor path.” (Sleep panel caption)
+Good: “Shuts off the screen fully. The Mac stays awake and agents keep running. The brightness floor and fade-back settings don't apply in this mode.” (Sleep panel caption)
 Good: a fixed-size eye icon with mode color; live watch/mode facts in accessibility text and tooltip.
 Good: “Which tools count as busy.”
 Good: “Count terminal sessions as busy.”
