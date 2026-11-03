@@ -96,12 +96,12 @@ If Agrypnos never saw your brightness before the lid closed, it won't guess one 
 
 ### How it knows your agents are busy
 
-It only looks at your own Mac, and only at the tools you leave checked under **Agents**. A tool counts as busy when its process is running and one of its session files changed in the last 45 seconds. For Claude Code and the Codex CLI, a running process that uses 5% CPU or more also counts.
+It only looks at your own Mac, and only at the tools you leave checked under **Agents**. A tool counts as busy when its process is running and one of its session files changed in the last 45 seconds. For Claude Code and the Codex CLI, a running process that uses 5% CPU or more also counts. The Claude and Codex desktop apps' own CPU use doesn't.
 
 | Tool | Processes it looks for | Session files it watches |
 |---|---|---|
 | Cursor | The Cursor app and `cursor-agent` | `~/.cursor/projects`, `~/.cursor/chats`, `~/.cursor/acp-sessions` (and the same folders under `$XDG_CONFIG_HOME/cursor`) |
-| Claude Code | The `claude` command-line tool. The Claude desktop app doesn't count. | `~/.claude/projects` (or `$CLAUDE_CONFIG_DIR/projects`) |
+| Claude Code | The `claude` command-line tool, and the Claude desktop app's Code tab (the app itself and the `claude` binary it launches). | `~/.claude/projects` (or `$CLAUDE_CONFIG_DIR/projects`) |
 | Codex | The Codex CLI and the Codex desktop app. CPU use counts only for the CLI. | `~/.codex/sessions` (or `$CODEX_HOME/sessions`) |
 | OpenCode | The `opencode` command-line tool. The OpenCode desktop app doesn't count. | `~/.local/share/opencode` (or `$XDG_DATA_HOME/opencode`) |
 
