@@ -58,6 +58,20 @@ final class HygieneTransitionTests: XCTestCase {
         XCTAssertFalse(f.runtime.hygieneEffects.floor)
     }
 
+    func testLidOpenRampsBackFromThePanelsLowestStepWithA1PercentFloor() {
+        let f = RuntimeFixture()
+        f.runtime.hygieneDevices = HygieneDevices(canSetBrightness: { true }, brightness: { 0.0625 },
+            setBrightness: { _ in }, keyboard: { nil }, setKeyboard: { _ in }, wakeDisplay: {})
+        f.runtime.engine.preferences.applyBrightnessFloor = true
+        f.runtime.engine.preferences.brightnessFloorPercent = 1
+        f.runtime.savedBrightness = 0.4375
+        _ = f.runtime.engine.userSetEngaged(true, now: Date(), lidClosed: true)
+        f.runtime.apply([.applyBrightnessFloor])
+        f.runtime.apply([.rampBrightnessRestore])
+        XCTAssertTrue(f.runtime.brightnessRamp.isRunning)
+        f.runtime.brightnessRamp.cancel()
+    }
+
     func testLidOpenRampsBackWhenThePanelIsStillAtTheFloor() {
         let f = RuntimeFixture()
         var writes: [Double] = []

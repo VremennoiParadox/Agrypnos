@@ -50,8 +50,16 @@ final class WakeRestoreTests: XCTestCase {
         XCTAssertTrue(box.writes.isEmpty)
     }
 
+    func testWakeRampsBackFromThePanelsLowestStepEvenWithA1PercentFloor() {
+        let (f, _) = fixtureAfterClosedLidSleep(current: 0.0625)
+        f.lidClosed = false
+        f.runtime.restoreHygieneAfterWake()
+        XCTAssertTrue(f.runtime.brightnessRamp.isRunning)
+        f.runtime.brightnessRamp.cancel()
+    }
+
     func testWakeLeavesBrightnessAloneWhenMacOSAlreadyRaisedIt() {
-        let (f, box) = fixtureAfterClosedLidSleep(current: 0.5625)
+        let (f, box) = fixtureAfterClosedLidSleep(current: 0.75)
         f.lidClosed = false
         f.runtime.restoreHygieneAfterWake()
         XCTAssertFalse(f.runtime.brightnessRamp.isRunning)

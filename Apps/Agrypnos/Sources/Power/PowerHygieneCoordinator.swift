@@ -110,7 +110,7 @@ enum PowerHygieneCoordinator {
                     break
                 }
                 let current = devices.brightness()
-                guard HygieneRestore.shouldRampBack(current: current, floor: preferences.brightnessFloor) else {
+                guard HygieneRestore.shouldRampBack(current: current, captured: target, floor: preferences.brightnessFloor) else {
                     // The floor is no longer in effect; a later disengage must not write the capture again.
                     effects.floor = false
                     WatchDiagnostics.event("ramp skipped: panel already at \(String(describing: current)), macOS restored it")
@@ -160,7 +160,7 @@ enum PowerHygieneCoordinator {
     ) {
         if effects.floor, devices.canSetBrightness(), let captured = savedBrightness {
             let current = devices.brightness()
-            if HygieneRestore.shouldRampBack(current: current, floor: preferences.brightnessFloor) {
+            if HygieneRestore.shouldRampBack(current: current, captured: captured, floor: preferences.brightnessFloor) {
                 WatchDiagnostics.event("wake restore from=\(String(describing: current)) to=\(captured)")
                 ramp.start(
                     from: current ?? captured,
@@ -171,7 +171,7 @@ enum PowerHygieneCoordinator {
                 for delay in [1.5, 3.0] {
                     DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
                         if let now = devices.brightness(),
-                           HygieneRestore.shouldRampBack(current: now, floor: preferences.brightnessFloor) {
+                           HygieneRestore.shouldRampBack(current: now, captured: captured, floor: preferences.brightnessFloor) {
                             WatchDiagnostics.event("wake restore retry now=\(now) to=\(captured)")
                             devices.setBrightness(captured)
                         }
