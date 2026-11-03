@@ -77,14 +77,14 @@ public enum QuestionMessageText {
                 text += "\nSelected: " + (numbers.isEmpty ? "none" : numbers.joined(separator: ", "))
             } else { text += "\nChoose by number. Review all questions before sending." }
             text += "\nAnswer on Mac for free text or local input."
-        case .submitting: text += "\n\nSending answers to the original request…"
+        case .submitting: text += "\n\nSending your answers…"
         case .delivered(.accepted): text += "\n\nThe agent accepted the answers."
-        case .delivered(.returnedToHook): text += "\n\nAnswers returned to the local hook; agent acceptance is not confirmed."
+        case .delivered(.returnedToHook): text += "\n\nAnswers went to the agent's hook. The agent hasn't confirmed it used them."
         case .delivered(.rejected): text += "\n\nThe agent rejected the answers. Check the question on your Mac."
-        case .delivered(.unconfirmed): text += "\n\nAnswer delivery is unconfirmed. Check the question on your Mac; Agrypnos will not retry it."
-        case .local: text += "\n\nAnswer this question on your Mac. Remote controls are closed."
-        case .expired: text += "\n\nThe remote response window has ended. Check the question on your Mac."
-        case .invalid: text += "\n\nThis question is no longer available remotely."
+        case .delivered(.unconfirmed): text += "\n\nCouldn't confirm the answers arrived. Check the question on your Mac. Agrypnos won't resend them."
+        case .local: text += "\n\nThis one is waiting on your Mac now. The buttons here no longer work."
+        case .expired: text += "\n\nThe time to answer here is up. Check the question on your Mac."
+        case .invalid: text += "\n\nThis question can't be answered from here any more."
         }
         return text
     }

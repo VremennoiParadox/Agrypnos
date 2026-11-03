@@ -42,7 +42,7 @@ final class QuestionRelayCoordinatorTests: XCTestCase {
             await fixture.waitForEdits(3)
             let final = try XCTUnwrap(fixture.requests.last { fixture.isEdit($0) })
             let body = try XCTUnwrap(JSONSerialization.jsonObject(with: final.body) as? [String: Any])
-            XCTAssertTrue(((body["text"] ?? body["content"]) as? String)?.contains("no longer available remotely") == true)
+            XCTAssertTrue(((body["text"] ?? body["content"]) as? String)?.contains("can't be answered from here any more") == true)
             XCTAssertTrue(fixture.retryDelays.isEmpty)
             XCTAssertTrue(fixture.submissions.isEmpty)
         }
@@ -128,7 +128,7 @@ final class QuestionRelayCoordinatorTests: XCTestCase {
         for request in fixture.requests.suffix(2) {
             let body = try? JSONSerialization.jsonObject(with: request.body) as? [String: Any]
             let text = (body?["text"] ?? body?["content"]) as? String
-            XCTAssertTrue(text?.contains("no longer available remotely") == true)
+            XCTAssertTrue(text?.contains("can't be answered from here any more") == true)
         }
         XCTAssertTrue(fixture.relay.pendingDeadlines.isEmpty)
     }
@@ -147,12 +147,12 @@ final class QuestionRelayCoordinatorTests: XCTestCase {
         XCTAssertTrue(fixture.relay.pendingDeadlines.isEmpty)
         await fixture.waitForSubmissions(1)
         XCTAssertEqual(fixture.submissions.count, 1)
-        XCTAssertTrue(fixture.messages.contains { $0.contains("Sending answers") })
+        XCTAssertTrue(fixture.messages.contains { $0.contains("Sending your answers") })
         XCTAssertFalse(fixture.messages.contains { $0.contains("agent accepted") })
         fixture.delivery?.resume(returning: .unconfirmed)
         fixture.delivery = nil
         await fixture.waitForEdits(5)
-        XCTAssertTrue(fixture.messages.contains { $0.contains("delivery is unconfirmed") })
+        XCTAssertTrue(fixture.messages.contains { $0.contains("Couldn't confirm the answers arrived") })
         fixture.now = 601
         fixture.relay.expireDueQuestions()
         XCTAssertFalse(fixture.events.contains { if case .expired = $0 { return true }; return false })
