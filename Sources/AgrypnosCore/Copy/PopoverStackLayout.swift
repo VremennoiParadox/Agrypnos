@@ -27,7 +27,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static let titleRowHeight = 24
     public static let segmentRowHeight = 28
     public static let sliderBlockHeight = 48
-    public static let durationCardHeight = 136
+    public static let durationCardHeight = 232
     public static let batteryCardHeight = 88
     public static let loginCardHeight = 44
     public static let secretFieldRowHeight = 28
@@ -61,7 +61,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static var panelPowerHelpY: Int { panelPowerCaptionY + PopoverCopyLayout.panelPowerCaptionHeightPoints }
 
     public static func includeSwitchY(index: Int) -> Int {
-        prefControlY + index * switchRowHeight
+        prefHelpY + index * switchRowHeight
     }
 
     public static var notifEnableHelpY: Int { prefTitleY + titleRowHeight }
@@ -72,8 +72,9 @@ public struct PopoverStackLayout: Equatable, Sendable {
         prefTitleY + titleRowHeight + PopoverCopyLayout.notifTelegramHelpHeightPoints
     }
     public static var notifTelegramChatY: Int { notifTelegramTokenY + secretFieldRowHeight }
+    public static var notifTelegramUserY: Int { notifTelegramChatY + secretFieldRowHeight }
     public static var notifTelegramInboundSwitchY: Int {
-        notifTelegramChatY + secretFieldRowHeight
+        notifTelegramUserY + secretFieldRowHeight
     }
     public static var notifDiscordInboundTokenY: Int {
         prefHelpY + PopoverCopyLayout.notifDiscordHelpHeightPoints
@@ -81,8 +82,11 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static var notifDiscordInboundChannelY: Int {
         notifDiscordInboundTokenY + secretFieldRowHeight
     }
-    public static var notifDiscordInboundSwitchY: Int {
+    public static var notifDiscordUserY: Int {
         notifDiscordInboundChannelY + secretFieldRowHeight
+    }
+    public static var notifDiscordInboundSwitchY: Int {
+        notifDiscordUserY + secretFieldRowHeight
     }
     public let section: PopoverSection
     public let sectionSwitcher: PopoverSlot
@@ -159,9 +163,11 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static func make(
         section: PopoverSection = .default,
         panelPowerMode: PanelPowerMode = .default,
-        showQuestionNotifications: Bool = false
+        showQuestionNotifications: Bool = false,
+        showsWatchCaption: Bool = false
     ) -> PopoverStackLayout {
-        let watchHeight = inset + 28 + PopoverCopyLayout.captionHeightPoints + inset
+        let watchHeight =
+            inset + 28 + (showsWatchCaption ? PopoverCopyLayout.captionHeightPoints : 0) + inset
         let hygieneHeight = panelPowerMode.writesBrightnessFloor
             ? hygieneKeyboardY
                 + 2 * switchRowHeight
@@ -172,7 +178,6 @@ public struct PopoverStackLayout: Equatable, Sendable {
         let includeHeight =
             inset
             + titleRowHeight
-            + PopoverCopyLayout.helpHeightPoints
             + AgentKind.allCases.count * switchRowHeight
             + inset
         let settleHeight =
@@ -209,14 +214,14 @@ public struct PopoverStackLayout: Equatable, Sendable {
             inset
             + titleRowHeight
             + PopoverCopyLayout.notifDiscordHelpHeightPoints
-            + 2 * secretFieldRowHeight
+            + 3 * secretFieldRowHeight
             + switchRowHeight
             + inset
         let notifTelegramHeight =
             inset
             + titleRowHeight
             + PopoverCopyLayout.notifTelegramHelpHeightPoints
-            + 2 * secretFieldRowHeight
+            + 3 * secretFieldRowHeight
             + switchRowHeight
             + inset
         let notifDiscordInboundHeight =
@@ -238,15 +243,10 @@ public struct PopoverStackLayout: Equatable, Sendable {
             case .duration: return durationCardHeight
             case .lastWatchEnd: return inset + PopoverCopyLayout.lastWatchEndHeightPoints + inset
             case .panelPower:
-                var height =
-                    inset
+                return inset
                     + segmentRowHeight
                     + PopoverCopyLayout.panelPowerCaptionHeightPoints
                     + inset
-                if !PanelPowerChrome.showsLidOpenRamp(panelPowerMode) {
-                    height += PopoverCopyLayout.panelPowerHelpHeightPoints
-                }
-                return height
             case .hygiene: return hygieneHeight
             case .battery: return batteryCardHeight
             case .agentInclude: return includeHeight

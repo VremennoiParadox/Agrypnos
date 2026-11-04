@@ -97,7 +97,7 @@ extension WatchRuntime {
             try startOpenCodePlugin(installer: installer, relay: relay)
             openCodeSetupFailure = nil
         } catch {
-            openCodeSetupFailure = "OpenCode: integration unavailable. Enable again to repair setup, or use the manual connection."
+            openCodeSetupFailure = "OpenCode: integration unavailable. Enable again to repair setup."
         }
     }
     private func startOpenCodePlugin(installer: OpenCodePluginInstaller, relay: QuestionRelaySettings) throws {

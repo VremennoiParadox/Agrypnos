@@ -264,15 +264,15 @@ extension WatchRuntime {
         if let reason {
             let rollback = engine.rollbackDisarmFailure(now: Date())
             // A failed clear left SleepDisabled held; do not turn a valid rollback into a failed reassertion.
-            let commands = readKernel() == .held ? rollback.filter { $0 != .assertSleepDisabled } : rollback
+            let commands = readKernel() == .clear ? rollback : rollback.filter { $0 != .assertSleepDisabled }
             apply(commands)
             syncDeadlineTimer()
             if reason == .questionUnanswered, !questionReleaseFailureReported {
                 questionReleaseFailureReported = true
-                Task { await attemptQuestionNotice("Agrypnos couldn't turn the watch off after an unanswered question.") }
+                Task { await attemptQuestionNotice("Agrypnos couldn't turn Keep awake off after an unanswered question.") }
             }
         }
-        notify("Couldn't verify SleepDisabled was cleared.")
+        notify("Couldn't verify the wake hold was cleared.")
         store.save(engine.preferences)
     }
 
@@ -284,7 +284,7 @@ extension WatchRuntime {
         store.save(engine.preferences)
         clearQuestionWatch()
         let context = key.map { "\n\($0.provider.displayName) · session \($0.sessionID.prefix(80))" } ?? ""
-        var message = "Agrypnos: watch turned off because an agent question went unanswered for 10 minutes."
+        var message = "Agrypnos: Keep awake turned off because an agent question went unanswered for 10 minutes."
         if shouldSleep { message += " Asking the Mac to sleep." }
         message += context
         let captured = questionSleepGeneration
@@ -311,6 +311,10 @@ extension WatchRuntime {
 
     func removeSleepIfLidOpen(_ applyCommands: inout [WatchCommand], reason: DisengageReason?) {
         let rawClosed = readLid()
+        let hadSleep = applyCommands.contains(.requestSleep)
+        defer {
+            WatchDiagnostics.event("sleep gate reason=\(String(describing: reason)) raw=\(String(describing: rawClosed)) confirmed=\(engine.lidCloseConfirmed) holding=\(engine.holdingForIdlePost) before=\(hadSleep) after=\(applyCommands.contains(.requestSleep))")
+        }
         if reason == nil || reason == .user {
             _ = engine.observeLid(closed: rawClosed == true, now: Date())
             if !engine.userOffLidCloseConfirmed(rawClosed: rawClosed == true) {
@@ -319,11 +323,13 @@ extension WatchRuntime {
             return
         }
         if engine.holdingForIdlePost, reason != .timerExpired {
-            _ = engine.observeLid(closed: rawClosed == true, now: Date())
-            if !engine.userOffLidCloseConfirmed(rawClosed: rawClosed == true) {
-                applyCommands.removeAll { $0 == .requestSleep }
+            if let closed = rawClosed {
+                _ = engine.observeLid(closed: closed, now: Date())
+                if !engine.userOffLidCloseConfirmed(rawClosed: closed) {
+                    applyCommands.removeAll { $0 == .requestSleep }
+                }
             }
-        } else if reason == .timerExpired ? rawClosed == false : rawClosed != true {
+        } else if rawClosed == false {
             applyCommands.removeAll { $0 == .requestSleep }
         }
     }
@@ -357,8 +363,8 @@ extension WatchRuntime {
     }
 
     func finishDisengageHygiene(sleepResult: HygieneApplyResult) {
-        if sleepResult.sleepnow != nil {
-            dropSavedHygieneWithoutWrite()
+        if sleepResult.sleepnow == .ok {
+            deferHygieneRestoreToWake()
         } else {
             restoreHygiene()
             if engine.preferences.panelPowerMode == .displaySleep, readLid() != true {
@@ -394,18 +400,18 @@ extension WatchRuntime {
             if confirmed, readLid() == true {
                 _ = engine.lidDidClose(now: Date())
             }
+            userOffSleepDecided = willSleep
             idlePostTask = Task { @MainActor in
                 await self.postIdle(enabled, reason, willSleep)
                 guard !Task.isCancelled else { return }
                 var live = commands
                 self.removeSleepIfLidOpen(&live, reason: reason)
                 if !self.disarmKernel() {
-                    self.notify("Couldn't verify SleepDisabled was cleared.")
-                    self.store.save(self.engine.preferences)
+                    self.rollbackFailedKernelClear(reason: reason)
                     self.idlePostTask = nil
-                    self.delegate?.watchRuntimeDidChange(self)
                     return
                 }
+                self.userOffSleepDecided = false
                 let result = self.apply(live)
                 self.finishDisengageHygiene(sleepResult: result)
                 self.store.save(self.engine.preferences)
@@ -414,6 +420,7 @@ extension WatchRuntime {
             }
             return HygieneApplyResult()
         }
+        userOffSleepDecided = false
         let result = apply(commands)
         finishDisengageHygiene(sleepResult: result)
         return result

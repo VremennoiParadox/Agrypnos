@@ -90,6 +90,12 @@ final class DiscordGatewayURLFactoryTests: XCTestCase {
     }
 
     func testRejectsNonGatewayHosts() {
+        XCTAssertEqual(
+            DiscordGatewayURLFactory.resumeURL(from: "wss://gateway-us-east1-b.discord.gg")?.host,
+            "gateway-us-east1-b.discord.gg"
+        )
+        XCTAssertNil(DiscordGatewayURLFactory.resumeURL(from: "wss://evil.example"))
+        XCTAssertNil(DiscordGatewayURLFactory.resumeURL(from: "wss://gateway.discord.gg.evil.com"))
         XCTAssertNil(DiscordGatewayURLFactory.resumeURL(from: "wss://example.com"))
         XCTAssertNil(DiscordGatewayURLFactory.resumeURL(from: "https://gateway.discord.gg"))
         XCTAssertNil(DiscordGatewayURLFactory.resumeURL(from: "  "))

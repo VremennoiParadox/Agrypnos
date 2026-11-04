@@ -7,10 +7,9 @@ final class AgrypnosCopyTests: XCTestCase {
         XCTAssertFalse(caption.lowercased().contains("watt"))
         XCTAssertFalse(caption.lowercased().contains("1.76"))
         XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("local busy signals"))
-        XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("settle buffer")
-            || AgrypnosCopy.settleGraceHelp.lowercased().contains("idle-after-wait"))
+        XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("keeps it from ending early"))
         XCTAssertEqual(AgrypnosCopy.quit, "Quit Agrypnos")
-        XCTAssertEqual(AgrypnosCopy.hotkeyHint(.defaultToggle), "⌥⌘A toggles the watch")
+        XCTAssertEqual(AgrypnosCopy.hotkeyHint(.defaultToggle), "⌥⌘A toggles Keep awake")
     }
 
     func testCoreCopySurfaceDoesNotClaimForcedDisplaySleep() {
@@ -75,9 +74,12 @@ final class AgrypnosCopyTests: XCTestCase {
         assertNoDisplaySleepFiction(caption)
     }
 
-    func testOffCaptionIsPlainKeepAwakeWithLidClosed() {
-        XCTAssertEqual(AgrypnosCopy.captionOff, "Keeps the Mac awake with the lid closed.")
-        assertFitsCaption(AgrypnosCopy.captionOff)
+    func testOffCaptionIsEmptySoTheCardCanHugTheSwitch() {
+        XCTAssertEqual(AgrypnosCopy.captionOff, "")
+        XCTAssertEqual(
+            AgrypnosCopy.watchCaption(engaged: false, leftover: false, floor: 15, lidClosed: false),
+            ""
+        )
     }
 
     func testWatchCaptionUsesLidOpenArmedAndLidClosedHolding() {
@@ -96,7 +98,7 @@ final class AgrypnosCopyTests: XCTestCase {
     }
 
     func testMenuTooltipWaitsForLidWhileArmedOpen() {
-        XCTAssertEqual(AgrypnosCopy.menuTooltipOff, "Agrypnos: watch is off.")
+        XCTAssertEqual(AgrypnosCopy.menuTooltipOff, "Agrypnos: Keep awake is off.")
         XCTAssertEqual(
             AgrypnosCopy.menuTooltip(engaged: true, leftover: false, onBattery: false, lidClosed: false),
             "Agrypnos: armed. Waiting for lid close — then brightness floor + keyboard backlight off."
@@ -119,27 +121,29 @@ final class AgrypnosCopyTests: XCTestCase {
         )
         XCTAssertEqual(
             AgrypnosCopy.menuTooltipLeftover,
-            "Agrypnos: adopted leftover SleepDisabled. Waiting for lid close — then brightness floor + keyboard backlight off."
+            "Agrypnos: took over a leftover wake hold. Waiting for lid close — then brightness floor + keyboard backlight off."
         )
         XCTAssertEqual(
             AgrypnosCopy.menuTooltip(engaged: true, leftover: true, onBattery: false, lidClosed: true),
-            "Agrypnos: adopted leftover SleepDisabled. Lid closed. Brightness floor + keyboard backlight off."
+            "Agrypnos: took over a leftover wake hold. Lid closed. Brightness floor + keyboard backlight off."
         )
     }
 
     func testDurationHintsArePlainAndFitTheDurationCard() {
+        let lid = "Turning Keep awake off with the lid confirmed closed sends the Mac to sleep. With the lid open or unconfirmed it turns Keep awake off and does not sleep the Mac."
+        func withLid(_ base: String) -> String { base + " " + lid }
         XCTAssertEqual(
             AgrypnosCopy.agentsHint,
-            "Watch turns off after local busy signals stay idle through the wait (battery / thermal still apply)."
+            "Keep awake turns off when the wait after agent signals stop ends (battery / thermal still apply)."
         )
         XCTAssertNotEqual(AgrypnosCopy.agentsHint, AgrypnosCopy.indefiniteHint)
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .untilAgentsSettle, engaged: true, remainingSeconds: nil),
-            AgrypnosCopy.agentsHint
+            withLid(AgrypnosCopy.agentsHint)
         )
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .untilAgentsSettle, engaged: true, remainingSeconds: nil, thermalAutoOff: false),
-            "Watch turns off after local busy signals stay idle through the wait (battery still applies)."
+            withLid("Keep awake turns off when the wait after agent signals stop ends (battery still applies).")
         )
         XCTAssertFalse(
             AgrypnosCopy.durationHint(option: .untilAgentsSettle, engaged: false, remainingSeconds: nil, thermalAutoOff: false)
@@ -148,15 +152,15 @@ final class AgrypnosCopyTests: XCTestCase {
         )
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .indefinite, engaged: false, remainingSeconds: nil),
-            "Stays on until you turn it off (battery / thermal still apply)."
+            withLid("Stays on until you turn it off (battery / thermal still apply).")
         )
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .indefinite, engaged: false, remainingSeconds: nil, thermalAutoOff: true),
-            AgrypnosCopy.indefiniteHint
+            withLid(AgrypnosCopy.indefiniteHint)
         )
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .indefinite, engaged: false, remainingSeconds: nil, thermalAutoOff: false),
-            AgrypnosCopy.indefiniteHint(thermalAutoOff: false)
+            withLid(AgrypnosCopy.indefiniteHint(thermalAutoOff: false))
         )
         XCTAssertEqual(
             AgrypnosCopy.indefiniteHint(thermalAutoOff: false),
@@ -168,16 +172,24 @@ final class AgrypnosCopyTests: XCTestCase {
         XCTAssertFalse(AgrypnosCopy.indefiniteHint.lowercased().contains("low power"))
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .oneHour, engaged: false, remainingSeconds: nil),
-            "Starts when Keep the watch is on.\nSleeps unless the lid is open."
+            withLid(AgrypnosCopy.timedHint)
         )
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .threeHours, engaged: false, remainingSeconds: nil),
-            "Starts when Keep the watch is on.\nSleeps unless the lid is open."
+            withLid(AgrypnosCopy.timedHint)
         )
         XCTAssertEqual(
             AgrypnosCopy.durationHint(option: .oneHour, engaged: true, remainingSeconds: 125),
             AgrypnosCopy.timedHint
         )
+        for text in [
+            AgrypnosCopy.durationHint(option: .indefinite, engaged: true, remainingSeconds: nil),
+            AgrypnosCopy.durationHint(option: .untilAgentsSettle, engaged: true, remainingSeconds: nil),
+            AgrypnosCopy.durationHint(option: .oneHour, engaged: false, remainingSeconds: nil),
+        ] {
+            XCTAssertTrue(text.contains(lid))
+            XCTAssertFalse(text.lowercased().contains("disarm always sleeps"))
+        }
         assertFitsDurationHint(AgrypnosCopy.agentsHint)
         assertFitsDurationHint(
             AgrypnosCopy.durationHint(option: .untilAgentsSettle, engaged: false, remainingSeconds: nil, thermalAutoOff: false)
@@ -185,13 +197,22 @@ final class AgrypnosCopyTests: XCTestCase {
         assertFitsDurationHint(AgrypnosCopy.timedHint)
         assertFitsDurationHint(AgrypnosCopy.indefiniteHint)
         assertFitsDurationHint(
+            AgrypnosCopy.durationHint(option: .indefinite, engaged: true, remainingSeconds: nil)
+        )
+        assertFitsDurationHint(
+            AgrypnosCopy.durationHint(option: .oneHour, engaged: false, remainingSeconds: nil)
+        )
+        assertFitsDurationHint(
             AgrypnosCopy.durationHint(option: .customMinutes(33), engaged: false, remainingSeconds: nil)
         )
     }
 
     func testThermalAutoOffCopyIsPlainAndOmitsCelsius() {
         XCTAssertEqual(AgrypnosCopy.thermalAutoOff, "Thermal auto-off")
-        XCTAssertEqual(AgrypnosCopy.thermalAutoOffHelp, "Thermal pressure turns the watch off.")
+        XCTAssertEqual(
+            AgrypnosCopy.thermalAutoOffHelp,
+            "High temperature turns Keep awake off and sends the Mac to sleep."
+        )
         let blob = allUserFacingCopy().joined(separator: "\n").lowercased()
         for banned in ["°c", "celsius", "safe temp", "health-gauge", "health gauge", "warranty"] {
             XCTAssertFalse(blob.contains(banned), "thermal fiction still in copy: \(banned)")
@@ -208,23 +229,23 @@ final class AgrypnosCopyTests: XCTestCase {
     }
 
     func testEndedNotificationsArePlainWatchTurnedOff() {
-        XCTAssertEqual(AgrypnosCopy.notification(for: .user), "Watch turned off.")
-        XCTAssertEqual(AgrypnosCopy.notification(for: .timerExpired), "Timer ended. Watch turned off.")
+        XCTAssertEqual(AgrypnosCopy.notification(for: .user), "Keep awake turned off.")
+        XCTAssertEqual(AgrypnosCopy.notification(for: .timerExpired), "Timer ended. Keep awake turned off.")
         XCTAssertEqual(
             AgrypnosCopy.notification(for: .batteryFloor),
-            "Battery floor reached. Watch turned off."
+            "Low battery. Keep awake turned off."
         )
         XCTAssertEqual(
             AgrypnosCopy.notification(for: .thermal),
-            "Thermal pressure. Watch turned off."
+            "Thermal pressure. Keep awake turned off."
         )
-        XCTAssertEqual(AgrypnosCopy.notification(for: .agentsSettled), "Agents idle. Watch turned off.")
-        XCTAssertEqual(AgrypnosCopy.notification(for: .lowPowerMode), "Low Power Mode. Watch turned off.")
+        XCTAssertEqual(AgrypnosCopy.notification(for: .agentsSettled), "The wait after agent signals stop ended. Keep awake turned off.")
+        XCTAssertEqual(AgrypnosCopy.notification(for: .lowPowerMode), "Low Power Mode. Keep awake turned off.")
         XCTAssertEqual(AgrypnosCopy.notification(for: .lowPowerMode), AgrypnosCopy.lpmEnded)
-        XCTAssertEqual(AgrypnosCopy.timerEnded, "Timer ended. Watch turned off.")
-        XCTAssertEqual(AgrypnosCopy.batteryEnded, "Battery floor reached. Watch turned off.")
-        XCTAssertEqual(AgrypnosCopy.thermalEnded, "Thermal pressure. Watch turned off.")
-        XCTAssertEqual(AgrypnosCopy.agentsEnded, "Agents idle. Watch turned off.")
+        XCTAssertEqual(AgrypnosCopy.timerEnded, "Timer ended. Keep awake turned off.")
+        XCTAssertEqual(AgrypnosCopy.batteryEnded, "Low battery. Keep awake turned off.")
+        XCTAssertEqual(AgrypnosCopy.thermalEnded, "Thermal pressure. Keep awake turned off.")
+        XCTAssertEqual(AgrypnosCopy.agentsEnded, "The wait after agent signals stop ended. Keep awake turned off.")
     }
 
     func testLowPowerModeEndedCopyOnlyMatchesWhenEvaluatorWouldDisengage() {
@@ -263,7 +284,7 @@ final class AgrypnosCopyTests: XCTestCase {
         ]
         for caption in engagedCaptions {
             XCTAssertFalse(
-                caption.contains("Watch turned off."),
+                caption.contains("Keep awake turned off."),
                 "engaged copy must not claim ended: \(caption)"
             )
             XCTAssertFalse(caption.lowercased().contains("stands down"))
@@ -276,23 +297,23 @@ final class AgrypnosCopyTests: XCTestCase {
         let notify = AgrypnosCopy.leftoverNotify
         XCTAssertEqual(
             open,
-            "Leftover SleepDisabled. Lid close — then brightness floor, keyboard backlight off. Auto-off at 15% battery."
+            "Leftover wake hold. Lid close — then brightness floor, keyboard backlight off. Auto-off at 15% battery."
         )
         XCTAssertEqual(
             closed,
-            "Leftover SleepDisabled. Lid closed. Brightness floor, keyboard backlight off. Auto-off at 15% battery."
+            "Leftover wake hold. Lid closed. Brightness floor, keyboard backlight off. Auto-off at 15% battery."
         )
         XCTAssertTrue(open.lowercased().contains("then"))
         XCTAssertFalse(closed.lowercased().contains("then"))
         XCTAssertTrue(closed.lowercased().contains("lid closed"))
         XCTAssertEqual(
             notify,
-            "SleepDisabled was already on. Agrypnos adopted it. Lid close still uses brightness floor + keyboard backlight off."
+            "The wake hold was already on from before. Agrypnos took it over as Keep awake. Lid close still uses brightness floor + keyboard backlight off."
         )
         XCTAssertTrue(open.lowercased().contains("leftover"))
-        XCTAssertTrue(open.lowercased().contains("sleepdisabled"))
+        XCTAssertTrue(open.lowercased().contains("wake hold"))
         XCTAssertTrue(notify.lowercased().contains("already on"))
-        XCTAssertTrue(notify.lowercased().contains("adopt"))
+        XCTAssertTrue(notify.lowercased().contains("took it over"))
         XCTAssertTrue(notify.lowercased().contains("brightness floor"))
         XCTAssertTrue(notify.lowercased().contains("keyboard"))
         XCTAssertFalse(open.lowercased().contains("watt"))
@@ -341,14 +362,15 @@ final class AgrypnosCopyTests: XCTestCase {
         XCTAssertFalse(AgrypnosCopy.lidOpenRamp.lowercased().contains("lid-open ramp"))
         XCTAssertFalse(AgrypnosCopy.settleGraceHelp.lowercased().contains("settle grace"))
         XCTAssertFalse(AgrypnosCopy.lidOpenRampHelp.lowercased().contains("lid-open ramp"))
-        XCTAssertTrue(AgrypnosCopy.settleGrace.lowercased().contains("idle"))
+        XCTAssertEqual(AgrypnosCopy.settleGrace, "Wait after agent signals stop")
         XCTAssertEqual(
             AgrypnosCopy.settleGraceHelp,
-            "How long to wait after local busy signals stop, before the idle-after-wait POST. Then Keep the watch turns off. Buffer so a quiet gap mid-run (no file write / low CPU) doesn’t look finished. Not still thinking — we only see local process and session activity."
+            "How long to wait after local busy signals stop before Keep awake turns off. A quiet gap mid-run, with no file writes or CPU use, can look finished, so this wait keeps it from ending early. Agrypnos sees only local process and session activity, not what an agent is doing."
         )
         XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("local busy signals"))
-        XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("keep the watch"))
-        XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("not still thinking"))
+        XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("keep awake"))
+        XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("not what an agent is doing"))
+        XCTAssertFalse(AgrypnosCopy.settleGraceHelp.lowercased().contains("idle-after-wait"))
         XCTAssertFalse(AgrypnosCopy.settleGraceHelp.lowercased().contains("agent finished"))
         XCTAssertTrue(AgrypnosCopy.lidOpenRamp.lowercased().contains("brightness"))
         XCTAssertTrue(AgrypnosCopy.lidOpenRampHelp.lowercased().contains("lid"))
@@ -383,133 +405,8 @@ final class AgrypnosCopyTests: XCTestCase {
     func testHotkeyHintDoesNotClaimActiveWhenRegistrationFailed() {
         let failed = AgrypnosCopy.hotkeyHint(.defaultToggle, registered: false)
         XCTAssertTrue(failed.contains("⌥⌘A"))
-        XCTAssertFalse(failed.lowercased().contains("toggles the watch"))
+        XCTAssertFalse(failed.lowercased().contains("toggles keep awake"))
         XCTAssertTrue(failed.lowercased().contains("not registered") || failed.lowercased().contains("isn’t registered"))
-    }
-
-    private func allUserFacingCopy() -> [String] {
-        [
-            AgrypnosCopy.appName,
-            AgrypnosCopy.keepWatch,
-            AgrypnosCopy.durationLabel,
-            AgrypnosCopy.minutesLabel,
-            AgrypnosCopy.minutesPlaceholder,
-            AgrypnosCopy.shortcutLabel,
-            AgrypnosCopy.hotkeyRecording,
-            AgrypnosCopy.hotkeyRecordingHint,
-            AgrypnosCopy.keyboardDark,
-            AgrypnosCopy.brightnessFloor,
-            AgrypnosCopy.brightnessFloorHelp,
-            AgrypnosCopy.settleGrace,
-            AgrypnosCopy.settleGraceHelp,
-            AgrypnosCopy.agentInclude,
-            AgrypnosCopy.agentIncludeHelp,
-            AgrypnosCopy.countTerminalSessions,
-            AgrypnosCopy.countTerminalSessionsHelp,
-            AgrypnosCopy.lidOpenRamp,
-            AgrypnosCopy.lidOpenRampHelp,
-            AgrypnosCopy.batteryFloor,
-            AgrypnosCopy.thermalAutoOff,
-            AgrypnosCopy.thermalAutoOffHelp,
-            AgrypnosCopy.launchAtLogin,
-            AgrypnosCopy.quit,
-            AgrypnosCopy.agentsHint,
-            AgrypnosCopy.timedHint,
-            AgrypnosCopy.indefiniteHint,
-            AgrypnosCopy.captionOff,
-            AgrypnosCopy.grantNeeded,
-            AgrypnosCopy.timerEnded,
-            AgrypnosCopy.batteryEnded,
-            AgrypnosCopy.thermalEnded,
-            AgrypnosCopy.agentsEnded,
-            AgrypnosCopy.lpmEnded,
-            AgrypnosCopy.leftoverNotify,
-            AgrypnosCopy.leftoverNotifySleepPanel,
-            AgrypnosCopy.leftoverNotify(for: .floor),
-            AgrypnosCopy.leftoverNotify(for: .displaySleep),
-            AgrypnosCopy.notifEnabled,
-            AgrypnosCopy.notifEnabledHelp,
-            AgrypnosCopy.notifDiscord,
-            AgrypnosCopy.notifDiscordHelp,
-            AgrypnosCopy.notifTelegram,
-            AgrypnosCopy.notifTelegramTokenShort,
-            AgrypnosCopy.notifTelegramChatShort,
-            AgrypnosCopy.notifTelegramToken,
-            AgrypnosCopy.notifTelegramChatId,
-            AgrypnosCopy.notifTelegramTokenPlaceholder,
-            AgrypnosCopy.notifTelegramChatPlaceholder,
-            AgrypnosCopy.notifTelegramInbound,
-            AgrypnosCopy.notifTelegramInboundHelp,
-            AgrypnosCopy.notifDiscordInbound,
-            AgrypnosCopy.notifDiscordInboundHelp,
-            AgrypnosCopy.notifDiscordInboundTokenShort,
-            AgrypnosCopy.notifDiscordInboundChannelShort,
-            AgrypnosCopy.notifDiscordInboundTokenPlaceholder,
-            AgrypnosCopy.notifDiscordInboundChannelPlaceholder,
-            AgrypnosCopy.notifDiscordInboundTokenInvalid,
-            AgrypnosCopy.notifDiscordInboundChannelInvalid,
-            AgrypnosCopy.notifSetup,
-            BotGuide.allText,
-            AgrypnosCopy.notifClear,
-            AgrypnosCopy.notifSaveFailed,
-            AgrypnosCopy.notifDiscordPostFailed,
-            AgrypnosCopy.notifTelegramPostFailed,
-            AgrypnosCopy.notifTelegramChatInvalid,
-            AgrypnosCopy.notifTelegramTokenInvalid,
-            AgrypnosCopy.notifIdleBody,
-            AgrypnosCopy.statusItemArmed,
-            AgrypnosCopy.statusItemAgents,
-            AgrypnosCopy.statusItemTitle(.off),
-            AgrypnosCopy.statusItemTitle(.armed),
-            AgrypnosCopy.statusItemTitle(.agents),
-            AgrypnosCopy.menuTooltipOff,
-            AgrypnosCopy.menuTooltipOn,
-            AgrypnosCopy.menuTooltipArmed,
-            AgrypnosCopy.menuTooltipLidClosed,
-            AgrypnosCopy.menuTooltipLeftover,
-            AgrypnosCopy.menuTooltipLeftoverLidClosed,
-            AgrypnosCopy.menuTooltipOnSleepPanel,
-            AgrypnosCopy.menuTooltipArmedSleepPanel,
-            AgrypnosCopy.menuTooltipLidClosedSleepPanel,
-            AgrypnosCopy.menuTooltipLeftoverSleepPanel,
-            AgrypnosCopy.menuTooltipLeftoverLidClosedSleepPanel,
-            AgrypnosCopy.captionPrepared(floor: 15),
-            AgrypnosCopy.captionPrepared(floor: 100),
-            AgrypnosCopy.captionPrepared(floor: 15, panelPowerMode: .displaySleep),
-            AgrypnosCopy.captionLidClosed(floor: 15),
-            AgrypnosCopy.captionLidClosed(floor: 100),
-            AgrypnosCopy.captionLidClosed(floor: 15, panelPowerMode: .displaySleep),
-            AgrypnosCopy.leftoverCaption(floor: 15, lidClosed: false),
-            AgrypnosCopy.leftoverCaption(floor: 100, lidClosed: false),
-            AgrypnosCopy.leftoverCaption(floor: 15, lidClosed: true),
-            AgrypnosCopy.leftoverCaption(floor: 100, lidClosed: true),
-            AgrypnosCopy.leftoverCaption(floor: 15, lidClosed: false, panelPowerMode: .displaySleep),
-            AgrypnosCopy.leftoverCaption(floor: 15, lidClosed: true, panelPowerMode: .displaySleep),
-            AgrypnosCopy.hotkeyHint(.defaultToggle, registered: true),
-            AgrypnosCopy.hotkeyHint(.defaultToggle, registered: false),
-            AgrypnosCopy.hotkeyHint(HotkeyChord(keyCode: 0, option: false, command: false), registered: false),
-            AgrypnosCopy.durationHint(option: .untilAgentsSettle, engaged: false, remainingSeconds: nil),
-            AgrypnosCopy.durationHint(option: .untilAgentsSettle, engaged: false, remainingSeconds: nil, thermalAutoOff: false),
-            AgrypnosCopy.durationHint(option: .indefinite, engaged: false, remainingSeconds: nil),
-            AgrypnosCopy.durationHint(option: .indefinite, engaged: false, remainingSeconds: nil, thermalAutoOff: false),
-            AgrypnosCopy.durationHint(option: .oneHour, engaged: false, remainingSeconds: nil),
-            AgrypnosCopy.durationHint(option: .threeHours, engaged: false, remainingSeconds: nil),
-            AgrypnosCopy.durationHint(option: .customMinutes(33), engaged: false, remainingSeconds: nil),
-            AgrypnosCopy.durationHint(option: .customMinutes(33), engaged: true, remainingSeconds: 125),
-            AgrypnosCopy.notification(for: .user),
-            AgrypnosCopy.notification(for: .timerExpired),
-            AgrypnosCopy.notification(for: .batteryFloor),
-            AgrypnosCopy.notification(for: .thermal),
-            AgrypnosCopy.notification(for: .agentsSettled),
-            AgrypnosCopy.notification(for: .lowPowerMode),
-            AgrypnosCopy.lastWatchEndNone,
-            AgrypnosCopy.lastWatchEndCaption(when: "23:04", reason: .user),
-            AgrypnosCopy.lastWatchEndCaption(when: "23:04", reason: .timerExpired),
-            AgrypnosCopy.lastWatchEndCaption(when: "23:04", reason: .batteryFloor),
-            AgrypnosCopy.lastWatchEndCaption(when: "23:04", reason: .thermal),
-            AgrypnosCopy.lastWatchEndCaption(when: "23:04", reason: .agentsSettled),
-            AgrypnosCopy.lastWatchEndCaption(when: "23:04", reason: .lowPowerMode),
-        ]
     }
 
     private func assertFitsCaption(_ text: String, file: StaticString = #filePath, line: UInt = #line) {
@@ -566,19 +463,5 @@ final class AgrypnosCopyTests: XCTestCase {
             file: file,
             line: line
         )
-    }
-
-    private func assertNoDisplaySleepFiction(_ blob: String, file: StaticString = #filePath, line: UInt = #line) {
-        let lower = blob.lowercased()
-        XCTAssertFalse(lower.contains("not dim"), file: file, line: line)
-        XCTAssertFalse(lower.contains("not just dim"), file: file, line: line)
-        XCTAssertFalse(lower.contains("sleeps for real"), file: file, line: line)
-        XCTAssertFalse(lower.contains("displaysleepnow"), file: file, line: line)
-        XCTAssertFalse(lower.contains("force display"), file: file, line: line)
-        XCTAssertFalse(lower.contains("built-in display asleep"), file: file, line: line)
-        XCTAssertFalse(lower.contains("asleep, not dim"), file: file, line: line)
-        XCTAssertFalse(lower.contains("display asleep"), file: file, line: line)
-        XCTAssertFalse(lower.contains("watt"), file: file, line: line)
-        XCTAssertFalse(lower.contains("1.76"), file: file, line: line)
     }
 }

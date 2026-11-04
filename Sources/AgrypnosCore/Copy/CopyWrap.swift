@@ -1,27 +1,27 @@
 public enum PopoverCopyLayout: Sendable {
     /// Inner label width in the popover (~272pt at 12pt). Conservative glyph budget.
     public static let innerColumns = 36
-    public static let durationHintMaxLines = 3
+    public static let durationHintMaxLines = 8
     /// Leftover + “battery” wraps to 4 lines at the conservative column budget.
     public static let captionMaxLines = 4
     public static let helpMaxLines = 2
     /// `AgrypnosCopy.settleGraceHelp` wraps to 8 lines at `innerColumns`. Power/Watch help stays at 2.
     public static let settleHelpMaxLines = 8
-    /// I3 terminal-busy help. Four lines at `innerColumns`.
-    public static let countTerminalSessionsHelpMaxLines = 4
+    /// I3 terminal-busy help. Seven lines at `innerColumns`.
+    public static let countTerminalSessionsHelpMaxLines = 7
     public static let hotkeyHintMaxLines = 2
     public static let lastWatchEndMaxLines = 3
     public static var lastWatchEndHeightPoints: Int { lastWatchEndMaxLines * lineHeightPoints }
     public static let lineHeightPoints = 16
-    public static let durationHintHeightPoints = 48
+    public static let durationHintHeightPoints = 128
     public static let captionHeightPoints = captionMaxLines * lineHeightPoints
     public static let helpHeightPoints = helpMaxLines * lineHeightPoints
     public static let settleHelpHeightPoints = settleHelpMaxLines * lineHeightPoints
     public static let countTerminalSessionsHelpHeightPoints =
         countTerminalSessionsHelpMaxLines * lineHeightPoints
-    /// Notif help wraps at `innerColumns`. Enable 5, Telegram 5, inbound 3, Discord inbound 4, Discord 7.
-    public static let notifEnableHelpMaxLines = 5
-    public static let notifTelegramHelpMaxLines = 5
+    /// Notif help wraps at `innerColumns`. Enable 6, Telegram 4, inbound 3, Discord inbound 4, Discord 7.
+    public static let notifEnableHelpMaxLines = 6
+    public static let notifTelegramHelpMaxLines = 4
     public static let notifTelegramInboundHelpMaxLines = 3
     public static let notifDiscordInboundHelpMaxLines = 4
     public static let notifDiscordHelpMaxLines = 7
@@ -31,8 +31,8 @@ public enum PopoverCopyLayout: Sendable {
     public static let notifDiscordInboundHelpHeightPoints = notifDiscordInboundHelpMaxLines * lineHeightPoints
     public static let notifDiscordHelpHeightPoints = notifDiscordHelpMaxLines * lineHeightPoints
     public static let hotkeyHintHeightPoints = hotkeyHintMaxLines * lineHeightPoints
-    /// Dim panel caption. Sleep panel help is taller; layout adds it only for B.
-    public static let panelPowerCaptionMaxLines = 3
+    /// Dim and sleep captions share this slot. Sleep panel is the taller one.
+    public static let panelPowerCaptionMaxLines = 4
     public static let panelPowerHelpMaxLines = 5
     public static var panelPowerCaptionHeightPoints: Int { panelPowerCaptionMaxLines * lineHeightPoints }
     public static var panelPowerHelpHeightPoints: Int { panelPowerHelpMaxLines * lineHeightPoints }
@@ -41,8 +41,8 @@ public enum PopoverCopyLayout: Sendable {
     /// Right-aligned on the How long row, extending left into the gap past the 56pt field.
     public static let minutesLabelWidthPoints = 80
     public static let percentValueWidthPoints = 54
-    /// "Chat id" at 13pt — token/chat labels beside the Notif secret fields.
-    public static let secretFieldLabelWidthPoints = 80
+    /// "Telegram user id" at 13pt — token/chat/user labels beside the Notif secret fields.
+    public static let secretFieldLabelWidthPoints = 152
     /// "1m 30s" at 13pt — wider than a percent so the idle-wait value does not clip.
     public static let timeValueWidthPoints = 72
 }

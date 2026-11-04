@@ -30,7 +30,7 @@ final class BotGuideCopyTests: XCTestCase {
 
     func testTelegramWalksBotFatherTokenChatIdAndInbound() {
         let text = BotGuide.text(for: .telegram)
-        for needle in ["BotFather", "/newbot", "Token", "getUpdates", "\"chat\":{\"id\":", "Chat id", "Empty result", "Telegram card", "Watch-end POST"] {
+        for needle in ["BotFather", "/newbot", "Token", "getUpdates", "\"chat\":{\"id\":", "Chat id", "Empty result", "Telegram inbound", "Telegram user id", "\"from\":{\"id\":", "Watch-end POST"] {
             XCTAssertTrue(text.contains(needle), "Telegram guide misses \(needle)")
         }
         let links = BotGuide.sections(for: .telegram).flatMap(\.steps).compactMap(\.link)
@@ -54,14 +54,13 @@ final class BotGuideCopyTests: XCTestCase {
         XCTAssertTrue(text.contains("Watch-end POST"))
         XCTAssertTrue(text.contains("asks the Mac to sleep"))
         XCTAssertTrue(
-            text.contains("Switch on Watch-end POST. Agrypnos messages this channel when the timer ends, when Agents stay idle through the wait, or when it asks the Mac to sleep.")
+            text.contains("Switch on Watch-end POST. Agrypnos messages this channel when the timer ends, when the wait after agent signals stop ends, or when it asks the Mac to sleep.")
         )
         XCTAssertTrue(text.contains("Paste it into Notif → Discord → Token."))
         let lower = text.lowercased()
-        XCTAssertTrue(lower.contains("old webhook url is unused"))
+        XCTAssertFalse(lower.contains("webhook"))
         XCTAssertTrue(lower.contains("bot token") && lower.contains("channel id"))
-        XCTAssertFalse(lower.contains("never paste it into the webhook field"))
-        for needle in ["Developer Portal", "New Application", "Reset Token", "applications.commands", "Send Messages", "Developer Mode", "Copy Channel ID", "Discord inbound"] {
+        for needle in ["Developer Portal", "New Application", "Reset Token", "applications.commands", "Send Messages", "Developer Mode", "Copy Channel ID", "Copy User ID", "Discord user id", "Discord inbound"] {
             XCTAssertTrue(text.contains(needle), "Discord guide misses \(needle)")
         }
         XCTAssertTrue(text.contains("`bot`") || text.contains("bot and applications.commands"))
@@ -79,16 +78,16 @@ final class BotGuideCopyTests: XCTestCase {
                 XCTAssertTrue(text.contains(command), "\(tab) guide misses \(command)")
             }
             XCTAssertTrue(lower.contains("with the lid open it does not sleep the mac"))
-            XCTAssertTrue(lower.contains("with the lid confirmed closed it turns keep the watch off and sends the mac to sleep"))
+            XCTAssertTrue(lower.contains("with the lid confirmed closed it turns keep awake off and sends the mac to sleep"))
             XCTAssertTrue(lower.contains("likely asleep"))
             XCTAssertTrue(text.contains("Missed while asleep."))
             XCTAssertTrue(lower.contains("not run later"))
             XCTAssertTrue(lower.contains("live battery when known"))
             XCTAssertTrue(text.contains(
-                "Keep the watch, How long, lid, Agents facts when relevant, last watch end, and safety prefs"
+                "Keep awake, How long, lid, Agents facts when relevant, the last time Keep awake turned off, and safety prefs"
             ))
             XCTAssertTrue(lower.contains("clear secrets"))
-            XCTAssertTrue(lower.contains("idle through the wait"))
+            XCTAssertTrue(lower.contains("wait after agent signals stop"))
         }
         XCTAssertTrue(BotGuide.text(for: .telegram).contains("isn’t polling"))
         let discord = BotGuide.text(for: .discord).lowercased()
@@ -128,7 +127,9 @@ final class BotGuideCopyTests: XCTestCase {
             XCTAssertFalse(lower.contains("mac-proven"), "\(tab) must not claim Mac-proven")
             XCTAssertFalse(lower.contains("mac proven"), "\(tab) must not claim Mac proven")
         }
-        XCTAssertTrue(BotGuide.text(for: .claudeCode).contains("not Mac-proven yet"))
+        for tab in BotGuideTab.allCases {
+            XCTAssertFalse(BotGuide.text(for: tab).lowercased().contains("mac-proven"), "\(tab) must not carry proof status")
+        }
     }
 
     func testEveryStepIsFilledAndImagesAndLinksAreWellFormed() {
@@ -182,6 +183,58 @@ final class BotGuideCopyTests: XCTestCase {
         XCTAssertFalse(text.contains("Notif does not have those cards."))
         XCTAssertFalse(text.contains("Codex question forwarding is not there."))
         XCTAssertFalse(text.contains("Notif → Forward agent questions"))
+    }
+
+    func testQuestionStepsLiveOnQuestionSetupNotBotSetup() {
+        for tab in [BotGuideTab.telegram, .discord] {
+            let text = BotGuide.text(for: tab)
+            XCTAssertFalse(text.contains("Question notifications"), "\(tab) still has question setup")
+            XCTAssertFalse(text.contains("Enable OpenCode forwarding"))
+            XCTAssertFalse(text.contains("Enable Claude Code forwarding"))
+            XCTAssertFalse(text.contains("Enable Codex alerts"))
+            XCTAssertFalse(text.contains("Cursor cannot forward"))
+        }
+
+        let openCode = BotGuide.text(for: .openCode)
+        XCTAssertTrue(openCode.contains("Use the bot you already saved"))
+        XCTAssertTrue(openCode.contains("Telegram user id") && openCode.contains("Discord user id"))
+        XCTAssertTrue(openCode.contains("Enable OpenCode forwarding"))
+        XCTAssertTrue(openCode.contains("Restart OpenCode once"))
+        XCTAssertTrue(openCode.contains("Free text and approvals stay on the Mac"))
+        XCTAssertTrue(openCode.contains("Send answers"))
+        XCTAssertTrue(openCode.contains("Remove OpenCode integration"))
+        XCTAssertTrue(openCode.contains("10 minutes"))
+        XCTAssertTrue(BotGuide.sections(for: .openCode).flatMap(\.steps).compactMap(\.link).contains(
+            BotGuideLink(title: "OpenCode plugins", url: "https://opencode.ai/docs/plugins/")
+        ))
+        XCTAssertFalse(openCode.contains("Enable Claude Code forwarding"))
+        XCTAssertFalse(openCode.contains("Enable Codex alerts"))
+        XCTAssertFalse(openCode.contains("cards above"))
+
+        let claude = BotGuide.text(for: .claudeCode)
+        XCTAssertTrue(claude.contains("Use the bot you already saved"))
+        XCTAssertTrue(claude.contains("Enable Claude Code forwarding"))
+        XCTAssertTrue(claude.contains("Send answers"))
+        XCTAssertTrue(claude.contains("10 minutes"))
+        XCTAssertFalse(claude.contains("Enable OpenCode forwarding"))
+        XCTAssertFalse(claude.contains("cards above"))
+
+        let codex = BotGuide.text(for: .codex)
+        XCTAssertTrue(codex.contains("Use the bot you already saved"))
+        XCTAssertTrue(codex.contains("don’t need inbound, a user id, or Watch-end POST"))
+        XCTAssertFalse(codex.contains("user id and"))
+        XCTAssertTrue(codex.contains("Enable Codex alerts"))
+        XCTAssertTrue(codex.contains("does not answer"))
+        XCTAssertTrue(codex.contains("no codex hooks shell command"))
+        XCTAssertTrue(codex.contains("ChatGPT app has no documented trust screen"))
+        XCTAssertFalse(codex.contains("Send answers"))
+        XCTAssertFalse(codex.contains("cards above"))
+
+        let cursor = BotGuide.text(for: .cursor)
+        XCTAssertTrue(cursor.contains("Cursor cannot forward a question"))
+        XCTAssertTrue(cursor.contains("There is no setup."))
+        XCTAssertFalse(cursor.contains("Enable OpenCode forwarding"))
+        XCTAssertFalse(cursor.contains("Send answers"))
     }
 
     func testToolTabsAreInstructionsOnly() {

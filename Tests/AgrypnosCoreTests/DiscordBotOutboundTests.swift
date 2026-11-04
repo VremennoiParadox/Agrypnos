@@ -5,7 +5,7 @@ final class DiscordBotOutboundTests: XCTestCase {
     func testTimerAndIdleKeepTheirSentence() {
         XCTAssertEqual(
             DiscordBotOutbound.body(reason: .timerExpired, willSleep: false),
-            "Agrypnos: your watch timer ended."
+            "Agrypnos: your Keep awake timer ended."
         )
         XCTAssertEqual(
             DiscordBotOutbound.body(reason: .agentsSettled, willSleep: false),
@@ -16,7 +16,7 @@ final class DiscordBotOutboundTests: XCTestCase {
     func testSleepAppendsOneClauseToTheWatchEndSentence() {
         XCTAssertEqual(
             DiscordBotOutbound.body(reason: .timerExpired, willSleep: true),
-            "Agrypnos: your watch timer ended. Asking the Mac to sleep."
+            "Agrypnos: your Keep awake timer ended. Asking the Mac to sleep."
         )
         XCTAssertEqual(
             DiscordBotOutbound.body(reason: .agentsSettled, willSleep: true),
@@ -27,7 +27,7 @@ final class DiscordBotOutboundTests: XCTestCase {
     func testSleepOnlyReasonsMessageOnlyWhenTheMacWillSleep() {
         XCTAssertEqual(
             DiscordBotOutbound.body(reason: .user, willSleep: true),
-            "Agrypnos: Keep the watch is off. Asking the Mac to sleep."
+            "Agrypnos: Keep awake is off. Asking the Mac to sleep."
         )
         XCTAssertEqual(
             DiscordBotOutbound.body(reason: .batteryFloor, willSleep: true),
@@ -35,11 +35,11 @@ final class DiscordBotOutboundTests: XCTestCase {
         )
         XCTAssertEqual(
             DiscordBotOutbound.body(reason: .thermal, willSleep: true),
-            "Agrypnos: thermal pressure turned the watch off. Asking the Mac to sleep."
+            "Agrypnos: thermal pressure turned Keep awake off. Asking the Mac to sleep."
         )
         XCTAssertEqual(
             DiscordBotOutbound.body(reason: .lowPowerMode, willSleep: true),
-            "Agrypnos: Low Power Mode turned the watch off. Asking the Mac to sleep."
+            "Agrypnos: Low Power Mode turned Keep awake off. Asking the Mac to sleep."
         )
         XCTAssertEqual(
             DiscordBotOutbound.body(reason: nil, willSleep: true),

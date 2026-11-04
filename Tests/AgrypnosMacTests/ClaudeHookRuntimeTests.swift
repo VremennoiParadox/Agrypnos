@@ -129,7 +129,7 @@ final class ClaudeHookRuntimeTests: XCTestCase {
             runCommand: { _, _ in XCTFail("must not run power command"); return (0, "", "") },
             notify: { _ in },
             readNotifSecrets: {
-                NotifSecrets(telegramBotToken: "fixture", telegramChatId: "9")
+                NotifSecrets(telegramBotToken: "fixture", telegramChatId: "9", telegramQuestionUserId: "42")
             })
         runtime.claudeSettingsURLOverride = settings
         let sockDir = URL(fileURLWithPath: "/private/tmp/ag-claude-hook-" + UUID().uuidString, isDirectory: true)

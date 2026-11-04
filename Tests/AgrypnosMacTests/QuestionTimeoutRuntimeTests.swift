@@ -18,13 +18,14 @@ final class QuestionTimeoutRuntimeTests: XCTestCase {
         XCTAssertFalse(fixture.runtime.engine.engaged)
         XCTAssertFalse(fixture.kernelHeld)
         XCTAssertEqual(fixture.runtime.engine.preferences.lastWatchEnd?.reason, .questionUnanswered)
+        XCTAssertEqual(fixture.runtime.engine.preferences.duration, .untilAgentsSettle)
         XCTAssertEqual(fixture.sleepRequests, 0)
         await fixture.waitForQuestionNotice()
-        XCTAssertTrue(fixture.questionNotices.first?.contains("watch turned off because an agent question went unanswered for 10 minutes") == true)
+        XCTAssertTrue(fixture.questionNotices.contains { $0.contains("Keep awake turned off") })
+        XCTAssertFalse(fixture.messages.contains { $0.contains("wait after agent signals stop") })
         fixture.completeQuestionNotice()
         await fixture.waitForCompletion()
         XCTAssertEqual(fixture.sleepRequests, 1)
-        XCTAssertFalse(fixture.messages.contains { $0.contains("local busy signals went idle") })
     }
 
     func testFailedKernelReleaseRollsBackAndDoesNotSendSuccessCopy() async {
@@ -41,8 +42,11 @@ final class QuestionTimeoutRuntimeTests: XCTestCase {
         XCTAssertNil(fixture.runtime.engine.preferences.lastWatchEnd)
         XCTAssertEqual(fixture.sleepRequests, 0)
         await fixture.waitForQuestionNotice()
-        XCTAssertTrue(fixture.questionNotices.first?.contains("couldn't turn the watch off") == true)
+        XCTAssertTrue(fixture.questionNotices.contains { $0.contains("couldn't turn Keep awake off") })
+        XCTAssertFalse(fixture.questionNotices.contains { $0.contains("Keep awake turned off") })
         fixture.completeQuestionNotice()
+        XCTAssertTrue(fixture.runtime.engine.engaged)
+        XCTAssertEqual(fixture.sleepRequests, 0)
     }
 
     func testBusyAndUnknownTimeoutPreserveWatch() async {
@@ -60,7 +64,7 @@ final class QuestionTimeoutRuntimeTests: XCTestCase {
             XCTAssertTrue(fixture.kernelHeld)
             XCTAssertEqual(fixture.sleepRequests, 0)
             await fixture.waitForQuestionNotice()
-            XCTAssertTrue(fixture.questionNotices.first?.contains("watch remains on") == true)
+            XCTAssertTrue(fixture.questionNotices.first?.contains("Keep awake stays on") == true)
             fixture.completeQuestionNotice()
         }
     }
@@ -74,12 +78,14 @@ final class QuestionTimeoutRuntimeTests: XCTestCase {
             fixture.runtime.questionRelayDidChange(.expired(key))
             fixture.runtime.finishPollTick(now: Date(timeIntervalSince1970: 600), safety: safe,
                 agents: AgentSnapshot(reports: []), kernel: true, observeAgents: true)
+            XCTAssertFalse(fixture.runtime.engine.engaged)
             await fixture.waitForQuestionNotice()
             if rearm { _ = fixture.runtime.setEngaged(true) }
             else { fixture.lidClosed = false }
             fixture.completeQuestionNotice()
             await fixture.waitForCompletion()
             XCTAssertEqual(fixture.sleepRequests, 0)
+            XCTAssertEqual(fixture.runtime.engine.engaged, rearm)
         }
     }
 
@@ -91,12 +97,14 @@ final class QuestionTimeoutRuntimeTests: XCTestCase {
         fixture.runtime.questionRelayDidChange(.expired(key))
         fixture.runtime.finishPollTick(now: Date(timeIntervalSince1970: 600), safety: safe,
             agents: AgentSnapshot(reports: []), kernel: true, observeAgents: true)
+        XCTAssertFalse(fixture.runtime.engine.engaged)
         await fixture.waitForQuestionNotice()
-        fixture.completeQuestionNotice()
-        try? await Task.sleep(nanoseconds: 50_000_000)
+        XCTAssertTrue(fixture.questionNotices.contains { $0.contains("Keep awake turned off") })
         fixture.lidClosed = false
+        fixture.completeQuestionNotice()
         await fixture.waitForCompletion()
         XCTAssertEqual(fixture.sleepRequests, 0)
+        XCTAssertFalse(fixture.runtime.engine.engaged)
     }
 
     func testWallClockJumpDoesNotExpireMonotonicQuestion() async {
@@ -112,9 +120,11 @@ final class QuestionTimeoutRuntimeTests: XCTestCase {
         fixture.runtime.finishPollTick(now: Date(timeIntervalSince1970: 1), safety: safe,
             agents: AgentSnapshot(reports: []), kernel: true, observeAgents: true)
         XCTAssertFalse(fixture.runtime.engine.engaged)
+        XCTAssertEqual(fixture.runtime.engine.preferences.lastWatchEnd?.reason, .questionUnanswered)
         await fixture.waitForQuestionNotice()
         fixture.completeQuestionNotice()
         await fixture.waitForCompletion()
+        XCTAssertEqual(fixture.sleepRequests, 1)
     }
 
     func testObservedWhileOffDoesNotProtectLaterArm() {
@@ -141,7 +151,7 @@ final class QuestionTimeoutRuntimeTests: XCTestCase {
             agents: AgentSnapshot(reports: []), kernel: true, observeAgents: false)
         await fixture.waitForCompletion()
         XCTAssertFalse(fixture.runtime.engine.engaged)
-        XCTAssertFalse(fixture.questionNotices.contains { $0.contains("watch remains on") })
+        XCTAssertFalse(fixture.questionNotices.contains { $0.contains("Keep awake stays on") })
     }
 
     func testDelayedNativeExpiryIsClearedBeforeTenMinuteWatchDecision() async {
@@ -151,7 +161,7 @@ final class QuestionTimeoutRuntimeTests: XCTestCase {
         var localReturns = 0
         runtime.questionRelay = QuestionRelayCoordinator(settings: {
             QuestionRelaySettings(enabled: true, includedKinds: [.cursor],
-                telegram: TelegramQuestionDestination(token: "fixture", chatID: "9"))
+                telegram: TelegramQuestionDestination(token: "fixture", chatID: "9", userID: "42"))
         }, transport: { _ in QuestionHTTPResponse(statusCode: nil, body: Data()) },
            uptime: { [unowned fixture] in fixture.questionUptime },
            onChange: { [weak runtime] event in runtime?.questionRelayDidChange(event) })
@@ -170,5 +180,25 @@ final class QuestionTimeoutRuntimeTests: XCTestCase {
         XCTAssertTrue(runtime.questionDeadlines.isEmpty)
         XCTAssertEqual(localReturns, 1)
         XCTAssertTrue(fixture.questionNotices.isEmpty)
+    }
+
+    func testOpenLidUnansweredNoticeDoesNotSleep() async {
+        let fixture = RuntimeFixture()
+        fixture.lidClosed = false
+        fixture.runtime.engine.preferences.duration = .untilAgentsSettle
+        _ = fixture.runtime.engine.userSetEngaged(true, now: Date(timeIntervalSince1970: 0), lidClosed: false)
+        fixture.runtime.questionRelayDidChange(.observed(key, 600))
+        fixture.questionUptime = 600
+        fixture.runtime.questionRelayDidChange(.expired(key))
+        fixture.runtime.finishPollTick(now: Date(timeIntervalSince1970: 600), safety: safe,
+            agents: AgentSnapshot(reports: []), kernel: true, observeAgents: true)
+        XCTAssertFalse(fixture.runtime.engine.engaged)
+        XCTAssertEqual(fixture.runtime.engine.preferences.duration, .untilAgentsSettle)
+        await fixture.waitForQuestionNotice()
+        XCTAssertTrue(fixture.questionNotices.contains { $0.contains("Keep awake turned off") })
+        XCTAssertFalse(fixture.questionNotices.contains { $0.contains("Asking the Mac to sleep") })
+        fixture.completeQuestionNotice()
+        await fixture.waitForCompletion()
+        XCTAssertEqual(fixture.sleepRequests, 0)
     }
 }

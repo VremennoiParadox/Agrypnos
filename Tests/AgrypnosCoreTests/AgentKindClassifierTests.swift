@@ -15,7 +15,7 @@ final class AgentKindClassifierTests: XCTestCase {
         XCTAssertEqual(AgentKindClassifier.classify(processName: "codex-exec"), .codex)
     }
 
-    func testClaudeCodeCLIClassifiesAndDesktopAppDoesNot() {
+    func testClaudeCodeCLIAndDesktopMainClassifyButHelpersDoNot() {
         XCTAssertEqual(AgentKindClassifier.classify(processName: "claude"), .claudeCode)
         XCTAssertEqual(AgentKindClassifier.classify(processName: "/opt/homebrew/bin/claude"), .claudeCode)
         XCTAssertEqual(
@@ -24,9 +24,37 @@ final class AgentKindClassifierTests: XCTestCase {
             ),
             .claudeCode
         )
-        XCTAssertNil(AgentKindClassifier.classify(processName: "/Applications/Claude.app/Contents/MacOS/Claude"))
+        // The desktop app hosts the Code tab, so its main process stands in for Claude Code.
+        XCTAssertEqual(
+            AgentKindClassifier.classify(processName: "/Applications/Claude.app/Contents/MacOS/Claude"),
+            .claudeCode
+        )
+        XCTAssertEqual(
+            AgentKindClassifier.classify(processName: "/Users/a/Apps/Claude.app/Contents/MacOS/Claude --flag"),
+            .claudeCode
+        )
         XCTAssertNil(AgentKindClassifier.classify(processName: "Claude Helper"))
         XCTAssertNil(AgentKindClassifier.classify(processName: "Claude Helper (Renderer)"))
+        XCTAssertNil(AgentKindClassifier.classify(
+            processName: "/Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude Helper --type=renderer"
+        ))
+        XCTAssertNil(AgentKindClassifier.classify(
+            processName: "/Applications/Claude.app/Contents/Frameworks/Electron Framework.framework/Helpers/chrome_crashpad_handler"
+        ))
+        XCTAssertNil(AgentKindClassifier.classify(processName: "/Applications/Claude.app/Contents/Frameworks/Squirrel.framework/Resources/ShipIt"))
+    }
+
+    func testClaudeDesktopCPUDoesNotCountTowardBusy() {
+        XCTAssertFalse(AgentKindClassifier.cpuCountsTowardBusy(processName: "/Applications/Claude.app/Contents/MacOS/Claude"))
+        XCTAssertTrue(AgentKindClassifier.cpuCountsTowardBusy(processName: "claude"))
+    }
+
+    /// The Code tab launches this binary for each session. It is the real agent process, so CPU counts.
+    func testClaudeCodeBinaryBundledWithTheDesktopAppIsTheCLI() {
+        let bundled = "/Users/a/Library/Application Support/Claude/claude-code/2.1.295/9d6405864fdc/claude.app/Contents/MacOS/claude"
+        XCTAssertEqual(AgentKindClassifier.classify(processName: bundled), .claudeCode)
+        XCTAssertEqual(AgentKindClassifier.classify(processName: bundled + " --output-format stream-json"), .claudeCode)
+        XCTAssertTrue(AgentKindClassifier.cpuCountsTowardBusy(processName: bundled))
     }
 
     func testCodexCLIAndNodeWrapper() {

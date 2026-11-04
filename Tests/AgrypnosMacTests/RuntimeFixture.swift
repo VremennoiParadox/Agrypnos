@@ -15,6 +15,7 @@ final class RuntimeFixture {
     var kernelUnknown = false
     var kernelWriteSucceeds = true
     var sleepRequests = 0
+    var sleepExit: Int32 = 0
     var panelSleepRequests = 0
     var messages: [String] = []
     var postContinuation: CheckedContinuation<Void, Never>?
@@ -36,7 +37,8 @@ final class RuntimeFixture {
             runCommand: { [unowned self] _, args in
                 if args == ["sleepnow"] { self.sleepRequests += 1 }
                 if args == ["displaysleepnow"] { self.panelSleepRequests += 1 }
-                return (0, "", "")
+                let exit: Int32 = args == ["sleepnow"] ? self.sleepExit : 0
+                return (exit, "", "")
             },
             postIdle: { [unowned self] _, reason, willSleep in
                 self.postReasons.append(reason)

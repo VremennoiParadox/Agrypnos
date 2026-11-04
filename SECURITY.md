@@ -15,99 +15,87 @@ Agrypnos asks for one privileged trick: lid-close keep-awake via `pmset disables
 - `visudo -c` on the snippet before install.
 - Reboot clears `SleepDisabled`. The app does not re-arm at login.
 - A crash or force quit clears it too. At launch the app starts a small `/bin/sh` helper that waits on a pipe from the app. When the app process ends for any reason, the pipe closes and the helper runs `sudo -n /usr/bin/pmset -a disablesleep 0` (the existing grant, nothing new), then exits.
-- Confirmed lid-closed inbound `/disarm` and popover/hotkey user-off (I2 — unlocked for Core, not Mac-proven) may call `pmset sleepnow`. Same user-level path as safety auto-off. Not a new sudoers grant. Lid-open or unconfirmed user-off/inbound disarm must not sleep the Mac. Timer expiry uses the same user-level `pmset sleepnow` path after verified kernel release, but sleeps unless the lid is known open; an unavailable lid reading requests sleep. This timer-only fallback does not apply to hygiene or manual/inbound off.
 
 Remove with `Scripts/ungrant.sh` or `sudo rm /etc/sudoers.d/agrypnos-disablesleep`.
 
+## Asking the Mac to sleep
+
+Agrypnos may run `pmset sleepnow` as you. It is not covered by the sudoers grant and needs no new one. It runs only after the wake hold is cleared, and only in these cases:
+
+- You turn Keep awake off (popover, hotkey, or `/disarm` from your bot) and the lid is **confirmed closed**. `/disarm` also sleeps the Mac when Keep awake was already off.
+- You quit Agrypnos with the lid confirmed closed.
+- Low battery, thermal pressure, Low Power Mode, an unanswered question, or the end of the wait after agent signals stop turns Keep awake off while the lid is confirmed closed.
+- A timer ends. The timer sleeps unless the lid is known to be open, so an unavailable lid reading still requests sleep.
+
+Lid open or unconfirmed: Agrypnos clears the hold and does not sleep the Mac. A single raw lid-sensor edge never counts as closed.
+
 ## What we read
 
-Agent heuristics look at process names and mtimes of known session paths under your home directory. Transcripts are plaintext; Agrypnos does not upload them and does not parse message bodies in V1 — only modification times.
+Agent heuristics look at process names and modification times of known session paths under your home directory. Transcripts are plaintext. Agrypnos does not upload them and does not read message bodies, only modification times.
 
-## Opt-in outbound (Notif)
+## Opt-in messages and commands (Notif)
 
-When Notif outbound (**Watch-end POST**) is enabled, Agrypnos may POST **once** to **your** Telegram bot when a timed watch expires, or after Agents mode has seen local busy this arm and then stayed quiet through the idle wait. Discord outbound is `POST /api/v10/channels/{channel-id}/messages` with **your** bot token, to the saved channel, when Watch-end POST is on. Discord messages on timer expiry, Agents idle-after-wait, and when this disengage will run `pmset sleepnow` (user-off, inbound `/disarm`, battery, thermal, Low Power Mode, already-off confirmed-closed disarm). One message. If timer or idle-after-wait is also sending the Mac to sleep, that same Discord sentence includes “Asking the Mac to sleep.” Lid open or unconfirmed: timer and idle-after-wait still message Discord, with no sleep sentence. User-off, battery, thermal, and Low Power Mode do not message Discord unless this disengage will `sleepnow`. Power B panel sleep does not message. Discord messages say Agrypnos is asking the Mac to sleep; they do not claim the Mac slept. Telegram does not POST for battery, thermal, LPM, or manual off. Timer messages report the expired watch timer; Agents messages report idle-after-wait. Default **off**. Empty fields skip that channel. Secrets (Telegram bot token, chat id, Discord bot token, Discord channel id) live in `~/Library/Application Support/Agrypnos/notif-secrets.json` (mode 0600), not Keychain and not plaintext prefs. Values saved in an older Keychain build are not imported; paste them again. This is not telemetry. Agrypnos does not run a shared bot. Discord outbound and Discord commands are not Mac-proven.
+Everything in this section is off by default and uses **your own** bot. Agrypnos does not run a shared bot, and none of this is telemetry.
 
-## Telegram inbound (your bot)
+Secrets live in `~/Library/Application Support/Agrypnos/notif-secrets.json` (mode `0600`). They are not in the Keychain and not in plaintext preferences. The file holds the Telegram bot token, chat id, and user id, and the Discord bot token, channel id, and user id. Values saved by an older Keychain build are not imported, so paste them again. **Clear secrets** deletes the file.
 
-When Telegram inbound is on, Agrypnos may poll `getUpdates`, register `/arm` `/disarm` `/status` `/help` with `setMyCommands`, and send command replies on **your** BotFather bot using the same token and chat id as outbound. Default **off**. Empty token or chat id: no inbound. Commands are accepted only from the saved chat id. Agrypnos does not reply while the Mac is asleep (no relay). On wake, queued commands are drained without applying (facts-only **missed while asleep**). Confirmed lid-closed `/disarm` may call `pmset sleepnow` (same user-level path as safety auto-off; not a new sudoers grant). Same lid gate as popover/hotkey user-off (I2 — unlocked for Core, not Mac-proven). Lid-open or unconfirmed `/disarm` must not sleep the Mac. If that id is a group, anyone who can message that group can send those commands. This is not telemetry. Agrypnos does not run a shared bot.
+### Watch-end messages
 
-## Discord inbound (your bot)
+With **Watch-end POST** on and the matching token and id saved, Agrypnos sends one message to the saved chat or channel when:
 
-When Discord inbound is on, Agrypnos may receive updates on **your** Discord bot on this Mac (Gateway or equivalent — Core picks the smallest reliable path) and send command replies using a **bot token** and **channel id** stored with the other Notif secrets. Default **off**, separate from outbound Notif and from Telegram inbound. Empty token or empty channel id: no inbound. Commands are accepted only from the saved channel. Do **not** set Discord’s Interactions Endpoint URL. Do **not** open a listen port. Same `/arm` `/disarm` `/status` `/help` WatchEngine path as Telegram (Discord-native slash may map to those commands). Agrypnos does not reply while the Mac is asleep (no relay). On wake, queued commands are drained without applying (facts-only **missed while asleep**) if anything was queued — do not scrape channel history on wake to invent missed commands. Confirmed lid-closed Discord `/disarm` may call `pmset sleepnow` (same user-level path as Telegram `/disarm` and as popover/hotkey user-off; not a new sudoers grant). Lid-open or unconfirmed `/disarm` must not sleep the Mac. If that channel is a server channel, anyone who can post there can send those commands. This is not telemetry. Agrypnos does not run a shared Discord bot. Gateway/UI landed on main; not Mac-proven until soft Mac optical.
+- a Keep awake timer ends;
+- in Agents mode, Agrypnos saw agents working since Keep awake turned on and the wait after agent signals stop ends;
+- (Discord only) this change will run `pmset sleepnow`: user-off, `/disarm`, battery, thermal, Low Power Mode, or an already-off `/disarm` with the lid confirmed closed.
 
-## Opt-in OpenCode question forwarding (test build)
+If the timer or the wait is also asking the Mac to sleep, that same message adds "Asking the Mac to sleep." With the lid open or unconfirmed, the timer and the wait still message and add no sleep sentence. Power B panel sleep sends nothing. Messages say Agrypnos is asking the Mac to sleep. They do not claim the Mac slept.
 
-Forward agent questions defaults off. OpenCode 1.18.32 remains enabled in
-this test build. Claude Code question forwarding is the hook path below.
-One-button setup requires OpenCode selected in Agents and
-an enabled, complete inbound bot destination with an explicit answering-user ID.
-It installs an owned global terminal plugin and registers it in `tui.json`,
-preserving other entries and leaving `tui.jsonc` untouched. Modified or foreign
-files and symlinks are refused. Disable leaves the plugin inactive; removal
-only deletes unchanged receipt-owned files and its registration.
+- **Telegram:** `sendMessage` on your bot, to the saved chat id.
+- **Discord:** `POST /api/v10/channels/{channel-id}/messages` with your bot token, to the saved channel. There is no incoming webhook.
 
-The plugin uses the public terminal SDK to observe native questions and submit
-complete answers to their original requests. IPC is a bounded authenticated
-Unix socket in a private 0700 directory, with a 0600 socket and a same-UID peer
-check. An independent random token and lifecycle generation live in
-`~/Library/Application Support/Agrypnos/opencode-bridge/bridge.json` (0600);
-no bot credentials go to OpenCode. Tokens are revoked on disable, clear-secrets,
-sleep, quit and source replacement. No local token protects against a compromised
-process running as the same user. No question polling heartbeat is added.
+Empty fields skip that bot.
 
-The explicit manual fallback connects to the saved HTTP `127.0.0.1` server
-and directory. It checks `/global/health`, reads `/global/event` and `/question`,
-and may submit a complete answer to the original `/question/:id/reply`.
-Redirects are rejected. The modes are exclusive. Neither mode scans ports,
-starts a replacement OpenCode server, or creates replacement conversations.
+### Telegram commands
 
-Structured question text/options go to the user's existing Telegram or
-Discord bot through its existing inbound connection. Callback checks include
-the saved answering-user ID, destination, message, live request handle and
-lifecycle generation. No extra
-bot consumer, listening port, shared bot or sudoers grant is added. A lost
-native reply is unconfirmed and is never retried blindly.
+With **Telegram inbound** on, Agrypnos polls `getUpdates` on your bot, registers `/arm`, `/disarm`, `/status`, and `/help` with `setMyCommands`, and replies on the same bot with the same token and chat id. Empty token or chat id: no inbound. Commands count only from the saved chat id. If that id is a group, anyone who can message the group can send commands.
 
-Answering IDs and the local-server connection/password are saved alongside
-bot credentials in `notif-secrets.json` (0600), not UserDefaults or Keychain.
-Question content stays in memory and on the opted-in messaging service; no
-local question history or content logs. Free text and approvals stay local.
-Clearing secrets deletes the saved file. Sleep, shutdown and setup changes
-invalidate old phone controls. Forwarding never arms the watch or overrides
-manual/safety off. The existing confirmed-lid sleep path may be used after
-an unanswered ten-minute watch end; a bot notification is best effort.
+### Discord commands
 
-## Opt-in Claude Code question forwarding (test build)
+With **Discord inbound** on, Agrypnos connects from your Mac to Discord's Gateway with your bot token, registers the same four application commands, and replies in the saved channel. Empty token or channel id: no inbound. Commands count only from the saved channel. If that is a server channel, anyone who can post there can send commands.
 
-Enable Claude Code forwarding merges a command hook into
-`~/.claude/settings.json`. It never replaces the file and never deletes
-other hook events. The command is this app with `--claude-question-hook`.
-The helper talks to the running menu-bar app on a Unix socket under
-`~/Library/Application Support/Agrypnos/claude-question-hook/` (directory
-0700, socket 0600, same-UID peer). It does not spawn a second Claude, open a
-listen port, or set a Discord Interactions Endpoint URL. If Agrypnos is not
-running, the helper returns empty JSON within two seconds and does not select
-an answer. No new sudoers grant.
+Agrypnos does not set Discord's Interactions Endpoint URL and does not open a listen port.
 
-## Opt-in Codex waiting alert (test build)
+### While the Mac sleeps
 
-Enable Codex alerts merges a command hook into `~/.codex/hooks.json`. It is a
-local command. It never replaces the file and never deletes other hook events
-(`UserPromptSubmit` and `Stop` stay). The command is this app with
-`--codex-alert-hook`. The helper talks to the running menu-bar app on a Unix
-socket under `~/Library/Application Support/Agrypnos/codex-alert-hook/`
-(directory 0700, socket 0600, same-UID peer). It prints nothing, exits 0, and
-does not answer the question. If Agrypnos is not running, the helper still
-exits 0 with empty stdout. It does not open a listen port or set a Discord
-Interactions Endpoint URL. Question text is not written to
-`notif-secrets.json`. Destinations are the saved Discord bot token + channel
-id and Telegram token + chat id. The idle-after-wait opt-in is not required. No new sudoers
-grant.
+Agrypnos does not reply and nothing relays commands while the Mac is asleep. On wake, commands that were queued are skipped without running, and the bot replies "Missed while asleep." Agrypnos does not read channel history on wake to look for missed commands.
+
+## Question forwarding (BETA)
+
+**Forward agent questions** is off by default. For OpenCode and Claude Code it needs one complete bot: token, chat or channel id, your user id, and that bot's inbound switch on. Only the saved user id can use **Send answers**. Codex alerts need only a token and a chat or channel id.
+
+Question text and options go to your Telegram or Discord bot over the connection you already set up. They stay in memory and on that messaging service. Agrypnos keeps no question history or content logs, and never writes question text to `notif-secrets.json`. Free text, permission prompts, and plan approvals stay on the Mac. Sleep, shutdown, setup changes, and **Clear secrets** invalidate old phone controls. A reply that was sent but not confirmed is never retried blindly.
+
+Forwarding never turns Keep awake on and never overrides turning it off yourself or a safety limit. If a forwarded question stays unanswered for ten minutes, Keep awake turns off once your selected agents look idle, and the usual lid rules decide whether the Mac sleeps. The bot note about that is best effort.
+
+None of the three setups adds a sudoers grant, a listen port, a shared bot, or a Discord Interactions Endpoint URL.
+
+### OpenCode
+
+One-button setup needs OpenCode selected in **Agents** and a complete bot as above. It installs an Agrypnos-owned global terminal plugin and registers it in `tui.json`. Other entries stay, and `tui.jsonc` is untouched. Setup refuses symlinks and files that are modified or not Agrypnos's. **Disable** leaves the plugin installed but inactive. **Remove integration** deletes only unchanged files Agrypnos installed, plus its registration.
+
+The plugin uses OpenCode's terminal plugin SDK to watch for native questions and to send complete answers back to the original request. It talks to Agrypnos over a Unix socket in a private `0700` directory. The socket is `0600` and Agrypnos checks that the peer runs as the same user. A random token and lifecycle generation live in `~/Library/Application Support/Agrypnos/opencode-bridge/bridge.json` (`0600`). No bot credentials go to OpenCode. Tokens are revoked on disable, **Clear secrets**, sleep, quit, and plugin replacement. A token cannot protect against a compromised process running as you.
+
+### Claude Code
+
+Enabling it merges a `PreToolUse` command hook for `AskUserQuestion` into `~/.claude/settings.json`. It never replaces the file or removes other hooks. The hook command is this app with `--claude-question-hook`. That helper talks to the running menu-bar app over a Unix socket under `~/Library/Application Support/Agrypnos/claude-question-hook/` (directory `0700`, socket `0600`, same-user peer). It does not start a second Claude. If Agrypnos isn't running, the helper returns empty JSON within two seconds and does not pick an answer.
+
+### Codex
+
+Enabling it merges a command hook into `~/.codex/hooks.json` for questions and approvals. It never replaces the file or removes other hooks (`UserPromptSubmit` and `Stop` stay). The hook command is this app with `--codex-alert-hook`. The helper talks to the running menu-bar app over a Unix socket under `~/Library/Application Support/Agrypnos/codex-alert-hook/` (directory `0700`, socket `0600`, same-user peer). It prints nothing and exits 0, and it does not answer the question. The bot message carries the question text unless Codex marks it secret. If Agrypnos isn't running, the helper still exits 0 with empty output. Watch-end POST and user ids aren't needed.
 
 ## What we will not do
 
 - Telemetry, analytics, or stealth network
 - Kernel extensions
 - Broad sudo
-- Storing your Mac login password (the optional OpenCode server password is separate)
+- Storing your Mac login password
 - A shared Agrypnos bot

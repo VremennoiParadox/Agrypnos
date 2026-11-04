@@ -98,13 +98,6 @@ extension PopoverController {
         swH: CGFloat
     ) {
         addPrefTitle(AgrypnosCopy.agentInclude, in: card, ci: ci, width: cw)
-        _ = PopoverForm.help(
-            AgrypnosCopy.agentIncludeHelp,
-            in: card,
-            y: CGFloat(PopoverStackLayout.prefHelpY),
-            x: ci,
-            width: cw
-        )
         includeSwitches = AgentKind.allCases.enumerated().map { index, kind in
             let toggle = PopoverForm.switchRow(
                 in: card,
@@ -245,7 +238,7 @@ extension PopoverController {
             height: CGFloat(PopoverCopyLayout.panelPowerHelpHeightPoints)
         )
         panelPowerHelp.preferredMaxLayoutWidth = cw
-        panelPowerHelp.isHidden = PanelPowerChrome.showsLidOpenRamp(.floor)
+        panelPowerHelp.isHidden = true
         card.addSubview(panelPowerHelp)
     }
 
@@ -297,7 +290,7 @@ extension PopoverController {
         card.addSubview(durationHint)
         countdownLabel = LabelFactory.make("", font: .monospacedDigitSystemFont(ofSize: 13, weight: .medium), color: .labelColor)
         countdownLabel.frame = NSRect(x: ci, y: 104, width: cw, height: 20)
-        countdownLabel.setAccessibilityLabel("Watch timer")
+        countdownLabel.setAccessibilityLabel("Keep awake timer")
         card.addSubview(countdownLabel)
     }
 
@@ -311,7 +304,7 @@ extension PopoverController {
             height: CGFloat(PopoverCopyLayout.lastWatchEndHeightPoints)
         )
         lastWatchEndLabel.preferredMaxLayoutWidth = cw
-        lastWatchEndLabel.setAccessibilityLabel("Last watch")
+        lastWatchEndLabel.setAccessibilityLabel("Keep awake ended")
         card.addSubview(lastWatchEndLabel)
     }
 

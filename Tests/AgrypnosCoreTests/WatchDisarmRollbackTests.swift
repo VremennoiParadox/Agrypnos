@@ -38,4 +38,29 @@ final class WatchDisarmRollbackTests: XCTestCase {
         XCTAssertFalse(rollback.contains(.applyBrightnessFloor))
         XCTAssertFalse(rollback.contains(.requestDisplaySleep))
     }
+
+    func testLeftoverRollbackKeepsNonUserForcedSessionSoLPMStillEndsWatch() {
+        var engine = WatchEngine(preferences: .default)
+        _ = engine.adoptLeftoverKernel(now: t0)
+        XCTAssertFalse(engine.userForcedThisSession)
+        XCTAssertTrue(engine.leftoverAdopted)
+        let lpm = SafetyInputs(
+            batteryPercent: 50,
+            onBatteryDischarging: true,
+            thermalSerious: false,
+            lowPowerMode: true
+        )
+        XCTAssertEqual(
+            engine.tick(now: t0.addingTimeInterval(1), safety: lpm, agents: AgentSnapshot(reports: [])),
+            [.disengage(.lowPowerMode)]
+        )
+        _ = engine.rollbackDisarmFailure(now: t0.addingTimeInterval(2), lidClosed: false)
+        XCTAssertTrue(engine.engaged)
+        XCTAssertFalse(engine.userForcedThisSession)
+        XCTAssertTrue(engine.leftoverAdopted)
+        XCTAssertEqual(
+            engine.tick(now: t0.addingTimeInterval(3), safety: lpm, agents: AgentSnapshot(reports: [])),
+            [.disengage(.lowPowerMode)]
+        )
+    }
 }

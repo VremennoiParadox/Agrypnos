@@ -8,7 +8,7 @@ import AgrypnosCore
 extension WatchRuntime {
     func telegramInboundIsPolling() -> Bool {
         guard engine.preferences.telegramInboundEnabled else { return false }
-        let secrets = NotifSecretsStore.load()
+        let secrets = readNotifSecrets()
         return TelegramInboundPolicy.shouldPoll(
             enabled: engine.preferences.telegramInboundEnabled,
             botToken: secrets.telegramBotToken,
@@ -17,7 +17,7 @@ extension WatchRuntime {
     }
 
     func beginTelegramInboundPollSession() {
-        store.saveTelegramInboundCursor(store.loadTelegramInboundCursor().startingSession())
+        store.saveTelegramInboundCursor(store.loadTelegramInboundCursor().startingLaunch())
     }
 
     func beginTelegramInboundWakeMissSession() {
@@ -25,6 +25,7 @@ extension WatchRuntime {
     }
 
     func noteMacWillSleep() {
+        inboundPoller.stopForSleep()
         WatchDiagnostics.event("lifecycle willSleep")
         invalidateAgentProbe()
         questionSourcesSuspended = true
@@ -40,6 +41,7 @@ extension WatchRuntime {
 
     func noteMacDidWake() {
         WatchDiagnostics.event("lifecycle didWake")
+        restoreHygieneAfterWake()
         invalidateAgentProbe()
         inboundPoller.restartForWakeMiss()
         discordGateway.restartForWakeMiss()
@@ -49,7 +51,7 @@ extension WatchRuntime {
     }
 
     func telegramInboundPollSnapshot() -> TelegramInboundPollSnapshot {
-        let secrets = NotifSecretsStore.load()
+        let secrets = readNotifSecrets()
         return TelegramInboundPollSnapshot(
             enabled: engine.preferences.telegramInboundEnabled,
             token: secrets.telegramBotToken,
@@ -59,7 +61,7 @@ extension WatchRuntime {
     }
 
     func registerTelegramBotCommands() {
-        let secrets = NotifSecretsStore.load()
+        let secrets = readNotifSecrets()
         guard telegramInboundIsPolling(), let token = secrets.telegramBotToken else { return }
         guard let request = NotifOutboundRequestFactory.telegramSetMyCommands(botToken: token) else { return }
         Task { await TelegramInboundHTTP.send(request) }
@@ -72,7 +74,7 @@ extension WatchRuntime {
         updates: [TelegramInboundUpdate]
     ) {
         guard inboundPoller.accepts(generation: generation) else { return }
-        let secrets = NotifSecretsStore.load()
+        let secrets = readNotifSecrets()
         guard TelegramInboundPolicy.sameBot(
             fetchedToken: fetchedToken,
             currentToken: secrets.telegramBotToken
@@ -80,11 +82,19 @@ extension WatchRuntime {
         let stored = store.loadTelegramInboundCursor()
         let drain = TelegramInboundDrain.effective(stored: stored, fetched: cursor)
         applyTelegramUpdates(updates, drain: drain)
-        store.saveTelegramInboundCursor(cursor.acknowledging(updates))
+        let basis = stored.wakeMiss
+            ? TelegramInboundCursor(offset: cursor.offset, seeded: false, wakeMiss: true)
+            : cursor
+        let acked = basis.acknowledging(updates)
+        if acked.wakeMiss, inboundPoller.takePostWakePromotion() {
+            store.saveTelegramInboundCursor(acked.promotedAfterWake())
+        } else {
+            store.saveTelegramInboundCursor(acked)
+        }
     }
 
     func applyTelegramUpdates(_ updates: [TelegramInboundUpdate], drain: TelegramInboundDrain) {
-        let secrets = NotifSecretsStore.load()
+        let secrets = readNotifSecrets()
         let enabled = engine.preferences.telegramInboundEnabled
         for update in updates {
             if update.isCallback {
@@ -150,17 +160,23 @@ extension WatchRuntime {
         if TelegramInboundIntent.arm.shouldSetEngaged(currentlyEngaged: engine.engaged) == true {
             setEngaged(true)
         }
-        let text = engine.engaged ? TelegramInboundCopy.armed : TelegramInboundCopy.armFailed
+        let text = engine.engaged
+            ? TelegramInboundCopy.armed(duration: engine.preferences.duration)
+            : TelegramInboundCopy.armFailed
         sendTelegramInboundReply(text, token: token, chatId: chatId)
     }
 
     func applyTelegramDisarm(token: String?, chatId: String?) {
+        let wasEngaged = engine.engaged
         guard let sleepResult = disarmWatch() else {
             sendTelegramInboundReply(TelegramInboundCopy.disarmFailed, token: token, chatId: chatId)
             return
         }
         sendTelegramInboundReply(
-            inboundDisarmReply(TelegramInboundCopy.disarmed, sleepResult: sleepResult),
+            inboundDisarmReply(
+                TelegramInboundCopy.disarmed(wasEngaged: wasEngaged, sleepRequested: disarmRequestedSleep(sleepResult)),
+                sleepResult: sleepResult
+            ),
             token: token,
             chatId: chatId
         )

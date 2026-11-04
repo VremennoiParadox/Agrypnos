@@ -344,10 +344,10 @@ final class PanelPowerChromeTests: XCTestCase {
         XCTAssertNil(PanelPowerChrome.mode(selectingSegment: 2))
         XCTAssertTrue(PanelPowerChrome.showsLidOpenRamp(.floor))
         XCTAssertFalse(PanelPowerChrome.showsLidOpenRamp(.displaySleep))
-        XCTAssertTrue(PanelPowerChrome.caption(.floor).lowercased().contains("brightness floor"))
+        XCTAssertTrue(PanelPowerChrome.caption(.floor).lowercased().contains("brightness"))
         XCTAssertFalse(PanelPowerChrome.caption(.floor).lowercased().contains("display asleep"))
-        XCTAssertTrue(PanelPowerChrome.caption(.displaySleep).lowercased().contains("panel sleeps"))
-        XCTAssertTrue(PanelPowerChrome.caption(.displaySleep).lowercased().contains("keep the watch"))
+        XCTAssertTrue(PanelPowerChrome.caption(.displaySleep).lowercased().contains("shuts off the screen"))
+        XCTAssertTrue(PanelPowerChrome.caption(.displaySleep).lowercased().contains("stays awake"))
         let banned = [
             "mac asleep",
             "agents stopped",
@@ -369,7 +369,7 @@ final class PanelPowerChromeTests: XCTestCase {
                 XCTAssertFalse(lower.contains(phrase), "\(phrase) in \(blob)")
             }
         }
-        XCTAssertTrue(PanelPowerChrome.help(.displaySleep).lowercased().contains("hidden"))
+        XCTAssertEqual(PanelPowerChrome.help(.displaySleep), PanelPowerChrome.caption(.displaySleep))
     }
 }
 

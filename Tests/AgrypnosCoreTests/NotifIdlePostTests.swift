@@ -461,20 +461,25 @@ final class NotifCopyTests: XCTestCase {
     func testIdleBodyAndHelpAreIdleAfterWaitNotJobFinished() {
         XCTAssertEqual(
             AgrypnosCopy.notifIdleBody,
-            "Agrypnos: local busy signals went idle after the wait."
+            "Agrypnos: the wait after agent signals stop ended."
         )
         XCTAssertFalse(
-            AgrypnosCopy.notifIdleBody.lowercased().contains("watch turned off"),
+            AgrypnosCopy.notifIdleBody.lowercased().contains("keep awake turned off"),
             "outbound body is idle-after-wait only"
         )
-        XCTAssertEqual(
-            AgrypnosCopy.notifEnabledHelp,
-            "Message your Discord bot and/or your Telegram bot when the timer ends, when Agents stay idle through the wait, or when Agrypnos asks the Mac to sleep. Off by default."
+        let help = AgrypnosCopy.notifEnabledHelp
+        XCTAssertTrue(help.contains("timer"))
+        XCTAssertTrue(help.contains("wait after agent signals stop"))
+        let telegram = help.split(separator: ".").first { $0.contains("Telegram") }.map(String.init) ?? help
+        XCTAssertFalse(
+            telegram.localizedCaseInsensitiveContains("asks the Mac to sleep"),
+            "Telegram is not messaged when Agrypnos asks the Mac to sleep"
         )
+        XCTAssertTrue(help.contains("asks the Mac to sleep"))
         XCTAssertFalse(AgrypnosCopy.notifDiscordHelp.lowercased().contains("webhook"))
         XCTAssertFalse(AgrypnosCopy.notifEnabledHelp.lowercased().contains("webhook"))
         XCTAssertTrue(AgrypnosCopy.notifTelegramHelp.lowercased().contains("your telegram bot"))
-        XCTAssertTrue(AgrypnosCopy.notifTelegramHelp.lowercased().contains("does not run a shared bot"))
+        XCTAssertFalse(AgrypnosCopy.notifTelegramHelp.lowercased().contains("does not run a shared bot"))
         let blob = [
             AgrypnosCopy.notifEnabled,
             AgrypnosCopy.notifEnabledHelp,
@@ -512,7 +517,7 @@ final class NotifCopyTests: XCTestCase {
         ] {
             XCTAssertFalse(blob.contains(banned), "banned phrase in Notif copy: \(banned)")
         }
-        XCTAssertTrue(blob.contains("idle after the wait") || blob.contains("idle through the wait"))
+        XCTAssertTrue(blob.contains("wait after agent signals stop"))
     }
 }
 

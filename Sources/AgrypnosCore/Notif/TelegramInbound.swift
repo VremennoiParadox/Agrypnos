@@ -153,17 +153,27 @@ public struct TelegramInboundCursor: Equatable, Sendable {
         TelegramInboundCursor(offset: offset, seeded: false, wakeMiss: false)
     }
 
+    /// Cold start. A stored wake-miss stays wake-miss. Any other cursor is leftover.
+    public func startingLaunch() -> TelegramInboundCursor {
+        wakeMiss ? startingWakeMiss() : startingSession()
+    }
+
     /// Sleep wake: drain queued commands without applying, then reply missed-while-asleep.
     public func startingWakeMiss() -> TelegramInboundCursor {
         TelegramInboundCursor(offset: offset, seeded: false, wakeMiss: true)
     }
 
     public func acknowledging(_ updates: [TelegramInboundUpdate]) -> TelegramInboundCursor {
-        TelegramInboundCursor(
-            offset: TelegramInboundOffset.next(current: offset, updates: updates),
-            seeded: true,
-            wakeMiss: false
-        )
+        let next = TelegramInboundOffset.next(current: offset, updates: updates)
+        if wakeMiss {
+            return TelegramInboundCursor(offset: next, seeded: false, wakeMiss: true)
+        }
+        return TelegramInboundCursor(offset: next, seeded: true, wakeMiss: false)
+    }
+
+    /// After the wake-miss drain has been acked, the next poll is live.
+    public func promotedAfterWake() -> TelegramInboundCursor {
+        TelegramInboundCursor(offset: offset, seeded: true, wakeMiss: false)
     }
 }
 
@@ -174,21 +184,34 @@ public enum TelegramInboundGeneration: Sendable {
 }
 
 public enum TelegramInboundCopy: Sendable {
-    public static let armed = "Armed."
-    public static let disarmed = "Disarmed."
-    public static let keepOn = "Keep the watch is on."
-    public static let keepOff = "Keep the watch is off."
-    public static let armFailed = "Couldn't keep the watch."
-    public static let disarmFailed = "Couldn't drop SleepDisabled."
+    public static let keepOn = "Keep awake is on."
+    public static let keepOff = "Keep awake is off."
+    public static let armFailed = "Couldn't turn Keep awake on."
+    public static let disarmFailed = "Couldn't confirm the wake hold cleared. The Mac may still be held awake."
     public static let commandsHelp = "Commands on your Telegram bot: arm, disarm, status."
-    public static let missedWhileAsleep = "Missed while asleep."
+    public static let missedWhileAsleep =
+        "Missed while asleep. That command didn't run. Send it again if you still want it."
     public static let help = """
-    /arm — turn Keep the watch on.
-    /disarm — turn Keep the watch off. Always clears Keep the watch. Puts the Mac to sleep only when the lid is closed (confirmed). Never sleeps the Mac when the lid is open.
-    /status — watch facts Agrypnos already knows: Keep the watch, How long, lid, Agents, last end, and safety prefs. Includes live battery when known. Includes time left while a timed watch is on.
-    /help — this list.
-    If the bot does not reply, the Mac is likely asleep or Agrypnos is not polling.
+    /arm: turn Keep awake on.
+    /disarm: turn Keep awake off. With the lid open the Mac stays awake. With the lid confirmed closed it also goes to sleep, even if Keep awake was already off.
+    /status: what Agrypnos knows right now. Keep awake, How long, time left on a timer, lid, panel mode, agent activity in Agents mode, when Keep awake last turned off and why, live battery when known, and your safety settings.
+    /help: this list.
+
+    No reply usually means the Mac is asleep, or Agrypnos isn't polling. Commands sent in the meantime don't run when it wakes. You get "Missed while asleep." instead.
     """
+
+    public static func armed(duration: DurationOption) -> String {
+        "Keep awake is on. How long is \(duration.segmentTitle)."
+    }
+
+    /// `sleepRequested` is true only when the lid was confirmed closed and the Mac was asked to sleep.
+    public static func disarmed(wasEngaged: Bool, sleepRequested: Bool) -> String {
+        let first = wasEngaged ? keepOff : "Keep awake was already off."
+        let lid = sleepRequested
+            ? "The lid is confirmed closed, so Agrypnos is asking the Mac to sleep."
+            : "The lid isn't confirmed closed, so the Mac stays awake."
+        return first + " " + lid
+    }
 
     public static func status(
         _ snapshot: TelegramWatchStatus,
@@ -201,13 +224,13 @@ public enum TelegramInboundCopy: Sendable {
 
     public static func reply(
         intent: TelegramInboundIntent,
-        engaged _: Bool,
-        duration _: DurationOption
+        engaged: Bool,
+        duration: DurationOption
     ) -> String? {
         switch intent {
         case .ignore, .status: return nil
-        case .arm: return armed
-        case .disarm: return disarmed
+        case .arm: return armed(duration: duration)
+        case .disarm: return disarmed(wasEngaged: engaged, sleepRequested: false)
         case .help: return help
         }
     }
@@ -221,8 +244,8 @@ public enum TelegramInboundCopy: Sendable {
     ) -> String? {
         switch intent {
         case .ignore: return nil
-        case .arm: return armed
-        case .disarm: return disarmed
+        case .arm: return armed(duration: snapshot.duration)
+        case .disarm: return disarmed(wasEngaged: snapshot.engaged, sleepRequested: false)
         case .status: return status(snapshot, now: now, calendar: calendar, locale: locale)
         case .help: return help
         }

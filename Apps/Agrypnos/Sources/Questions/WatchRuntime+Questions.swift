@@ -18,14 +18,16 @@ extension WatchRuntime {
         let telegram: TelegramQuestionDestination?
         if engine.preferences.telegramInboundEnabled,
            let token = secrets.telegramBotToken,
-           let chatID = secrets.telegramChatId {
-            telegram = TelegramQuestionDestination(token: token, chatID: chatID)
+           let chatID = secrets.telegramChatId,
+           let userID = secrets.telegramQuestionUserId {
+            telegram = TelegramQuestionDestination(token: token, chatID: chatID, userID: userID)
         } else { telegram = nil }
         let discord: DiscordQuestionDestination?
         if engine.preferences.discordInboundEnabled,
            let token = secrets.discordBotToken,
-           let channelID = secrets.discordChannelId {
-            discord = DiscordQuestionDestination(token: token, channelID: channelID)
+           let channelID = secrets.discordChannelId,
+           let userID = secrets.discordQuestionUserId {
+            discord = DiscordQuestionDestination(token: token, channelID: channelID, userID: userID)
         } else { discord = nil }
         return QuestionRelaySettings(enabled: engine.preferences.forwardAgentQuestions,
             includedKinds: engine.preferences.includedAgentKinds, telegram: telegram, discord: discord)
@@ -91,11 +93,11 @@ extension WatchRuntime {
             let text: String
             switch timeout.reason {
             case .busy:
-                text = "Question unanswered for 10 minutes; watch remains on because local busy signals are present."
+                text = "Question unanswered for 10 minutes; Keep awake stays on because local busy signals are present."
             case .unknown:
-                text = "Question unanswered for 10 minutes; watch remains on because agent activity could not be checked."
+                text = "Question unanswered for 10 minutes; Keep awake stays on because agent activity could not be checked."
             case .anotherQuestion:
-                text = "Question unanswered for 10 minutes; watch remains on while another question awaits an answer."
+                text = "Question unanswered for 10 minutes; Keep awake stays on while another question awaits an answer."
             case .idle:
                 continue
             }

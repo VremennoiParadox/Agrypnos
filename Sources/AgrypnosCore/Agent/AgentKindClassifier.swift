@@ -5,6 +5,7 @@ public enum AgentKindClassifier: Sendable {
         if n == "cursor-agent" || n.hasPrefix("cursor-agent") { return .cursor }
         if n == "cursor" || n.hasPrefix("cursor") { return .cursor }
 
+        if isClaudeBundledAgent(lowered) || isClaudeDesktopMain(lowered) { return .claudeCode }
         if isClaudeDesktop(lowered) { return nil }
 
         if isClaudeCodeCLI(basename: n, loweredCommand: lowered) { return .claudeCode }
@@ -27,7 +28,7 @@ public enum AgentKindClassifier: Sendable {
     public static func cpuCountsTowardBusy(processName: String) -> Bool {
         switch classify(processName: processName) {
         case .claudeCode:
-            return true
+            return !isClaudeDesktopMain(processName.lowercased())
         case .codex:
             return !isCodexDesktop(processName.lowercased())
         case .cursor, .openCode, .none:
@@ -45,6 +46,27 @@ public enum AgentKindClassifier: Sendable {
         let name = command[executable.upperBound...]
         return (app.hasSuffix("/codex") && name.hasPrefix("codex"))
             || name.hasPrefix("codex (") || name.hasPrefix("codex helper")
+    }
+
+    /// `<something>.app/Contents/MacOS/claude` with the app named `claude`. The desktop app's own
+    /// binary and the Claude Code binary it bundles both have this shape.
+    static func isClaudeAppBinary(_ lowered: String) -> Bool {
+        let command = lowered.trimmingCharacters(in: .whitespaces)
+        guard let executable = command.range(of: ".app/contents/macos/") else { return false }
+        let app = command[..<executable.lowerBound]
+        let name = command[executable.upperBound...].split(whereSeparator: \.isWhitespace).first ?? ""
+        return app.hasSuffix("/claude") && name == "claude"
+    }
+
+    /// The Claude Code binary the desktop app launches for each Code-tab session. A real agent process.
+    static func isClaudeBundledAgent(_ lowered: String) -> Bool {
+        isClaudeAppBinary(lowered) && lowered.contains("/claude-code/")
+    }
+
+    /// The Claude desktop app's main process. It hosts the Code tab, so it stands in for the
+    /// `claude` CLI when no bundled agent shows up. Helpers and updater processes do not match.
+    static func isClaudeDesktopMain(_ lowered: String) -> Bool {
+        isClaudeAppBinary(lowered) && !lowered.contains("/claude-code/")
     }
 
     static func isClaudeDesktop(_ lowered: String) -> Bool {

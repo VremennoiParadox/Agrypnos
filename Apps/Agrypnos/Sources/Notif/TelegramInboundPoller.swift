@@ -70,6 +70,8 @@ final class TelegramInboundPoller {
     weak var runtime: WatchRuntime?
     private var task: Task<Void, Never>?
     private var generation: UInt64 = 0
+    private var heldForSleep = false
+    private var promoteNextAck = false
 
     func sync() {
         if shouldPoll() {
@@ -80,9 +82,11 @@ final class TelegramInboundPoller {
     }
 
     func restartForWakeMiss() {
+        heldForSleep = false
         invalidate()
         guard shouldPoll() else { return }
         runtime?.beginTelegramInboundWakeMissSession()
+        armPostWakePromotion()
         startLoop(session: .keepCursor)
     }
 
@@ -90,14 +94,31 @@ final class TelegramInboundPoller {
         invalidate()
     }
 
+    /// Stops `getUpdates` before sleep. `restartForWakeMiss` is what starts it again.
+    func stopForSleep() {
+        heldForSleep = true
+        invalidate()
+    }
+
     func invalidate() {
         generation &+= 1
         task?.cancel()
         task = nil
+        promoteNextAck = false
     }
 
     func accepts(generation captured: UInt64) -> Bool {
         TelegramInboundGeneration.allowsApply(current: generation, captured: captured)
+    }
+
+    func armPostWakePromotion() {
+        promoteNextAck = true
+    }
+
+    func takePostWakePromotion() -> Bool {
+        guard promoteNextAck else { return false }
+        promoteNextAck = false
+        return true
     }
 
     private func shouldPoll() -> Bool {
@@ -116,6 +137,7 @@ final class TelegramInboundPoller {
     }
 
     private func startLoop(session: SessionStart) {
+        guard !heldForSleep else { return }
         guard task == nil else { return }
         switch session {
         case .leftover:

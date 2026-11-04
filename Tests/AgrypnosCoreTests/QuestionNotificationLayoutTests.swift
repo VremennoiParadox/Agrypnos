@@ -37,7 +37,6 @@ final class QuestionNotificationLayoutTests: XCTestCase {
             agents.agentInclude!.height,
             PopoverStackLayout.inset
                 + PopoverStackLayout.titleRowHeight
-                + PopoverCopyLayout.helpHeightPoints
                 + AgentKind.allCases.count * PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset
         )

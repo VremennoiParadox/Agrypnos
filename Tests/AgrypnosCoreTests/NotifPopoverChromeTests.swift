@@ -87,8 +87,12 @@ final class NotifPopoverChromeTests: XCTestCase {
     func testTelegramFieldsHaveVisibleTokenAndChatIdCaptions() {
         XCTAssertEqual(AgrypnosCopy.notifTelegramTokenShort, "Token")
         XCTAssertEqual(AgrypnosCopy.notifTelegramChatShort, "Chat id")
+        XCTAssertEqual(AgrypnosCopy.notifTelegramUserId, "Telegram user id")
+        XCTAssertEqual(AgrypnosCopy.notifDiscordUserId, "Discord user id")
         let needed = AgrypnosCopy.notifTelegramChatShort.count * 9 + 8
+        let userLabel = AgrypnosCopy.notifTelegramUserId.count * 9 + 8
         XCTAssertGreaterThanOrEqual(PopoverCopyLayout.secretFieldLabelWidthPoints, needed)
+        XCTAssertGreaterThanOrEqual(PopoverCopyLayout.secretFieldLabelWidthPoints, userLabel)
         XCTAssertEqual(AgrypnosCopy.notifSaveFailed, "Couldn't save that secret.")
         XCTAssertFalse(AgrypnosCopy.notifSaveFailed.lowercased().contains("saved."))
     }
@@ -122,7 +126,7 @@ final class NotifPopoverChromeTests: XCTestCase {
     func testTelegramHelpAndPlaceholdersSayWhereChatIdComesFrom() {
         let help = AgrypnosCopy.notifTelegramHelp.lowercased()
         XCTAssertTrue(help.contains("your telegram bot"))
-        XCTAssertTrue(help.contains("does not run a shared bot"))
+        XCTAssertFalse(help.contains("does not run a shared bot"))
         XCTAssertTrue(help.contains("chat id"))
         XCTAssertTrue(help.contains("getupdates"))
         XCTAssertEqual(
@@ -183,14 +187,14 @@ final class NotifPopoverChromeTests: XCTestCase {
         XCTAssertTrue(help.contains("Copy Channel ID"))
         XCTAssertTrue(help.contains("Watch-end POST"))
         XCTAssertTrue(help.contains("asks the Mac to sleep"))
-        XCTAssertTrue(lower.contains("old webhook url is unused"))
+        XCTAssertFalse(lower.contains("webhook"))
         XCTAssertTrue(help.contains("BotFather"))
         XCTAssertTrue(help.contains("/newbot"))
         XCTAssertTrue(help.contains("getUpdates"))
         XCTAssertTrue(lower.contains("empty result"))
         XCTAssertTrue(lower.contains("arm") && help.contains("Agents"))
         XCTAssertTrue(lower.contains("local busy"))
-        XCTAssertTrue(lower.contains("idle wait"))
+        XCTAssertTrue(lower.contains("wait after agent signals stop"))
         XCTAssertTrue(lower.contains("one message"))
         XCTAssertTrue(lower.contains("clear secrets"))
         XCTAssertTrue(lower.contains("live battery"))
@@ -204,17 +208,17 @@ final class NotifPopoverChromeTests: XCTestCase {
                 AgrypnosCopy.notifEnabledHelp,
                 columns: PopoverCopyLayout.innerColumns
             ),
-            5
+            6
         )
-        XCTAssertEqual(PopoverCopyLayout.notifEnableHelpMaxLines, 5)
+        XCTAssertEqual(PopoverCopyLayout.notifEnableHelpMaxLines, 6)
         XCTAssertEqual(
             CopyWrap.lineCount(
                 AgrypnosCopy.notifTelegramHelp,
                 columns: PopoverCopyLayout.innerColumns
             ),
-            5
+            4
         )
-        XCTAssertEqual(PopoverCopyLayout.notifTelegramHelpMaxLines, 5)
+        XCTAssertEqual(PopoverCopyLayout.notifTelegramHelpMaxLines, 4)
         XCTAssertEqual(
             CopyWrap.lineCount(
                 AgrypnosCopy.notifDiscordHelp,
@@ -231,10 +235,12 @@ final class NotifPopoverChromeTests: XCTestCase {
             AgrypnosCopy.notifDiscordHelp,
             "Messages this channel when Watch-end POST is on, including when Agrypnos asks the Mac to sleep. Commands: /arm, /disarm, /status, /help, when Discord inbound is on. Needs your bot token + channel id. Details in Setup instructions."
         )
-        XCTAssertEqual(
-            AgrypnosCopy.notifEnabledHelp,
-            "Message your Discord bot and/or your Telegram bot when the timer ends, when Agents stay idle through the wait, or when Agrypnos asks the Mac to sleep. Off by default."
-        )
+        let help = AgrypnosCopy.notifEnabledHelp
+        XCTAssertTrue(help.contains("timer"))
+        XCTAssertTrue(help.contains("wait after agent signals stop"))
+        let telegram = help.split(separator: ".").first { $0.contains("Telegram") }.map(String.init) ?? help
+        XCTAssertFalse(telegram.localizedCaseInsensitiveContains("asks the Mac to sleep"))
+        XCTAssertTrue(help.contains("asks the Mac to sleep"))
         XCTAssertEqual(
             AgrypnosCopy.notifDiscordPostFailed,
             "Couldn't message your Discord bot."
@@ -278,7 +284,7 @@ final class NotifPopoverChromeTests: XCTestCase {
         XCTAssertTrue(blob.contains("your discord bot"))
         XCTAssertTrue(blob.contains("your telegram bot"))
         XCTAssertTrue(blob.contains("does not run a shared bot"))
-        XCTAssertTrue(blob.contains("idle after the wait") || blob.contains("idle after wait"))
+        XCTAssertTrue(blob.contains("wait after agent signals stop"))
         XCTAssertTrue(blob.contains("show discord bot token"))
         XCTAssertTrue(blob.contains("hide telegram bot token"))
         XCTAssertFalse(blob.contains("keychain"))
@@ -348,7 +354,7 @@ final class NotifPopoverChromeTests: XCTestCase {
                     AgrypnosCopy.notifDiscordHelp,
                     columns: PopoverCopyLayout.innerColumns
                 ) * PopoverCopyLayout.lineHeightPoints
-                + 2 * PopoverStackLayout.secretFieldRowHeight
+                + 3 * PopoverStackLayout.secretFieldRowHeight
                 + PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset
         )
@@ -357,7 +363,7 @@ final class NotifPopoverChromeTests: XCTestCase {
             PopoverStackLayout.inset
                 + PopoverStackLayout.titleRowHeight
                 + PopoverCopyLayout.notifTelegramHelpHeightPoints
-                + 2 * PopoverStackLayout.secretFieldRowHeight
+                + 3 * PopoverStackLayout.secretFieldRowHeight
                 + PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset
         )

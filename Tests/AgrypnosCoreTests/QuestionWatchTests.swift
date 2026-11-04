@@ -27,14 +27,58 @@ final class QuestionWatchTests: XCTestCase {
         preferences.duration = .untilAgentsSettle
         preferences.notifEnabled = true
         var engine = WatchEngine(preferences: preferences)
-        _ = engine.userSetEngaged(true, now: Date(timeIntervalSince1970: 0))
+        _ = engine.userSetEngaged(true, now: Date(timeIntervalSince1970: 0), lidClosed: true)
         _ = engine.tick(now: Date(timeIntervalSince1970: 1), safety: safe, agents: busy)
         let commands = engine.tick(now: Date(timeIntervalSince1970: 600), safety: safe, agents: idle,
             questionWait: QuestionWaitDecision(action: .endUnanswered, timeouts: []))
         XCTAssertTrue(commands.contains(.disengage(.questionUnanswered)))
+        XCTAssertFalse(commands.contains(.disengage(.agentsSettled)))
+        XCTAssertTrue(commands.contains(.requestSleep))
         XCTAssertFalse(commands.contains(.postIdleAfterWaitNotif))
+        XCTAssertFalse(engine.engaged)
         XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
         XCTAssertEqual(engine.preferences.lastWatchEnd?.reason, .questionUnanswered)
+
+        var open = WatchEngine(preferences: preferences)
+        open.preferences.duration = .indefinite
+        _ = open.userSetEngaged(true, now: Date(timeIntervalSince1970: 0), lidClosed: false)
+        let openCommands = open.tick(now: Date(timeIntervalSince1970: 600), safety: safe, agents: idle,
+            questionWait: QuestionWaitDecision(action: .endUnanswered, timeouts: []))
+        XCTAssertTrue(openCommands.contains(.disengage(.questionUnanswered)))
+        XCTAssertFalse(openCommands.contains(.requestSleep))
+        XCTAssertFalse(openCommands.contains(.postIdleAfterWaitNotif))
+        XCTAssertEqual(open.preferences.duration, .indefinite)
+    }
+
+    func testUnansweredQuestionDoesNotBlockAgentsSettle() {
+        var preferences = UserPreferences.default
+        preferences.duration = .untilAgentsSettle
+        var engine = WatchEngine(preferences: preferences)
+        _ = engine.userSetEngaged(true, now: Date(timeIntervalSince1970: 0))
+        _ = engine.tick(now: Date(timeIntervalSince1970: 1), safety: safe, agents: busy)
+        let unanswered = QuestionWaitDecision(action: .endUnanswered, timeouts: [])
+        let first = engine.tick(
+            now: Date(timeIntervalSince1970: 6),
+            safety: safe,
+            agents: idle,
+            questionWait: unanswered
+        )
+        XCTAssertTrue(first.contains(.disengage(.questionUnanswered)))
+        XCTAssertFalse(first.contains(.disengage(.agentsSettled)))
+        var settled = false
+        for second in stride(from: 11, through: 126, by: 5) {
+            let commands = engine.tick(
+                now: Date(timeIntervalSince1970: TimeInterval(second)),
+                safety: safe,
+                agents: idle,
+                questionWait: unanswered
+            )
+            if commands.contains(.disengage(.agentsSettled)) {
+                settled = true
+            }
+        }
+        XCTAssertFalse(settled)
+        XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
     }
 
     func testSafetyWinsAndDeferredTimeoutKeepsKernelReassertion() {

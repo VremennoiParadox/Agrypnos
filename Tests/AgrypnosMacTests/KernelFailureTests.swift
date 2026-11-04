@@ -33,4 +33,29 @@ final class KernelFailureTests: XCTestCase {
         XCTAssertEqual(f.runtime.preferences.lastWatchEnd?.reason, .wakeHoldFailed)
         XCTAssertFalse(f.messages.isEmpty)
     }
+
+    func testUnknownArmReadbackUndoesSetAndStaysArmedWhenClearUnconfirmed() {
+        let f = RuntimeFixture()
+        _ = f.runtime.engine.userSetEngaged(true, now: Date(), lidClosed: false)
+        f.kernelHeld = true
+        f.kernelUnknown = true
+        var writes: [Bool] = []
+        f.kernelWriteHook = { writes.append($0) }
+        f.runtime.apply([.assertSleepDisabled])
+        XCTAssertEqual(writes.first, true)
+        XCTAssertTrue(writes.contains(false))
+        XCTAssertTrue(f.runtime.engine.engaged)
+        XCTAssertNil(f.runtime.preferences.lastWatchEnd)
+    }
+
+    func testUnknownLeftoverReconcileClearsWithoutAdopting() {
+        let f = RuntimeFixture()
+        XCTAssertFalse(f.runtime.engine.engaged)
+        f.kernelHeld = true
+        f.kernelUnknown = true
+        f.runtime.reconcileKernel(preferClearLeftover: true)
+        XCTAssertFalse(f.runtime.engine.engaged)
+        XCTAssertFalse(f.runtime.engine.leftoverAdopted)
+        XCTAssertFalse(f.kernelHeld)
+    }
 }

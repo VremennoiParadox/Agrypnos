@@ -147,8 +147,9 @@ extension PopoverController {
         forwardQuestionsSwitch.setAccessibilityHelp(QuestionSetupChrome.help + " " + QuestionSetupChrome.policy)
         _ = PopoverForm.help(QuestionSetupChrome.help, in: card,
             y: CGFloat(QuestionSetupChrome.helpY), x: ci, width: cw, lines: QuestionSetupChrome.helpMaxLines)
-        _ = PopoverForm.help(QuestionSetupChrome.policy, in: card,
+        let policy = PopoverForm.help(QuestionSetupChrome.policy, in: card,
             y: CGFloat(QuestionSetupChrome.policyY), x: ci, width: cw, lines: QuestionSetupChrome.policyMaxLines)
+        emphasize(["Discord", "Telegram"], in: policy)
         questionConnectionStatus = PopoverForm.help("", in: card,
             y: CGFloat(QuestionSetupChrome.statusY), x: ci, width: cw, lines: 4)
     }
@@ -182,5 +183,29 @@ extension PopoverController {
         }
         runtime?.setForwardAgentQuestions(sender.state == .on)
         refresh()
+    }
+
+    private func emphasize(_ words: [String], in field: NSTextField) {
+        let text = field.stringValue
+        let size = field.font?.pointSize ?? 12
+        let wrap = NSMutableParagraphStyle()
+        wrap.lineBreakMode = .byWordWrapping
+        let marked = NSMutableAttributedString(string: text, attributes: [
+            .font: NSFont.systemFont(ofSize: size),
+            .foregroundColor: field.textColor ?? .secondaryLabelColor,
+            .paragraphStyle: wrap
+        ])
+        let strong: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: size, weight: .semibold),
+            .foregroundColor: NSColor.labelColor
+        ]
+        for word in words {
+            var start = text.startIndex
+            while let found = text.range(of: word, range: start..<text.endIndex) {
+                marked.addAttributes(strong, range: NSRange(found, in: text))
+                start = found.upperBound
+            }
+        }
+        field.attributedStringValue = marked
     }
 }

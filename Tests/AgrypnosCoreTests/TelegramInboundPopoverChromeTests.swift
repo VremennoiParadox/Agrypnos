@@ -89,13 +89,13 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
             PopoverStackLayout.inset
                 + PopoverStackLayout.titleRowHeight
                 + PopoverCopyLayout.notifTelegramHelpHeightPoints
-                + 2 * PopoverStackLayout.secretFieldRowHeight
+                + 3 * PopoverStackLayout.secretFieldRowHeight
                 + PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset
         )
         XCTAssertEqual(
             PopoverStackLayout.notifTelegramInboundSwitchY,
-            PopoverStackLayout.notifTelegramChatY + PopoverStackLayout.secretFieldRowHeight
+            PopoverStackLayout.notifTelegramUserY + PopoverStackLayout.secretFieldRowHeight
         )
         XCTAssertEqual(
             layout.stackedCards.map(\.y),
@@ -122,7 +122,7 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
         )
         XCTAssertEqual(layout.notifSetup!.height, PopoverStackLayout.loginCardHeight)
         XCTAssertTrue(AgrypnosCopy.notifTelegramHelp.contains("/arm"))
-        XCTAssertTrue(AgrypnosCopy.notifTelegramHelp.contains("Turn this on for commands"))
+        XCTAssertTrue(AgrypnosCopy.notifTelegramHelp.contains("Commands need Telegram inbound on"))
     }
 
     func testInboundCopyBansJobFinishedPhoneNotifyAndRichStatus() {
@@ -169,8 +169,8 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
     func testSetupGuideNamesInboundOnOffWithoutClaimingMacProve() {
         let help = BotGuide.text(for: .telegram)
         let lower = help.lowercased()
-        XCTAssertTrue(lower.contains("telegram card"))
-        XCTAssertTrue(lower.contains("commands turn on"))
+        XCTAssertTrue(lower.contains("telegram inbound"))
+        XCTAssertTrue(lower.contains("can send commands"))
         XCTAssertTrue(help.contains("/arm") && help.contains("/disarm") && help.contains("/status") && help.contains("/help"))
         XCTAssertTrue(lower.contains("live battery"))
         XCTAssertTrue(lower.contains("when known"))

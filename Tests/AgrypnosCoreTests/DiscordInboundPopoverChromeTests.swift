@@ -103,7 +103,7 @@ final class DiscordInboundPopoverChromeTests: XCTestCase {
             PopoverStackLayout.inset
                 + PopoverStackLayout.titleRowHeight
                 + discordHelpHeight
-                + 2 * PopoverStackLayout.secretFieldRowHeight
+                + 3 * PopoverStackLayout.secretFieldRowHeight
                 + PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset
         )
@@ -116,8 +116,12 @@ final class DiscordInboundPopoverChromeTests: XCTestCase {
             PopoverStackLayout.notifDiscordInboundTokenY + PopoverStackLayout.secretFieldRowHeight
         )
         XCTAssertEqual(
-            PopoverStackLayout.notifDiscordInboundSwitchY,
+            PopoverStackLayout.notifDiscordUserY,
             PopoverStackLayout.notifDiscordInboundChannelY + PopoverStackLayout.secretFieldRowHeight
+        )
+        XCTAssertEqual(
+            PopoverStackLayout.notifDiscordInboundSwitchY,
+            PopoverStackLayout.notifDiscordUserY + PopoverStackLayout.secretFieldRowHeight
         )
         XCTAssertEqual(
             layout.stackedCards.map(\.y),
@@ -222,7 +226,7 @@ final class DiscordInboundPopoverChromeTests: XCTestCase {
         let help = BotGuide.text(for: .discord)
         let lower = help.lowercased()
         XCTAssertTrue(lower.contains("discord inbound"))
-        XCTAssertTrue(lower.contains("webhook"))
+        XCTAssertFalse(lower.contains("webhook"))
         XCTAssertTrue(help.contains("/arm") && help.contains("/disarm") && help.contains("/status") && help.contains("/help"))
         XCTAssertFalse(lower.contains("mac-proven"))
         XCTAssertFalse(lower.contains("mac proven"))

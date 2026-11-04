@@ -177,7 +177,7 @@ extension WatchRuntime {
         let reply: String?
         switch effect {
         case .ignore:
-            reply = update.source == .slash ? "\u{200b}" : nil
+            reply = DiscordInboundPolicy.slashIgnoreReply(source: update.source)
         case .missedWhileAsleep:
             reply = DiscordInboundCopy.missedWhileAsleep
         case .apply(.help):
@@ -202,7 +202,7 @@ extension WatchRuntime {
         case .apply(.disarm):
             reply = applyDiscordDisarm()
         case .apply(.ignore):
-            reply = update.source == .slash ? "\u{200b}" : nil
+            reply = DiscordInboundPolicy.slashIgnoreReply(source: update.source)
         }
         if let reply {
             sendDiscordInboundReply(
@@ -218,12 +218,18 @@ extension WatchRuntime {
         if TelegramInboundIntent.arm.shouldSetEngaged(currentlyEngaged: engine.engaged) == true {
             setEngaged(true)
         }
-        return engine.engaged ? DiscordInboundCopy.armed : TelegramInboundCopy.armFailed
+        return engine.engaged
+            ? DiscordInboundCopy.armed(duration: engine.preferences.duration)
+            : TelegramInboundCopy.armFailed
     }
 
     func applyDiscordDisarm() -> String {
+        let wasEngaged = engine.engaged
         guard let sleepResult = disarmWatch() else { return TelegramInboundCopy.disarmFailed }
-        return inboundDisarmReply(DiscordInboundCopy.disarmed, sleepResult: sleepResult)
+        return inboundDisarmReply(
+            DiscordInboundCopy.disarmed(wasEngaged: wasEngaged, sleepRequested: disarmRequestedSleep(sleepResult)),
+            sleepResult: sleepResult
+        )
     }
 
     func sendDiscordInboundReply(

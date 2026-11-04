@@ -74,20 +74,29 @@ public enum BotGuide {
 
     public static func sections(for tab: BotGuideTab) -> [BotGuideSection] {
         switch tab {
-        case .telegram: return [telegramSetup, telegramTurnOn, questionSetup(), commands(asleep: telegramAsleep), turnOff]
-        case .discord: return [discordBot, questionSetup(), commands(asleep: discordAsleep), turnOff]
-        case .openCode: return toolNote(
-            "OpenCode",
-            "Enable OpenCode forwarding in Question notifications. Agrypnos installs its plugin. Restart OpenCode once, then use your normal chats. The question is forwarded to your bot. Free text and approvals stay on the Mac."
-        )
-        case .claudeCode: return toolNote(
-            "Claude Code",
-            "Enable Claude Code forwarding in Question notifications. Agrypnos merges a PreToolUse AskUserQuestion hook into ~/.claude/settings.json and keeps your other hooks. Interactive sessions hold hooks until you trust the folder. The question is forwarded to your bot. This path is not Mac-proven yet."
-        )
-        case .codex: return toolNote(
-            "Codex",
-            "Enable Codex alerts in Question notifications. Agrypnos adds a hook to ~/.codex/hooks.json and keeps your other hooks. There is no codex hooks shell command, and the ChatGPT app has no documented trust screen. Until Codex runs the hook, no alert is sent. The alert says Codex is waiting on you, or waiting for an approval. It does not answer the question."
-        )
+        case .telegram: return [telegramSetup, telegramTurnOn, commands(asleep: telegramAsleep), turnOff]
+        case .discord: return [discordBot, commands(asleep: discordAsleep), turnOff]
+        case .openCode: return questionGuide("OpenCode", [
+            savedBot,
+            BotGuideStep("Enable OpenCode forwarding",
+                "Open Notif → Question notifications, then click Enable OpenCode forwarding. Agrypnos installs and registers its global terminal plugin. Restart OpenCode once to load forwarding. The card then shows how many terminals are connected. No port or project-directory setup is needed. Free text and approvals stay on the Mac.",
+                link: BotGuideLink(title: "OpenCode plugins", url: "https://opencode.ai/docs/plugins/")),
+            answerOnBot,
+            disableOpenCode,
+            watchAndExpiry,
+        ])
+        case .claudeCode: return questionGuide("Claude Code", [
+            savedBot,
+            BotGuideStep("Enable Claude Code forwarding",
+                "Open Notif → Question notifications, then click Enable Claude Code forwarding. Agrypnos merges a PreToolUse AskUserQuestion hook into ~/.claude/settings.json and keeps your other hooks, including UserPromptSubmit / Stop / StopFailure. In an interactive session, Claude Code holds hooks until you trust the folder."),
+            answerOnBot,
+            watchAndExpiry,
+        ])
+        case .codex: return questionGuide("Codex", [
+            codexBot,
+            BotGuideStep("Enable Codex alerts",
+                "Open Notif → Question notifications, then click Enable Codex alerts. Agrypnos adds a hook to ~/.codex/hooks.json and keeps your other hooks. There is nothing to trust: there is no codex hooks shell command, and the ChatGPT app has no documented trust screen. No alert is sent until Codex runs the hook. The alert says Codex is waiting on you, or waiting for an approval. It does not answer the question."),
+        ])
         case .cursor: return toolNote(
             "Cursor",
             "Cursor cannot forward a question or send a waiting alert. The question stays in Cursor. There is no setup."
@@ -101,35 +110,40 @@ public enum BotGuide {
         ])]
     }
 
+    static func questionGuide(_ title: String, _ steps: [BotGuideStep]) -> [BotGuideSection] {
+        [BotGuideSection(title: title, note: nil, numbered: true, steps: steps)]
+    }
+
+    static let savedBot = BotGuideStep(
+        "Use the bot you already saved",
+        "In Notif, save one bot: Telegram token, chat id, and Telegram user id, or Discord token, channel id, and Discord user id. Then turn on that bot’s inbound switch. Question forwarding uses that bot, and only that user id can send answers. Forward agent questions stays off until all four are set."
+    )
+
+    static let codexBot = BotGuideStep(
+        "Use the bot you already saved",
+        "In Notif, save a Telegram token and chat id, or a Discord token and channel id. Codex alerts don’t need inbound, a user id, or Watch-end POST."
+    )
+
+    static let answerOnBot = BotGuideStep(
+        "Answer a new question",
+        "Ask a question that offers listed options, in a chat started after you enabled forwarding. On your bot, tap a number for each question, review, then press Send answers. Answer on Mac leaves it for you on the Mac without answering or rejecting it."
+    )
+
+    static let disableOpenCode = BotGuideStep(
+        "Disable or remove",
+        "Disable OpenCode forwarding keeps the plugin installed but inactive. Remove OpenCode integration removes only unchanged Agrypnos-owned files and its registration."
+    )
+
+    static let watchAndExpiry = BotGuideStep(
+        "Keep awake and expiry",
+        "Forwarding never turns Keep awake on. If it is already on, a waiting question stops Agents mode from turning it off for up to 10 minutes. If nobody answers in 10 minutes, Keep awake turns off once your selected agents look idle, and the Mac also sleeps if the lid is confirmed closed. Turning it off yourself, the timer, and the battery, thermal, and Low Power Mode limits still work at any time. If Agrypnos restarts or the Mac sleeps, questions already waiting stay on the Mac and new ones forward again once connected. Locking the screen doesn’t stop forwarding."
+    )
+
     static let telegramAsleep = "If the bot isn’t replying, the Mac is likely asleep / Agrypnos isn’t polling."
     static let discordAsleep = "If the bot isn’t replying, the Mac is likely asleep / Agrypnos isn’t receiving updates."
 
-    static func questionSetup() -> BotGuideSection {
-        BotGuideSection(title: "Question notifications (BETA)",
-            note: "OpenCode and Claude Code forwarding, the Codex waiting alert, and the Cursor note live in Notif under Telegram → Question notifications. Setup instructions is the first Notif card. Info buttons on those cards open these notes.",
-            numbered: true, steps: [
-                BotGuideStep("Use the bot you already saved",
-                    "Turn on Telegram or Discord inbound and save the bot token and chat or channel id on the cards above. Question forwarding uses that bot. The switch stays off until one of those is saved."),
-                BotGuideStep("Enable OpenCode forwarding",
-                    "Open Notif → Question notifications, then click Enable OpenCode forwarding. Agrypnos installs and registers its global terminal plugin. Restart OpenCode once to load forwarding, then use your normal chats. No port or project-directory setup is needed.",
-                    link: BotGuideLink(title: "OpenCode plugins", url: "https://opencode.ai/docs/plugins/")),
-                BotGuideStep("Enable Claude Code forwarding",
-                    "Open Notif → Question notifications, then click Enable Claude Code forwarding. Agrypnos merges a PreToolUse AskUserQuestion hook into ~/.claude/settings.json and keeps your other hooks, including UserPromptSubmit / Stop / StopFailure. Interactive sessions hold hooks until you trust the folder. Ask a structured choice in that same Claude Code session and answer on your bot."),
-                BotGuideStep("Enable Codex alerts",
-                    "Open Notif → Question notifications, then click Enable Codex alerts. Agrypnos adds a hook to ~/.codex/hooks.json and keeps your other hooks. There is no codex hooks shell command. Until Codex runs the hook, no alert is sent. The alert says Codex is waiting on you, or waiting for an approval. It does not answer the question."),
-                BotGuideStep("Cursor",
-                    "Cursor cannot forward a question or send a waiting alert. The question stays in Cursor. There is no setup."),
-                BotGuideStep("Answer a new question",
-                    "Check for a connected terminal count. Start a new structured choice question in that same chat. Select every answer on your bot, review, then Send answers. Answer on Mac leaves it local without rejecting the question."),
-                BotGuideStep("Disable or remove",
-                    "Disable OpenCode forwarding keeps the plugin installed but inactive. Remove OpenCode integration removes only unchanged Agrypnos-owned files and its registration."),
-                BotGuideStep("Watch and expiry",
-                    "Forwarding never arms Keep the watch. While already armed, a question holds it for up to 10 minutes; other busy or unknown agent activity delays auto-off. Manual off and safety still win. App restart and sleep invalidate phone controls and leave existing pending questions local; new questions can forward when connected again. Screen lock alone does not cancel forwarding."),
-            ])
-    }
-
     static let idleAfterWait =
-        "Arm Keep the watch with How long set to Agents and run an agent so Agrypnos sees a local busy signal. When those signals stay idle through the wait (the idle wait in Agents), expect one message. Then Keep the watch turns off."
+        "Arm Keep awake with How long set to Agents and run an agent so Agrypnos sees a local busy signal. When the wait after agent signals stop ends, expect one message. Then Keep awake turns off."
 
     static let telegramSetup = BotGuideSection(
         title: "Create your Telegram bot",
@@ -159,6 +173,10 @@ public enum BotGuide {
                 "Paste the chat id",
                 "Paste that number into Notif → Telegram → Chat id."
             ),
+            BotGuideStep(
+                "Copy your user id (for question answers)",
+                "In the same getUpdates result, copy the number after \"from\":{\"id\":. Paste it into Notif → Telegram → Telegram user id. Only needed to answer agent questions from Telegram. Skip it if you only want messages and commands."
+            ),
         ]
     )
 
@@ -168,12 +186,12 @@ public enum BotGuide {
         numbered: true,
         steps: [
             BotGuideStep(
-                "Get a message when the watch ends",
-                "Switch on Watch-end POST. Agrypnos messages your Telegram bot when the timer ends or Agents stay idle through the wait."
+                "Get a message when Keep awake turns off",
+                "Switch on Watch-end POST. Agrypnos messages your Telegram bot when the timer ends or the wait after agent signals stop ends."
             ),
             BotGuideStep(
                 "Send commands from Telegram",
-                "Switch on the Telegram card. Commands turn on with it. It is separate from the POST switch. Only the chat id you saved can send commands."
+                "Switch on Telegram inbound. It is separate from the Watch-end POST switch. Only the chat id you saved can send commands."
             ),
             BotGuideStep("Test it", idleAfterWait),
         ]
@@ -210,17 +228,18 @@ public enum BotGuide {
                 image: "guide-discord-copy-channel-id"
             ),
             BotGuideStep(
-                "Old webhook URL",
-                "An old webhook URL is unused. Paste the bot token and channel id."
+                "Copy your user id (for question answers)",
+                "Right-click your own name → Copy User ID. Paste it into Notif → Discord → Discord user id. Only needed to answer agent questions from Discord. Skip it if you only want messages and commands."
             ),
             BotGuideStep(
-                "Get a message when the watch ends",
-                "Switch on Watch-end POST. Agrypnos messages this channel when the timer ends, when Agents stay idle through the wait, or when it asks the Mac to sleep."
+                "Get a message when Keep awake turns off",
+                "Switch on Watch-end POST. Agrypnos messages this channel when the timer ends, when the wait after agent signals stop ends, or when it asks the Mac to sleep."
             ),
             BotGuideStep(
                 "Turn inbound on",
                 "Switch on Discord inbound. Agrypnos adds /arm, /disarm, /status, and /help to your bot’s / menu. Type /help in that channel to check."
             ),
+            BotGuideStep("Test it", idleAfterWait),
         ]
     )
 
@@ -230,16 +249,16 @@ public enum BotGuide {
             note: nil,
             numbered: false,
             steps: [
-                BotGuideStep("/arm", "Turns Keep the watch on."),
+                BotGuideStep("/arm", "Turns Keep awake on."),
                 BotGuideStep(
                     "/disarm",
-                    "Turns Keep the watch off. With the lid open it does not sleep the Mac. With the lid confirmed closed it turns Keep the watch off and sends the Mac to sleep."
+                    "Turns Keep awake off. With the lid open it does not sleep the Mac. With the lid confirmed closed it turns Keep awake off and sends the Mac to sleep."
                 ),
                 BotGuideStep(
                     "/status",
-                    "Returns Keep the watch, How long, lid, Agents facts when relevant, last watch end, and safety prefs. Includes live battery when known, like Battery 62% · on AC."
+                    "Returns Keep awake, How long, lid, Agents facts when relevant, the last time Keep awake turned off, and safety prefs. Includes live battery when known, like Battery 62% · on AC."
                 ),
-                BotGuideStep("/help", "Lists these commands."),
+                BotGuideStep("/help", "Lists these commands, the lid rule for /disarm, and what /status returns."),
                 BotGuideStep(
                     "Bot not replying?",
                     "\(asleep) Commands sent while the Mac slept are not run later. On wake the bot replies “Missed while asleep.”"

@@ -1,3 +1,5 @@
+import Foundation
+
 #if canImport(AgrypnosCore)
 import AgrypnosCore
 #endif
@@ -40,7 +42,21 @@ enum PowerHygieneCoordinator {
             case .engage, .disengage, .assertSleepDisabled, .postIdleAfterWaitNotif, .postTimerExpiredNotif:
                 break
             case .requestSleep:
-                guard timerExpired ? readLid() != false : readLid() == true else { break }
+                // Timer, safety, and agents sleep unless the lid is known open.
+                // User-off still needs a closed read, so a nil sample does not sleep.
+                let missingLidStillSleeps = timerExpired || commands.contains { command in
+                    if case .disengage(let reason) = command {
+                        return reason == .batteryFloor || reason == .thermal
+                            || reason == .lowPowerMode || reason == .agentsSettled
+                    }
+                    return false
+                }
+                let lid = readLid()
+                guard missingLidStillSleeps ? lid != false : lid == true else {
+                    WatchDiagnostics.event("sleepnow skipped lid=\(String(describing: lid)) sleepsWhenLidUnknown=\(missingLidStillSleeps)")
+                    break
+                }
+                WatchDiagnostics.event("sleepnow running lid=\(String(describing: lid)) sleepsWhenLidUnknown=\(missingLidStillSleeps)")
                 let exit = runCommand("/usr/bin/pmset", ["sleepnow"]).exit
                 result.sleepnow = PmsetCommandOutcome.from(exit: exit)
             case .requestDisplaySleep:
@@ -54,26 +70,54 @@ enum PowerHygieneCoordinator {
                 // would stall the menu extra and fight a following `sleepnow`.
                 devices.wakeDisplay()
             case .applyBrightnessFloor:
+                let lid = readLid()
                 guard preferences.applyBrightnessFloor,
                       PanelPowerMode.shouldWriteFloor(armed: armed, lidCloseConfirmed: lidCloseConfirmed,
-                                                       mode: preferences.panelPowerMode), readLid() == true else { break }
+                                                       mode: preferences.panelPowerMode), lid == true else {
+                    WatchDiagnostics.event("floor skipped armed=\(armed) confirmed=\(lidCloseConfirmed) lid=\(String(describing: lid)) mode=\(preferences.panelPowerMode)")
+                    break
+                }
                 ramp.cancel()
-                if devices.canSetBrightness() {
+                let canSet = devices.canSetBrightness()
+                WatchDiagnostics.event("floor write canSet=\(canSet) saved=\(String(describing: savedBrightness)) current=\(String(describing: devices.brightness())) floor=\(preferences.brightnessFloor)")
+                if canSet {
                     devices.setBrightness(preferences.brightnessFloor)
                     effects.floor = true
                 }
             case .requestKeyboardBacklightOff:
                 guard armed, lidCloseConfirmed, preferences.keyboardBacklightOff, readLid() == true else { break }
+                // Without a readable level there is nothing to restore later, so do not turn it off.
+                guard devices.keyboard() != nil else {
+                    WatchDiagnostics.event("keyboard off skipped: level unreadable")
+                    break
+                }
                 devices.setKeyboard(0)
                 effects.keyboard = true
             case .rampBrightnessRestore:
-                guard effects.floor, preferences.panelPowerMode.showsLidOpenRamp else { break }
-                guard devices.canSetBrightness() else { break }
+                guard effects.floor, preferences.panelPowerMode.showsLidOpenRamp else {
+                    WatchDiagnostics.event("ramp skipped floorApplied=\(effects.floor) mode=\(preferences.panelPowerMode)")
+                    break
+                }
+                guard devices.canSetBrightness() else {
+                    WatchDiagnostics.event("ramp skipped: built-in panel not settable")
+                    break
+                }
                 guard let target = HygieneRestore.displayBrightnessToRestore(
                     captured: savedBrightness,
                     floor: preferences.brightnessFloor
-                ) else { break }
-                let from = devices.brightness() ?? target
+                ) else {
+                    WatchDiagnostics.event("ramp skipped: no captured brightness")
+                    break
+                }
+                let current = devices.brightness()
+                guard HygieneRestore.shouldRampBack(current: current, captured: target, floor: preferences.brightnessFloor) else {
+                    // The floor is no longer in effect; a later disengage must not write the capture again.
+                    effects.floor = false
+                    WatchDiagnostics.event("ramp skipped: panel already at \(String(describing: current)), macOS restored it")
+                    break
+                }
+                let from = current ?? target
+                WatchDiagnostics.event("ramp start from=\(from) to=\(target) seconds=\(preferences.lidOpenRampSeconds)")
                 ramp.start(
                     from: from,
                     to: target,
@@ -101,6 +145,46 @@ enum PowerHygieneCoordinator {
     static func restoreKeyboard(effects: inout HygieneEffects, captured: Double?, devices: HygieneDevices) {
         if effects.keyboard, let captured { devices.setKeyboard(captured) }
         effects.keyboard = false
+    }
+
+    /// After a closed-lid `sleepnow`: put the capture back once the Mac is awake with the lid open.
+    /// Ramp only while the panel is still at the floor. The panel can still be waking and drop early
+    /// writes, so check again shortly after.
+    static func restoreAfterWake(
+        effects: inout HygieneEffects,
+        savedBrightness: inout Double?,
+        savedKeyboard: inout Double?,
+        preferences: UserPreferences,
+        ramp: BrightnessRampController,
+        devices: HygieneDevices
+    ) {
+        if effects.floor, devices.canSetBrightness(), let captured = savedBrightness {
+            let current = devices.brightness()
+            if HygieneRestore.shouldRampBack(current: current, captured: captured, floor: preferences.brightnessFloor) {
+                WatchDiagnostics.event("wake restore from=\(String(describing: current)) to=\(captured)")
+                ramp.start(
+                    from: current ?? captured,
+                    to: captured,
+                    duration: HygieneRestore.lidOpenRampDuration(seconds: preferences.lidOpenRampSeconds),
+                    setBrightness: devices.setBrightness
+                )
+                for delay in [1.5, 3.0] {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                        if let now = devices.brightness(),
+                           HygieneRestore.shouldRampBack(current: now, captured: captured, floor: preferences.brightnessFloor) {
+                            WatchDiagnostics.event("wake restore retry now=\(now) to=\(captured)")
+                            devices.setBrightness(captured)
+                        }
+                    }
+                }
+            } else {
+                WatchDiagnostics.event("wake restore skipped: panel already at \(String(describing: current))")
+            }
+        }
+        effects.floor = false
+        restoreKeyboard(effects: &effects, captured: savedKeyboard, devices: devices)
+        savedBrightness = nil
+        savedKeyboard = nil
     }
 
     static func restoreAfterDisengage(

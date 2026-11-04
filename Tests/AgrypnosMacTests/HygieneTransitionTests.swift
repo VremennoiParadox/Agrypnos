@@ -42,6 +42,62 @@ final class HygieneTransitionTests: XCTestCase {
         XCTAssertEqual(keyboard, [0, 0.6])
     }
 
+    func testLidOpenLeavesBrightnessAloneWhenMacOSAlreadyRaisedIt() {
+        let f = RuntimeFixture()
+        var writes: [Double] = []
+        f.runtime.hygieneDevices = HygieneDevices(canSetBrightness: { true }, brightness: { 0.5625 },
+            setBrightness: { writes.append($0) }, keyboard: { nil }, setKeyboard: { _ in }, wakeDisplay: {})
+        f.runtime.engine.preferences.applyBrightnessFloor = true
+        f.runtime.savedBrightness = 0.4375
+        _ = f.runtime.engine.userSetEngaged(true, now: Date(), lidClosed: true)
+        f.runtime.apply([.applyBrightnessFloor])
+        XCTAssertEqual(writes, [0.15])
+        f.runtime.apply([.rampBrightnessRestore])
+        XCTAssertFalse(f.runtime.brightnessRamp.isRunning)
+        XCTAssertEqual(writes, [0.15])
+        XCTAssertFalse(f.runtime.hygieneEffects.floor)
+    }
+
+    func testLidOpenRampsBackFromThePanelsLowestStepWithA1PercentFloor() {
+        let f = RuntimeFixture()
+        f.runtime.hygieneDevices = HygieneDevices(canSetBrightness: { true }, brightness: { 0.0625 },
+            setBrightness: { _ in }, keyboard: { nil }, setKeyboard: { _ in }, wakeDisplay: {})
+        f.runtime.engine.preferences.applyBrightnessFloor = true
+        f.runtime.engine.preferences.brightnessFloorPercent = 1
+        f.runtime.savedBrightness = 0.4375
+        _ = f.runtime.engine.userSetEngaged(true, now: Date(), lidClosed: true)
+        f.runtime.apply([.applyBrightnessFloor])
+        f.runtime.apply([.rampBrightnessRestore])
+        XCTAssertTrue(f.runtime.brightnessRamp.isRunning)
+        f.runtime.brightnessRamp.cancel()
+    }
+
+    func testLidOpenRampsBackWhenThePanelIsStillAtTheFloor() {
+        let f = RuntimeFixture()
+        var writes: [Double] = []
+        f.runtime.hygieneDevices = HygieneDevices(canSetBrightness: { true }, brightness: { 0.15 },
+            setBrightness: { writes.append($0) }, keyboard: { nil }, setKeyboard: { _ in }, wakeDisplay: {})
+        f.runtime.engine.preferences.applyBrightnessFloor = true
+        f.runtime.savedBrightness = 0.8
+        _ = f.runtime.engine.userSetEngaged(true, now: Date(), lidClosed: true)
+        f.runtime.apply([.applyBrightnessFloor])
+        f.runtime.apply([.rampBrightnessRestore])
+        XCTAssertTrue(f.runtime.brightnessRamp.isRunning)
+        f.runtime.brightnessRamp.cancel()
+    }
+
+    func testKeyboardBacklightIsNotTurnedOffWhenItsLevelCannotBeRead() {
+        let f = RuntimeFixture()
+        var keyboard: [Double] = []
+        f.runtime.hygieneDevices = HygieneDevices(canSetBrightness: { true }, brightness: { 0.8 },
+            setBrightness: { _ in }, keyboard: { nil }, setKeyboard: { keyboard.append($0) }, wakeDisplay: {})
+        f.runtime.engine.preferences.keyboardBacklightOff = true
+        _ = f.runtime.engine.userSetEngaged(true, now: Date(), lidClosed: true)
+        f.runtime.apply([.requestKeyboardBacklightOff])
+        XCTAssertTrue(keyboard.isEmpty)
+        XCTAssertFalse(f.runtime.hygieneEffects.keyboard)
+    }
+
     func testCapturedButUnappliedValuesAreNotRestored() {
         let f = RuntimeFixture()
         var brightness: [Double] = []
@@ -67,5 +123,46 @@ final class HygieneTransitionTests: XCTestCase {
         f.runtime.apply([.applyBrightnessFloor])
         f.runtime.setPanelPowerMode(.displaySleep)
         XCTAssertEqual(brightness, [0.15])
+    }
+
+    func testFailedSleepnowRestoresCapturedBrightnessAndKeyboard() {
+        let f = RuntimeFixture()
+        var brightness: [Double] = []
+        var keyboard: [Double] = []
+        f.runtime.hygieneDevices = HygieneDevices(canSetBrightness: { true }, brightness: { 0.8 },
+            setBrightness: { brightness.append($0) }, keyboard: { 0.6 },
+            setKeyboard: { keyboard.append($0) }, wakeDisplay: {})
+        f.runtime.savedBrightness = 0.8
+        f.runtime.savedKeyboard = 0.6
+        f.runtime.hygieneEffects.floor = true
+        f.runtime.hygieneEffects.keyboard = true
+        f.kernelHeld = false
+        f.sleepExit = 1
+        let failed = f.runtime.apply([.requestSleep])
+        let sleeps = f.sleepRequests
+        f.runtime.finishDisengageHygiene(sleepResult: failed)
+        XCTAssertEqual(failed.sleepnow, .failed(exit: 1))
+        XCTAssertEqual(brightness, [0.8])
+        XCTAssertEqual(keyboard, [0.6])
+        XCTAssertFalse(brightness.contains(f.runtime.preferences.brightnessFloor))
+        XCTAssertEqual(f.sleepRequests, sleeps)
+        XCTAssertFalse(f.kernelHeld)
+
+        brightness.removeAll()
+        keyboard.removeAll()
+        f.runtime.savedBrightness = 0.8
+        f.runtime.savedKeyboard = 0.6
+        f.runtime.hygieneEffects.floor = true
+        f.runtime.hygieneEffects.keyboard = true
+        f.sleepExit = 0
+        let ok = f.runtime.apply([.requestSleep])
+        f.runtime.finishDisengageHygiene(sleepResult: ok)
+        XCTAssertEqual(ok.sleepnow, .ok)
+        XCTAssertTrue(brightness.isEmpty)
+        XCTAssertTrue(keyboard.isEmpty)
+        // Nothing is written before the Mac sleeps. The capture waits for the wake.
+        XCTAssertEqual(f.runtime.savedBrightness, 0.8)
+        XCTAssertEqual(f.runtime.savedKeyboard, 0.6)
+        XCTAssertTrue(f.runtime.wakeRestorePending)
     }
 }

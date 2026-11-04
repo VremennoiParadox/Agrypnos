@@ -15,12 +15,15 @@ extension WatchRuntime {
             }
         }
         guard result == .ok, readKernel() == .held else {
+            if result == .ok {
+                _ = setKernel(false)
+            }
             if case .failed(let message) = result {
-                notify("Couldn't keep the watch. \(message)")
+                notify("Couldn't turn Keep awake on. \(message)")
             } else if result == .grantMissing {
                 notify(AgrypnosCopy.grantNeeded)
             } else {
-                notify("pmset ran but SleepDisabled did not read back as on.")
+                notify("pmset ran but the wake hold did not read back as on.")
             }
             WatchDiagnostics.event("kernel arm failed")
             return false
@@ -53,6 +56,7 @@ extension WatchRuntime {
             engineEngaged: engine.engaged,
             kernelSleepDisabled: kernelHeld != .clear
         )
+        let userOffWillSleep = userOffSleepDecided
         idlePostTask?.cancel()
         idlePostTask = nil
         idleOutbound.cancelInFlight()
@@ -65,9 +69,23 @@ extension WatchRuntime {
             }
         }
         if engine.engaged {
-            apply(engine.userSetEngaged(false, now: Date(), lidClosed: false))
+            let confirmed = cleared && engine.userOffLidCloseConfirmed(rawClosed: readLid() == true)
+            let result = apply(engine.userSetEngaged(false, now: Date(), lidClosed: confirmed))
             store.save(engine.preferences)
+            if result.sleepnow != nil {
+                userOffSleepDecided = false
+                finishDisengageHygiene(sleepResult: result)
+                return
+            }
         }
+        if userOffWillSleep, cleared,
+           engine.userOffLidCloseConfirmed(rawClosed: readLid() == true) {
+            userOffSleepDecided = false
+            let result = apply([.requestSleep])
+            finishDisengageHygiene(sleepResult: result)
+            return
+        }
+        userOffSleepDecided = false
         if KernelQuitPolicy.shouldRestoreHygiene(kernelCleared: cleared) {
             restoreHygiene()
         } else {
@@ -77,27 +95,33 @@ extension WatchRuntime {
 
     func reconcileKernel(preferClearLeftover: Bool) {
         let kernel = readKernel()
-        if kernel == .held, !engine.engaged {
+        guard !engine.engaged else { return }
+        if kernel == .unknown {
             if preferClearLeftover {
                 _ = setKernel(false)
             }
-            if readKernel() == .held {
-                let rawClosed = readLid() == true
-                if LidCloseConfirm.shouldCaptureBeforeClosedHygiene(rawClosed: rawClosed) {
-                    recaptureOpenLidHygiene()
-                }
-                apply(engine.adoptLeftoverKernel(now: Date(), lidClosed: false))
-                apply(engine.observeLid(closed: rawClosed, now: Date()))
-                if LidCloseConfirm.shouldRecaptureOpenBrightness(
-                    rawClosed: rawClosed,
-                    confirmedClosed: engine.lidClosed
-                ) {
-                    recaptureOpenLidHygiene()
-                }
-                startLidPulse()
-                syncDeadlineTimer()
-                notify(AgrypnosCopy.leftoverNotify(for: engine.preferences.panelPowerMode))
+            return
+        }
+        guard kernel == .held else { return }
+        if preferClearLeftover {
+            _ = setKernel(false)
+        }
+        if readKernel() == .held {
+            let rawClosed = readLid() == true
+            if LidCloseConfirm.shouldCaptureBeforeClosedHygiene(rawClosed: rawClosed) {
+                recaptureOpenLidHygiene()
             }
+            apply(engine.adoptLeftoverKernel(now: Date(), lidClosed: false))
+            apply(engine.observeLid(closed: rawClosed, now: Date()))
+            if LidCloseConfirm.shouldRecaptureOpenBrightness(
+                rawClosed: rawClosed,
+                confirmedClosed: engine.lidClosed
+            ) {
+                recaptureOpenLidHygiene()
+            }
+            startLidPulse()
+            syncDeadlineTimer()
+            notify(AgrypnosCopy.leftoverNotify(for: engine.preferences.panelPowerMode))
         }
     }
 
@@ -109,7 +133,10 @@ extension WatchRuntime {
                 object: nil,
                 queue: .main
             ) { [weak self] _ in
-                Task { @MainActor in self?.noteMacWillSleep() }
+                // On this queue, before the block returns. A later Task lets the in-flight poll ack live.
+                MainActor.assumeIsolated {
+                    self?.noteMacWillSleep()
+                }
             }
         )
         workspaceObservers.append(

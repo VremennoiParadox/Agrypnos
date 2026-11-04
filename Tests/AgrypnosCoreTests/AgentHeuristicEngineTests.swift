@@ -173,26 +173,43 @@ final class AgentHeuristicEngineTests: XCTestCase {
         XCTAssertTrue(snap.report(.claudeCode)?.isBusy ?? false)
     }
 
-    func testClaudeDesktopAppIsNotClaudeCodeBusy() {
-        let snap = engine.evaluate(
-            processes: [
-                ProcessRecord(
-                    pid: 2,
-                    cpuPercent: 40,
-                    name: "/Applications/Claude.app/Contents/MacOS/Claude"
-                )
-            ],
-            sessionWrites: [
-                SessionFileSignal(
-                    url: URL(fileURLWithPath: "/Users/a/.claude/projects/p/s.jsonl"),
-                    modified: now.addingTimeInterval(-1),
-                    kind: .claudeCode
-                )
-            ],
+    func testClaudeDesktopCodeTabIsBusyOnlyWithAFreshTranscriptWrite() {
+        let desktop = ProcessRecord(pid: 2, cpuPercent: 40, name: "/Applications/Claude.app/Contents/MacOS/Claude")
+        let helper = ProcessRecord(
+            pid: 3,
+            cpuPercent: 40,
+            name: "/Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude Helper"
+        )
+        let transcript = URL(fileURLWithPath: "/Users/a/.claude/projects/p/s.jsonl")
+
+        let fresh = engine.evaluate(
+            processes: [desktop, helper],
+            sessionWrites: [SessionFileSignal(url: transcript, modified: now.addingTimeInterval(-1), kind: .claudeCode)],
             now: now
         )
-        XCTAssertEqual(snap.report(.claudeCode)?.processRunning, false)
-        XCTAssertFalse(snap.report(.claudeCode)?.isBusy ?? true)
+        XCTAssertEqual(fresh.report(.claudeCode)?.processRunning, true)
+        XCTAssertTrue(fresh.report(.claudeCode)?.isBusy ?? false)
+
+        // CPU alone never counts for the desktop app, and an idle app is not busy.
+        let idle = engine.evaluate(processes: [desktop, helper], sessionWrites: [], now: now)
+        XCTAssertEqual(idle.report(.claudeCode)?.processRunning, true)
+        XCTAssertEqual(idle.report(.claudeCode)?.cpuBusy, false)
+        XCTAssertFalse(idle.report(.claudeCode)?.isBusy ?? true)
+
+        let stale = engine.evaluate(
+            processes: [desktop],
+            sessionWrites: [SessionFileSignal(url: transcript, modified: now.addingTimeInterval(-600), kind: .claudeCode)],
+            now: now
+        )
+        XCTAssertFalse(stale.report(.claudeCode)?.isBusy ?? true)
+
+        // Helpers alone are not a Claude Code process.
+        let helperOnly = engine.evaluate(
+            processes: [helper],
+            sessionWrites: [SessionFileSignal(url: transcript, modified: now.addingTimeInterval(-1), kind: .claudeCode)],
+            now: now
+        )
+        XCTAssertEqual(helperOnly.report(.claudeCode)?.processRunning, false)
     }
 
     func testCursorParentStaleSubagentTranscriptWithinSessionFreshnessIsBusy() {

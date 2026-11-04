@@ -61,7 +61,8 @@ public struct LidCloseConfirm: Equatable, Sendable {
     }
 }
 
-/// 4 Hz only while a close is pending confirm. Open or already confirmed uses the 5s tick.
+/// 4 Hz while a close is pending confirm, and while armed with the lid closed, so an open is noticed
+/// within one pulse and the brightness restore starts at once. Otherwise the 5s tick.
 public enum LidSampleCadence: Equatable, Sendable {
     case none
     case confirmPulse
@@ -78,7 +79,7 @@ public enum LidSamplePolicy: Sendable {
         pendingClose: Bool = false
     ) -> LidSampleCadence {
         guard engaged || inboundNeedsLid else { return .none }
-        if lidCloseConfirmed { return .coarse }
+        if lidCloseConfirmed { return engaged ? .confirmPulse : .coarse }
         if pendingClose { return .confirmPulse }
         return .coarse
     }

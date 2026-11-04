@@ -13,7 +13,7 @@ final class DiscordInboundHelpCopyTests: XCTestCase {
         XCTAssertTrue(help.contains("/disarm"))
         XCTAssertTrue(help.contains("/status"))
         XCTAssertTrue(help.contains("/help"))
-        XCTAssertTrue(lower.contains("keep the watch"))
+        XCTAssertTrue(lower.contains("keep awake"))
         XCTAssertTrue(lower.contains("asleep"))
         XCTAssertTrue(lower.contains("receiving updates"))
         XCTAssertFalse(lower.contains("polling"))
@@ -21,7 +21,7 @@ final class DiscordInboundHelpCopyTests: XCTestCase {
         XCTAssertTrue(lower.contains("open"))
         XCTAssertTrue(lower.contains("closed") || lower.contains("close"))
         XCTAssertTrue(lower.contains("sleep"))
-        XCTAssertTrue(lower.contains("watch facts") || lower.contains("keep the watch, how long"))
+        XCTAssertTrue(lower.contains("watch facts") || lower.contains("keep awake, how long"))
         XCTAssertTrue(lower.contains("live battery"))
         XCTAssertTrue(lower.contains("when known"))
         XCTAssertFalse(lower.contains("agent stopped"))
@@ -32,19 +32,27 @@ final class DiscordInboundHelpCopyTests: XCTestCase {
     }
 
     func testArmDisarmMissedAndStatusReuseTelegramFacts() {
-        XCTAssertEqual(DiscordInboundCopy.armed, TelegramInboundCopy.armed)
-        XCTAssertEqual(DiscordInboundCopy.disarmed, TelegramInboundCopy.disarmed)
+        XCTAssertEqual(
+            DiscordInboundCopy.armed(duration: .untilAgentsSettle),
+            TelegramInboundCopy.armed(duration: .untilAgentsSettle)
+        )
+        XCTAssertEqual(
+            DiscordInboundCopy.disarmed(wasEngaged: true, sleepRequested: true),
+            TelegramInboundCopy.disarmed(wasEngaged: true, sleepRequested: true)
+        )
         XCTAssertEqual(DiscordInboundCopy.missedWhileAsleep, TelegramInboundCopy.missedWhileAsleep)
-        XCTAssertEqual(DiscordInboundCopy.armed, "Armed.")
-        XCTAssertEqual(DiscordInboundCopy.disarmed, "Disarmed.")
-        XCTAssertEqual(DiscordInboundCopy.missedWhileAsleep, "Missed while asleep.")
+        XCTAssertEqual(DiscordInboundCopy.armed(duration: .untilAgentsSettle), "Keep awake is on. How long is Agents.")
+        XCTAssertEqual(
+            DiscordInboundCopy.disarmed(wasEngaged: true, sleepRequested: false),
+            "Keep awake is off. The lid isn't confirmed closed, so the Mac stays awake."
+        )
         XCTAssertEqual(
             DiscordInboundCopy.reply(intent: .arm, engaged: true, duration: .indefinite),
-            "Armed."
+            "Keep awake is on. How long is \(DurationOption.indefinite.segmentTitle)."
         )
         XCTAssertEqual(
             DiscordInboundCopy.reply(intent: .disarm, engaged: false, duration: .indefinite),
-            "Disarmed."
+            "Keep awake was already off. The lid isn't confirmed closed, so the Mac stays awake."
         )
         XCTAssertNil(DiscordInboundCopy.reply(intent: .ignore, engaged: false, duration: .indefinite))
 
@@ -83,8 +91,9 @@ final class DiscordInboundHelpCopyTests: XCTestCase {
 
     func testInboundCopyBansJobFinishedAndStillThinking() {
         let blob = [
-            DiscordInboundCopy.armed,
-            DiscordInboundCopy.disarmed,
+            DiscordInboundCopy.armed(duration: .untilAgentsSettle),
+            DiscordInboundCopy.disarmed(wasEngaged: true, sleepRequested: true),
+            DiscordInboundCopy.disarmed(wasEngaged: false, sleepRequested: false),
             DiscordInboundCopy.missedWhileAsleep,
             DiscordInboundCopy.help,
             DiscordInboundCopy.commandsHelp,
@@ -307,14 +316,14 @@ final class DiscordApplicationCommandFactoryTests: XCTestCase {
             DiscordInboundRequestFactory.channelMessage(
                 botToken: "BotToken.example",
                 channelId: "123",
-                content: DiscordInboundCopy.armed
+                content: DiscordInboundCopy.armed(duration: .indefinite)
             )
         )
         XCTAssertEqual(message.httpMethod, "POST")
         XCTAssertEqual(message.url.path, "/api/v10/channels/123/messages")
         XCTAssertFalse(message.url.path.contains("webhooks"))
         let messageBody = try XCTUnwrap(JSONSerialization.jsonObject(with: message.body) as? [String: Any])
-        XCTAssertEqual(messageBody["content"] as? String, "Armed.")
+        XCTAssertEqual(messageBody["content"] as? String, DiscordInboundCopy.armed(duration: .indefinite))
 
         let callback = try XCTUnwrap(
             DiscordInboundRequestFactory.interactionCallback(
@@ -352,7 +361,7 @@ final class DiscordApplicationCommandFactoryTests: XCTestCase {
             DiscordInboundRequestFactory.interactionEditOriginal(
                 applicationId: "99",
                 interactionToken: "tok",
-                content: DiscordInboundCopy.armed
+                content: DiscordInboundCopy.armed(duration: .indefinite)
             )
         )
         XCTAssertEqual(edit.httpMethod, "PATCH")

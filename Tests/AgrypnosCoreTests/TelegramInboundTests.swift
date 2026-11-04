@@ -330,17 +330,32 @@ final class TelegramInboundWatchEngineTests: XCTestCase {
 
 final class TelegramInboundCopyTests: XCTestCase {
     func testRepliesArePlainFacts() {
-        XCTAssertEqual(TelegramInboundCopy.armed, "Armed.")
-        XCTAssertEqual(TelegramInboundCopy.disarmed, "Disarmed.")
-        XCTAssertEqual(TelegramInboundCopy.keepOn, "Keep the watch is on.")
-        XCTAssertEqual(TelegramInboundCopy.keepOff, "Keep the watch is off.")
+        XCTAssertEqual(TelegramInboundCopy.armed(duration: .untilAgentsSettle), "Keep awake is on. How long is Agents.")
+        XCTAssertEqual(
+            TelegramInboundCopy.disarmed(wasEngaged: true, sleepRequested: false),
+            "Keep awake is off. The lid isn't confirmed closed, so the Mac stays awake."
+        )
+        XCTAssertEqual(
+            TelegramInboundCopy.disarmed(wasEngaged: true, sleepRequested: true),
+            "Keep awake is off. The lid is confirmed closed, so Agrypnos is asking the Mac to sleep."
+        )
+        XCTAssertEqual(
+            TelegramInboundCopy.disarmed(wasEngaged: false, sleepRequested: true),
+            "Keep awake was already off. The lid is confirmed closed, so Agrypnos is asking the Mac to sleep."
+        )
+        XCTAssertEqual(
+            TelegramInboundCopy.disarmFailed,
+            "Couldn't confirm the wake hold cleared. The Mac may still be held awake."
+        )
+        XCTAssertEqual(TelegramInboundCopy.keepOn, "Keep awake is on.")
+        XCTAssertEqual(TelegramInboundCopy.keepOff, "Keep awake is off.")
         XCTAssertEqual(
             TelegramInboundCopy.reply(intent: .arm, engaged: true, duration: .indefinite),
-            "Armed."
+            "Keep awake is on. How long is \(DurationOption.indefinite.segmentTitle)."
         )
         XCTAssertEqual(
             TelegramInboundCopy.reply(intent: .disarm, engaged: false, duration: .indefinite),
-            "Disarmed."
+            "Keep awake was already off. The lid isn't confirmed closed, so the Mac stays awake."
         )
         XCTAssertNil(TelegramInboundCopy.reply(intent: .status, engaged: true, duration: .indefinite))
         XCTAssertNil(TelegramInboundCopy.reply(intent: .status, engaged: true, duration: .oneHour))
@@ -353,8 +368,9 @@ final class TelegramInboundCopyTests: XCTestCase {
 
     func testInboundCopyBansJobFinishedAndStillThinking() {
         let blob = [
-            TelegramInboundCopy.armed,
-            TelegramInboundCopy.disarmed,
+            TelegramInboundCopy.armed(duration: .untilAgentsSettle),
+            TelegramInboundCopy.disarmed(wasEngaged: true, sleepRequested: true),
+            TelegramInboundCopy.disarmed(wasEngaged: false, sleepRequested: false),
             TelegramInboundCopy.keepOn,
             TelegramInboundCopy.keepOff,
             TelegramInboundCopy.armFailed,

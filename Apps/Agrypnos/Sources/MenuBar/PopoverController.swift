@@ -47,8 +47,10 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var discordInboundSwitch: NSSwitch!
     var discordInboundTokenSecrets: SecretRevealRow!
     var discordInboundChannelSecrets: SecretRevealRow!
+    var discordUserSecrets: SecretRevealRow!
     var telegramTokenSecrets: SecretRevealRow!
     var telegramChatSecrets: SecretRevealRow!
+    var telegramUserSecrets: SecretRevealRow!
     var loginSwitch: NSSwitch!
     var hotkeyHint: NSTextField!
     let recorder = HotkeyRecorderControl()
@@ -105,6 +107,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var quitButton: NSButton!
     var currentSection: PopoverSection = .default
     var sectionMotion = 0
+    var watchCaptionShown = false
 
     init(runtime: WatchRuntime) {
         self.runtime = runtime
@@ -147,13 +150,20 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         watchSwitch?.state = on ? .on : .off
         mainCard?.active = on
         headerMark?.contentTintColor = on ? AgrypnosPalette.gold : .labelColor
-        caption?.stringValue = AgrypnosCopy.watchCaption(
+        let watchCaption = AgrypnosCopy.watchCaption(
             engaged: on,
             leftover: runtime.adoptedLeftover,
             floor: runtime.preferences.batteryFloorPercent,
             lidClosed: runtime.engine.lidClosed,
             panelPowerMode: runtime.preferences.panelPowerMode
         )
+        caption?.stringValue = watchCaption
+        let showWatchCaption = !watchCaption.isEmpty
+        caption?.isHidden = !showWatchCaption
+        if caption != nil, showWatchCaption != watchCaptionShown {
+            watchCaptionShown = showWatchCaption
+            applySection(currentSection)
+        }
         lastWatchEndLabel?.stringValue = AgrypnosCopy.lastWatchEndCaption(
             event: runtime.preferences.lastWatchEnd, now: Date()
         )
@@ -193,12 +203,8 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         panelPowerControl?.selectedSegment = PanelPowerChrome.selectedSegment(mode: panelMode)
         panelPowerCaption?.stringValue = PanelPowerChrome.caption(panelMode)
         panelPowerHelp?.stringValue = PanelPowerChrome.help(panelMode)
-        panelPowerHelp?.isHidden = PanelPowerChrome.showsLidOpenRamp(panelMode)
-        panelPowerControl?.setAccessibilityHelp(
-            PanelPowerChrome.showsLidOpenRamp(panelMode)
-                ? PanelPowerChrome.caption(panelMode)
-                : PanelPowerChrome.help(panelMode)
-        )
+        panelPowerHelp?.isHidden = true
+        panelPowerControl?.setAccessibilityHelp(PanelPowerChrome.caption(panelMode))
         thermalSwitch?.state = runtime.preferences.thermalAutoOff ? .on : .off
         refreshNotifChrome(runtime: runtime)
         let batteryRange = UserPreferences.batteryFloorRange
@@ -296,9 +302,13 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
 
     func refreshCountdown() {
         guard let runtime else { return }
-        durationHint?.stringValue = hintCopy(for: runtime)
-        let timed = runtime.preferences.duration.minutes != nil
-        durationHint?.frame.size.height = timed ? 32 : PopoverMetrics.durationHintHeight
+        let hint = hintCopy(for: runtime)
+        durationHint?.stringValue = hint
+        let lines = max(CopyWrap.lineCount(hint, columns: PopoverCopyLayout.innerColumns), 1)
+        durationHint?.frame.size.height = CGFloat(lines * PopoverCopyLayout.lineHeightPoints)
+        if let durationHint, let countdownLabel {
+            countdownLabel.frame.origin.y = durationHint.frame.maxY + 4
+        }
         let remaining = runtime.engine.statusItemRemainingSeconds(now: Date())
             ?? (runtime.engine.holdingForIdlePost ? 0 : nil)
         let text = AgrypnosCopy.durationCountdown(option: runtime.preferences.duration,

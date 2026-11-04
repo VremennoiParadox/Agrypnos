@@ -56,6 +56,8 @@ final class WatchRuntime {
     var pollTimer: Timer?
     var deadlineTimer: Timer?
     var savedBrightness: Double?
+    /// A closed-lid `sleepnow` skipped the restore. Put the capture back when the Mac wakes with the lid open.
+    var wakeRestorePending = false
     var savedKeyboard: Double?
     var hygieneDevices = HygieneDevices()
     var hygieneEffects = HygieneEffects()
@@ -75,6 +77,8 @@ final class WatchRuntime {
     var hotkeySuspendedForRecord = false
     var idleOutbound = NotifIdleOutboundCoordinator()
     var idlePostTask: Task<Void, Never>?
+    /// User-off already chose sleep, then quit cancelled the Discord send before `sleepnow`.
+    var userOffSleepDecided = false
     let inboundPoller = TelegramInboundPoller()
     let discordGateway = DiscordInboundGatewayClient()
     lazy var questionRelay = makeQuestionRelay()
@@ -87,7 +91,7 @@ final class WatchRuntime {
     var probeInFlight = false
     var idleProbeTicks: Int = 0
     var diagnostics = WatchDiagnostics()
-    private(set) var ownsWakeHold = false
+    var ownsWakeHold = false
 
     init(
         store: PreferencesStore = PreferencesStore(),
@@ -292,6 +296,26 @@ final class WatchRuntime {
         return saved
     }
 
+    @discardableResult
+    func setNotifTelegramQuestionUserId(_ value: String?) -> Bool {
+        guard NotifSecretsPayload.present(value) != readNotifSecrets().telegramQuestionUserId else { return true }
+        questionRelay.invalidateAll()
+        let saved = NotifSecretsStore.setTelegramQuestionUserId(value)
+        clearQuestionWatch()
+        dropQuestionForwardingWithoutBot()
+        return saved
+    }
+
+    @discardableResult
+    func setNotifDiscordQuestionUserId(_ value: String?) -> Bool {
+        guard NotifSecretsPayload.present(value) != readNotifSecrets().discordQuestionUserId else { return true }
+        questionRelay.invalidateAll()
+        let saved = NotifSecretsStore.setDiscordQuestionUserId(value)
+        clearQuestionWatch()
+        dropQuestionForwardingWithoutBot()
+        return saved
+    }
+
     func clearNotifSecrets() {
         questionRelay.invalidateAll()
         store.resetTelegramInboundCursor()
@@ -372,6 +396,7 @@ final class WatchRuntime {
             invalidateAgentProbe()
             idlePostTask?.cancel()
             idlePostTask = nil
+            userOffSleepDecided = false
             idleOutbound.noteUserArm()
             let rawClosed = readLid() == true
             if LidCloseConfirm.shouldCaptureBeforeClosedHygiene(rawClosed: rawClosed) {
@@ -410,7 +435,7 @@ final class WatchRuntime {
         )
         if !willWait {
             guard disarmKernel() else {
-                notify("Couldn't verify SleepDisabled was cleared. The watch state is unchanged.")
+                notify("Couldn't verify the wake hold was cleared. Keep awake is unchanged.")
                 delegate?.watchRuntimeDidChange(self)
                 return nil
             }
@@ -430,9 +455,14 @@ final class WatchRuntime {
             if case .assertSleepDisabled = command {
                 guard armKernel(allowInstall: false) else {
                     engine.endForWakeHoldFailure(now: Date())
+                    if !disarmKernel() {
+                        rollbackFailedKernelClear(reason: .wakeHoldFailed)
+                        return HygieneApplyResult()
+                    }
                     syncDeadlineTimer()
                     idlePostTask?.cancel()
                     idlePostTask = nil
+                    userOffSleepDecided = false
                     idleOutbound.cancelInFlight()
                     invalidateAgentProbe()
                     restoreHygiene()
@@ -480,6 +510,7 @@ final class WatchRuntime {
     }
 
     func dropSavedHygieneWithoutWrite() {
+        wakeRestorePending = false
         stopLidPulse()
         brightnessRamp.cancel()
         savedBrightness = nil
@@ -488,8 +519,17 @@ final class WatchRuntime {
     }
 
     func recaptureOpenLidHygiene() {
+        let previous = savedBrightness
         savedBrightness = hygieneDevices.brightness()
         savedKeyboard = hygieneDevices.keyboard()
+        if savedBrightness != previous {
+            WatchDiagnostics.event("capture brightness=\(String(describing: savedBrightness)) keyboard=\(String(describing: savedKeyboard))")
+        }
+    }
+
+    /// True when this user-off asked the Mac to sleep, now or after the pending watch-end message.
+    func disarmRequestedSleep(_ result: HygieneApplyResult) -> Bool {
+        result.sleepnow != nil || userOffSleepDecided
     }
 
     func inboundDisarmReply(_ base: String, sleepResult: HygieneApplyResult? = nil) -> String {

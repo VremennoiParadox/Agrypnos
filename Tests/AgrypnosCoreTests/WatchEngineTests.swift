@@ -118,6 +118,36 @@ final class WatchEngineTests: XCTestCase {
         XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
     }
 
+    func testReselectingAgentsKeepsBusyAndStillSettles() {
+        var prefs = UserPreferences.default
+        prefs.duration = .untilAgentsSettle
+        var engine = WatchEngine(preferences: prefs)
+        _ = engine.userSetEngaged(true, now: t0)
+        XCTAssertTrue(
+            engine.tick(
+                now: t0.addingTimeInterval(20),
+                safety: .acPower,
+                agents: AgentSnapshot(reports: [
+                    AgentReport(kind: .claudeCode, processRunning: true, cpuBusy: true, recentSessionWrite: true, isBusy: true)
+                ])
+            ).isEmpty
+        )
+        XCTAssertTrue(engine.settle.sawBusy)
+        _ = engine.userSetDuration(.untilAgentsSettle, now: t0.addingTimeInterval(21))
+        XCTAssertTrue(engine.settle.sawBusy)
+        observeHealthyIdle(&engine, before: t0.addingTimeInterval(20 + 120))
+        XCTAssertEqual(
+            engine.tick(
+                now: t0.addingTimeInterval(20 + 120),
+                safety: .acPower,
+                agents: .idle
+            ),
+            [.disengage(.agentsSettled)]
+        )
+        XCTAssertFalse(engine.engaged)
+        XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
+    }
+
     func testDroppedKernelWhileEngagedReassertsAndStaysOn() {
         var engine = WatchEngine(preferences: .default)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: false)

@@ -29,7 +29,7 @@ public enum DisengageReason: String, Equatable, Sendable, CaseIterable, Codable 
     case lowPowerMode
     case wakeHoldFailed
 
-    /// How long is a user setting; timer must not flip it. Agents idle turns Keep the watch off after settle.
+    /// How long is a user setting; timer must not flip it. The wait after agent signals stop turns Keep awake off.
     public var turnsWatchOff: Bool {
         switch self {
         case .batteryFloor, .thermal, .lowPowerMode, .agentsSettled, .questionUnanswered, .wakeHoldFailed, .timerExpired:

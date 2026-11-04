@@ -77,6 +77,17 @@ final class TelegramQuestionTests: XCTestCase {
             #"{"telegramBotToken":"fixture","telegramChatId":"9","telegramQuestionUserId":"42"}"#.utf8)))
         XCTAssertEqual(legacy.telegramBotToken, "fixture")
         XCTAssertEqual(legacy.telegramChatId, "9")
+        XCTAssertEqual(legacy.telegramQuestionUserId, "42")
+        XCTAssertNil(legacy.discordQuestionUserId)
+        let withUsers = NotifSecretsPayload(
+            telegramBotToken: "fixture", telegramChatId: "9",
+            discordBotToken: "discord", discordChannelId: "10",
+            telegramQuestionUserId: "42", discordQuestionUserId: "43")
+        XCTAssertEqual(
+            NotifSecretsPayload.decode(try XCTUnwrap(NotifSecretsPayload.encode(withUsers))),
+            withUsers)
+        XCTAssertNil(secrets.telegramQuestionUserId)
+        XCTAssertNil(secrets.discordQuestionUserId)
     }
 
     private func questionBatch() -> QuestionBatch {

@@ -40,7 +40,7 @@ final class KernelQuitPolicyTests: XCTestCase {
     func testFailedClearPostsLeftoverHonesty() {
         XCTAssertEqual(
             KernelQuitPolicy.leftoverNotify(kernelCleared: false),
-            "Couldn't verify SleepDisabled was cleared."
+            "Couldn't verify the wake hold was cleared."
         )
         XCTAssertNil(KernelQuitPolicy.leftoverNotify(kernelCleared: true))
     }
