@@ -68,6 +68,20 @@ final class WakeRestoreTests: XCTestCase {
         XCTAssertFalse(f.runtime.hygieneEffects.floor)
     }
 
+    /// Armed with the lid confirmed closed, the lid is sampled at 4 Hz so an open is noticed at once.
+    func testLidPulseKeepsRunningWhileArmedWithTheLidConfirmedClosed() {
+        let f = RuntimeFixture()
+        f.beginQuestionWatch()
+        XCTAssertTrue(f.runtime.engine.lidCloseConfirmed)
+        XCTAssertEqual(f.runtime.lidCadence(), .confirmPulse)
+        f.runtime.syncLidPulse()
+        XCTAssertTrue(f.runtime.lidTimer != nil)
+        f.lidClosed = false
+        f.runtime.pollLid()
+        XCTAssertEqual(f.runtime.lidCadence(), .coarse)
+        XCTAssertNil(f.runtime.lidTimer)
+    }
+
     func testNothingRestoresWhenNoSleepnowWasPending() {
         let f = RuntimeFixture()
         f.lidClosed = false

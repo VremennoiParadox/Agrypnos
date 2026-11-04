@@ -65,13 +65,18 @@ final class LidSamplePolicyTests: XCTestCase {
         )
     }
 
-    func testArmedAlreadyConfirmedDropsTheFourHertzPulse() {
+    /// Armed with the lid closed, the open must be noticed within one pulse so the brightness comes back at once.
+    func testArmedWithTheLidConfirmedClosedKeepsTheFourHertzPulse() {
         XCTAssertEqual(
             LidSamplePolicy.cadence(engaged: true, lidCloseConfirmed: true),
-            .coarse
+            .confirmPulse
         )
-        XCTAssertFalse(LidSamplePolicy.runsConfirmPulse(engaged: true, lidCloseConfirmed: true))
+        XCTAssertTrue(LidSamplePolicy.runsConfirmPulse(engaged: true, lidCloseConfirmed: true))
         XCTAssertTrue(LidSamplePolicy.samplesOnTick(engaged: true, lidCloseConfirmed: true))
+    }
+
+    func testArmedWithTheLidOpenSamplesOnTheCoarseTick() {
+        XCTAssertEqual(LidSamplePolicy.cadence(engaged: true, lidCloseConfirmed: false), .coarse)
     }
 
     func testDisengagedWithoutInboundNeverPulsesEvenIfLidLooksClosed() {
