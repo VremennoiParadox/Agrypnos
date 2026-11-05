@@ -12,6 +12,14 @@
   </p>
 </div>
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/readme/agrypnos-demo.webp">
+    <source media="(prefers-color-scheme: light)" srcset="docs/readme/agrypnos-demo-light.webp">
+    <img src="docs/readme/agrypnos-demo.webp" alt="Agrypnos demo: turn Keep awake on in Agents mode and close the lid; the agent keeps working. When the wait after agent signals stop ends, Keep awake turns off and Agrypnos asks the Mac to sleep.">
+  </picture>
+</p>
+
 <table align="center">
   <tr>
     <td align="center"><b>Watches</b></td>
