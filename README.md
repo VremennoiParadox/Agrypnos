@@ -97,7 +97,7 @@ The **Power** section has two panel modes. You pick one.
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/readme/agrypnos-howto-power.webp">
     <source media="(prefers-color-scheme: light)" srcset="docs/readme/agrypnos-howto-power-light.webp">
-    <img src="docs/readme/agrypnos-howto-power.webp" width="400" alt="Open Power and pick Sleep panel. The brightness floor and fade-back controls go away.">
+    <img src="docs/readme/agrypnos-howto-power.webp" width="400" alt="Open Power and pick Dim panel. The brightness floor and fade-back controls appear.">
   </picture>
 </p>
 
