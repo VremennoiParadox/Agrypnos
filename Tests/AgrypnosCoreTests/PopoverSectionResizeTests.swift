@@ -40,6 +40,7 @@ final class PopoverSectionResizeTests: XCTestCase {
         XCTAssertTrue(same.hidesOutgoingImmediately)
         XCTAssertEqual(same.documentHeightDuringMotion, same.toContentHeight)
         XCTAssertEqual(same.scrollIntent, .preserve)
+        XCTAssertFalse(same.slidesCards)
 
         let initial = PopoverSectionResize.make(from: .power, to: .watch, animated: false)
         XCTAssertFalse(initial.animatesHeight)
@@ -48,6 +49,40 @@ final class PopoverSectionResizeTests: XCTestCase {
         XCTAssertFalse(initial.allowsImplicitAnimation)
         XCTAssertTrue(initial.hidesOutgoingImmediately)
         XCTAssertEqual(initial.documentHeightDuringMotion, initial.toContentHeight)
+    }
+
+    /// Keep awake on/off grows or shrinks Watch in place. The same cards stay up, so they ride
+    /// the height ease; swapping them first made the cards jump and clip before the window moved.
+    func testSameSectionHeightChangeSlidesCardsWithTheEase() {
+        let closed = PopoverStackLayout.make(section: .watch, showsWatchCaption: false).popoverHeight
+        let opening = PopoverSectionResize.make(
+            from: .watch, to: .watch, animated: true, currentHeight: closed, showsWatchCaption: true
+        )
+        XCTAssertTrue(opening.animatesHeight)
+        XCTAssertTrue(opening.slidesCards)
+        XCTAssertEqual(opening.timing, .easeInEaseOut)
+        XCTAssertEqual(opening.scrollIntent, .preserve)
+
+        let open = PopoverStackLayout.make(section: .watch, showsWatchCaption: true).popoverHeight
+        let closing = PopoverSectionResize.make(
+            from: .watch, to: .watch, animated: true, currentHeight: open, showsWatchCaption: false
+        )
+        XCTAssertTrue(closing.animatesHeight)
+        XCTAssertTrue(closing.slidesCards)
+
+        let reduceMotion = PopoverSectionResize.make(
+            from: .watch, to: .watch, animated: false, currentHeight: closed, showsWatchCaption: true
+        )
+        XCTAssertFalse(reduceMotion.slidesCards)
+    }
+
+    func testSectionSwitchesSwapCardsBeforeTheEase() {
+        for from in PopoverSection.allCases {
+            for to in PopoverSection.allCases where from != to {
+                let motion = PopoverSectionResize.make(from: from, to: to, animated: true)
+                XCTAssertFalse(motion.slidesCards, "\(from.title) → \(to.title) would interpolate two sections")
+            }
+        }
     }
 
     func testSwitchHidesOutgoingImmediatelyAndSizesDocumentToDestination() {
