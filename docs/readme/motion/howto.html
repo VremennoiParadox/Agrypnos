@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Agrypnos how-to clips</title>
+<!-- Short README clips. ?clip=power|agents|bot|questions picks one, ?light uses the light popover.
+     Card positions come from PopoverStackLayout and the copy from AgrypnosCopy / QuestionSetupChrome.
+     Serve this folder to watch it live: python3 -m http.server -d docs/readme/motion -->
+<script>window.ready = new Promise(r => { window.markReady = r; });</script>
+<style>
+  :root {
+    --blue: #0a84ff; --pop: rgba(36,36,42,.74); --pop-edge: rgba(255,255,255,.2);
+    --card: rgba(255,255,255,.06); --card-edge: rgba(255,255,255,.08);
+    --ink: rgba(255,255,255,.86); --muted: rgba(235,235,245,.6); --faint: rgba(235,235,245,.3);
+    --seg: rgba(118,118,128,.24); --off: rgba(120,120,128,.36); --knob: #f2f2f2;
+    --field: rgba(0,0,0,.28); --field-edge: rgba(255,255,255,.1); --btn: rgba(255,255,255,.14); --btn-edge: rgba(255,255,255,.06);
+    --track: rgba(255,255,255,.16); --bar: rgba(18,18,28,.5); --bar-ink: rgba(255,255,255,.9); --hi: rgba(255,255,255,.18);
+    --sep: rgba(255,255,255,.16);
+    --sans: -apple-system, "SF Pro Text", system-ui, sans-serif;
+  }
+  body.light {
+    --blue: #007aff; --pop: rgba(236,236,241,.84); --pop-edge: rgba(0,0,0,.12);
+    --card: rgba(0,0,0,.045); --card-edge: rgba(0,0,0,.06);
+    --ink: rgba(0,0,0,.85); --muted: rgba(60,60,67,.62); --faint: rgba(60,60,67,.32);
+    --seg: rgba(0,0,0,.07); --off: rgba(0,0,0,.1); --knob: #fff;
+    --field: #fff; --field-edge: rgba(0,0,0,.16); --btn: rgba(0,0,0,.08); --btn-edge: transparent;
+    --track: rgba(0,0,0,.13); --bar: rgba(255,255,255,.55); --bar-ink: rgba(0,0,0,.85); --hi: rgba(0,0,0,.1);
+    --sep: rgba(0,0,0,.16);
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { background: transparent; font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+  .abs { position: absolute; }
+  /* A crop of the Mac's screen. Rounded, fading out at the bottom into whatever page it sits on. */
+  #stage { --top-fade: 0px; position: relative; width: 440px; height: 640px; overflow: hidden; border-radius: 14px;
+    -webkit-mask-image: linear-gradient(transparent, #000 var(--top-fade), #000 calc(100% - 64px), transparent); }
+  #desk { position: absolute; left: 0; top: 0; width: 440px; height: 900px; }
+  #wall { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 62% 30%; }
+  #menubar { position: absolute; left: 0; top: 0; width: 100%; height: 24px; background: var(--bar); color: var(--bar-ink);
+    font-size: 13px; backdrop-filter: blur(20px); }
+  #menubar .abs { top: 0; height: 24px; display: flex; align-items: center; }
+  #eyeItem { left: 208px; width: 24px; height: 22px !important; top: 1px !important; justify-content: center; border-radius: 5px; }
+
+  #pop { left: 56px; top: 34px; width: 328px; transform-origin: 164px -10px; }
+  #pop .arrow { left: 155px; top: -9px; width: 18px; height: 10px; background: var(--pop); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+  #popBody { position: relative; border-radius: 12px; overflow: hidden; background: var(--pop);
+    backdrop-filter: blur(26px) saturate(1.6); box-shadow: 0 0 0 .5px var(--pop-edge), 0 24px 60px rgba(0,0,0,.35); }
+  #doc { position: absolute; left: 0; top: 0; width: 328px; }
+  .lbl { font-size: 13px; color: var(--ink); white-space: nowrap; }
+  .cap { font-size: 12px; line-height: 16px; color: var(--muted); }
+  .card { position: absolute; left: 16px; width: 296px; border-radius: 11px; border: 1px solid var(--card-edge); background: var(--card); }
+  .seg { position: absolute; display: flex; padding: 2px; gap: 2px; height: 24px; border-radius: 7px; background: var(--seg); font-size: 13px; }
+  .seg span { flex: 1; display: grid; place-items: center; border-radius: 5px; color: var(--ink); white-space: nowrap; }
+  .seg span.sel { background: var(--blue); color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+  /* NSSegmentedControl draws a thin divider between unselected neighbours */
+  .seg span { position: relative; }
+  .seg span + span::before { content: ''; position: absolute; left: -2px; top: 25%; height: 50%; width: 1px; background: var(--sep); }
+  .seg span.sel::before, .seg span.sel + span::before { display: none; }
+  .val { font-weight: 600; color: var(--muted); text-align: right; }   /* PopoverForm.valueLabel: 13 pt semibold, secondary */
+  .switch { position: absolute; width: 38px; height: 22px; border-radius: 11px; background: var(--off); }
+  .switch.on { background: var(--blue); }
+  .switch i { position: absolute; top: 1px; left: 1px; width: 20px; height: 20px; border-radius: 50%; background: var(--knob);
+    box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .switch.on i { transform: translateX(16px); }
+  .slider { position: absolute; left: 12px; width: 272px; height: 24px; }
+  .slider b { position: absolute; left: 0; right: 0; top: 10px; height: 4px; border-radius: 2px; background: var(--track); }
+  .slider i { position: absolute; top: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff;
+    box-shadow: 0 0 0 .5px rgba(0,0,0,.2), 0 1px 3px rgba(0,0,0,.3); }
+  .mm { display: flex; justify-content: space-between; font-size: 10px; color: var(--faint); }
+  .btn { position: absolute; height: 24px; padding: 0 12px; display: flex; align-items: center; border-radius: 6px; font-size: 13px;
+    color: var(--ink); background: var(--btn); box-shadow: 0 0 0 .5px var(--btn-edge); white-space: nowrap; }
+  .beta { font: 600 11px var(--sans); color: #ff9f0a; }
+  .field { position: absolute; left: 171px; width: 86px; height: 22px; border-radius: 6px; background: var(--field);
+    box-shadow: inset 0 0 0 1px var(--field-edge); padding: 3px 7px; font-size: 13px; line-height: 16px; color: var(--ink);
+    white-space: nowrap; overflow: hidden; }
+  .field.empty::before { content: attr(data-ph); color: var(--faint); }
+  .field.focus { box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 55%, transparent), inset 0 0 0 1px var(--blue); }
+  .reveal { position: absolute; left: 263px; width: 20px; height: 22px; display: grid; place-items: center; }
+
+  #cursor { left: 0; top: 0; width: 18px; height: 26px; transform-origin: 2px 2px; filter: drop-shadow(0 2px 3px rgba(0,0,0,.45)); }
+  #ripple { left: 0; top: 0; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.85); }
+  #keys { left: 0; top: 0; padding: 3px 7px; border-radius: 6px; font: 600 12px var(--sans); color: #fff;
+    background: rgba(20,20,26,.82); box-shadow: 0 4px 12px rgba(0,0,0,.3); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="desk">
+    <img id="wall" src="wallpaper.jpg" alt="">
+    <div id="menubar">
+      <div class="abs" id="eyeItem"></div>
+      <div class="abs" style="left:244px"><svg width="18" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M1.5 5a11 11 0 0 1 15 0M4.2 8a7 7 0 0 1 9.6 0"/><circle cx="9" cy="11" r="1.3" fill="currentColor" stroke="none"/></svg></div>
+      <div class="abs" style="left:272px"><svg width="26" height="13" viewBox="0 0 26 13"><rect x=".75" y=".75" width="21.5" height="11.5" rx="3.2" fill="none" stroke="currentColor" stroke-opacity=".5" stroke-width="1.2"/><rect x="2.5" y="2.5" width="14" height="8" rx="1.8" fill="currentColor"/><rect x="23.5" y="4.2" width="1.6" height="4.6" rx=".8" fill="currentColor" fill-opacity=".5"/></svg></div>
+      <div class="abs" style="left:310px">Wed 4 Nov&nbsp;&nbsp;23:47</div>
+    </div>
+    <div class="abs" id="pop"><div class="abs arrow"></div><div id="popBody"><div id="doc"></div></div></div>
+    <div class="abs" id="ripple"></div>
+    <svg class="abs" id="cursor" viewBox="0 0 18 26"><path d="M1.5 1.5v20l5-4.6 3.3 7.4 3.2-1.4-3.2-7.2h6.7z" fill="#000" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg>
+    <div class="abs" id="keys">⌘V</div>
+  </div>
+</div>
+
+<script type="module">
+import { k, win, eye } from './shared.js';
+
+const $ = id => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+document.body.classList.toggle('light', params.has('light'));
+
+// ---- The popover, built from the app's layout (document coordinates, 328 wide, cards 296 wide).
+const W = 272;   // card inner width
+const card = (id, y, h, inner) => `<div class="card" id="${id}" style="top:${y}px;height:${h}px">${inner}</div>`;
+const lbl = (x, y, s, id = '') => `<div class="abs lbl" ${id && `id="${id}"`} style="left:${x}px;top:${y}px">${s}</div>`;
+const value = (y, s, id = '') => `<div class="abs lbl val" ${id && `id="${id}"`} style="left:12px;top:${y}px;width:${W}px">${s}</div>`;
+const cap = (y, s, id = '') => `<div class="abs cap" ${id && `id="${id}"`} style="left:12px;top:${y}px;width:${W}px">${s}</div>`;
+const sw = (id, y, on = false) => `<div class="switch${on ? ' on' : ''}" id="${id}" style="left:246px;top:${y}px"><i></i></div>`;
+const seg = (id, x, y, w, labels, sel) =>
+  `<div class="seg" id="${id}" style="left:${x}px;top:${y}px;width:${w}px">${labels.map((l, i) => `<span${i === sel ? ' class="sel"' : ''}>${l}</span>`).join('')}</div>`;
+const slider = (id, y, f) => `<div class="slider" style="top:${y}px"><b></b><i id="${id}" style="left:${f * (W - 20)}px"></i></div>`;
+const minmax = (y, a, b) => `<div class="abs mm" style="left:12px;top:${y}px;width:${W}px"><span>${a}</span><span>${b}</span></div>`;
+const btn = (id, y, s, after = '') => `<div class="btn" id="${id}" style="left:12px;top:${y}px">${s}</div>${after}`;
+const secret = (id, y, label, ph) => lbl(12, y + 5, label) +
+  `<div class="field empty" id="${id}" style="top:${y + 3}px" data-ph="${ph}"></div><div class="reveal" id="${id}Eye" style="top:${y + 3}px"></div>`;
+const swRow = (id, y, label, on) => lbl(12, y + 6, label) + sw(id, y + 5, on);
+
+// Copy: AgrypnosCopy, PanelPowerChrome, AgentSettleGraceChrome, QuestionSetupChrome (verbatim).
+const C = {
+  hintAgents: 'Keep awake turns off when the wait after agent signals stop ends (battery / thermal still apply). Turning Keep awake off with the lid confirmed closed sends the Mac to sleep. With the lid open or unconfirmed it turns Keep awake off and does not sleep the Mac.',
+  captionA: 'Lowers brightness to a set point instead of fully shutting off the screen.',
+  captionB: "Shuts off the screen fully. The Mac stays awake and agents keep running. The brightness floor and fade-back settings don't apply in this mode.",
+  floorHelp: 'Dim panel: when the lid closes, brightness drops to this percent.',
+  rampHelp: 'How long brightness takes to come back when the lid opens.',
+  thermalHelp: 'High temperature turns Keep awake off and sends the Mac to sleep.',
+  settleHelp: 'How long to wait after local busy signals stop before Keep awake turns off. A quiet gap mid-run, with no file writes or CPU use, can look finished, so this wait keeps it from ending early. Agrypnos sees only local process and session activity, not what an agent is doing.',
+  terminalHelp: 'Some agents might launch terminals for tasks like testing. While the terminal is active and executing a command, the agent might go idle and wait for the terminal. This may turn Keep awake off. Turn this on if you want to prevent that.',
+  notifHelp: 'Message your Telegram bot when the timer ends, and when the wait after agent signals stop ends. Message your Discord bot for those, and when Agrypnos asks the Mac to sleep. Off by default.',
+  discordHelp: 'Messages this channel when Watch-end POST is on, including when Agrypnos asks the Mac to sleep. Commands: /arm, /disarm, /status, /help, when Discord inbound is on. Needs your bot token + channel id. Details in Setup instructions.',
+  telegramHelp: 'Message your Telegram bot. Needs token; chat id from getUpdates. Commands need Telegram inbound on: /arm, /disarm, /status, /help.',
+  qHelp: 'Full question forwarding with answering through the bot for OpenCode and Claude Code. Codex only pings you through the bot. It does not forward or answer. Cursor is unavailable because it does not have the signals this needs.',
+  qPolicy: 'After a question is recognized, Agrypnos waits 10 minutes for an answer. If none comes, and Keep awake is already on, Keep awake turns off. The Mac is asked to sleep only when the lid is confirmed closed. A busy agent delays that. Save a Telegram or Discord bot first: token, chat or channel id, your user id, and its inbound switch on.',
+};
+const SETTLE = [90, 600];
+const settleLabel = s => { s = Math.round(s); const m = Math.floor(s / 60), r = s % 60; return s < 60 ? `${s}s` : r ? `${m}m ${r}s` : `${m}m`; };
+const settleFrac = s => (s - SETTLE[0]) / (SETTLE[1] - SETTLE[0]);
+
+const HEADER = `<div class="abs" id="headMark" style="left:16px;top:16px">${eye('open', 'var(--ink)', 18)}</div>` +
+  `<div class="abs lbl" style="left:40px;top:13px;font-size:14px;font-weight:600">Agrypnos</div>` +
+  seg('tabs', 16, 38, 296, ['Watch', 'Power', 'Agents', 'Notif', 'General'], 0);
+
+const SECTIONS = {
+  watch: card('watch', 72, 52, lbl(12, 14, 'Keep awake') + sw('watchSw', 15)) +
+    card('duration', 134, 232, lbl(12, 10, 'How long') + `<div class="abs lbl" style="left:204px;top:10px;width:80px;text-align:right">Minutes</div>` +
+      seg('dur', 12, 36, 208, ['∞', '1h', '3h', 'Agents'], 3) + `<div class="field" style="left:228px;top:36px;width:56px;height:24px"></div>` + cap(68, C.hintAgents)) +
+    card('lastEnd', 376, 72, cap(12, 'Keep awake ended at 22:58, because the wait after agent signals stop ended.')),
+  power: card('panel', 72, 116, seg('panelSeg', 12, 12, W, ['Dim panel', 'Sleep panel'], 0) + cap(40, C.captionA, 'panelCap')) +
+    card('hygiene', 198, 166, swRow('kbSw', 10, 'Keyboard backlight off', true) +
+      `<div id="floor">${swRow('floorSw', 42, 'Brightness floor', true)}<div class="abs lbl val" style="left:178px;top:48px;width:60px">15%</div>` +
+      cap(74, C.floorHelp) + slider('floorKnob', 106, 14 / 39) + minmax(132, '1%', '40%') + '</div>') +
+    card('battery', 374, 88, lbl(12, 12, 'Auto-off at low battery') + value(12, '15%') + slider('batKnob', 40, 10 / 95) + minmax(66, '5%', '100%')) +
+    card('ramp', 472, 108, lbl(12, 12, 'Brightness return when lid opens') + cap(36, C.rampHelp) + seg('rampSeg', 12, 72, W, ['1s', '2s', '3s'], 1)) +
+    card('thermal', 590, 112, swRow('thermalSw', 6, 'Thermal auto-off', true) + cap(40, C.thermalHelp)),
+  agents: card('include', 72, 176, lbl(12, 12, 'Which tools count as busy.') +
+      ['Cursor', 'Claude Code', 'Codex', 'OpenCode'].map((n, i) => swRow(`tool${i}`, 36 + 32 * i, n, i !== 2)).join('')) +
+    card('settle', 258, 224, lbl(12, 12, 'Wait after agent signals stop') + value(12, '2m', 'settleVal') + cap(36, C.settleHelp) +
+      slider('settleKnob', 164, settleFrac(120)) + minmax(190, '1m 30s', '10m')) +
+    card('terminal', 492, 192, lbl(12, 12, 'Count terminal sessions as busy') + cap(36, C.terminalHelp) + sw('termSw', 148)),
+  notif: card('setup', 72, 44, btn('setupBtn', 10, 'Setup instructions…')) +
+    card('enable', 126, 176, lbl(12, 12, 'Watch-end POST') + cap(36, C.notifHelp) + sw('postSw', 132)) +
+    card('discord', 312, 276, lbl(12, 12, 'Discord') + cap(36, C.discordHelp) + secret('dToken', 148, 'Token', 'paste bot token') +
+      secret('dChan', 176, 'Channel', 'channel id') + secret('dUser', 204, 'Discord user id', 'your user id') + swRow('dInSw', 232, 'Discord inbound')) +
+    card('telegram', 598, 228, lbl(12, 12, 'Telegram') + cap(36, C.telegramHelp) + secret('tToken', 100, 'Token', 'paste bot token') +
+      secret('tChat', 128, 'Chat id', 'from getUpdates') + secret('tUser', 156, 'Telegram user id', 'your user id') + swRow('tInSw', 184, 'Telegram inbound')) +
+    card('questions', 836, 44, btn('qBtn', 10, 'Question notifications', '<span class="abs beta" id="qBeta" style="top:14px">BETA</span>')) +
+    card('relay', 890, 412, lbl(12, 12, 'Forward agent questions') + sw('fwdSw', 9) + cap(40, C.qHelp) + cap(160, C.qPolicy)) +
+    card('clear', 890, 44, btn('clearBtn', 10, 'Clear secrets')),
+};
+const SECTION_TABS = ['watch', 'power', 'agents', 'notif'];
+$('doc').innerHTML = HEADER + Object.entries(SECTIONS).map(([n, h]) => `<div class="sec" id="sec-${n}">${h}</div>`).join('');
+$('eyeItem').innerHTML = eye('slash', 'var(--bar-ink)');
+for (const el of document.querySelectorAll('.reveal')) el.innerHTML = eye('open', 'var(--muted)', 17);
+$('qBeta').style.left = `${12 + $('qBtn').offsetWidth + 8}px`;
+
+// ---- Clips. Times in seconds; points in desk coordinates (popover at 56, 34).
+const tabX = i => 56 + 16 + 2 + (i + .5) * (292 / 5);
+const TAB_Y = 34 + 38 + 12;
+const at = (docX, docY, scroll = 0) => [56 + docX, 34 + docY - scroll];
+const set = (id, prop, v) => { $(id).style[prop] = v; };
+const toggle = (id, on, t0, t) => {   // NSSwitch flips with a short slide
+  const p = k(t, [[t0, on ? 0 : 1], [t0 + .18, on ? 1 : 0]]);
+  set(id, 'background', p > .5 ? 'var(--blue)' : 'var(--off)');
+  $(id).firstChild.style.transform = `translateX(${16 * p}px)`;
+};
+
+const CLIPS = {
+  // Power → Sleep panel: the brightness floor and fade-back controls go away.
+  power: { T: 3.6, tab: 1, tabAt: .6, clicks: [.6, 1.45],
+    heights: [[.6, 464], [.85, 718], [1.45, 718], [1.7, 488]],
+    cursor: [[.1, 300, 330], [.5, tabX(1), TAB_Y], [.7, tabX(1), TAB_Y], [1.35, ...at(232, 96)]],
+    update(t) {
+      const sleep = t >= 1.45, s = k(t, [[1.45, 0], [1.7, 1]]);
+      [...$('panelSeg').children].forEach((el, i) => el.classList.toggle('sel', i === (sleep ? 1 : 0)));
+      $('panelCap').textContent = sleep ? C.captionB : C.captionA;
+      set('floor', 'display', sleep ? 'none' : 'block');
+      set('ramp', 'display', sleep ? 'none' : 'block');
+      set('hygiene', 'height', `${166 - 112 * s}px`);
+      set('battery', 'top', `${374 - 112 * s}px`);
+      set('thermal', 'top', `${590 - 230 * s}px`);
+    } },
+  // Agents → which tools count as busy, and the wait after agent signals stop.
+  agents: { T: 3.8, tab: 2, tabAt: .6, clicks: [1.35, 2.0],
+    heights: [[.6, 464], [.85, 700]],
+    cursor: [[.1, 300, 330], [.5, tabX(2), TAB_Y], [.7, tabX(2), TAB_Y], [1.25, ...at(281, 188)], [1.45, ...at(281, 188)],
+      [1.9, 94 + settleFrac(120) * 252 + 4, 34 + 434 + 4], [2.0, 94 + settleFrac(120) * 252 + 4, 34 + 434 + 4],
+      [2.7, 94 + settleFrac(300) * 252 + 4, 34 + 434 + 4]],
+    hold: [2.0, 2.75],
+    update(t) {
+      toggle('tool2', true, 1.35, t);
+      const s = k(t, [[2.0, 120], [2.7, 300]]);
+      set('settleKnob', 'left', `${settleFrac(s) * (W - 20)}px`);
+      $('settleVal').textContent = settleLabel(s);
+    } },
+  // Notif → paste the Discord bot token and channel id, reveal to check.
+  bot: { T: 3.8, tab: 3, tabAt: .6, clicks: [1.3, 1.85, 2.45],
+    heights: [[.6, 464], [.85, 720]],
+    cursor: [[.1, 300, 330], [.5, tabX(3), TAB_Y], [.7, tabX(3), TAB_Y], [1.2, ...at(236, 476)], [1.75, ...at(236, 504)],
+      [2.35, ...at(289, 504)]],
+    keys: [[1.38, 1.68], [1.93, 2.23]],
+    update(t) {
+      const tokenIn = t >= 1.45, chanIn = t >= 2.0, shown = t >= 2.45;
+      $('dToken').classList.toggle('focus', t >= 1.3 && t < 1.85);
+      $('dChan').classList.toggle('focus', t >= 1.85);
+      $('dToken').classList.toggle('empty', !tokenIn);
+      $('dToken').textContent = tokenIn ? '●'.repeat(12) : '';
+      $('dChan').classList.toggle('empty', !chanIn);
+      $('dChan').textContent = !chanIn ? '' : shown ? '1305829174630957056' : '●'.repeat(12);
+      $('dChanEye').innerHTML = eye(shown ? 'slash' : 'open', 'var(--muted)', 17);
+    } },
+  // Notif → Question notifications (BETA) → Forward agent questions.
+  questions: { T: 4.0, tab: 3, tabAt: .6, clicks: [1.75, 2.85],
+    heights: [[.6, 464], [.85, 720]],
+    scroll: [[.95, 0], [1.45, 230], [2.0, 230], [2.5, 520]],
+    pan: [[.95, 0], [1.45, -150]],
+    cursor: [[.1, 300, 330], [.5, tabX(3), TAB_Y], [.7, tabX(3), TAB_Y], [1.0, 200, 520], [1.65, ...at(107, 858, 230)],
+      [1.85, ...at(107, 858, 230)], [2.7, ...at(281, 912, 520)]],
+    update(t) {
+      const open = t >= 1.75;
+      set('relay', 'display', open ? 'block' : 'none');
+      set('relay', 'opacity', k(t, [[1.75, 0], [1.9, 1]]));
+      set('clear', 'top', `${open ? 1984 : 890}px`);
+      toggle('fwdSw', true, 2.85, t);
+    } },
+};
+const clip = CLIPS[params.get('clip')] ?? CLIPS.power;
+const T = clip.T;
+
+window.seek = function (t) {
+  t = ((t % T) + T) % T;
+  const open = k(t, [[0, 0], [.22, 1], [T - .3, 1], [T, 0]]);   // NSPopover opens and closes around the loop
+  set('pop', 'opacity', open);
+  set('pop', 'transform', `scale(${.97 + .03 * open})`);
+  set('eyeItem', 'background', open > .5 ? 'var(--hi)' : 'transparent');
+
+  const section = t >= clip.tabAt ? SECTION_TABS[clip.tab] : 'watch';
+  for (const n of SECTION_TABS) set(`sec-${n}`, 'display', n === section ? 'block' : 'none');
+  [...$('tabs').children].forEach((el, i) => el.classList.toggle('sel', i === SECTION_TABS.indexOf(section)));
+  set('popBody', 'height', `${k(t, clip.heights)}px`);
+  set('doc', 'transform', `translateY(${-(clip.scroll ? k(t, clip.scroll) : 0)}px)`);
+  const pan = clip.pan ? k(t, clip.pan) : 0;
+  set('desk', 'transform', `translateY(${pan}px)`);
+  $('stage').style.setProperty('--top-fade', `${Math.min(48, -pan / 3)}px`);   // soft top edge once the menu bar scrolls away
+  clip.update(t);
+
+  const cursorAt = u => [k(u, clip.cursor.map(c => [c[0], c[1]])), k(u, clip.cursor.map(c => [c[0], c[2]]))];
+  const [x, y] = cursorAt(t);
+  const held = clip.hold && t >= clip.hold[0] && t < clip.hold[1];
+  const press = held ? 1 : Math.max(0, ...clip.clicks.map(c => win(t, c - .07, c + .1, .07)));
+  set('cursor', 'transform', `translate(${x}px, ${y}px) scale(${1 - .12 * press})`);
+  set('cursor', 'opacity', Math.min(k(t, [[.05, 0], [.2, 1]]), open));
+  const c = clip.clicks.find(c => t >= c && t < c + .45);
+  set('ripple', 'opacity', c ? .9 * (1 - (t - c) / .45) : 0);
+  const [rx, ry] = cursorAt(c ?? t);   // the ripple stays where the click landed
+  set('ripple', 'transform', `translate(${rx}px, ${ry}px) scale(${c ? .4 + (t - c) * 1.6 : 0})`);
+  const key = clip.keys?.find(([a, b]) => t >= a && t < b);
+  const keyOn = key ? win(t, key[0], key[1], .08) : 0;
+  const [kx, ky] = cursorAt(key ? key[0] : t);   // pinned where the paste happens, in the gap left of the field
+  set('keys', 'opacity', keyOn);
+  set('keys', 'transform', `translate(${kx - 100}px, ${ky - 4 - 4 * keyOn}px)`);
+};
+window.DURATION = T;
+window.EXPORT = { size: [440, 640], webpScale: 2, webpQuality: 82, transparent: true };
+
+await Promise.all([...document.images].map(i => i.decode().catch(() => {})));
+if (!params.has('render')) {
+  const t0 = performance.now();
+  const tick = now => { seek((now - t0) / 1000); requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+} else {
+  seek(0);
+}
+window.markReady();
+</script>
+</body>
+</html>

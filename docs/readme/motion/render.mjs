@@ -2,7 +2,9 @@
 // Needs Google Chrome, ffmpeg and img2webp (libwebp), and network for three.js from jsDelivr.
 //   node render.mjs main                       → docs/readme/agrypnos-demo.webp (README) + .mp4 (master)
 //   LIGHT=1 node render.mjs main               → the light version, as agrypnos-demo-light.*
+//   CLIP=power node render.mjs howto          → docs/readme/agrypnos-howto-power.webp (LIGHT=1 for -light)
 //   node render.mjs main --stills 0,4.4 <dir>  → PNG stills of those seconds into <dir>
+// A page may set window.EXPORT = { size, webpScale, webpQuality, transparent } to change the defaults.
 // The README uses animated WebP: GitHub strips autoplay from <video>, and a GIF of this is ~10 MB.
 // Pages are served over a local port: browsers refuse modules and WebGL textures from file://.
 import { spawn } from 'node:child_process';
@@ -18,9 +20,10 @@ const [name = 'main', flag, list, stillDir] = process.argv.slice(2);
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const MP4_FPS = 30;
 const WEBP_FPS = 25;          // 40 ms a frame, exact in WebP's millisecond timing
-const WEBP_QUALITY = 65;
 const light = process.env.LIGHT === '1';
-const outBase = join(here, '..', `${name === 'main' ? 'agrypnos-demo' : `agrypnos-${name}`}${light ? '-light' : ''}`);
+const clip = process.env.CLIP;
+const tag = `${clip ? `-${clip}` : ''}${light ? '-light' : ''}`;
+const outBase = join(here, '..', `${name === 'main' ? 'agrypnos-demo' : `agrypnos-${name}`}${tag}`);
 
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.png': 'image/png', '.jpg': 'image/jpeg' };
 const server = createServer(async (req, res) => {
@@ -73,15 +76,20 @@ const evaluate = async expression => {
   if (r.exceptionDetails) throw new Error(r.exceptionDetails.exception?.description ?? r.exceptionDetails.text);
   return r.result.value;
 };
-const pixels = scale => page('Emulation.setDeviceMetricsOverride', { width: 1280, height: 720, deviceScaleFactor: scale, mobile: false });
+let W = 1280, H = 720;
+const pixels = scale => page('Emulation.setDeviceMetricsOverride', { width: W, height: H, deviceScaleFactor: scale, mobile: false });
 
 await pixels(1.5);
 await page('Runtime.enable');
-await page('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/${name}.html?render${light ? '&light' : ''}` });
+await page('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/${name}.html?render${light ? '&light' : ''}${clip ? `&clip=${clip}` : ''}` });
 while (await evaluate('document.readyState') !== 'complete') await new Promise(r => setTimeout(r, 50));
 await Promise.race([evaluate('window.ready'),
   new Promise((_, reject) => setTimeout(() => reject(new Error('the page never became ready')), 30000))]);
 const duration = await evaluate('window.DURATION');
+let webpScale, webpQuality, transparent;
+({ size: [W, H] = [1280, 720], webpScale = 0.8, webpQuality = 65, transparent = false } = await evaluate('window.EXPORT') ?? {});
+await pixels(1.5);
+if (transparent) await page('Emulation.setDefaultBackgroundColorOverride', { color: { r: 0, g: 0, b: 0, a: 0 } });
 
 async function frame(t) {
   await evaluate(`seek(${t})`);
@@ -105,7 +113,7 @@ async function frames(fps, each) {
 
 try {
   if (flag === '--stills') {
-    for (const t of list.split(',').map(Number)) writeFileSync(join(stillDir, `${name}${light ? '-light' : ''}-${t.toFixed(2)}.png`), await frame(t));
+    for (const t of list.split(',').map(Number)) writeFileSync(join(stillDir, `${name}${tag}-${t.toFixed(2)}.png`), await frame(t));
   } else {
     const { child, done } = run('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y',
       '-f', 'image2pipe', '-framerate', String(MP4_FPS), '-i', '-',
@@ -116,7 +124,7 @@ try {
     child.stdin.end();
     await done;
 
-    await pixels(0.8);        // 1024 wide: GitHub shows a README at most ~830 px wide
+    await pixels(webpScale);  // main: 1024 wide, since GitHub shows a README at most ~830 px wide
     const dir = join(profile, 'webp');
     mkdirSync(dir);
     const files = [];
@@ -124,7 +132,7 @@ try {
       files.push(join(dir, `${String(i).padStart(4, '0')}.png`));
       writeFileSync(files.at(-1), png);
     });
-    await run('img2webp', ['-loop', '0', '-lossy', '-q', String(WEBP_QUALITY), '-m', '4',
+    await run('img2webp', ['-loop', '0', '-lossy', '-q', String(webpQuality), '-m', '4',
       '-d', String(1000 / WEBP_FPS), ...files, '-o', `${outBase}.webp`]).done;
     console.log(`\nwrote ${outBase}.webp and ${outBase}.mp4`);
   }
