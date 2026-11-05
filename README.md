@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="Apps/Agrypnos/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png" width="128" alt="Agrypnos icon">
+  <img src="docs/readme/agrypnos-eye.png" width="240" alt="Agrypnos icon">
   <h1>Agrypnos</h1>
   <p><b>Close the lid. Your coding agents keep working.</b></p>
   <p>A small macOS menu-bar app that keeps your Mac awake with the lid shut while your agents run, and lets it sleep again when the wait after agent signals stop ends, or when you say so.</p>
