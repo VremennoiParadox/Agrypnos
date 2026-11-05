@@ -72,7 +72,7 @@ macOS asks for your password once. To remove the rule later, run `./Scripts/ungr
 3. Turn on **Keep awake**. The menu-bar eye turns **purple** for Agents. The eye is gray when off, blue for ∞, and gold on a timer. It stays the same size in every mode.
 4. Start your agent and close the lid.
 
-Agrypnos waits until the lid has really closed (a single flicker of the lid sensor doesn't count), then turns the keyboard backlight off and dims the panel. When the wait after agent signals stop ends (2 minutes by default), Keep awake turns off. If the lid is still closed, Agrypnos also asks the Mac to sleep.
+Agrypnos waits until the lid has really closed (a single flicker of the lid sensor doesn't count), then turns the keyboard backlight off and puts the panel to sleep. Keep awake still holds the Mac awake, so your agents keep running. (Prefer a dimmed panel? Pick **Dim panel** in **Power**.) When the wait after agent signals stop ends (2 minutes by default), Keep awake turns off. If the lid is still closed, Agrypnos also asks the Mac to sleep.
 
 Want it on until you say stop? Pick `∞` instead and turn it off yourself.
 
@@ -87,8 +87,8 @@ The **Power** section has two panel modes. You pick one.
 
 | Mode | On a confirmed lid close | When you open the lid again |
 |---|---|---|
-| **Dim panel** (default) | Brightness drops to your floor (15% by default, 1–40%). The panel stays on. | Brightness fades back over 1, 2, or 3 seconds (2 by default). |
-| **Sleep panel** | The display itself sleeps (`displaysleepnow`). | The display wakes. Nothing fades back, so the brightness floor and fade settings are hidden. |
+| **Sleep panel** (default) | The display itself sleeps (`displaysleepnow`). | The display wakes. Nothing fades back, so the brightness floor and fade settings are hidden. |
+| **Dim panel** | Brightness drops to your floor (15% by default, 1–40%). The panel stays on. | Brightness fades back over 1, 2, or 3 seconds (2 by default). |
 
 Both modes turn the keyboard backlight off by default, and **Power** has a switch for that. Dim panel also has a switch for the brightness floor. Neither mode puts the Mac to sleep or turns Keep awake off, so your agents keep running either way. Turning Keep awake on with the lid open never touches the screen.
 
@@ -344,7 +344,7 @@ Everything is in the popover, one section at a time.
 | Section | What's in it |
 |---|---|
 | **Watch** | Keep awake, How long (`∞`, `1h`, `3h`, custom minutes, **Agents**) with the time left on a timer, and when Keep awake last ended |
-| **Power** | Dim panel or Sleep panel, keyboard backlight off, brightness floor (Dim panel only), low-battery auto-off, brightness return time (Dim panel only), thermal auto-off |
+| **Power** | Sleep panel (default) or Dim panel, keyboard backlight off, brightness floor (Dim panel only), low-battery auto-off, brightness return time (Dim panel only), thermal auto-off |
 | **Agents** | Which tools count as busy (at least one), wait after agent signals stop (1m 30s–10m), count terminal sessions as busy |
 | **Notif** | Setup instructions, Watch-end POST, Discord (token, channel, user id, Discord inbound), Telegram (token, chat id, user id, Telegram inbound), Question notifications (BETA), Clear secrets |
 | **General** | Launch at login, global shortcut (default `⌥⌘A`, remappable), quit |
