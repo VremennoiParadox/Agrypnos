@@ -15,6 +15,7 @@ Claude Code forwarding passed its same-session Mac check (user-confirmed, 2026-1
 Codex waiting alerts passed their ChatGPT-app check (user-confirmed, 2026-10-11). They do not answer the question.
 Cursor has no question forwarding and no waiting alert.
 V1 ships question forwarding for OpenCode and Claude Code, waiting alerts only for Codex, and nothing for Cursor. Do not claim four-provider question forwarding. Separate automated evidence from live user/bot/Mac proof.
+Forwarding and Codex waiting alerts happen only while Keep awake is on (human decision 2026-11-05). With Keep awake off, questions stay in the agent; turning Keep awake off hands any forwarded question still waiting back to the agent. Forwarding never arms the watch.
 Forwarding needs one complete bot: token + chat or channel id + saved Telegram or Discord user id + that bot's inbound on. Only the saved user id may **Send answers**. Codex alerts need only token + chat or channel id. Popover: **Notif → Question notifications** (BETA).
 
 ## Session start

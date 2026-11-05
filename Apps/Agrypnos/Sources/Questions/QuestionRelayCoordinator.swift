@@ -27,6 +27,8 @@ struct QuestionRelaySettings: Equatable {
     var includedKinds: Set<AgentKind>
     var telegram: TelegramQuestionDestination?
     var discord: DiscordQuestionDestination? = nil
+    /// Questions go to the bot only while Keep awake is on. With it off they stay in the agent.
+    var watchArmed: Bool
 }
 
 struct QuestionHTTPResponse: Sendable {
@@ -95,7 +97,7 @@ final class QuestionRelayCoordinator {
                  submit: @escaping @MainActor (QuestionAnswer) async -> QuestionDelivery,
                  returnLocal: @escaping @MainActor () async -> Void) -> Bool {
         refreshSettings()
-        guard let currentSettings, currentSettings.enabled,
+        guard let currentSettings, currentSettings.enabled, currentSettings.watchArmed,
               currentSettings.includedKinds.contains(batch.key.provider),
               (currentSettings.telegram?.isComplete == true || currentSettings.discord?.isComplete == true)
         else { return false }
@@ -249,6 +251,12 @@ final class QuestionRelayCoordinator {
             onChange(.cleared(record.batch.key))
             if needsFallback.contains(handle), !record.returnedLocal { Task { await record.returnLocal() } }
         }
+    }
+
+    /// Keep awake turning off hands questions already on the bot back to the agent.
+    func syncWatchArmed(_ armed: Bool) {
+        guard currentSettings?.watchArmed != armed else { return }
+        refreshSettings()
     }
 
     func refreshSettings() {

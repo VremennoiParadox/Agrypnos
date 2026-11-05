@@ -52,7 +52,10 @@ final class WatchRuntime {
     var questionSleepGeneration: UInt64 = 0
     var questionReleaseFailureReported = false
     var evaluatingQuestionTick = false
-    var engine: WatchEngine
+    var engine: WatchEngine {
+        // Agent questions follow Keep awake: turning it off returns any on the bot to the agent.
+        didSet { if engine.engaged != oldValue.engaged { questionRelay.syncWatchArmed(engine.engaged) } }
+    }
     var pollTimer: Timer?
     var deadlineTimer: Timer?
     var savedBrightness: Double?
