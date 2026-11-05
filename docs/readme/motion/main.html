@@ -99,10 +99,13 @@
   #pillText { font: 600 19px var(--display); color: #fff; }
   #pillSub { font: 13px var(--mono); color: var(--muted); margin-top: 3px; }
   #ring { width: 34px; height: 34px; }
-  #chips { left: 64px; top: 170px; display: grid; gap: 10px; font: 13px var(--mono); }
-  #chips div { padding: 8px 12px; border-radius: 9px; background: rgba(255,255,255,.05);
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); color: var(--ink); white-space: pre; }
-  #chips b { font-weight: 600; color: var(--faint); }
+  /* closed-lid facts, in the pill's glass */
+  #stack { left: 64px; top: 170px; display: grid; gap: 10px; }
+  #stack .row { display: flex; align-items: center; gap: 12px; width: fit-content; padding: 12px 20px 12px 14px; border-radius: 16px;
+    background: rgba(30,31,38,.92); box-shadow: 0 0 0 1px rgba(255,255,255,.1), 0 12px 30px rgba(0,0,0,.35);
+    font: 500 18px var(--display); color: #fff; white-space: nowrap; --glyph-cut: #1e1f26; }
+  .hudIcon { width: 22px; height: 22px; display: grid; place-items: center; color: var(--muted); }
+  .hudIcon svg { width: 22px; height: 22px; }
   /* a message in your Discord bot's channel */
   #bubble { right: 64px; top: 190px; width: 360px; border-radius: 10px; overflow: hidden; background: #313338;
     box-shadow: 0 0 0 1px rgba(255,255,255,.07), 0 20px 50px rgba(0,0,0,.5); }
@@ -134,8 +137,9 @@
   body.light #pillText { color: #1d1d1f; }
   body.light #pillSub { color: rgba(60,60,67,.7); }
   body.light #ring circle:first-child { stroke: rgba(0,0,0,.1); }
-  body.light #chips div { background: rgba(0,0,0,.035); box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); color: #1d1d1f; }
-  body.light #chips b { color: rgba(0,0,0,.38); }
+  body.light #stack .row { background: rgba(255,255,255,.94); box-shadow: 0 0 0 1px rgba(0,0,0,.08), 0 12px 30px rgba(0,0,0,.1);
+    color: #1d1d1f; --glyph-cut: #fff; }
+  body.light .hudIcon { color: rgba(60,60,67,.6); }
   body.light #bubble { background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.08), 0 20px 50px rgba(0,0,0,.12); }
   body.light #bubble .chan { background: #f2f3f5; color: #060607; border-bottom-color: rgba(0,0,0,.08); }
   body.light #bubble .chan span { color: #6d6f78; }
@@ -197,7 +201,7 @@
   </div>
 
   <div class="abs" id="scrim"></div>
-  <div class="abs" id="chips"><div id="c0"></div><div id="c1"></div><div id="c2"></div><div id="c3"></div></div>
+  <div class="abs" id="stack"><div class="row" id="s0"></div><div class="row" id="s1"></div><div class="row" id="s2"></div></div>
   <div class="abs" id="pill"><span id="pillIcon"></span><svg id="ring" viewBox="0 0 34 34"><circle cx="17" cy="17" r="14" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="3"/><circle id="ringArc" cx="17" cy="17" r="14" fill="none" stroke="var(--purple)" stroke-width="3" stroke-linecap="round" transform="rotate(-90 17 17)" stroke-dasharray="88"/></svg><div><div id="pillText"></div><div id="pillSub"></div></div></div>
   <div class="abs" id="bubble"><div class="chan"><span>#</span>agrypnos</div>
     <div class="row"><div class="ava" id="bubbleAva"></div><div>
@@ -261,9 +265,9 @@ function terminal(t) {
 const HINT_INF = 'Stays on until you turn it off (battery / thermal still apply).';
 const HINT_AGENTS = 'Keep awake turns off when the wait after agent signals stop ends (battery / thermal still apply).';
 const HINT_SLEEP = ' Turning Keep awake off with the lid confirmed closed sends the Mac to sleep. With the lid open or unconfirmed it turns Keep awake off and does not sleep the Mac.';
-const CAPTION = 'Armed. Waiting for lid close — then brightness floor, keyboard backlight off. Auto-off at 15% battery.';
+const CAPTION = 'Armed and waiting for the lid to close.';   // Sleep panel, the default
 
-// Captions: [start, end, eyebrow, dot colour, headline]. "Confirmed" waits for the chips, after the lid shuts.
+// Captions: [start, end, eyebrow, dot colour, headline]. "Confirmed" waits for the status stack, after the lid shuts.
 const SCENES = [
   [1.0, 3.0, 'KEEP AWAKE · OFF', 'var(--faint)', 'Your agent is mid-run.'],
   [5.9, 7.0, 'KEEP AWAKE · AGENTS', 'var(--purple)', 'One switch.\nOr ⌥⌘A.'],
@@ -398,7 +402,26 @@ function popover(t) {
   html('eyeItem', !on || t >= 11.4 ? eye('slash', 'rgba(235,235,245,.6)') : eye(busy ? 'fill' : 'armed', 'var(--purple)'));
 }
 
+// Closed-lid facts. Icons are SF Symbols stand-ins: a display and a keyboard, each struck through.
+const SCREEN_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M9 20h6M12 16v4M3.5 2.5l17 17"/></svg>';
+const KEYS_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6.5 10h.01M10 10h.01M13.5 10h.01M17 10h.01M8 14h8M3 3l18 18"/></svg>';
+const icon = (svg, size = 20) => `<span class="hudIcon">${svg.replace('<svg ', `<svg width="${size}" height="${size}" `)}</span>`;
+// The stack appears once the lid is confirmed closed. The last row follows Keep awake.
+function statusStack(t) {
+  const asleep = t >= 11.4;
+  const facts = [[icon(SCREEN_OFF, 22), 'Screen off'], [icon(KEYS_OFF, 22), 'Keyboard light off'],
+    [asleep ? icon(eye('slash', 'currentColor', 22), 22) : icon(eye('fill', 'var(--purple)', 22), 22),
+      asleep ? 'Asking the Mac to sleep' : 'Mac stays awake']];
+  facts.forEach(([ic, text], i) => {
+    const p = win(t, 8.75 + i * .15, 12.6, .3);
+    html('s' + i, `${ic}<span>${text}</span>`);
+    $('s' + i).style.opacity = p;
+    $('s' + i).style.transform = `translateX(${(1 - p) * -16}px)`;
+  });
+}
+
 function hud(t) {
+  statusStack(t);
   const show = win(t, 8.6, 12.6, .3);
   $('pill').style.opacity = show;
   $('pill').style.transform = `translateX(-50%) translateY(${(1 - show) * -14}px)`;
@@ -417,18 +440,6 @@ function hud(t) {
   html('pillIcon', icon); html('pillText', text); html('pillSub', sub);
   $('ring').style.display = t >= 10.1 && t < 11.4 ? 'block' : 'none';
   $('ringArc').style.strokeDashoffset = 88 * (1 - ring);
-  const chips = [
-    ['LID   ', 'confirmed closed'],
-    ['PANEL ', 'brightness floor 15%'],
-    ['KEYS  ', 'backlight off'],
-    ['SLEEP ', t < 11.4 ? 'held · pmset -a disablesleep 1' : 'released · pmset -a disablesleep 0'],
-  ];
-  chips.forEach(([a, b], i) => {
-    html('c' + i, `<b>${a}</b>${b}`);
-    const p = win(t, 8.75 + i * .15, 12.6, .3);
-    $('c' + i).style.opacity = p;
-    $('c' + i).style.transform = `translateX(${(1 - p) * -16}px)`;
-  });
   const b = win(t, 11.55, 12.6, .3);
   $('bubble').style.opacity = b;
   $('bubble').style.transform = `translateY(${(1 - b) * 18}px) scale(${.96 + .04 * b})`;

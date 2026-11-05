@@ -48,6 +48,7 @@
   .lbl { font-size: 13px; color: var(--ink); white-space: nowrap; }
   .cap { font-size: 12px; line-height: 16px; color: var(--muted); }
   .card { position: absolute; left: 16px; width: 296px; border-radius: 11px; border: 1px solid var(--card-edge); background: var(--card); }
+  #hygiene { overflow: hidden; }   /* the floor rows open with the card */
   .seg { position: absolute; display: flex; padding: 2px; gap: 2px; height: 24px; border-radius: 7px; background: var(--seg); font-size: 13px; }
   .seg span { flex: 1; display: grid; place-items: center; border-radius: 5px; color: var(--ink); white-space: nowrap; }
   .seg span.sel { background: var(--blue); color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
@@ -151,7 +152,7 @@ const SECTIONS = {
     card('duration', 134, 232, lbl(12, 10, 'How long') + `<div class="abs lbl" style="left:204px;top:10px;width:80px;text-align:right">Minutes</div>` +
       seg('dur', 12, 36, 208, ['∞', '1h', '3h', 'Agents'], 3) + `<div class="field" style="left:228px;top:36px;width:56px;height:24px"></div>` + cap(68, C.hintAgents)) +
     card('lastEnd', 376, 72, cap(12, 'Keep awake ended at 22:58, because the wait after agent signals stop ended.')),
-  power: card('panel', 72, 116, seg('panelSeg', 12, 12, W, ['Dim panel', 'Sleep panel'], 0) + cap(40, C.captionA, 'panelCap')) +
+  power: card('panel', 72, 116, seg('panelSeg', 12, 12, W, ['Dim panel', 'Sleep panel'], 1) + cap(40, C.captionB, 'panelCap')) +
     card('hygiene', 198, 166, swRow('kbSw', 10, 'Keyboard backlight off', true) +
       `<div id="floor">${swRow('floorSw', 42, 'Brightness floor', true)}<div class="abs lbl val" style="left:178px;top:48px;width:60px">15%</div>` +
       cap(74, C.floorHelp) + slider('floorKnob', 106, 14 / 39) + minmax(132, '1%', '40%') + '</div>') +
@@ -191,19 +192,21 @@ const toggle = (id, on, t0, t) => {   // NSSwitch flips with a short slide
 };
 
 const CLIPS = {
-  // Power → Sleep panel: the brightness floor and fade-back controls go away.
+  // Power starts on Sleep panel (the default). Pick Dim panel: the brightness floor and fade-back controls appear.
   power: { T: 3.6, tab: 1, tabAt: .6, clicks: [.6, 1.45],
-    heights: [[.6, 464], [.85, 718], [1.45, 718], [1.7, 488]],
-    cursor: [[.1, 300, 330], [.5, tabX(1), TAB_Y], [.7, tabX(1), TAB_Y], [1.35, ...at(232, 96)]],
+    heights: [[.6, 464], [.85, 488], [1.45, 488], [1.7, 718]],
+    cursor: [[.1, 300, 330], [.5, tabX(1), TAB_Y], [.7, tabX(1), TAB_Y], [1.35, ...at(96, 96)]],
     update(t) {
-      const sleep = t >= 1.45, s = k(t, [[1.45, 0], [1.7, 1]]);
-      [...$('panelSeg').children].forEach((el, i) => el.classList.toggle('sel', i === (sleep ? 1 : 0)));
-      $('panelCap').textContent = sleep ? C.captionB : C.captionA;
-      set('floor', 'display', sleep ? 'none' : 'block');
-      set('ramp', 'display', sleep ? 'none' : 'block');
-      set('hygiene', 'height', `${166 - 112 * s}px`);
-      set('battery', 'top', `${374 - 112 * s}px`);
-      set('thermal', 'top', `${590 - 230 * s}px`);
+      const dim = t >= 1.45, s = k(t, [[1.45, 0], [1.7, 1]]);
+      [...$('panelSeg').children].forEach((el, i) => el.classList.toggle('sel', i === (dim ? 0 : 1)));
+      $('panelCap').textContent = dim ? C.captionA : C.captionB;
+      set('floor', 'display', dim ? 'block' : 'none');
+      set('floor', 'opacity', s);
+      set('ramp', 'display', dim ? 'block' : 'none');
+      set('ramp', 'opacity', k(t, [[1.6, 0], [1.75, 1]]));   // after thermal has slid past it
+      set('hygiene', 'height', `${54 + 112 * s}px`);
+      set('battery', 'top', `${262 + 112 * s}px`);
+      set('thermal', 'top', `${360 + 230 * s}px`);
     } },
   // Agents → which tools count as busy, and the wait after agent signals stop.
   agents: { T: 3.8, tab: 2, tabAt: .6, clicks: [1.35, 2.0],
@@ -286,7 +289,7 @@ window.seek = function (t) {
   set('keys', 'transform', `translate(${kx - 100}px, ${ky - 4 - 4 * keyOn}px)`);
 };
 window.DURATION = T;
-window.EXPORT = { size: [440, 640], webpScale: 2, webpQuality: 82, transparent: true };
+window.EXPORT = { size: [440, 640], webpScale: 2, webpQuality: 82, transparent: true, keyframes: false };   // whole frames would triple these mostly-still clips
 
 await Promise.all([...document.images].map(i => i.decode().catch(() => {})));
 if (!params.has('render')) {

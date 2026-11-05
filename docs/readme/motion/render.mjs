@@ -4,7 +4,7 @@
 //   LIGHT=1 node render.mjs main               → the light version, as agrypnos-demo-light.*
 //   CLIP=power node render.mjs howto          → docs/readme/agrypnos-howto-power.webp (LIGHT=1 for -light)
 //   node render.mjs main --stills 0,4.4 <dir>  → PNG stills of those seconds into <dir>
-// A page may set window.EXPORT = { size, webpScale, webpQuality, transparent } to change the defaults.
+// A page may set window.EXPORT = { size, webpScale, webpQuality, transparent, keyframes } to change the defaults.
 // The README uses animated WebP: GitHub strips autoplay from <video>, and a GIF of this is ~10 MB.
 // Pages are served over a local port: browsers refuse modules and WebGL textures from file://.
 import { spawn } from 'node:child_process';
@@ -86,8 +86,8 @@ while (await evaluate('document.readyState') !== 'complete') await new Promise(r
 await Promise.race([evaluate('window.ready'),
   new Promise((_, reject) => setTimeout(() => reject(new Error('the page never became ready')), 30000))]);
 const duration = await evaluate('window.DURATION');
-let webpScale, webpQuality, transparent;
-({ size: [W, H] = [1280, 720], webpScale = 0.8, webpQuality = 65, transparent = false } = await evaluate('window.EXPORT') ?? {});
+let webpScale, webpQuality, transparent, keyframes;
+({ size: [W, H] = [1280, 720], webpScale = 0.8, webpQuality = 50, transparent = false, keyframes = true } = await evaluate('window.EXPORT') ?? {});
 await pixels(1.5);
 if (transparent) await page('Emulation.setDefaultBackgroundColorOverride', { color: { r: 0, g: 0, b: 0, a: 0 } });
 
@@ -132,7 +132,10 @@ try {
       files.push(join(dir, `${String(i).padStart(4, '0')}.png`));
       writeFileSync(files.at(-1), png);
     });
-    await run('img2webp', ['-loop', '0', '-lossy', '-q', String(webpQuality), '-m', '4',
+    // keyframes: every frame is stored whole (-kmax 1). Lossy partial frames treat slowly fading
+    // pixels as unchanged and blend over the old ones, which leaves ghosts of earlier frames behind.
+    // (libwebp reads -kmax 0 as "no keyframes", despite img2webp's help text.)
+    await run('img2webp', ['-loop', '0', '-lossy', '-q', String(webpQuality), '-m', '4', ...(keyframes ? ['-kmax', '1'] : []),
       '-d', String(1000 / WEBP_FPS), ...files, '-o', `${outBase}.webp`]).done;
     console.log(`\nwrote ${outBase}.webp and ${outBase}.mp4`);
   }
