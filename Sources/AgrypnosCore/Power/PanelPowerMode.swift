@@ -3,12 +3,12 @@ import Foundation
 /// Mutually exclusive panel modes. A = floor + ramp. B = display sleep.
 /// B does not turn Keep awake off and does not sleep the Mac.
 public enum PanelPowerMode: String, Equatable, Sendable, CaseIterable {
-    /// A (default): brightness floor on confirmed lid-close; lid-open ramp.
+    /// A: brightness floor on confirmed lid-close; lid-open ramp.
     case floor
-    /// B: `displaysleepnow` on confirmed lid-close. Panel only. Watch still holds.
+    /// B (default for new installs): `displaysleepnow` on confirmed lid-close. Panel only. Watch still holds.
     case displaySleep
 
-    public static let `default` = PanelPowerMode.floor
+    public static let `default` = PanelPowerMode.displaySleep
 
     public var writesBrightnessFloor: Bool { self == .floor }
     public var sleepsDisplay: Bool { self == .displaySleep }

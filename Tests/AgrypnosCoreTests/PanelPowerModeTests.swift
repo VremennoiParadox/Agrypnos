@@ -2,15 +2,17 @@ import XCTest
 @testable import AgrypnosCore
 
 final class PanelPowerModePreferenceTests: XCTestCase {
-    func testDefaultIsFloorModeA() {
-        XCTAssertEqual(PanelPowerMode.default, .floor)
-        XCTAssertEqual(UserPreferences.default.panelPowerMode, .floor)
-        XCTAssertEqual(UserPreferences().panelPowerMode, .floor)
-        XCTAssertTrue(UserPreferences.default.panelPowerMode.writesBrightnessFloor)
-        XCTAssertFalse(UserPreferences.default.panelPowerMode.sleepsDisplay)
-        XCTAssertTrue(UserPreferences.default.panelPowerMode.showsLidOpenRamp)
+    /// New installs start on Sleep panel (B). Saved files keep their mode; see the decode tests below.
+    func testDefaultIsDisplaySleepModeB() {
+        XCTAssertEqual(PanelPowerMode.default, .displaySleep)
+        XCTAssertEqual(UserPreferences.default.panelPowerMode, .displaySleep)
+        XCTAssertEqual(UserPreferences().panelPowerMode, .displaySleep)
+        XCTAssertFalse(UserPreferences.default.panelPowerMode.writesBrightnessFloor)
+        XCTAssertTrue(UserPreferences.default.panelPowerMode.sleepsDisplay)
+        XCTAssertFalse(UserPreferences.default.panelPowerMode.showsLidOpenRamp)
     }
 
+    /// A saved file without the key predates Sleep panel being the default, so it keeps Dim panel.
     func testDisplaySleepModePersistsAndMissingKeyDecodesToFloor() throws {
         var prefs = UserPreferences.default
         prefs.panelPowerMode = .displaySleep
@@ -162,7 +164,9 @@ final class PanelPowerWatchEngineTests: XCTestCase {
     let t0 = Date(timeIntervalSince1970: 10_000)
 
     func testPowerAConfirmedCloseFloorsAndDoesNotSleepDisplay() {
-        var engine = WatchEngine(preferences: .default)
+        var prefs = UserPreferences.default
+        prefs.panelPowerMode = .floor   // Dim panel: the floor path
+        var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
         XCTAssertTrue(engine.observeLid(closed: true, now: t0).isEmpty)
         let commands = engine.observeLid(

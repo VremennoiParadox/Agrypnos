@@ -19,7 +19,8 @@ final class PanelPowerPopoverChromeTests: XCTestCase {
         let layout = PopoverStackLayout.make(section: .power, panelPowerMode: .floor)
         XCTAssertEqual(
             PopoverStackLayout.make(section: .power).stackedCards.map(\.y),
-            layout.stackedCards.map(\.y)
+            PopoverStackLayout.make(section: .power, panelPowerMode: .displaySleep).stackedCards.map(\.y),
+            "the default Power layout is Sleep panel's"
         )
         XCTAssertEqual(
             layout.stackedCards.map(\.y),

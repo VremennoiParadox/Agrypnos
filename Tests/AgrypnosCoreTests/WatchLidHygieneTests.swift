@@ -1,11 +1,18 @@
 import XCTest
 @testable import AgrypnosCore
 
+/// These tests cover the Dim panel (Power A) floor path; Sleep panel is the default for new installs.
+private let dimPanel: UserPreferences = {
+    var prefs = UserPreferences.default
+    prefs.panelPowerMode = .floor
+    return prefs
+}()
+
 final class WatchLidHygieneTests: XCTestCase {
     let t0 = Date(timeIntervalSince1970: 10_000)
 
     func testOneClosedSampleWhileArmedDoesNotFloor() {
-        var engine = WatchEngine(preferences: .default)
+        var engine = WatchEngine(preferences: dimPanel)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
         XCTAssertTrue(engine.observeLid(closed: true, now: t0).isEmpty)
         XCTAssertFalse(engine.lidHygieneApplied)
@@ -14,7 +21,7 @@ final class WatchLidHygieneTests: XCTestCase {
     }
 
     func testClosedThenOpenBeforeConfirmDoesNotFloor() {
-        var engine = WatchEngine(preferences: .default)
+        var engine = WatchEngine(preferences: dimPanel)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
         XCTAssertTrue(engine.observeLid(closed: true, now: t0).isEmpty)
         XCTAssertTrue(engine.observeLid(closed: false, now: t0.addingTimeInterval(0.1)).isEmpty)
@@ -26,7 +33,7 @@ final class WatchLidHygieneTests: XCTestCase {
     }
 
     func testTwoClosedPulseSamplesWhileArmedApplyFloor() {
-        var engine = WatchEngine(preferences: .default)
+        var engine = WatchEngine(preferences: dimPanel)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
         XCTAssertTrue(engine.observeLid(closed: true, now: t0).isEmpty)
         XCTAssertEqual(
@@ -38,7 +45,7 @@ final class WatchLidHygieneTests: XCTestCase {
     }
 
     func testLidCloseReassertsSleepDisabledThenHygiene() {
-        var engine = WatchEngine(preferences: .default)
+        var engine = WatchEngine(preferences: dimPanel)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
         XCTAssertEqual(
             engine.lidDidClose(now: t0.addingTimeInterval(1)),
@@ -48,7 +55,7 @@ final class WatchLidHygieneTests: XCTestCase {
     }
 
     func testArmWithLidAlreadyClosedAppliesFloorAndKeyboard() {
-        var engine = WatchEngine(preferences: .default)
+        var engine = WatchEngine(preferences: dimPanel)
         let commands = engine.userSetEngaged(true, now: t0, lidClosed: true)
         XCTAssertEqual(
             commands,
@@ -58,7 +65,7 @@ final class WatchLidHygieneTests: XCTestCase {
     }
 
     func testSecondLidCloseIsNoOp() {
-        var engine = WatchEngine(preferences: .default)
+        var engine = WatchEngine(preferences: dimPanel)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
         XCTAssertEqual(
             engine.lidDidClose(now: t0.addingTimeInterval(1)),
@@ -69,7 +76,7 @@ final class WatchLidHygieneTests: XCTestCase {
     }
 
     func testLidOpenWhileArmedRampsBrightnessAndRestoresKeyboard() {
-        var engine = WatchEngine(preferences: .default)
+        var engine = WatchEngine(preferences: dimPanel)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
         _ = engine.lidDidClose(now: t0.addingTimeInterval(1))
         let cmds = engine.lidDidOpen(now: t0.addingTimeInterval(2))
@@ -79,19 +86,19 @@ final class WatchLidHygieneTests: XCTestCase {
     }
 
     func testLidOpenWithoutPriorCloseIsNoOp() {
-        var engine = WatchEngine(preferences: .default)
+        var engine = WatchEngine(preferences: dimPanel)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
         XCTAssertTrue(engine.lidDidOpen(now: t0.addingTimeInterval(1)).isEmpty)
         XCTAssertTrue(engine.engaged)
     }
 
     func testLidOpenWhileDisengagedIsNoOp() {
-        var engine = WatchEngine(preferences: .default)
+        var engine = WatchEngine(preferences: dimPanel)
         XCTAssertTrue(engine.lidDidOpen(now: t0).isEmpty)
     }
 
     func testAdoptLeftoverWithLidClosedAppliesFloorAndKeyboard() {
-        var engine = WatchEngine(preferences: .default)
+        var engine = WatchEngine(preferences: dimPanel)
         let commands = engine.adoptLeftoverKernel(now: t0, lidClosed: true)
         XCTAssertTrue(engine.engaged)
         XCTAssertTrue(engine.leftoverAdopted)
@@ -103,7 +110,7 @@ final class WatchLidHygieneTests: XCTestCase {
     }
 
     func testAdoptLeftoverWhileEngagedWithLidClosedReappliesFloorAndKeys() {
-        var engine = WatchEngine(preferences: .default)
+        var engine = WatchEngine(preferences: dimPanel)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: true)
         let commands = engine.adoptLeftoverKernel(now: t0.addingTimeInterval(1), lidClosed: true)
         XCTAssertTrue(engine.leftoverAdopted)
@@ -112,7 +119,7 @@ final class WatchLidHygieneTests: XCTestCase {
     }
 
     func testAgentsModeStaysArmedAcrossLidCloseOpen() {
-        var prefs = UserPreferences.default
+        var prefs = dimPanel
         prefs.duration = .untilAgentsSettle
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
@@ -125,7 +132,7 @@ final class WatchLidHygieneTests: XCTestCase {
     }
 
     func testLidHygieneHonorsPreferenceToggles() {
-        var prefs = UserPreferences.default
+        var prefs = dimPanel
         prefs.applyBrightnessFloor = false
         prefs.keyboardBacklightOff = false
         var engine = WatchEngine(preferences: prefs)
@@ -138,7 +145,7 @@ final class WatchLidHygieneTests: XCTestCase {
     }
 
     func testDisengageClearsLidHygiene() {
-        var engine = WatchEngine(preferences: .default)
+        var engine = WatchEngine(preferences: dimPanel)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: true)
         XCTAssertTrue(engine.lidHygieneApplied)
         XCTAssertEqual(
@@ -150,7 +157,7 @@ final class WatchLidHygieneTests: XCTestCase {
     }
 
     func testAgentsIdleWithLidClosedTurnsWatchOffAndRequestsSleep() {
-        var prefs = UserPreferences.default
+        var prefs = dimPanel
         prefs.duration = .untilAgentsSettle
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: true)
@@ -179,7 +186,7 @@ final class WatchLidHygieneTests: XCTestCase {
     }
 
     func testTimerEndWithLidClosedRequestsSleep() {
-        var prefs = UserPreferences.default
+        var prefs = dimPanel
         prefs.duration = .oneHour
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: true)
@@ -191,7 +198,7 @@ final class WatchLidHygieneTests: XCTestCase {
     }
 
     func testLidOpenKeepsTimerRunningUntilTheClock() {
-        var prefs = UserPreferences.default
+        var prefs = dimPanel
         prefs.duration = .oneHour
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
@@ -209,7 +216,7 @@ final class WatchLidHygieneTests: XCTestCase {
     }
 
     func testBatteryFloorWithLidClosedRequestsSleep() {
-        var engine = WatchEngine(preferences: .default)
+        var engine = WatchEngine(preferences: dimPanel)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: true)
         XCTAssertEqual(
             engine.tick(

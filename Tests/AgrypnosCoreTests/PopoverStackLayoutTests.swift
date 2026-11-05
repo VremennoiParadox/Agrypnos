@@ -53,7 +53,7 @@ final class PopoverStackLayoutTests: XCTestCase {
 
     func testHygieneSettleAndRampSlotsFitNativeControls() {
         let watch = PopoverStackLayout.make(section: .watch)
-        let power = PopoverStackLayout.make(section: .power)
+        let power = PopoverStackLayout.make(section: .power, panelPowerMode: .floor)
         let agents = PopoverStackLayout.make(section: .agents)
         let general = PopoverStackLayout.make(section: .general)
         XCTAssertGreaterThanOrEqual(
@@ -177,7 +177,7 @@ final class PopoverStackLayoutTests: XCTestCase {
 
     func testSettleCardGrowsWithSettleHelpAndLeavesRampThermalOnTheTwoLineSlot() {
         let agents = PopoverStackLayout.make(section: .agents)
-        let power = PopoverStackLayout.make(section: .power)
+        let power = PopoverStackLayout.make(section: .power, panelPowerMode: .floor)
         XCTAssertEqual(
             agents.settle!.height,
             PopoverStackLayout.inset

@@ -135,11 +135,13 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         return true
     }
 
+    /// A saved file without a readable mode predates Sleep panel being the default, so it keeps
+    /// Dim panel. Only a new install (no saved file) starts on `PanelPowerMode.default`.
     static func decodePanelPowerMode(_ container: KeyedDecodingContainer<CodingKeys>) -> PanelPowerMode {
         guard let raw = try? container.decodeIfPresent(String.self, forKey: .panelPowerMode) else {
-            return .default
+            return .floor
         }
-        return PanelPowerMode(rawValue: raw) ?? .default
+        return PanelPowerMode(rawValue: raw) ?? .floor
     }
 
     public static func clampSessionFreshness(_ seconds: TimeInterval) -> TimeInterval {

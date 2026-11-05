@@ -40,7 +40,7 @@ final class AgrypnosCopyTests: XCTestCase {
     }
 
     func testArmedCaptionWaitsForLidThenFloorAndKeyboard() {
-        let caption = AgrypnosCopy.captionPrepared(floor: 15)
+        let caption = AgrypnosCopy.captionPrepared(floor: 15, panelPowerMode: .floor)
         let lower = caption.lowercased()
         XCTAssertEqual(
             caption,
@@ -54,12 +54,12 @@ final class AgrypnosCopyTests: XCTestCase {
         XCTAssertTrue(lower.contains("keyboard backlight"))
         XCTAssertFalse(lower.contains("prepared"))
         assertFitsCaption(caption)
-        assertFitsCaption(AgrypnosCopy.captionPrepared(floor: 100))
+        assertFitsCaption(AgrypnosCopy.captionPrepared(floor: 100, panelPowerMode: .floor))
         assertNoDisplaySleepFiction(caption)
     }
 
     func testLidClosedCaptionIsFloorAndKeyboardNotDisplaySleep() {
-        let caption = AgrypnosCopy.captionLidClosed(floor: 15)
+        let caption = AgrypnosCopy.captionLidClosed(floor: 15, panelPowerMode: .floor)
         let lower = caption.lowercased()
         XCTAssertEqual(
             caption,
@@ -70,7 +70,7 @@ final class AgrypnosCopyTests: XCTestCase {
         XCTAssertTrue(lower.contains("keyboard backlight"))
         XCTAssertFalse(lower.contains("waiting"))
         assertFitsCaption(caption)
-        assertFitsCaption(AgrypnosCopy.captionLidClosed(floor: 100))
+        assertFitsCaption(AgrypnosCopy.captionLidClosed(floor: 100, panelPowerMode: .floor))
         assertNoDisplaySleepFiction(caption)
     }
 
@@ -100,23 +100,23 @@ final class AgrypnosCopyTests: XCTestCase {
     func testMenuTooltipWaitsForLidWhileArmedOpen() {
         XCTAssertEqual(AgrypnosCopy.menuTooltipOff, "Agrypnos: Keep awake is off.")
         XCTAssertEqual(
-            AgrypnosCopy.menuTooltip(engaged: true, leftover: false, onBattery: false, lidClosed: false),
+            AgrypnosCopy.menuTooltip(engaged: true, leftover: false, onBattery: false, lidClosed: false, panelPowerMode: .floor),
             "Agrypnos: armed. Waiting for lid close — then brightness floor + keyboard backlight off."
         )
         XCTAssertEqual(
-            AgrypnosCopy.menuTooltip(engaged: true, leftover: false, onBattery: true, lidClosed: false),
+            AgrypnosCopy.menuTooltip(engaged: true, leftover: false, onBattery: true, lidClosed: false, panelPowerMode: .floor),
             "Agrypnos: armed. Waiting for lid close — then brightness floor + keyboard backlight off. On battery."
         )
         XCTAssertEqual(
-            AgrypnosCopy.menuTooltip(engaged: true, leftover: false, onBattery: false, lidClosed: true),
+            AgrypnosCopy.menuTooltip(engaged: true, leftover: false, onBattery: false, lidClosed: true, panelPowerMode: .floor),
             "Agrypnos: lid closed. Brightness floor + keyboard backlight off."
         )
         XCTAssertEqual(
-            AgrypnosCopy.menuTooltip(engaged: false, leftover: false, onBattery: false, lidClosed: false),
+            AgrypnosCopy.menuTooltip(engaged: false, leftover: false, onBattery: false, lidClosed: false, panelPowerMode: .floor),
             AgrypnosCopy.menuTooltipOff
         )
         XCTAssertEqual(
-            AgrypnosCopy.menuTooltip(engaged: true, leftover: true, onBattery: false, lidClosed: false),
+            AgrypnosCopy.menuTooltip(engaged: true, leftover: true, onBattery: false, lidClosed: false, panelPowerMode: .floor),
             AgrypnosCopy.menuTooltipLeftover
         )
         XCTAssertEqual(
@@ -124,7 +124,7 @@ final class AgrypnosCopyTests: XCTestCase {
             "Agrypnos: took over a leftover wake hold. Waiting for lid close — then brightness floor + keyboard backlight off."
         )
         XCTAssertEqual(
-            AgrypnosCopy.menuTooltip(engaged: true, leftover: true, onBattery: false, lidClosed: true),
+            AgrypnosCopy.menuTooltip(engaged: true, leftover: true, onBattery: false, lidClosed: true, panelPowerMode: .floor),
             "Agrypnos: took over a leftover wake hold. Lid closed. Brightness floor + keyboard backlight off."
         )
     }
@@ -292,8 +292,8 @@ final class AgrypnosCopyTests: XCTestCase {
     }
 
     func testLeftoverAdoptCopyIsVisibleAndDoesNotClaimWatts() {
-        let open = AgrypnosCopy.leftoverCaption(floor: 15, lidClosed: false)
-        let closed = AgrypnosCopy.leftoverCaption(floor: 15, lidClosed: true)
+        let open = AgrypnosCopy.leftoverCaption(floor: 15, lidClosed: false, panelPowerMode: .floor)
+        let closed = AgrypnosCopy.leftoverCaption(floor: 15, lidClosed: true, panelPowerMode: .floor)
         let notify = AgrypnosCopy.leftoverNotify
         XCTAssertEqual(
             open,
@@ -320,25 +320,25 @@ final class AgrypnosCopyTests: XCTestCase {
         XCTAssertFalse(notify.lowercased().contains("1.76"))
         assertFitsCaption(open)
         assertFitsCaption(closed)
-        assertFitsCaption(AgrypnosCopy.leftoverCaption(floor: 50, lidClosed: false))
-        assertFitsCaption(AgrypnosCopy.leftoverCaption(floor: 100, lidClosed: false))
-        assertFitsCaption(AgrypnosCopy.leftoverCaption(floor: 50, lidClosed: true))
-        assertFitsCaption(AgrypnosCopy.leftoverCaption(floor: 100, lidClosed: true))
-        assertFitsCaption(AgrypnosCopy.captionPrepared(floor: 50))
+        assertFitsCaption(AgrypnosCopy.leftoverCaption(floor: 50, lidClosed: false, panelPowerMode: .floor))
+        assertFitsCaption(AgrypnosCopy.leftoverCaption(floor: 100, lidClosed: false, panelPowerMode: .floor))
+        assertFitsCaption(AgrypnosCopy.leftoverCaption(floor: 50, lidClosed: true, panelPowerMode: .floor))
+        assertFitsCaption(AgrypnosCopy.leftoverCaption(floor: 100, lidClosed: true, panelPowerMode: .floor))
+        assertFitsCaption(AgrypnosCopy.captionPrepared(floor: 50, panelPowerMode: .floor))
         XCTAssertEqual(
-            AgrypnosCopy.watchCaption(engaged: true, leftover: true, floor: 15, lidClosed: false),
+            AgrypnosCopy.watchCaption(engaged: true, leftover: true, floor: 15, lidClosed: false, panelPowerMode: .floor),
             open
         )
         XCTAssertEqual(
-            AgrypnosCopy.watchCaption(engaged: true, leftover: true, floor: 15, lidClosed: true),
+            AgrypnosCopy.watchCaption(engaged: true, leftover: true, floor: 15, lidClosed: true, panelPowerMode: .floor),
             closed
         )
         XCTAssertEqual(
-            AgrypnosCopy.watchCaption(engaged: true, leftover: false, floor: 15, lidClosed: false),
-            AgrypnosCopy.captionPrepared(floor: 15)
+            AgrypnosCopy.watchCaption(engaged: true, leftover: false, floor: 15, lidClosed: false, panelPowerMode: .floor),
+            AgrypnosCopy.captionPrepared(floor: 15, panelPowerMode: .floor)
         )
         XCTAssertEqual(
-            AgrypnosCopy.watchCaption(engaged: false, leftover: true, floor: 15, lidClosed: false),
+            AgrypnosCopy.watchCaption(engaged: false, leftover: true, floor: 15, lidClosed: false, panelPowerMode: .floor),
             AgrypnosCopy.captionOff
         )
     }
@@ -346,7 +346,7 @@ final class AgrypnosCopyTests: XCTestCase {
     func testLeftoverOpenAndClosedCaptionsBothSayBattery() {
         for lidClosed in [false, true] {
             for floor in [5, 15, 100] {
-                let caption = AgrypnosCopy.leftoverCaption(floor: floor, lidClosed: lidClosed)
+                let caption = AgrypnosCopy.leftoverCaption(floor: floor, lidClosed: lidClosed, panelPowerMode: .floor)
                 XCTAssertTrue(
                     caption.lowercased().contains("battery"),
                     "leftover lidClosed=\(lidClosed) floor=\(floor) dropped battery: \(caption)"

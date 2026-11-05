@@ -226,7 +226,9 @@ final class WatchEngineTests: XCTestCase {
     }
 
     func testLidCloseFloorsBrightnessAndKillsKeyboardWithoutDisplaySleep() {
-        var engine = WatchEngine(preferences: .default)
+        var prefs = UserPreferences.default
+        prefs.panelPowerMode = .floor   // Dim panel: the floor path
+        var engine = WatchEngine(preferences: prefs)
         XCTAssertTrue(engine.lidDidClose(now: t0).isEmpty)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
         let cmds = engine.lidDidClose(now: t0.addingTimeInterval(1))

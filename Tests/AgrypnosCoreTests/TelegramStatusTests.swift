@@ -318,6 +318,7 @@ final class TelegramStatusSnapshotTests: XCTestCase {
             includedAgentKinds: [.cursor, .claudeCode]
         )
         prefs.lastWatchEnd = LastWatchEnd(endedAt: t0.addingTimeInterval(-10), reason: .user)
+        prefs.panelPowerMode = .floor
         var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0)
         _ = engine.tick(now: t0.addingTimeInterval(1), safety: .acPower, agents: .busy)
