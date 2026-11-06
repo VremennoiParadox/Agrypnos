@@ -25,8 +25,14 @@ public enum WatchTickProbe: Equatable, Sendable {
     public var probesKernelHold: Bool { self != .none }
     public var probesAgents: Bool { self == .safetyAndAgents }
 
-    public static func needed(engaged: Bool, mode: WatchMode, questionTimeoutPending: Bool = false) -> WatchTickProbe {
-        guard engaged else { return .none }
+    /// `autoArmWatching`: Auto-on needs safety + busy signals while Keep awake is off.
+    public static func needed(
+        engaged: Bool,
+        mode: WatchMode,
+        questionTimeoutPending: Bool = false,
+        autoArmWatching: Bool = false
+    ) -> WatchTickProbe {
+        guard engaged else { return autoArmWatching ? .safetyAndAgents : .none }
         if mode == .untilAgentsSettle || questionTimeoutPending { return .safetyAndAgents }
         return .safety
     }

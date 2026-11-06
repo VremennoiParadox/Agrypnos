@@ -20,6 +20,11 @@ public enum AgrypnosCopy: Sendable {
     public static let countTerminalSessions = "Count terminal sessions as busy"
     public static let countTerminalSessionsHelp =
         "Some agents might launch terminals for tasks like testing. While the terminal is active and executing a command, the agent might go idle and wait for the terminal. This may turn Keep awake off. Turn this on if you want to prevent that."
+    public static let autoArm = "Auto-on when tools look busy"
+    public static let autoArmHelp =
+        "Turns Keep awake on when selected tools look busy for 30 seconds with the lid open. Needs How long set to Agents, so it turns off after the idle wait. Then it waits for the next run."
+    public static let autoArmGrantMissing =
+        "Auto-on couldn’t turn Keep awake on: the lid-close grant isn’t installed. Turn Keep awake on once by hand to install it."
     public static let lidOpenRamp = "Brightness return when lid opens"
     public static let lidOpenRampHelp =
         "How long brightness takes to come back when the lid opens."
@@ -296,12 +301,15 @@ public enum AgrypnosCopy: Sendable {
         leftover: Bool,
         floor: Int,
         lidClosed: Bool,
-        panelPowerMode: PanelPowerMode = .default
+        panelPowerMode: PanelPowerMode = .default,
+        autoArmed: Bool = false
     ) -> String {
         if !engaged { return captionOff }
         if leftover { return leftoverCaption(floor: floor, lidClosed: lidClosed, panelPowerMode: panelPowerMode) }
         if lidClosed { return captionLidClosed(floor: floor, panelPowerMode: panelPowerMode) }
-        return captionPrepared(floor: floor, panelPowerMode: panelPowerMode)
+        // Only the lid-open caption: that is the one someone reads in the popover.
+        let prepared = captionPrepared(floor: floor, panelPowerMode: panelPowerMode)
+        return autoArmed ? "Turned on by Auto-on. " + prepared : prepared
     }
 
     public static func menuTooltip(

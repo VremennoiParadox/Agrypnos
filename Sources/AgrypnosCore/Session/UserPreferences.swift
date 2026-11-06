@@ -44,6 +44,8 @@ public struct UserPreferences: Equatable, Sendable, Codable {
     public var includedAgentKinds: Set<AgentKind>
     /// Terminal session files count as busy only when on. Default off.
     public var countTerminalSessionsAsBusy: Bool
+    /// Auto-on: Keep awake arms itself when selected tools look busy. Agents mode only. Default off.
+    public var autoArmWhenBusy: Bool
 
     /// 0...1 unit the Mac brightness adapter writes. Derived from floor %.
     public var brightnessFloor: Double {
@@ -71,7 +73,8 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         codexAlertEnabled: Bool = false,
         lastWatchEnd: LastWatchEnd? = nil,
         includedAgentKinds: Set<AgentKind> = AgentIncludeChrome.defaultIncluded,
-        countTerminalSessionsAsBusy: Bool = false
+        countTerminalSessionsAsBusy: Bool = false,
+        autoArmWhenBusy: Bool = false
     ) {
         self.batteryFloorPercent = Self.clampBatteryFloor(batteryFloorPercent)
         self.duration = duration
@@ -94,6 +97,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         self.lastWatchEnd = lastWatchEnd
         self.includedAgentKinds = Self.clampIncludedAgentKinds(includedAgentKinds)
         self.countTerminalSessionsAsBusy = countTerminalSessionsAsBusy
+        self.autoArmWhenBusy = autoArmWhenBusy
     }
 
     public static let `default` = UserPreferences()
@@ -184,6 +188,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         case lastWatchEnd
         case includedAgentKinds
         case countTerminalSessionsAsBusy
+        case autoArmWhenBusy
     }
 
     public init(from decoder: Decoder) throws {
@@ -217,7 +222,8 @@ public struct UserPreferences: Equatable, Sendable, Codable {
             codexAlertEnabled: try container.decodeIfPresent(Bool.self, forKey: .codexAlertEnabled) ?? false,
             lastWatchEnd: try container.decodeIfPresent(LastWatchEnd.self, forKey: .lastWatchEnd),
             includedAgentKinds: try AgentIncludeFlags.decode(from: container),
-            countTerminalSessionsAsBusy: try container.decodeIfPresent(Bool.self, forKey: .countTerminalSessionsAsBusy) ?? false
+            countTerminalSessionsAsBusy: try container.decodeIfPresent(Bool.self, forKey: .countTerminalSessionsAsBusy) ?? false,
+            autoArmWhenBusy: try container.decodeIfPresent(Bool.self, forKey: .autoArmWhenBusy) ?? false
         )
     }
 
@@ -245,6 +251,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
         try container.encodeIfPresent(lastWatchEnd, forKey: .lastWatchEnd)
         try container.encode(AgentIncludeFlags(includedAgentKinds), forKey: .includedAgentKinds)
         try container.encode(countTerminalSessionsAsBusy, forKey: .countTerminalSessionsAsBusy)
+        try container.encode(autoArmWhenBusy, forKey: .autoArmWhenBusy)
     }
 }
 

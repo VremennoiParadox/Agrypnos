@@ -56,6 +56,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static var terminalBusyControlY: Int {
         prefHelpY + PopoverCopyLayout.countTerminalSessionsHelpHeightPoints
     }
+    public static var autoArmControlY: Int { prefHelpY + PopoverCopyLayout.autoArmHelpHeightPoints }
     public static let panelPowerControlY = prefTitleY
     public static var panelPowerCaptionY: Int { panelPowerControlY + segmentRowHeight }
     public static var panelPowerHelpY: Int { panelPowerCaptionY + PopoverCopyLayout.panelPowerCaptionHeightPoints }
@@ -96,6 +97,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public let panelPower: PopoverSlot?
     public let hygiene: PopoverSlot?
     public let battery: PopoverSlot?
+    public let autoArm: PopoverSlot?
     public let agentInclude: PopoverSlot?
     public let settle: PopoverSlot?
     public let terminalBusy: PopoverSlot?
@@ -137,6 +139,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
         case .panelPower: return panelPower
         case .hygiene: return hygiene
         case .battery: return battery
+        case .autoArm: return autoArm
         case .agentInclude: return agentInclude
         case .settle: return settle
         case .terminalBusy: return terminalBusy
@@ -249,6 +252,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
                     + inset
             case .hygiene: return hygieneHeight
             case .battery: return batteryCardHeight
+            case .autoArm: return autoArmControlY + switchRowHeight + inset
             case .agentInclude: return includeHeight
             case .settle: return settleHeight
             case .terminalBusy: return terminalBusyHeight
@@ -317,6 +321,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
             panelPower: placed[.panelPower],
             hygiene: placed[.hygiene],
             battery: placed[.battery],
+            autoArm: placed[.autoArm],
             agentInclude: placed[.agentInclude],
             settle: placed[.settle],
             terminalBusy: placed[.terminalBusy],

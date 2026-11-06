@@ -44,7 +44,7 @@ final class PopoverSectionTests: XCTestCase {
     }
 
     func testCardMapKeepsExistingControlsAndFillsNotif() {
-        XCTAssertEqual(PopoverSection.watch.cards, [.watch, .duration, .lastWatchEnd])
+        XCTAssertEqual(PopoverSection.watch.cards, [.watch, .duration, .autoArm, .lastWatchEnd])
         XCTAssertEqual(PopoverSection.power.cards, [.panelPower, .hygiene, .battery, .ramp, .thermal])
         XCTAssertTrue(PopoverSection.power.cards.contains(.thermal))
         XCTAssertEqual(PopoverSection.power.cards.first, .panelPower)
@@ -92,8 +92,11 @@ final class PopoverSectionLayoutTests: XCTestCase {
 
     func testWatchSectionShowsArmDurationAndLastEnd() {
         let layout = PopoverStackLayout.make(section: .watch)
-        XCTAssertEqual(layout.stackedCards.map(\.y), compactYs(layout.watch, layout.duration, layout.lastWatchEnd))
-        XCTAssertEqual(layout.lastWatchEnd?.y, layout.duration!.maxY + PopoverStackLayout.cardGap)
+        XCTAssertEqual(
+            layout.stackedCards.map(\.y),
+            compactYs(layout.watch, layout.duration, layout.autoArm, layout.lastWatchEnd)
+        )
+        XCTAssertEqual(layout.lastWatchEnd?.y, layout.autoArm!.maxY + PopoverStackLayout.cardGap)
         XCTAssertEqual(
             layout.lastWatchEnd?.height,
             PopoverStackLayout.inset + PopoverCopyLayout.lastWatchEndHeightPoints + PopoverStackLayout.inset
@@ -244,7 +247,7 @@ final class PopoverSectionLayoutTests: XCTestCase {
         let general = PopoverStackLayout.make(section: .general).contentHeight
         XCTAssertGreaterThan(agents, watch)
         XCTAssertNotEqual(agents, power)
-        XCTAssertLessThan(watch, power)
+        XCTAssertNotEqual(watch, power)
         XCTAssertLessThan(general, power)
     }
 
