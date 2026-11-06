@@ -1,5 +1,9 @@
 import AppKit
 
+#if canImport(AgrypnosCore)
+import AgrypnosCore
+#endif
+
 enum AgrypnosPalette {
     static let indigo = NSColor(srgbRed: 0.42, green: 0.38, blue: 0.92, alpha: 1)
     static let gold = NSColor(srgbRed: 0.90, green: 0.74, blue: 0.38, alpha: 1)
