@@ -167,11 +167,11 @@ final class PopoverStackLayoutTests: XCTestCase {
         XCTAssertEqual(PopoverCopyLayout.helpMaxLines, 2)
         XCTAssertEqual(PopoverCopyLayout.helpHeightPoints, 2 * PopoverCopyLayout.lineHeightPoints)
         XCTAssertGreaterThan(settleLines, PopoverCopyLayout.helpMaxLines)
-        XCTAssertEqual(settleLines, 8)
-        XCTAssertEqual(PopoverCopyLayout.settleHelpMaxLines, 8)
+        // The slot is exactly the wrapped help: no blank band, no clipping.
+        XCTAssertEqual(PopoverCopyLayout.settleHelpMaxLines, settleLines)
         XCTAssertEqual(
             PopoverCopyLayout.settleHelpHeightPoints,
-            8 * PopoverCopyLayout.lineHeightPoints
+            settleLines * PopoverCopyLayout.lineHeightPoints
         )
         XCTAssertGreaterThanOrEqual(
             PopoverCopyLayout.settleHelpHeightPoints,
