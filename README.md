@@ -134,7 +134,7 @@ It reads file modification times, not what's inside the files. If Cursor is sele
 
 Once Agrypnos has seen work since you turned Keep awake on, it starts the wait after agent signals stop each time the busy signals stop. New activity starts the wait over. You can set it from 1 minute 30 seconds to 10 minutes. When the wait runs out, Keep awake turns off. If Agrypnos never saw any work since you turned it on, Keep awake stays on. The wait is there because an agent can go quiet for a while between file writes, and that shouldn't look like the end of the run.
 
-Agrypnos can't tell whether a model is "thinking". It only sees processes and files, so pick a wait after agent signals stop that fits how your agents work.
+Agrypnos can't tell whether a model is "thinking". It only sees processes and files, so pick a wait after agent signals stop that fits how your agents work. While a model writes a long reply, Claude Code writes nothing to its session file and uses little CPU until the reply is done. A reply that takes longer than about 45 seconds plus your wait ends Keep awake mid-turn, so raise the wait if your agents write long replies.
 
 > [!TIP]
 > Terminal session files don't count as busy by default, so a terminal left open can't hold the Mac awake on its own. Some agents run commands like tests in a terminal and go quiet while they wait for it. Turn on **Count terminal sessions as busy** in **Agents** if you want that terminal to count.

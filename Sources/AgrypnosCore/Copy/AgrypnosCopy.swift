@@ -15,7 +15,7 @@ public enum AgrypnosCopy: Sendable {
         "Dim panel: when the lid closes, brightness drops to this percent."
     public static let settleGrace = "Wait after agent signals stop"
     public static let settleGraceHelp =
-        "How long to wait after local busy signals stop before Keep awake turns off. A quiet gap mid-run, with no file writes or CPU use, can look finished, so this wait keeps it from ending early. Agrypnos sees only local process and session activity, not what an agent is doing."
+        "How long to wait after local busy signals stop before Keep awake turns off. A quiet gap mid-run, with no file writes or CPU use, can look finished, so this wait keeps it from ending early. Agrypnos sees only local process and session activity, not what an agent is doing. A long model reply writes nothing until it ends, so raise this wait if Keep awake turns off mid-reply."
     public static let agentInclude = "Which tools count as busy."
     public static let countTerminalSessions = "Count terminal sessions as busy"
     public static let countTerminalSessionsHelp =
