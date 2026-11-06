@@ -16,7 +16,8 @@ extension PopoverController {
             currentHeight: Int((popoverRoot.window?.frame.height ?? popover.contentSize.height).rounded()),
             panelPowerMode: runtime?.preferences.panelPowerMode ?? .default,
             showQuestionNotifications: showQuestionNotifications,
-            showsWatchCaption: watchCaptionShown
+            showsWatchCaption: watchCaptionShown,
+            watchCaptionLines: watchCaptionLines
         )
         if section != .notif { showQuestionNotifications = false }
         currentSection = section
@@ -24,7 +25,8 @@ extension PopoverController {
             section: section,
             panelPowerMode: runtime?.preferences.panelPowerMode ?? .default,
             showQuestionNotifications: section == .notif && showQuestionNotifications,
-            showsWatchCaption: watchCaptionShown
+            showsWatchCaption: watchCaptionShown,
+            watchCaptionLines: watchCaptionLines
         )
         let pad = CGFloat(PopoverStackLayout.pad)
         let width = CGFloat(PopoverStackLayout.width)

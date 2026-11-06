@@ -110,6 +110,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var currentSection: PopoverSection = .default
     var sectionMotion = 0
     var watchCaptionShown = false
+    var watchCaptionLines = PopoverCopyLayout.captionMaxLines
 
     init(runtime: WatchRuntime) {
         self.runtime = runtime
@@ -162,7 +163,9 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         )
         caption?.stringValue = watchCaption
         let showWatchCaption = !watchCaption.isEmpty
-        let captionChanged = caption != nil && showWatchCaption != watchCaptionShown
+        let captionLines = measuredCaptionLines()
+        let captionChanged = caption != nil && (showWatchCaption != watchCaptionShown
+            || (showWatchCaption && captionLines != watchCaptionLines))
         if !captionChanged { caption?.isHidden = !showWatchCaption }
         lastWatchEndLabel?.stringValue = AgrypnosCopy.lastWatchEndCaption(
             event: runtime.preferences.lastWatchEnd, now: Date()
@@ -227,10 +230,19 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         hotkeyHint?.textColor = bindFailed ? .labelColor : .tertiaryLabelColor
         // Resize last, once nothing else in this pass can hold up the 0.25s ease.
         if captionChanged {
+            let fade = showWatchCaption != watchCaptionShown
             watchCaptionShown = showWatchCaption
-            fadeWatchCaption(in: showWatchCaption)
+            watchCaptionLines = captionLines
+            if fade { fadeWatchCaption(in: showWatchCaption) }
             applySection(currentSection)
         }
+    }
+
+    /// Lines the caption really wraps to, so the Watch card holds no blank band under it.
+    private func measuredCaptionLines() -> Int {
+        guard let caption, let cell = caption.cell else { return PopoverCopyLayout.captionMaxLines }
+        let bounds = NSRect(x: 0, y: 0, width: caption.frame.width, height: .greatestFiniteMagnitude)
+        return Int((cell.cellSize(forBounds: bounds).height / CGFloat(PopoverCopyLayout.lineHeightPoints)).rounded(.up))
     }
 
     /// The Watch card clips, so the caption opens and closes with it; the fade keeps it soft.

@@ -167,10 +167,13 @@ public struct PopoverStackLayout: Equatable, Sendable {
         section: PopoverSection = .default,
         panelPowerMode: PanelPowerMode = .default,
         showQuestionNotifications: Bool = false,
-        showsWatchCaption: Bool = false
+        showsWatchCaption: Bool = false,
+        watchCaptionLines: Int = PopoverCopyLayout.captionMaxLines
     ) -> PopoverStackLayout {
+        // The caption's real lines, so a one-line caption leaves no blank band under it.
+        let captionLines = min(max(watchCaptionLines, 1), PopoverCopyLayout.captionMaxLines)
         let watchHeight =
-            inset + 28 + (showsWatchCaption ? PopoverCopyLayout.captionHeightPoints : 0) + inset
+            inset + 28 + (showsWatchCaption ? captionLines * PopoverCopyLayout.lineHeightPoints : 0) + inset
         let hygieneHeight = panelPowerMode.writesBrightnessFloor
             ? hygieneKeyboardY
                 + 2 * switchRowHeight
