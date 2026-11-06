@@ -72,7 +72,7 @@ The first time you turn Keep awake on, Agrypnos asks to install a small sudoers 
 /usr/bin/pmset -a disablesleep 0
 ```
 
-macOS asks for your password once. To remove the rule later, run `./Scripts/ungrant.sh`.
+macOS asks for your password once. To remove it later, see [Uninstall](#uninstall).
 
 ## Quick start
 
@@ -400,6 +400,33 @@ Everything is in the popover, one section at a time.
 - Claim power savings nobody measured.
 - Upload your transcripts or run a shared bot. Question forwarding, if you turn it on, sends the question and its options to your own bot.
 - Report what your agent is doing or when it will finish. `/status` only reports what Agrypnos can see.
+
+## Uninstall
+
+1. If you turned on question forwarding, open **Notif → Question notifications** and click **Disable** for Claude Code and Codex, and **Remove integration** for OpenCode. Each removes only Agrypnos's own hook or plugin.
+2. In **General**, turn off **Launch at login**, then click **Quit Agrypnos**. Quitting turns Keep awake off.
+3. Turn lid-close sleep back on, then remove the sudoers rule. Run them in this order: once the rule is gone, Agrypnos can no longer clear the setting for you.
+
+   ```bash
+   sudo /usr/bin/pmset -a disablesleep 0
+   ```
+
+   ```bash
+   sudo rm /etc/sudoers.d/agrypnos-disablesleep
+   ```
+
+   From a clone of this repo, `./Scripts/ungrant.sh` does both.
+4. Delete `Agrypnos.app`, then its data folder, which holds your bot secrets:
+
+   ```bash
+   rm -rf ~/Library/Application\ Support/Agrypnos
+   ```
+
+   ```bash
+   defaults delete app.agrypnos.Agrypnos
+   ```
+
+If the Mac won't sleep with the lid closed after this, run `sudo /usr/bin/pmset -a disablesleep 0` again. A reboot also clears it.
 
 ## Development
 

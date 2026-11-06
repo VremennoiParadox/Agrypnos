@@ -16,7 +16,7 @@ Agrypnos asks for one privileged trick: lid-close keep-awake via `pmset disables
 - Reboot clears `SleepDisabled`. The app does not re-arm at login.
 - A crash or force quit clears it too. At launch the app starts a small `/bin/sh` helper that waits on a pipe from the app. When the app process ends for any reason, the pipe closes and the helper runs `sudo -n /usr/bin/pmset -a disablesleep 0` (the existing grant, nothing new), then exits.
 
-Remove with `Scripts/ungrant.sh` or `sudo rm /etc/sudoers.d/agrypnos-disablesleep`.
+Remove with `Scripts/ungrant.sh`, or by hand: first `sudo /usr/bin/pmset -a disablesleep 0`, then `sudo rm /etc/sudoers.d/agrypnos-disablesleep`. Clear the setting first: without the rule, nothing can clear a hold a running watch left on until reboot.
 
 ## Asking the Mac to sleep
 

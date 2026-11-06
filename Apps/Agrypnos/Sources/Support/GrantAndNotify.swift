@@ -54,13 +54,14 @@ enum GrantInstaller {
         let intro = NSAlert()
         intro.alertStyle = .informational
         intro.messageText = "Let Agrypnos keep awake"
-        intro.informativeText = AgrypnosCopy.grantNeeded + " The grant is two exact pmset disablesleep commands. See SECURITY.md."
+        intro.informativeText = AgrypnosCopy.grantNeeded + " The grant is two exact pmset disablesleep commands. Details are in SECURITY.md on GitHub."
         intro.addButton(withTitle: "Enable")
         intro.addButton(withTitle: "Not now")
         NSApp.activate(ignoringOtherApps: true)
         guard intro.runModal() == .alertFirstButtonReturn else { return false }
 
-        let result = ProcessRunner.run("/usr/bin/osascript", ["-e", osa], timeout: 120)
+        // Room for a slow password entry; the system dialog closes if this times out.
+        let result = ProcessRunner.run("/usr/bin/osascript", ["-e", osa], timeout: 300)
         return result.exit == 0
     }
 }

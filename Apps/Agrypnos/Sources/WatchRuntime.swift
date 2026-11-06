@@ -394,7 +394,7 @@ final class WatchRuntime {
     @discardableResult
     func setEngaged(_ on: Bool, auto: Bool = false) -> HygieneApplyResult {
         if on {
-            let grantNote = auto ? AgrypnosCopy.autoArmGrantMissing : AgrypnosCopy.grantNeeded
+            let grantNote = auto ? AgrypnosCopy.autoArmGrantMissing : AgrypnosCopy.grantMissing
             guard armKernel(allowInstall: !auto, grantMissingNote: grantNote) else { return HygieneApplyResult() }
             resetQuestionWatchForNewArm()
             invalidateAgentProbe()

@@ -60,6 +60,8 @@ public enum AgrypnosCopy: Sendable {
 
     public static let captionOff = ""
     public static let grantNeeded = "The lid-close grant isn’t installed yet. macOS will ask once."
+    /// After "Not now" or a failed install.
+    public static let grantMissing = "Keep awake stays off: it needs the lid-close grant. Turn Keep awake on again to install it."
     public static let timerEnded = "Timer ended. Keep awake turned off."
     public static let batteryEnded = "Low battery. Keep awake turned off."
     public static let thermalEnded = "Thermal pressure. Keep awake turned off."
