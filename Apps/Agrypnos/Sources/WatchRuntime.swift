@@ -392,9 +392,10 @@ final class WatchRuntime {
     }
 
     @discardableResult
-    func setEngaged(_ on: Bool) -> HygieneApplyResult {
+    func setEngaged(_ on: Bool, auto: Bool = false) -> HygieneApplyResult {
         if on {
-            guard armKernel() else { return HygieneApplyResult() }
+            let grantNote = auto ? AgrypnosCopy.autoArmGrantMissing : AgrypnosCopy.grantNeeded
+            guard armKernel(allowInstall: !auto, grantMissingNote: grantNote) else { return HygieneApplyResult() }
             resetQuestionWatchForNewArm()
             invalidateAgentProbe()
             idlePostTask?.cancel()
@@ -405,7 +406,7 @@ final class WatchRuntime {
             if LidCloseConfirm.shouldCaptureBeforeClosedHygiene(rawClosed: rawClosed) {
                 recaptureOpenLidHygiene()
             }
-            apply(engine.userSetEngaged(true, now: Date(), lidClosed: false))
+            apply(auto ? engine.autoArm(now: Date()) : engine.userSetEngaged(true, now: Date(), lidClosed: false))
             apply(engine.observeLid(closed: rawClosed, now: Date()))
             if LidCloseConfirm.shouldRecaptureOpenBrightness(
                 rawClosed: rawClosed,

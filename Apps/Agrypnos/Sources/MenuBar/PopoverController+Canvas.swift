@@ -103,6 +103,9 @@ extension PopoverController {
         durationCard = PopoverForm.card(in: document, slot: layout.duration!, pad: pad, width: contentW)
         addDurationCard(durationCard, contentW: contentW, ci: ci, cw: cw)
 
+        autoArmCard = PopoverForm.card(in: document, slot: layout.autoArm!, pad: pad, width: contentW)
+        addAutoArmCard(autoArmCard, contentW: contentW, ci: ci, cw: cw, swW: swW, swH: swH)
+
         lastWatchEndCard = PopoverForm.card(in: document, slot: layout.lastWatchEnd!, pad: pad, width: contentW)
         addLastWatchEndCard(lastWatchEndCard, ci: ci, cw: cw)
 

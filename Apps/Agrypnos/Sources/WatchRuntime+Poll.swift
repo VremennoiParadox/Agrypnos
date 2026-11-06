@@ -7,7 +7,7 @@ import AgrypnosCore
 extension WatchRuntime {
     func poll() {
         let probe = WatchTickProbe.needed(engaged: engine.engaged, mode: engine.mode,
-            questionTimeoutPending: !questionUnansweredKeys.isEmpty)
+            questionTimeoutPending: !questionUnansweredKeys.isEmpty, autoArmWatching: engine.autoArmWatching)
         if lidCadence() != .none {
             pollLid()
         } else {
@@ -15,7 +15,9 @@ extension WatchRuntime {
         }
 
         if idleOutbound.shouldSkipPoll(engineEngaged: engine.engaged) { return }
-        guard probe != .none else {
+        if engine.engaged {
+            idleProbeTicks = 0
+        } else {
             idleProbeTicks += 1
             if WatchTickProbe.leftoverReconcileDue(
                 idleTicks: idleProbeTicks,
@@ -24,10 +26,12 @@ extension WatchRuntime {
                 idleProbeTicks = 0
                 reconcileKernel(preferClearLeftover: true)
             }
-            delegate?.watchRuntimeDidChange(self)
-            return
+            // Off: only Auto-on keeps walking busy signals. A leftover adopt just armed — next tick.
+            guard probe != .none, !engine.engaged else {
+                delegate?.watchRuntimeDidChange(self)
+                return
+            }
         }
-        idleProbeTicks = 0
 
         let battery = BatteryMonitor.reading()
         lastBatteryReading = battery
@@ -38,7 +42,7 @@ extension WatchRuntime {
             lowPowerMode: ProcessInfo.processInfo.isLowPowerModeEnabled
         )
         lastSafety = safety
-        let kernel = readKernel() == .held
+        let kernel = engine.engaged && readKernel() == .held
         let included = engine.preferences.includedAgentKinds
         let terminals = engine.preferences.countTerminalSessionsAsBusy
         let now = Date()
@@ -137,6 +141,7 @@ extension WatchRuntime {
             engine.interruptAgentObservations()
         }
         guard engine.engaged else {
+            autoArmIfDue(busy: busy, now: now)
             delegate?.watchRuntimeDidChange(self)
             return
         }
@@ -162,6 +167,14 @@ extension WatchRuntime {
         kernel: Bool,
         observeAgents: Bool
     ) {
+        // Only Auto-on reaches here while off (cached snapshot or probe still in flight).
+        guard engine.engaged else {
+            if observeAgents {
+                autoArmIfDue(busy: agents.anyBusy(included: engine.preferences.includedAgentKinds), now: now)
+            }
+            delegate?.watchRuntimeDidChange(self)
+            return
+        }
         let previousSettle = engine.settle
         if observeAgents, engine.mode == .untilAgentsSettle, let last = previousSettle.lastObservedAt {
             let gap = now.timeIntervalSince(last)

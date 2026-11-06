@@ -40,6 +40,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var settleValue: NSTextField!
     var includeSwitches: [NSSwitch] = []
     var terminalBusySwitch: NSSwitch!
+    var autoArmSwitch: NSSwitch!
     var rampControl: NSSegmentedControl!
     var thermalSwitch: NSSwitch!
     var notifSwitch: NSSwitch!
@@ -61,6 +62,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var popoverDocument: NSView!
     var watchCard: CardView!
     var durationCard: CardView!
+    var autoArmCard: CardView!
     var lastWatchEndCard: CardView!
     var lastWatchEndLabel: NSTextField!
     var panelPowerCard: CardView!
@@ -155,7 +157,8 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
             leftover: runtime.adoptedLeftover,
             floor: runtime.preferences.batteryFloorPercent,
             lidClosed: runtime.engine.lidClosed,
-            panelPowerMode: runtime.preferences.panelPowerMode
+            panelPowerMode: runtime.preferences.panelPowerMode,
+            autoArmed: runtime.engine.autoArmed
         )
         caption?.stringValue = watchCaption
         let showWatchCaption = !watchCaption.isEmpty
@@ -175,6 +178,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
             )
         )
         refreshCountdown()
+        refreshAutoArm(runtime)
         keyboardSwitch?.state = runtime.preferences.keyboardBacklightOff ? .on : .off
         floorSwitch?.state = runtime.preferences.applyBrightnessFloor ? .on : .off
         let floorRange = UserPreferences.brightnessFloorPercentRange

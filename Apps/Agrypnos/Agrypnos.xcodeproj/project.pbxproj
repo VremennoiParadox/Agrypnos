@@ -18,6 +18,7 @@
 		87299C24812BC138E73D77BC /* PopoverController+Canvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50D9BE7A9730D85A15B6E96E /* PopoverController+Canvas.swift */; };
 		83E9538CE09AAA2166595788 /* PopoverController+Cards.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9704B117A23E378C79A3883 /* PopoverController+Cards.swift */; };
 		51A4F14CFF7974BBC248E4FB /* PopoverController+ClaudeHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052BE85C746568D8A215D1DF /* PopoverController+ClaudeHook.swift */; };
+		78F27D04A225CDD33F8BD565 /* PopoverController+AutoArm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D442999080EEBEF8002AA6F /* PopoverController+AutoArm.swift */; };
 		3E342BC9083A87088493456F /* PopoverController+Notif.swift in Sources */ = {isa = PBXBuildFile; fileRef = D36BE0786C01BFCA5770EAE1 /* PopoverController+Notif.swift */; };
 		B3BF8385D303AB9F8B3915EC /* PopoverController+OpenCodePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2D724306EE431110D4B6552 /* PopoverController+OpenCodePlugin.swift */; };
 		D26100AA275DD2C7CC545A83 /* PopoverController+Questions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8B9236115BA41F196506414 /* PopoverController+Questions.swift */; };
@@ -62,6 +63,7 @@
 		B61701CD7A9C7B8B971BBE35 /* WatchRuntime+Lid.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE46E54106185894B8859E55 /* WatchRuntime+Lid.swift */; };
 		E3E9E97E96936C3A956AAC68 /* WatchRuntime+Poll.swift in Sources */ = {isa = PBXBuildFile; fileRef = 779C1801A09C9D65CD3D4E70 /* WatchRuntime+Poll.swift */; };
 		9B92EA17C72B00361727B385 /* WatchRuntime+WakeRestore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0D2FC201B1C3A8681B55F7F /* WatchRuntime+WakeRestore.swift */; };
+		8D61521422AB383D0B39D04D /* WatchRuntime+AutoArm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 345FF37DE611289DE8E0F4CC /* WatchRuntime+AutoArm.swift */; };
 		1A07C28A481816CBE4F20A60 /* WatchRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41663A701EAD0DB8779BE8A5 /* WatchRuntime.swift */; };
 		095E19E7CB28F7EE95D82908 /* AgrypnosCore in Frameworks */ = {isa = PBXBuildFile; productRef = C81CD5F22406E4B780AC870D /* AgrypnosCore */; };
 		6B8001DABC00C7B45D3BFA0C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8B40A3F1CAC9ADB66B78DD5C /* Assets.xcassets */; };
@@ -81,6 +83,7 @@
 		50D9BE7A9730D85A15B6E96E /* PopoverController+Canvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Canvas.swift"; sourceTree = "<group>"; };
 		C9704B117A23E378C79A3883 /* PopoverController+Cards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Cards.swift"; sourceTree = "<group>"; };
 		052BE85C746568D8A215D1DF /* PopoverController+ClaudeHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+ClaudeHook.swift"; sourceTree = "<group>"; };
+		3D442999080EEBEF8002AA6F /* PopoverController+AutoArm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+AutoArm.swift"; sourceTree = "<group>"; };
 		D36BE0786C01BFCA5770EAE1 /* PopoverController+Notif.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Notif.swift"; sourceTree = "<group>"; };
 		E2D724306EE431110D4B6552 /* PopoverController+OpenCodePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+OpenCodePlugin.swift"; sourceTree = "<group>"; };
 		D8B9236115BA41F196506414 /* PopoverController+Questions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Questions.swift"; sourceTree = "<group>"; };
@@ -125,6 +128,7 @@
 		BE46E54106185894B8859E55 /* WatchRuntime+Lid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+Lid.swift"; sourceTree = "<group>"; };
 		779C1801A09C9D65CD3D4E70 /* WatchRuntime+Poll.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+Poll.swift"; sourceTree = "<group>"; };
 		E0D2FC201B1C3A8681B55F7F /* WatchRuntime+WakeRestore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+WakeRestore.swift"; sourceTree = "<group>"; };
+		345FF37DE611289DE8E0F4CC /* WatchRuntime+AutoArm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchRuntime+AutoArm.swift"; sourceTree = "<group>"; };
 		41663A701EAD0DB8779BE8A5 /* WatchRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRuntime.swift; sourceTree = "<group>"; };
 		38ED30322495D02C679CFD76 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0111024D5CF6358695630612 /* Agrypnos.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Agrypnos.entitlements; sourceTree = "<group>"; };
@@ -154,6 +158,7 @@
 				BE46E54106185894B8859E55 /* WatchRuntime+Lid.swift */,
 				779C1801A09C9D65CD3D4E70 /* WatchRuntime+Poll.swift */,
 				E0D2FC201B1C3A8681B55F7F /* WatchRuntime+WakeRestore.swift */,
+				345FF37DE611289DE8E0F4CC /* WatchRuntime+AutoArm.swift */,
 				41663A701EAD0DB8779BE8A5 /* WatchRuntime.swift */,
 				7BC2CAB9094C6A3F6E6AF09E /* Agent */,
 				3E81BE9F451039AECD508BDD /* Hotkey */,
@@ -201,6 +206,7 @@
 				50D9BE7A9730D85A15B6E96E /* PopoverController+Canvas.swift */,
 				C9704B117A23E378C79A3883 /* PopoverController+Cards.swift */,
 				052BE85C746568D8A215D1DF /* PopoverController+ClaudeHook.swift */,
+				3D442999080EEBEF8002AA6F /* PopoverController+AutoArm.swift */,
 				D36BE0786C01BFCA5770EAE1 /* PopoverController+Notif.swift */,
 				E2D724306EE431110D4B6552 /* PopoverController+OpenCodePlugin.swift */,
 				D8B9236115BA41F196506414 /* PopoverController+Questions.swift */,
@@ -389,6 +395,7 @@
 				87299C24812BC138E73D77BC /* PopoverController+Canvas.swift in Sources */,
 				83E9538CE09AAA2166595788 /* PopoverController+Cards.swift in Sources */,
 				51A4F14CFF7974BBC248E4FB /* PopoverController+ClaudeHook.swift in Sources */,
+				78F27D04A225CDD33F8BD565 /* PopoverController+AutoArm.swift in Sources */,
 				3E342BC9083A87088493456F /* PopoverController+Notif.swift in Sources */,
 				B3BF8385D303AB9F8B3915EC /* PopoverController+OpenCodePlugin.swift in Sources */,
 				D26100AA275DD2C7CC545A83 /* PopoverController+Questions.swift in Sources */,
@@ -433,6 +440,7 @@
 				B61701CD7A9C7B8B971BBE35 /* WatchRuntime+Lid.swift in Sources */,
 				E3E9E97E96936C3A956AAC68 /* WatchRuntime+Poll.swift in Sources */,
 				9B92EA17C72B00361727B385 /* WatchRuntime+WakeRestore.swift in Sources */,
+				8D61521422AB383D0B39D04D /* WatchRuntime+AutoArm.swift in Sources */,
 				1A07C28A481816CBE4F20A60 /* WatchRuntime.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -7,7 +7,7 @@ import AgrypnosCore
 
 extension WatchRuntime {
     @discardableResult
-    func armKernel(allowInstall: Bool = true) -> Bool {
+    func armKernel(allowInstall: Bool = true, grantMissingNote: String = AgrypnosCopy.grantNeeded) -> Bool {
         var result = setKernel(true)
         if result == .grantMissing, allowInstall {
             if GrantInstaller.installViaNativeAuth() {
@@ -21,7 +21,7 @@ extension WatchRuntime {
             if case .failed(let message) = result {
                 notify("Couldn't turn Keep awake on. \(message)")
             } else if result == .grantMissing {
-                notify(AgrypnosCopy.grantNeeded)
+                notify(grantMissingNote)
             } else {
                 notify("pmset ran but the wake hold did not read back as on.")
             }
