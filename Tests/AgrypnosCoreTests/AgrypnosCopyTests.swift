@@ -130,7 +130,8 @@ final class AgrypnosCopyTests: XCTestCase {
     }
 
     func testDurationHintsArePlainAndFitTheDurationCard() {
-        let lid = "Turning Keep awake off with the lid confirmed closed sends the Mac to sleep. With the lid open or unconfirmed it turns Keep awake off and does not sleep the Mac."
+        let lid = "Turning Keep awake off with the lid confirmed closed sends the Mac to sleep. With the lid open it turns Keep awake off and does not sleep the Mac."
+        XCTAssertEqual(AgrypnosCopy.timedHint, "When the timer ends, Keep awake turns off and Agrypnos sends the Mac to sleep unless the lid is open.")
         func withLid(_ base: String) -> String { base + " " + lid }
         XCTAssertEqual(
             AgrypnosCopy.agentsHint,

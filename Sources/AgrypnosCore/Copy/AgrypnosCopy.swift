@@ -37,9 +37,9 @@ public enum AgrypnosCopy: Sendable {
     public static let agentsHint =
         "Keep awake turns off when the wait after agent signals stop ends (battery / thermal still apply)."
     public static let timedHint =
-        "Sends the Mac to sleep by the end of the timer unless the lid is open."
+        "When the timer ends, Keep awake turns off and Agrypnos sends the Mac to sleep unless the lid is open."
     public static let userOffSleepHint =
-        "Turning Keep awake off with the lid confirmed closed sends the Mac to sleep. With the lid open or unconfirmed it turns Keep awake off and does not sleep the Mac."
+        "Turning Keep awake off with the lid confirmed closed sends the Mac to sleep. With the lid open it turns Keep awake off and does not sleep the Mac."
     // User-armed watches do not auto-off on Low Power Mode, so it is not listed here.
     public static let indefiniteHint =
         "Stays on until you turn it off (battery / thermal still apply)."
