@@ -7,7 +7,9 @@ import AgrypnosCore
 extension PopoverController {
     func makeController() -> NSViewController {
         let layout = PopoverStackLayout.make()
-        let power = PopoverStackLayout.make(section: .power)
+        // Dim panel lays out every Power card, ramp included. Sleep panel (the default) leaves the
+        // ramp out, which crashed setup. applySection hides it again in Sleep panel.
+        let power = PopoverStackLayout.make(section: .power, panelPowerMode: .floor)
         let agents = PopoverStackLayout.make(section: .agents)
         let general = PopoverStackLayout.make(section: .general)
         let W = CGFloat(PopoverStackLayout.width)
@@ -102,6 +104,9 @@ extension PopoverController {
 
         durationCard = PopoverForm.card(in: document, slot: layout.duration!, pad: pad, width: contentW)
         addDurationCard(durationCard, contentW: contentW, ci: ci, cw: cw)
+
+        autoArmCard = PopoverForm.card(in: document, slot: layout.autoArm!, pad: pad, width: contentW)
+        addAutoArmCard(autoArmCard, contentW: contentW, ci: ci, cw: cw, swW: swW, swH: swH)
 
         lastWatchEndCard = PopoverForm.card(in: document, slot: layout.lastWatchEnd!, pad: pad, width: contentW)
         addLastWatchEndCard(lastWatchEndCard, ci: ci, cw: cw)

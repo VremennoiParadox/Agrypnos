@@ -110,21 +110,22 @@ final class PopoverSectionResizeTests: XCTestCase {
     }
 
     func testGrowAndShrinkBothHideOutgoingNow() {
-        let watch = PopoverStackLayout.make(section: .watch)
+        // Watch carries the Auto-on card, so Power is the shorter of the two.
         let power = PopoverStackLayout.make(section: .power)
-        XCTAssertLessThan(watch.popoverHeight, power.popoverHeight)
+        let watch = PopoverStackLayout.make(section: .watch)
+        XCTAssertLessThan(power.popoverHeight, watch.popoverHeight)
 
-        let grow = PopoverSectionResize.make(from: .watch, to: .power, animated: true)
+        let grow = PopoverSectionResize.make(from: .power, to: .watch, animated: true)
         XCTAssertTrue(grow.animatesHeight)
         XCTAssertGreaterThan(grow.toHeight, grow.fromHeight)
         XCTAssertTrue(grow.hidesOutgoingImmediately)
-        XCTAssertEqual(grow.documentHeightDuringMotion, power.contentHeight)
+        XCTAssertEqual(grow.documentHeightDuringMotion, watch.contentHeight)
 
-        let shrink = PopoverSectionResize.make(from: .power, to: .watch, animated: true)
+        let shrink = PopoverSectionResize.make(from: .watch, to: .power, animated: true)
         XCTAssertTrue(shrink.animatesHeight)
         XCTAssertLessThan(shrink.toHeight, shrink.fromHeight)
         XCTAssertTrue(shrink.hidesOutgoingImmediately)
-        XCTAssertEqual(shrink.documentHeightDuringMotion, watch.contentHeight)
+        XCTAssertEqual(shrink.documentHeightDuringMotion, power.contentHeight)
         XCTAssertLessThan(shrink.documentHeightDuringMotion, shrink.fromContentHeight)
     }
 

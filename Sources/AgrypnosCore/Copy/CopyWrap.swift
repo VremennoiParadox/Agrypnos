@@ -9,6 +9,9 @@ public enum PopoverCopyLayout: Sendable {
     public static let settleHelpMaxLines = 8
     /// I3 terminal-busy help. Seven lines at `innerColumns`.
     public static let countTerminalSessionsHelpMaxLines = 7
+    /// Auto-on help at `innerColumns`.
+    public static let autoArmHelpMaxLines = 6
+    public static let autoArmHelpHeightPoints = autoArmHelpMaxLines * lineHeightPoints
     public static let hotkeyHintMaxLines = 2
     public static let lastWatchEndMaxLines = 3
     public static var lastWatchEndHeightPoints: Int { lastWatchEndMaxLines * lineHeightPoints }

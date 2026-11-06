@@ -40,6 +40,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var settleValue: NSTextField!
     var includeSwitches: [NSSwitch] = []
     var terminalBusySwitch: NSSwitch!
+    var autoArmSwitch: NSSwitch!
     var rampControl: NSSegmentedControl!
     var thermalSwitch: NSSwitch!
     var notifSwitch: NSSwitch!
@@ -61,6 +62,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var popoverDocument: NSView!
     var watchCard: CardView!
     var durationCard: CardView!
+    var autoArmCard: CardView!
     var lastWatchEndCard: CardView!
     var lastWatchEndLabel: NSTextField!
     var panelPowerCard: CardView!
@@ -108,6 +110,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var currentSection: PopoverSection = .default
     var sectionMotion = 0
     var watchCaptionShown = false
+    var watchCaptionLines = PopoverCopyLayout.captionMaxLines
 
     init(runtime: WatchRuntime) {
         self.runtime = runtime
@@ -155,11 +158,14 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
             leftover: runtime.adoptedLeftover,
             floor: runtime.preferences.batteryFloorPercent,
             lidClosed: runtime.engine.lidClosed,
-            panelPowerMode: runtime.preferences.panelPowerMode
+            panelPowerMode: runtime.preferences.panelPowerMode,
+            autoArmed: runtime.engine.autoArmed
         )
         caption?.stringValue = watchCaption
         let showWatchCaption = !watchCaption.isEmpty
-        let captionChanged = caption != nil && showWatchCaption != watchCaptionShown
+        let captionLines = measuredCaptionLines()
+        let captionChanged = caption != nil && (showWatchCaption != watchCaptionShown
+            || (showWatchCaption && captionLines != watchCaptionLines))
         if !captionChanged { caption?.isHidden = !showWatchCaption }
         lastWatchEndLabel?.stringValue = AgrypnosCopy.lastWatchEndCaption(
             event: runtime.preferences.lastWatchEnd, now: Date()
@@ -175,6 +181,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
             )
         )
         refreshCountdown()
+        refreshAutoArm(runtime)
         keyboardSwitch?.state = runtime.preferences.keyboardBacklightOff ? .on : .off
         floorSwitch?.state = runtime.preferences.applyBrightnessFloor ? .on : .off
         let floorRange = UserPreferences.brightnessFloorPercentRange
@@ -223,10 +230,19 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         hotkeyHint?.textColor = bindFailed ? .labelColor : .tertiaryLabelColor
         // Resize last, once nothing else in this pass can hold up the 0.25s ease.
         if captionChanged {
+            let fade = showWatchCaption != watchCaptionShown
             watchCaptionShown = showWatchCaption
-            fadeWatchCaption(in: showWatchCaption)
+            watchCaptionLines = captionLines
+            if fade { fadeWatchCaption(in: showWatchCaption) }
             applySection(currentSection)
         }
+    }
+
+    /// Lines the caption really wraps to, so the Watch card holds no blank band under it.
+    private func measuredCaptionLines() -> Int {
+        guard let caption, let cell = caption.cell else { return PopoverCopyLayout.captionMaxLines }
+        let bounds = NSRect(x: 0, y: 0, width: caption.frame.width, height: .greatestFiniteMagnitude)
+        return Int((cell.cellSize(forBounds: bounds).height / CGFloat(PopoverCopyLayout.lineHeightPoints)).rounded(.up))
     }
 
     /// The Watch card clips, so the caption opens and closes with it; the fade keeps it soft.

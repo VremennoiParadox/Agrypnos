@@ -16,7 +16,8 @@ extension PopoverController {
             currentHeight: Int((popoverRoot.window?.frame.height ?? popover.contentSize.height).rounded()),
             panelPowerMode: runtime?.preferences.panelPowerMode ?? .default,
             showQuestionNotifications: showQuestionNotifications,
-            showsWatchCaption: watchCaptionShown
+            showsWatchCaption: watchCaptionShown,
+            watchCaptionLines: watchCaptionLines
         )
         if section != .notif { showQuestionNotifications = false }
         currentSection = section
@@ -24,7 +25,8 @@ extension PopoverController {
             section: section,
             panelPowerMode: runtime?.preferences.panelPowerMode ?? .default,
             showQuestionNotifications: section == .notif && showQuestionNotifications,
-            showsWatchCaption: watchCaptionShown
+            showsWatchCaption: watchCaptionShown,
+            watchCaptionLines: watchCaptionLines
         )
         let pad = CGFloat(PopoverStackLayout.pad)
         let width = CGFloat(PopoverStackLayout.width)
@@ -120,6 +122,7 @@ extension PopoverController {
     ) {
         PopoverForm.apply(watchCard, slot: layout.watch, pad: pad, width: width)
         PopoverForm.apply(durationCard, slot: layout.duration, pad: pad, width: width)
+        PopoverForm.apply(autoArmCard, slot: layout.autoArm, pad: pad, width: width)
         PopoverForm.apply(lastWatchEndCard, slot: layout.lastWatchEnd, pad: pad, width: width)
         PopoverForm.apply(panelPowerCard, slot: layout.panelPower, pad: pad, width: width)
         PopoverForm.apply(hygieneCard, slot: layout.hygiene, pad: pad, width: width)

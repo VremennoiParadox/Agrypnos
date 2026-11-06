@@ -23,6 +23,9 @@ public struct WatchEngine: Equatable, Sendable {
     /// Kernel still held during the bounded watch-end POST. Do not paint ended.
     public private(set) var holdingForIdlePost: Bool
     public private(set) var lastDisengageLidClosed: Bool
+    /// This watch was turned on by Auto-on, not by the user.
+    public private(set) var autoArmed = false
+    public private(set) var autoArmGate = AutoArmGate()
     var lastWatchEndRollback: LastWatchEnd?
     private var timerEndRollback: Date?
     private var userForcedRollback = false
@@ -138,6 +141,50 @@ public struct WatchEngine: Equatable, Sendable {
 
     public mutating func userSetCountTerminalSessionsAsBusy(_ on: Bool) {
         preferences.countTerminalSessionsAsBusy = on
+    }
+
+    public mutating func userSetAutoArmWhenBusy(_ on: Bool) {
+        preferences.autoArmWhenBusy = on
+    }
+
+    /// Auto-on only counts busy while it could act: toggle on, How long is Agents, Keep awake off.
+    public var autoArmWatching: Bool {
+        preferences.autoArmWhenBusy && preferences.duration == .untilAgentsSettle && !engaged
+    }
+
+    /// One busy check while Keep awake is off. True when Auto-on should arm now.
+    /// A closed lid or a safety limit holds the arm; the busy count keeps running.
+    public mutating func autoArmDue(now: Date, busy: Bool?, lidClosed: Bool?, safety: SafetyInputs) -> Bool {
+        guard autoArmWatching else {
+            autoArmGate.restartCount()
+            return false
+        }
+        guard autoArmGate.observe(busy: busy, now: now), lidClosed != true else { return false }
+        return AutoOffEvaluator.reason(
+            engaged: true,
+            timerEnd: nil,
+            safety: safety,
+            batteryFloorPercent: preferences.batteryFloorPercent,
+            userForcedThisSession: false,
+            thermalAutoOff: preferences.thermalAutoOff,
+            now: now
+        ) == nil
+    }
+
+    /// Same engage path as a user arm, lid open. The triggering busy counts as busy seen this arm,
+    /// so the wait after agent signals stop always ends it.
+    public mutating func autoArm(now: Date) -> [WatchCommand] {
+        leftoverAdopted = false
+        lidClosed = false
+        let commands = engage(now: now, forcedByUser: false, resetPostedThisUserArm: true)
+        autoArmed = true
+        _ = settle.observe(busy: true, now: now)
+        return commands
+    }
+
+    /// The kernel arm failed. Do not retry during this run.
+    public mutating func autoArmDidFail() {
+        autoArmGate.watchEnded()
     }
 
     public mutating func userSetPanelPowerMode(_ mode: PanelPowerMode) -> [WatchCommand] {
@@ -328,6 +375,7 @@ public struct WatchEngine: Equatable, Sendable {
             timerEndRollback = timerEnd
             userForcedRollback = userForcedThisSession
             leftoverAdoptedRollback = leftoverAdopted
+            autoArmGate.watchEnded()
             let end = LastWatchEnd(endedAt: now, reason: reason)
             if postWatchEnd {
                 pendingLastWatchEnd = end
@@ -336,6 +384,7 @@ public struct WatchEngine: Equatable, Sendable {
             }
         }
         engaged = false
+        autoArmed = false
         mode = .idle
         timerEnd = nil
         userForcedThisSession = false

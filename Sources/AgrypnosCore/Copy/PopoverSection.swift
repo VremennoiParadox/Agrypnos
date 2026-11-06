@@ -5,6 +5,7 @@ public enum PopoverCard: Equatable, Hashable, Sendable {
     case panelPower
     case hygiene
     case battery
+    case autoArm
     case agentInclude
     case settle
     case terminalBusy
@@ -52,7 +53,7 @@ public enum PopoverSection: Int, CaseIterable, Sendable {
 
     public func cards(showQuestionNotifications: Bool = false) -> [PopoverCard] {
         switch self {
-        case .watch: return [.watch, .duration, .lastWatchEnd]
+        case .watch: return [.watch, .duration, .autoArm, .lastWatchEnd]
         case .power: return [.panelPower, .hygiene, .battery, .ramp, .thermal]
         case .agents:
             return [.agentInclude, .settle, .terminalBusy]

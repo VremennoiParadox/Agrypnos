@@ -51,6 +51,33 @@ final class PopoverStackLayoutTests: XCTestCase {
         )
     }
 
+    /// A one-line caption gets one line of card, not the four-line worst case.
+    func testWatchCaptionSlotHugsTheCaptionLines() {
+        let unit = PopoverCopyLayout.lineHeightPoints
+        let bare = PopoverStackLayout.inset + 28 + PopoverStackLayout.inset
+        for lines in 1...PopoverCopyLayout.captionMaxLines {
+            let layout = PopoverStackLayout.make(section: .watch, showsWatchCaption: true, watchCaptionLines: lines)
+            XCTAssertEqual(layout.watch!.height, bare + lines * unit, "\(lines) lines")
+            XCTAssertEqual(layout.duration!.y, layout.watch!.maxY + PopoverStackLayout.cardGap)
+        }
+        let tooMany = PopoverStackLayout.make(section: .watch, showsWatchCaption: true, watchCaptionLines: 9)
+        XCTAssertEqual(tooMany.watch!.height, bare + PopoverCopyLayout.captionHeightPoints)
+        let zero = PopoverStackLayout.make(section: .watch, showsWatchCaption: true, watchCaptionLines: 0)
+        XCTAssertEqual(zero.watch!.height, bare + unit)
+        let hidden = PopoverStackLayout.make(section: .watch, showsWatchCaption: false, watchCaptionLines: 3)
+        XCTAssertEqual(hidden.watch!.height, bare)
+    }
+
+    func testCaptionLineChangeEasesWatchInPlace() {
+        let one = PopoverStackLayout.make(section: .watch, showsWatchCaption: true, watchCaptionLines: 1).popoverHeight
+        let grow = PopoverSectionResize.make(
+            from: .watch, to: .watch, animated: true, currentHeight: one, showsWatchCaption: true, watchCaptionLines: 3
+        )
+        XCTAssertTrue(grow.animatesHeight)
+        XCTAssertTrue(grow.slidesCards)
+        XCTAssertEqual(grow.toHeight, one + 2 * PopoverCopyLayout.lineHeightPoints)
+    }
+
     func testHygieneSettleAndRampSlotsFitNativeControls() {
         let watch = PopoverStackLayout.make(section: .watch)
         let power = PopoverStackLayout.make(section: .power, panelPowerMode: .floor)
