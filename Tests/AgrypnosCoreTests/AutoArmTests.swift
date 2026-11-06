@@ -117,7 +117,7 @@ final class AutoArmTests: XCTestCase {
         XCTAssertTrue(engine.settle.sawBusy)
         XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
 
-        // Quiet right after the arm still ends the watch after the idle wait.
+        // Quiet right after the arm still ends the watch when the wait after agent signals stop ends.
         var ended: [WatchCommand] = []
         var s: TimeInterval = 35
         while ended.isEmpty, s <= 300 {
@@ -189,6 +189,8 @@ final class AutoArmTests: XCTestCase {
         let all = (AgrypnosCopy.autoArm + " " + AgrypnosCopy.autoArmHelp).lowercased()
         XCTAssertTrue(all.contains("30 seconds"))
         XCTAssertTrue(all.contains("agents"))
+        XCTAssertTrue(all.contains("wait after agent signals stop"))
+        XCTAssertFalse(all.contains("idle wait"))
         for banned in ["thinking", "agent started", "job", "finished"] {
             XCTAssertFalse(all.contains(banned), banned)
         }

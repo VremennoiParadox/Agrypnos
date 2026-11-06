@@ -123,7 +123,7 @@ The menu-bar item is always a fixed-size **eye icon only**, with no visible titl
   - **Arms only when all hold:** toggle ON; How long is **Agents**; Keep awake is off; selected tools look busy (same local busy signals as Agents mode) for **30 seconds** of consecutive checks (a gap or incomplete probe restarts the count); the lid is not closed (raw lid open, or no lid); battery / thermal / Low Power Mode would not turn it off right away.
   - Any other How long: the toggle is disabled and does nothing. Auto-on never changes How long.
   - Same WatchEngine engage path as a user arm — no second arm stack. Not a forced watch (the Low Power Mode rule applies). The busy that triggered the arm counts as busy seen this arm, so the wait after agent signals stop always ends it.
-  - After **any** watch end (user off, idle wait, safety, unanswered question, failed arm), Auto-on waits until busy signals go quiet, then may arm on the next run.
+  - After **any** watch end (user off, the wait after agent signals stop, safety, unanswered question, failed arm), Auto-on waits until busy signals go quiet, then may arm on the next run.
   - Never runs the grant installer. A missing grant notifies and waits for the next run.
   - Launch never restores a saved armed state; after launch Auto-on may arm through the same 30-second rule. Question forwarding still never arms the watch.
   - No new Notif message for an auto-arm. The Watch caption says Auto-on turned Keep awake on.

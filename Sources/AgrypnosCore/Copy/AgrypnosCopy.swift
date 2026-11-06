@@ -22,7 +22,7 @@ public enum AgrypnosCopy: Sendable {
         "Some agents might launch terminals for tasks like testing. While the terminal is active and executing a command, the agent might go idle and wait for the terminal. This may turn Keep awake off. Turn this on if you want to prevent that."
     public static let autoArm = "Auto-on when tools look busy"
     public static let autoArmHelp =
-        "Turns Keep awake on when selected tools look busy for 30 seconds with the lid open. Needs How long set to Agents, so it turns off after the idle wait. Then it waits for the next run."
+        "Turns Keep awake on when selected tools look busy for 30 seconds with the lid open. Needs How long set to Agents, so it turns off when the wait after agent signals stop ends. Then it waits for the next run."
     public static let autoArmGrantMissing =
         "Auto-on couldn’t turn Keep awake on: the lid-close grant isn’t installed. Turn Keep awake on once by hand to install it."
     public static let lidOpenRamp = "Brightness return when lid opens"
