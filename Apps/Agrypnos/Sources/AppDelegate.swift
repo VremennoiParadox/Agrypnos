@@ -1,11 +1,12 @@
 import AppKit
+import UserNotifications
 
 #if canImport(AgrypnosCore)
 import AgrypnosCore
 #endif
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate, WatchRuntimeDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, WatchRuntimeDelegate, UNUserNotificationCenterDelegate {
     private let runtime = WatchRuntime()
     private var statusItem: StatusItemController!
     private var popover: PopoverController!
@@ -13,6 +14,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WatchRuntimeDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        if Bundle.main.bundleURL.pathExtension == "app" {
+            UNUserNotificationCenter.current().delegate = self
+        }
+        UserNotify.requestPermission()
         guard runtime.start() else { NSApp.terminate(nil); return }
         AppEditMenu.install()
         PopoverCopyLayout.measureLines = PopoverTextMeasure.lines
@@ -42,6 +47,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WatchRuntimeDelegate {
 
     func watchRuntimeDidChange(_ runtime: WatchRuntime) {
         statusItem.refresh()
+    }
+
+    /// Show banners even while the popover makes Agrypnos the active app.
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification,
+                                            withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        completionHandler([.banner, .sound])
     }
 }
 

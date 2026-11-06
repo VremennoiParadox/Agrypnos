@@ -1,18 +1,29 @@
 import AppKit
+import UserNotifications
 
 #if canImport(AgrypnosCore)
 import AgrypnosCore
 #endif
 
+/// Local Mac banners, shown as Agrypnos. Not the Notif path: bots stay the only Notif channel.
 enum UserNotify {
+    /// Asks once. A denied permission leaves banners off; the popover still shows state.
+    static func requestPermission() {
+        center?.requestAuthorization(options: [.alert, .sound]) { _, _ in }
+    }
+
     static func post(_ message: String) {
-        let escaped = message
-            .replacingOccurrences(of: "\\", with: "\\\\")
-            .replacingOccurrences(of: "\"", with: "\\\"")
-        _ = ProcessRunner.run("/usr/bin/osascript", [
-            "-e",
-            "display notification \"\(escaped)\" with title \"Agrypnos\" sound name \"Tink\"",
-        ])
+        guard let center else { return }
+        let content = UNMutableNotificationContent()
+        content.title = AgrypnosCopy.appName
+        content.body = message
+        content.sound = .default
+        center.add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil))
+    }
+
+    /// The notification center needs a real app bundle. Test runners and command-line hosts have none.
+    private static var center: UNUserNotificationCenter? {
+        Bundle.main.bundleURL.pathExtension == "app" ? .current() : nil
     }
 
     static func post(reason: DisengageReason) {
