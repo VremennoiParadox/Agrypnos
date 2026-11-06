@@ -39,14 +39,21 @@ extension PopoverController {
         )
         let preservedOrigin = popoverScroll.contentView.bounds.origin
 
-        // Cards swap now, outside the height ease, so two sections never double-paint
-        // and NSAnimationContext cannot interpolate their frames.
+        // Section switches swap cards now, outside the height ease, so two sections never
+        // double-paint and NSAnimationContext cannot interpolate their frames. Within one
+        // section (Keep awake on/off) the same cards slide with the ease instead, and the
+        // document keeps its taller height until the ease ends so nothing clips.
+        let documentHeight = motion.slidesCards
+            ? max(popoverDocument.frame.height, CGFloat(motion.documentHeightDuringMotion))
+            : CGFloat(motion.documentHeightDuringMotion)
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0
             context.allowsImplicitAnimation = false
-            self.applyCardSlots(layout, pad: pad, width: contentW)
-            self.applyGeneralChrome(layout, pad: pad, contentW: contentW)
-            self.popoverDocument.frame.size.height = CGFloat(motion.documentHeightDuringMotion)
+            if !motion.slidesCards {
+                self.applyCardSlots(layout, pad: pad, width: contentW)
+                self.applyGeneralChrome(layout, pad: pad, contentW: contentW)
+            }
+            self.popoverDocument.frame.size.height = documentHeight
         }
         applyDocumentScroll(motion.scrollIntent, origin: preservedOrigin)
 
@@ -57,6 +64,10 @@ extension PopoverController {
                 context.allowsImplicitAnimation = motion.allowsImplicitAnimation
                 if motion.timing == .easeInEaseOut {
                     context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                }
+                if motion.slidesCards {
+                    self.applyCardSlots(layout, pad: pad, width: contentW)
+                    self.applyGeneralChrome(layout, pad: pad, contentW: contentW)
                 }
                 // Popover owns the window so the menu-bar edge stays put.
                 // One section only — outgoing cards are already hidden.

@@ -28,6 +28,9 @@ public struct PopoverSectionResize: Equatable, Sendable {
     public let timing: Timing
     public let allowsImplicitAnimation: Bool
     public let hidesOutgoingImmediately: Bool
+    /// Within one section the same cards stay up, so they slide with the height ease.
+    /// Section switches swap cards first so two sections never interpolate or double-paint.
+    public let slidesCards: Bool
     public let incomingCards: [PopoverCard]
     public let outgoingCards: [PopoverCard]
     public let documentHeightDuringMotion: Int
@@ -73,6 +76,7 @@ public struct PopoverSectionResize: Equatable, Sendable {
             timing: animatesHeight ? .easeInEaseOut : .none,
             allowsImplicitAnimation: animatesHeight,
             hidesOutgoingImmediately: true,
+            slidesCards: animatesHeight && from == to,
             incomingCards: to.cards(showQuestionNotifications: to == .notif && showQuestionNotifications),
             outgoingCards: from.cards(showQuestionNotifications: from == .notif && showQuestionNotifications),
             documentHeightDuringMotion: toContentHeight,

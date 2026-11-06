@@ -159,11 +159,8 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         )
         caption?.stringValue = watchCaption
         let showWatchCaption = !watchCaption.isEmpty
-        caption?.isHidden = !showWatchCaption
-        if caption != nil, showWatchCaption != watchCaptionShown {
-            watchCaptionShown = showWatchCaption
-            applySection(currentSection)
-        }
+        let captionChanged = caption != nil && showWatchCaption != watchCaptionShown
+        if !captionChanged { caption?.isHidden = !showWatchCaption }
         lastWatchEndLabel?.stringValue = AgrypnosCopy.lastWatchEndCaption(
             event: runtime.preferences.lastWatchEnd, now: Date()
         )
@@ -224,6 +221,35 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         hotkeyHint?.stringValue = hotkey.hint
         let bindFailed = !hotkey.isRecording && (runtime.lastFailedHotkey != nil || !runtime.hotkeyRegistered)
         hotkeyHint?.textColor = bindFailed ? .labelColor : .tertiaryLabelColor
+        // Resize last, once nothing else in this pass can hold up the 0.25s ease.
+        if captionChanged {
+            watchCaptionShown = showWatchCaption
+            fadeWatchCaption(in: showWatchCaption)
+            applySection(currentSection)
+        }
+    }
+
+    /// The Watch card clips, so the caption opens and closes with it; the fade keeps it soft.
+    private func fadeWatchCaption(in show: Bool) {
+        guard let caption else { return }
+        let animated = popover.isShown && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        guard animated else {
+            caption.alphaValue = 1
+            caption.isHidden = !show
+            return
+        }
+        if show, caption.isHidden {
+            caption.alphaValue = 0
+            caption.isHidden = false
+        }
+        NSAnimationContext.runAnimationGroup({ context in
+            context.duration = show ? PopoverSectionResize.standardDurationSeconds : 0.12
+            caption.animator().alphaValue = show ? 1 : 0
+        }, completionHandler: { [weak self] in
+            guard let self, !self.watchCaptionShown else { return }
+            caption.isHidden = true
+            caption.alphaValue = 1
+        })
     }
 
     func open(relativeTo button: NSView) {

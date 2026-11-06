@@ -76,6 +76,7 @@ extension PopoverController {
         let swH = sw.height > 0 ? sw.height : 21
 
         watchCard = PopoverForm.card(in: document, slot: layout.watch!, pad: pad, width: contentW)
+        watchCard.clipsToBounds = true   // the caption opens and closes with the card
         mainCard = watchCard
         watchSwitch = PopoverForm.switchRow(
             in: watchCard,
