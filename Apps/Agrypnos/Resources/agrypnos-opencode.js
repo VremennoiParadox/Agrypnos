@@ -44,7 +44,8 @@ function readManifest(path) {
 }
 
 export function createOpenCodeBridge(api, { manifestPath = join(homedir(), "Library/Application Support/Agrypnos/opencode-bridge/bridge.json") } = {}) {
-  if (api.app.version !== "1.18.32" || typeof api.client.question?.reply !== "function"
+  // Any OpenCode with the question API. The app refuses versions older than the Mac-checked 1.18.32.
+  if (typeof api.client.question?.reply !== "function"
     || typeof api.client.question?.list !== "function") return { dispose() {} }
   const instanceID = randomUUID(), directory = api.state.path.directory
   const records = new Map(), unsubscribers = []

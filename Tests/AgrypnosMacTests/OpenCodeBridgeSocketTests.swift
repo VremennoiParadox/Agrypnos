@@ -56,6 +56,25 @@ final class OpenCodeBridgeSocketTests: XCTestCase {
         }
     }
 
+    func testNewerHostVersionConnectsAndOlderIsRefused() async throws {
+        for (host, accepted) in [("1.18.34", true), ("1.18.31", false)] {
+            let config = fixture()
+            defer { try? FileManager.default.removeItem(at: config.socketURL.deletingLastPathComponent()) }
+            let outcome = expectation(description: host)
+            var greeted = false
+            let bridge = OpenCodeBridgeSocket(configuration: config, receive: { _, message in
+                if case .hello = message { greeted = true; outcome.fulfill() }
+            }, disconnected: { _ in if !greeted { outcome.fulfill() } })
+            try bridge.start(); defer { bridge.stop() }
+            let client = try connect(config.socketURL); defer { close(client) }
+            let hello = try OpenCodeBridgeMessage.hello(protocolVersion: 1, token: config.token, instanceID: UUID(),
+                generation: config.generation, hostVersion: host, directory: "/project", projectLabel: nil).encodedFrame()
+            hello.withUnsafeBytes { _ = Darwin.write(client, $0.baseAddress!, $0.count) }
+            await fulfillment(of: [outcome], timeout: 2)
+            XCTAssertEqual(greeted, accepted, host)
+        }
+    }
+
     func testIncompleteHelloClosesAndExistingFileIsPreserved() async throws {
         let config = fixture()
         defer { try? FileManager.default.removeItem(at: config.socketURL.deletingLastPathComponent()) }

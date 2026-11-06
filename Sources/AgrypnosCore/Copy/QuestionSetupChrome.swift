@@ -43,5 +43,5 @@ public enum QuestionSetupChrome {
         12 + cursorNoteMaxLines * PopoverCopyLayout.lineHeightPoints + 12
     }
     public static let enableTitle = "Enable OpenCode forwarding"
-    public static let pluginHelp = "One-time setup for OpenCode 1.18.32 terminals. Restart OpenCode once, then use your normal chats."
+    public static let pluginHelp = "One-time setup for OpenCode 1.18.32 or newer, in the terminal. Restart OpenCode once, then use your normal chats."
 }

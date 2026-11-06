@@ -8,7 +8,7 @@ final class OpenCodePluginQuestionSource {
     typealias Submit = @MainActor (QuestionAnswer) async -> QuestionDelivery
     typealias ReturnLocal = @MainActor () async -> Void
     typealias Receive = @MainActor (QuestionBatch, @escaping Submit, @escaping ReturnLocal) -> Bool
-    private struct Client { let instance: String; let label: String? }
+    private struct Client { let instance: String; let label: String?; let host: String }
     private struct Record {
         let batch: QuestionBatch
         let original: Data
@@ -40,6 +40,8 @@ final class OpenCodePluginQuestionSource {
         receive: { [weak self] id, message in self?.ingest(message, from: id) },
         disconnected: { [weak self] id in self?.disconnected(id) })
     var connectedCount: Int { clients.count }
+    /// OpenCode versions of the connected terminals, for the status line.
+    var connectedVersions: [String] { Set(clients.values.map(\.host)).sorted() }
 
     init(configuration: OpenCodeBridgeConfiguration,
          uptime: @escaping () -> TimeInterval,
@@ -64,10 +66,10 @@ final class OpenCodePluginQuestionSource {
         }
         if case let .hello(version, token, instance, generation, host, _, label) = message {
             guard version == 1, token == configuration.token, generation == configuration.generation,
-                  host == "1.18.32", clients[id] == nil, clients.count < 32 else { return }
+                  OpenCodeHostVersion.isSupported(host), clients[id] == nil, clients.count < 32 else { return }
             let identity = instance.uuidString + "#" + generation.uuidString
             guard !clients.values.contains(where: { $0.instance == identity }) else { return }
-            clients[id] = Client(instance: identity, label: label); stateChanged(clients.count); return
+            clients[id] = Client(instance: identity, label: label, host: host); stateChanged(clients.count); return
         }
         guard let client = clients[id] else { return }
         switch message {

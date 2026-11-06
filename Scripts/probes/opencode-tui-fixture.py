@@ -113,6 +113,7 @@ if (fixture / "runtime.json").exists():
 print("Fixture:", fixture)
 print(json.dumps(report, indent=2))
 print("Model requests:", json.dumps(requests))
-ok = report.get("hostVersion") == "1.18.32" and report.get("questionReply") and report.get("pendingListed")
+version = tuple(int(part) for part in str(report.get("hostVersion", "0.0.0")).split("-")[0].split(".") if part.isdigit())
+ok = version >= (1, 18, 32) and report.get("questionReply") and report.get("pendingListed")
 ok = ok and (report.get("localPromptAvailable") if mode == "unavailable" else (mode == "bridge" or report.get("accepted")) and report.get("markerCount") == 1 and report.get("continuedSessionID") == report.get("originalSessionID"))
 sys.exit(0 if ok else 1)

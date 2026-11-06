@@ -11,7 +11,7 @@ reviewing it, read [the OpenCode milestone](docs/superpowers/plans/2026-10-01-op
 and [the native-question design](docs/superpowers/specs/2026-09-29-native-agent-questions-design.md).
 The human authorized finishing OpenCode first for their test on 2026-10-01.
 OpenCode question forwarding is Mac-checked for OpenCode 1.18.32.
-Newer OpenCode versions are accepted when they expose `question.reply` and `question.list` (human decision 2026-11-06). The popover status names the detected version.
+Newer OpenCode versions are accepted when they expose `question.reply` and `question.list` (human decision 2026-11-06). The popover status names the detected version. Automated: the native end-to-end test passed on OpenCode 1.18.34 (2026-11-06). No live bot check on 1.18.34 yet.
 Claude Code forwarding passed its same-session Mac check (user-confirmed, 2026-10-11).
 Codex waiting alerts passed their ChatGPT-app check (user-confirmed, 2026-10-11). They do not answer the question.
 Cursor has no question forwarding and no waiting alert.
