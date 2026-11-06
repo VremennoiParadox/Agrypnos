@@ -45,7 +45,9 @@ final class StatusItemStateTests: XCTestCase {
     }
 
     func testEngineOffArmedAndAgentsFollowKeepTheWatch() {
-        var engine = WatchEngine(preferences: .default)
+        var prefs = UserPreferences.default
+        prefs.duration = .indefinite
+        var engine = WatchEngine(preferences: prefs)
         XCTAssertEqual(engine.statusItemState, .off)
 
         _ = engine.userSetEngaged(true, now: t0)

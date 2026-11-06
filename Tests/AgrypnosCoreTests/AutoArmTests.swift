@@ -130,6 +130,44 @@ final class AutoArmTests: XCTestCase {
         XCTAssertEqual(engine.preferences.duration, .untilAgentsSettle)
     }
 
+    /// Human decision 2026-11-06: an Auto-on watch that ends with the lid open sends no bot message.
+    func testAutoOnEndWithLidOpenIsQuietAndWithLidConfirmedClosedStillMessages() {
+        for closeLid in [false, true] {
+            var engine = WatchEngine(preferences: UserPreferences(
+                duration: .untilAgentsSettle, notifEnabled: true, autoArmWhenBusy: true))
+            XCTAssertEqual(feed(&engine, busy: true, from: 0, through: 60), 30)
+            _ = engine.autoArm(now: at(30))
+            if closeLid {
+                _ = engine.observeLid(closed: true, now: at(31))
+                _ = engine.observeLid(closed: true, now: at(33))
+                XCTAssertTrue(engine.lidCloseConfirmed)
+            }
+            var ended: [WatchCommand] = []
+            var s: TimeInterval = 35
+            while ended.isEmpty, s <= 300 {
+                ended = engine.tick(now: at(s), safety: calm, agents: busyAgents(false))
+                s += 5
+            }
+            XCTAssertTrue(ended.contains(.disengage(.agentsSettled)))
+            XCTAssertEqual(ended.contains(.postIdleAfterWaitNotif), closeLid, "lid closed: \(closeLid)")
+            XCTAssertEqual(engine.lastEndQuiet, !closeLid)
+        }
+    }
+
+    func testUserArmEndingWithLidOpenStillMessages() {
+        var engine = WatchEngine(preferences: UserPreferences(duration: .untilAgentsSettle, notifEnabled: true))
+        _ = engine.userSetEngaged(true, now: at(0))
+        _ = engine.tick(now: at(5), safety: calm, agents: busyAgents(true))
+        var ended: [WatchCommand] = []
+        var s: TimeInterval = 10
+        while ended.isEmpty, s <= 300 {
+            ended = engine.tick(now: at(s), safety: calm, agents: busyAgents(false))
+            s += 5
+        }
+        XCTAssertTrue(ended.contains(.postIdleAfterWaitNotif))
+        XCTAssertFalse(engine.lastEndQuiet)
+    }
+
     func testAfterManualOffWaitsForTheNextRun() {
         var engine = autoOnEngine()
         XCTAssertEqual(feed(&engine, busy: true, from: 0, through: 60), 30)

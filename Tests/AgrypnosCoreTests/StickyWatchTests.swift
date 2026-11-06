@@ -72,7 +72,7 @@ final class StickyWatchTests: XCTestCase {
         _ = engine.userSetEngaged(true, now: t0)
         XCTAssertEqual(engine.userSetEngaged(false, now: t0.addingTimeInterval(1)), [.disengage(.user)])
         XCTAssertFalse(engine.engaged)
-        XCTAssertEqual(engine.preferences.duration, .indefinite)
+        XCTAssertEqual(engine.preferences.duration, UserPreferences.default.duration)
     }
 
     func testBatteryFloorStillTurnsTheWatchOff() {

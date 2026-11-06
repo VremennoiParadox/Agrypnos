@@ -231,7 +231,7 @@ final class WatchLidHygieneTests: XCTestCase {
             ),
             [.disengage(.batteryFloor), .requestSleep]
         )
-        XCTAssertEqual(engine.preferences.duration, .indefinite)
+        XCTAssertEqual(engine.preferences.duration, UserPreferences.default.duration)
     }
 
     func testPreferencesDecodeIgnoresUnknownForceDisplaySleepKey() throws {

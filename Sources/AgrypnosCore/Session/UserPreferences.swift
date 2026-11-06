@@ -54,7 +54,7 @@ public struct UserPreferences: Equatable, Sendable, Codable {
 
     public init(
         batteryFloorPercent: Int = 15,
-        duration: DurationOption = .indefinite,
+        duration: DurationOption = .untilAgentsSettle,
         keyboardBacklightOff: Bool = true,
         applyBrightnessFloor: Bool = true,
         brightnessFloorPercent: Int = UserPreferences.defaultBrightnessFloorPercent,
