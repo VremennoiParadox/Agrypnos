@@ -12,6 +12,14 @@
   </p>
 </div>
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/readme/agrypnos-demo.webp">
+    <source media="(prefers-color-scheme: light)" srcset="docs/readme/agrypnos-demo-light.webp">
+    <img src="docs/readme/agrypnos-demo.webp" alt="Agrypnos demo: turn Keep awake on in Agents mode and close the lid; the agent keeps working. When the wait after agent signals stop ends, Keep awake turns off and Agrypnos asks the Mac to sleep.">
+  </picture>
+</p>
+
 <table align="center">
   <tr>
     <td align="center"><b>Watches</b></td>
@@ -85,6 +93,14 @@ Want it on until you say stop? Pick `∞` instead and turn it off yourself.
 
 The **Power** section has two panel modes. You pick one.
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/readme/agrypnos-howto-power.webp">
+    <source media="(prefers-color-scheme: light)" srcset="docs/readme/agrypnos-howto-power-light.webp">
+    <img src="docs/readme/agrypnos-howto-power.webp" width="400" alt="Open Power and pick Dim panel. The brightness floor and fade-back controls appear.">
+  </picture>
+</p>
+
 | Mode | On a confirmed lid close | When you open the lid again |
 |---|---|---|
 | **Sleep panel** (default) | The display itself sleeps (`displaysleepnow`). | The display wakes. Nothing fades back, so the brightness floor and fade settings are hidden. |
@@ -97,6 +113,14 @@ If Agrypnos never saw your brightness before the lid closed, it won't guess one 
 ### How it knows your agents are busy
 
 It only looks at your own Mac, and only at the tools you leave checked under **Agents**. A tool counts as busy when its process is running and one of its session files changed in the last 45 seconds. For Claude Code and the Codex CLI, a running process that uses 5% CPU or more also counts. The Claude and Codex desktop apps' own CPU use doesn't.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/readme/agrypnos-howto-agents.webp">
+    <source media="(prefers-color-scheme: light)" srcset="docs/readme/agrypnos-howto-agents-light.webp">
+    <img src="docs/readme/agrypnos-howto-agents.webp" width="400" alt="Open Agents, turn on the tools that count as busy, and drag the wait after agent signals stop.">
+  </picture>
+</p>
 
 | Tool | Processes it looks for | Session files it watches |
 |---|---|---|
@@ -142,6 +166,14 @@ Click the toggle or press `⌥⌘A`. If the lid is open, Keep awake turns off an
 ## Messages and remote commands
 
 This part is optional and off by default. It lives in the **Notif** section. You bring your own bot. Agrypnos doesn't run one for you.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/readme/agrypnos-howto-bot.webp">
+    <source media="(prefers-color-scheme: light)" srcset="docs/readme/agrypnos-howto-bot-light.webp">
+    <img src="docs/readme/agrypnos-howto-bot.webp" width="400" alt="Open Notif, paste your Discord bot token and channel id, then click the eye to check what you pasted.">
+  </picture>
+</p>
 
 There are two separate pieces:
 
@@ -268,6 +300,14 @@ Telegram holds messages for the bot until someone fetches them. When you first t
 ## Question notifications (BETA)
 
 When an agent stops to ask you a multiple-choice question, Agrypnos can send it to your own bot so you can answer from your phone. This is off by default. It lives in **Notif → Question notifications**, marked **BETA**.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/readme/agrypnos-howto-questions.webp">
+    <source media="(prefers-color-scheme: light)" srcset="docs/readme/agrypnos-howto-questions-light.webp">
+    <img src="docs/readme/agrypnos-howto-questions.webp" width="400" alt="Open Notif, scroll to Question notifications (BETA), open it, and turn on Forward agent questions.">
+  </picture>
+</p>
 
 | Tool | What you get |
 |---|---|

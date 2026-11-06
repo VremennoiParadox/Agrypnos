@@ -20,3 +20,6 @@ Apps/Agrypnos/build/
 .worktrees/
 .video-frames/
 .superpowers/
+
+# README demo master renders stay local; the README uses the WebPs.
+docs/readme/*.mp4
