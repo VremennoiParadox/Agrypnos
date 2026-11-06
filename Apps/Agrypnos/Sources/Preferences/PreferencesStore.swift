@@ -21,7 +21,6 @@ final class PreferencesStore {
         if let data = try? JSONEncoder().encode(preferences) {
             defaults.set(data, forKey: Self.key)
         }
-        defaults.set(preferences.batteryFloorPercent, forKey: "batteryFloorPercent")
     }
 
     static let telegramInboundOffsetKey = "agrypnos.telegramInbound.offset"

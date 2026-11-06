@@ -7,6 +7,15 @@ import AgrypnosCore
 enum AgrypnosPalette {
     static let indigo = NSColor(srgbRed: 0.42, green: 0.38, blue: 0.92, alpha: 1)
     static let gold = NSColor(srgbRed: 0.90, green: 0.74, blue: 0.38, alpha: 1)
+
+    /// Armed eye color by How long: blue ∞, purple Agents, gold for a timer.
+    static func armed(_ duration: DurationOption) -> NSColor {
+        switch duration {
+        case .indefinite: return .systemBlue
+        case .untilAgentsSettle: return .systemPurple
+        case .oneHour, .threeHours, .custom: return gold
+        }
+    }
 }
 
 final class FlippedView: NSView {

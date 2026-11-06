@@ -111,6 +111,8 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var sectionMotion = 0
     var watchCaptionShown = false
     var watchCaptionLines = PopoverCopyLayout.captionMaxLines
+    /// True while `open` paints the popover before it is shown.
+    private var opening = false
 
     init(runtime: WatchRuntime) {
         self.runtime = runtime
@@ -148,11 +150,12 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     }
 
     func refresh() {
-        guard let runtime else { return }
+        // Closed: nothing to paint. `open` refreshes before it shows.
+        guard let runtime, popover.isShown || opening else { return }
         let on = runtime.engaged
         watchSwitch?.state = on ? .on : .off
         mainCard?.active = on
-        headerMark?.contentTintColor = on ? AgrypnosPalette.gold : .labelColor
+        headerMark?.contentTintColor = on ? AgrypnosPalette.armed(runtime.preferences.duration) : .labelColor
         let watchCaption = AgrypnosCopy.watchCaption(
             engaged: on,
             leftover: runtime.adoptedLeftover,
@@ -269,6 +272,8 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     }
 
     func open(relativeTo button: NSView) {
+        opening = true
+        defer { opening = false }
         showQuestionNotifications = false
         applySection(.watch)
         refresh()

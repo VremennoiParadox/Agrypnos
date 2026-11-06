@@ -43,6 +43,11 @@ final class StatusItemController: NSObject {
         refresh()
     }
 
+    func showPopover() {
+        guard let button = item.button, !popover.popover.isShown else { return }
+        popover.open(relativeTo: button)
+    }
+
     @objc private func clicked() {
         guard let button = item.button else { return }
         popover.toggle(relativeTo: button)
@@ -75,11 +80,7 @@ final class StatusItemController: NSObject {
             remainingSeconds: runtime.engine.statusItemRemainingSeconds(now: Date())
         )
         if let button = item.button {
-            let color: NSColor
-            if !on { color = .secondaryLabelColor }
-            else if runtime.preferences.duration == .indefinite { color = .systemBlue }
-            else if runtime.preferences.duration == .untilAgentsSettle { color = .systemPurple }
-            else { color = AgrypnosPalette.gold }
+            let color = on ? AgrypnosPalette.armed(runtime.preferences.duration) : NSColor.secondaryLabelColor
             let appearance = button.effectiveAppearance.name
             if glyph != displayedGlyph || color != displayedColor || appearance != displayedAppearance {
                 button.image = GlyphFactory.image(glyph, color: color)

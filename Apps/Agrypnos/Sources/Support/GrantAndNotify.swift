@@ -18,7 +18,12 @@ enum UserNotify {
         content.title = AgrypnosCopy.appName
         content.body = message
         content.sound = .default
-        center.add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil))
+        // Wait briefly so a banner posted right before quit still reaches the system.
+        let delivered = DispatchSemaphore(value: 0)
+        center.add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)) { _ in
+            delivered.signal()
+        }
+        _ = delivered.wait(timeout: .now() + 1)
     }
 
     /// The notification center needs a real app bundle. Test runners and command-line hosts have none.

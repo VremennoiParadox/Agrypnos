@@ -94,14 +94,12 @@ extension WatchRuntime {
                 countTerminalSessions: terminals,
                 included: included
             )
-            await MainActor.run {
-                self?.finishAgentProbe(
-                    snap,
-                    generation: generation,
-                    included: included,
-                    countTerminalSessionsAsBusy: terminals
-                )
-            }
+            await self?.finishAgentProbe(
+                snap,
+                generation: generation,
+                included: included,
+                countTerminalSessionsAsBusy: terminals
+            )
         }
         finishPollTick(
             now: now,

@@ -18,7 +18,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WatchRuntimeDelegate, 
             UNUserNotificationCenter.current().delegate = self
         }
         UserNotify.requestPermission()
-        guard runtime.start() else { NSApp.terminate(nil); return }
+        guard runtime.start() else {
+            Self.handOffToRunningCopy()
+            NSApp.terminate(nil)
+            return
+        }
+        DistributedNotificationCenter.default().addObserver(
+            forName: Self.showPopover, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.statusItem.showPopover() }
+        }
         AppEditMenu.install()
         PopoverCopyLayout.measureLines = PopoverTextMeasure.lines
         hotkey.onTrigger = { [weak self] in
@@ -38,6 +47,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WatchRuntimeDelegate, 
         popover = PopoverController(runtime: runtime)
         statusItem = StatusItemController(runtime: runtime, popover: popover)
         runtime.delegate = self
+    }
+
+    static let showPopover = Notification.Name("app.agrypnos.Agrypnos.showPopover")
+
+    /// A second launch (say, login item plus Finder) opens the running copy's popover instead.
+    private static func handOffToRunningCopy() {
+        let others = NSRunningApplication.runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "")
+            .filter { $0 != NSRunningApplication.current }
+        if others.isEmpty {
+            UserNotify.post("Couldn't take ownership of the wake hold. Quit any other copy of Agrypnos, then open it again.")
+        } else {
+            DistributedNotificationCenter.default().postNotificationName(showPopover, object: nil, deliverImmediately: true)
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
