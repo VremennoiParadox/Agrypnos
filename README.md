@@ -276,6 +276,8 @@ When an agent stops to ask you a multiple-choice question, Agrypnos can send it 
 | Codex | A message that Codex is waiting on you. You still answer in Codex. |
 | Cursor | Nothing. The question stays in Cursor. |
 
+Questions only go to your bot while **Keep awake** is on. With Keep awake off, they stay in the agent and you answer them there as usual.
+
 The OpenCode, Claude Code, and Codex cards each have an info button that opens **Question setup** with the steps for that tool.
 
 ### Before you start
@@ -311,7 +313,7 @@ Setup adds a `PreToolUse` hook for `AskUserQuestion` to `~/.claude/settings.json
 
 ### Codex waiting alerts
 
-Codex alerts tell you Codex is waiting. They don't forward or answer the question.
+Codex alerts tell you Codex is waiting. They don't forward or answer the question. Like forwarded questions, they only arrive while Keep awake is on.
 
 1. Save a Telegram token and chat id, or a Discord token and channel id. Inbound, user ids, and Watch-end POST aren't needed.
 2. In **Notif → Question notifications**, click **Enable Codex alerts**.
@@ -333,7 +335,7 @@ Question text stays in memory and on your messaging service. Agrypnos keeps no q
 
 ### Keep awake and unanswered questions
 
-Forwarding never turns Keep awake on. If Keep awake is already on, a waiting question stops **Agents** mode from turning it off for up to 10 minutes. The timer, the battery, thermal, and Low Power Mode limits, and turning it off yourself still work at any time.
+Forwarding never turns Keep awake on, and it only happens while Keep awake is on. Turning Keep awake off hands any question still on your bot back to the agent, so you can answer it there. While Keep awake is on, a waiting question stops **Agents** mode from turning it off for up to 10 minutes. The timer, the battery, thermal, and Low Power Mode limits, and turning it off yourself still work at any time.
 
 If nobody answers within 10 minutes, Keep awake turns off once your selected agents look idle, whatever How long is set to. Agrypnos tries to send your bot a short note first. With the lid confirmed closed, it then asks the Mac to sleep. If an agent still looks busy or Agrypnos can't check, the bot gets a note that Keep awake stays on, and Agrypnos waits for the usual wait after agent signals stop before turning it off. If another question is still waiting, Keep awake stays on while that one waits.
 

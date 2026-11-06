@@ -69,7 +69,8 @@ final class CodexAlertHookProcessTests: XCTestCase {
         XCTAssertFalse(runtime.engaged)
     }
 
-    func testQuestionStdinPostsSentenceAndLeavesWatchOff() async throws {
+    /// Codex alerts follow forwarded questions: nothing while Keep awake is off, the alert once it is on.
+    func testQuestionStdinPostsSentenceOnlyWhileKeepAwakeIsOn() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -81,12 +82,19 @@ final class CodexAlertHookProcessTests: XCTestCase {
         let stdin = Data("""
         {"hook_event_name":"PreToolUse","tool_name":"request_user_input","tool_input":{"questions":[{"id":"q","question":"Which?","options":[{"label":"A"},{"label":"B"}]}]}}
         """.utf8)
-        let output = await Task.detached {
+        let whileOff = await Task.detached {
             CodexAlertHookProcess.run(stdin: stdin, socketURL: sock)
         }.value
-        XCTAssertEqual(output, Data())
-        XCTAssertEqual(runtime.codexPostedSentences, ["Codex is waiting on you.\n\nWhich?"])
+        XCTAssertEqual(whileOff, Data())
+        XCTAssertEqual(runtime.codexPostedSentences, [])
         XCTAssertFalse(runtime.engaged)
+
+        _ = runtime.engine.userSetEngaged(true, now: Date(), lidClosed: false)
+        let whileOn = await Task.detached {
+            CodexAlertHookProcess.run(stdin: stdin, socketURL: sock)
+        }.value
+        XCTAssertEqual(whileOn, Data())
+        XCTAssertEqual(runtime.codexPostedSentences, ["Codex is waiting on you.\n\nWhich?"])
     }
 
     private static let brainrot = Data(#"""

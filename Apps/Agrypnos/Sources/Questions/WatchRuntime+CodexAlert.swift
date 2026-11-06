@@ -110,6 +110,7 @@ extension WatchRuntime {
             socketURL: codexSocketURLOverride ?? CodexAlertHookProcess.defaultSocketURL(),
             receive: { [weak self] data in
                 guard let self, let notice = CodexAlertHook.notice(data) else { return }
+                guard self.engine.engaged else { return }   // like forwarded questions: only while Keep awake is on
                 self.codexPostedSentences.append(notice)
                 guard !self.codexSuppressNetwork else { return }
                 Task { await self.postCodexAlert(notice) }

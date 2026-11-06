@@ -355,12 +355,35 @@ final class QuestionRelayCoordinatorTests: XCTestCase {
         XCTAssertEqual(fixture.localReturns, 1)
         XCTAssertFalse(fixture.events.contains { if case .expired = $0 { return true }; return false })
     }
+
+    /// Forwarding needs Keep awake on. With it off the question stays in the agent and nothing is sent.
+    func testQuestionStaysLocalWhileKeepAwakeIsOff() async {
+        let fixture = QuestionRelayFixture()
+        fixture.settings.watchArmed = false
+        XCTAssertFalse(fixture.receive())
+        for _ in 0..<5 { await Task.yield() }
+        XCTAssertTrue(fixture.requests.isEmpty)
+        XCTAssertTrue(fixture.relay.pendingDeadlines.isEmpty)
+        XCTAssertEqual(fixture.localReturns, 0)
+    }
+
+    /// Turning Keep awake off hands a question already on the bot back to the agent.
+    func testTurningKeepAwakeOffReturnsPendingQuestionLocal() async {
+        let fixture = QuestionRelayFixture()
+        XCTAssertTrue(fixture.receive())
+        XCTAssertFalse(fixture.relay.pendingDeadlines.isEmpty)
+        fixture.settings.watchArmed = false
+        fixture.relay.syncWatchArmed(false)
+        for _ in 0..<5 { await Task.yield() }
+        XCTAssertEqual(fixture.localReturns, 1)
+        XCTAssertTrue(fixture.relay.pendingDeadlines.isEmpty)
+    }
 }
 
 @MainActor
 private final class QuestionRelayFixture {
     var now: TimeInterval = 0
-    var settings = QuestionRelaySettings(enabled: true, includedKinds: [.cursor], telegram: TelegramQuestionDestination(token: "fixture", chatID: "9", userID: "42"))
+    var settings = QuestionRelaySettings(enabled: true, includedKinds: [.cursor], telegram: TelegramQuestionDestination(token: "fixture", chatID: "9", userID: "42"), watchArmed: true)
     var requests: [NotifOutboundRequest] = []
     var submissions: [QuestionAnswer] = []
     var delivery: CheckedContinuation<QuestionDelivery, Never>?
@@ -375,7 +398,7 @@ private final class QuestionRelayFixture {
     var retryDelays: [TimeInterval] = []
     var reply = QuestionHTTPResponse(statusCode: 200, body: Data(#"{"ok":true,"result":{"message_id":18,"chat":{"id":9}}}"#.utf8))
     var batch = QuestionBatch(key: QuestionKey(provider: .cursor, instanceID: "app", sessionID: "thread", requestID: "r"), questions: [AgentQuestion(id: "q", prompt: "Which?", options: [QuestionOption(id: "a", label: "Alpha"), QuestionOption(id: "b", label: "Beta")], multiple: true)], receivedUptime: 0, deadlineUptime: 600)
-    lazy var relay = QuestionRelayCoordinator(settings: { [weak self] in self?.settings ?? QuestionRelaySettings(enabled: false, includedKinds: [], telegram: nil) },
+    lazy var relay = QuestionRelayCoordinator(settings: { [weak self] in self?.settings ?? QuestionRelaySettings(enabled: false, includedKinds: [], telegram: nil, watchArmed: false) },
         transport: { [weak self] request in
             guard let self else { return QuestionHTTPResponse(statusCode: nil, body: Data()) }
             requests.append(request)
