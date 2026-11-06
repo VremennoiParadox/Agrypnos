@@ -6,6 +6,7 @@ import AgrypnosCore
 final class HygieneTransitionTests: XCTestCase {
     func testSwitchToBRestoresAppliedFloorBeforeSleepingPanel() {
         let f = RuntimeFixture()
+        f.runtime.engine.preferences.panelPowerMode = .floor   // Dim panel: the floor path
         var writes: [Double] = []
         var restoredBeforePanelSleep = false
         f.runtime.hygieneDevices = HygieneDevices(canSetBrightness: { true }, brightness: { 0.8 },
@@ -24,6 +25,7 @@ final class HygieneTransitionTests: XCTestCase {
 
     func testDisablingAppliedHygieneRestoresCapturedValues() {
         let f = RuntimeFixture()
+        f.runtime.engine.preferences.panelPowerMode = .floor   // Dim panel: the floor path
         var brightness: [Double] = []
         var keyboard: [Double] = []
         f.runtime.hygieneDevices = HygieneDevices(canSetBrightness: { true }, brightness: { 0.8 },
@@ -44,6 +46,7 @@ final class HygieneTransitionTests: XCTestCase {
 
     func testLidOpenLeavesBrightnessAloneWhenMacOSAlreadyRaisedIt() {
         let f = RuntimeFixture()
+        f.runtime.engine.preferences.panelPowerMode = .floor   // Dim panel: the floor path
         var writes: [Double] = []
         f.runtime.hygieneDevices = HygieneDevices(canSetBrightness: { true }, brightness: { 0.5625 },
             setBrightness: { writes.append($0) }, keyboard: { nil }, setKeyboard: { _ in }, wakeDisplay: {})
@@ -60,6 +63,7 @@ final class HygieneTransitionTests: XCTestCase {
 
     func testLidOpenRampsBackFromThePanelsLowestStepWithA1PercentFloor() {
         let f = RuntimeFixture()
+        f.runtime.engine.preferences.panelPowerMode = .floor   // Dim panel: the floor path
         f.runtime.hygieneDevices = HygieneDevices(canSetBrightness: { true }, brightness: { 0.0625 },
             setBrightness: { _ in }, keyboard: { nil }, setKeyboard: { _ in }, wakeDisplay: {})
         f.runtime.engine.preferences.applyBrightnessFloor = true
@@ -74,6 +78,7 @@ final class HygieneTransitionTests: XCTestCase {
 
     func testLidOpenRampsBackWhenThePanelIsStillAtTheFloor() {
         let f = RuntimeFixture()
+        f.runtime.engine.preferences.panelPowerMode = .floor   // Dim panel: the floor path
         var writes: [Double] = []
         f.runtime.hygieneDevices = HygieneDevices(canSetBrightness: { true }, brightness: { 0.15 },
             setBrightness: { writes.append($0) }, keyboard: { nil }, setKeyboard: { _ in }, wakeDisplay: {})
@@ -115,6 +120,7 @@ final class HygieneTransitionTests: XCTestCase {
 
     func testNilCaptureNeverWritesGuessedRestore() {
         let f = RuntimeFixture()
+        f.runtime.engine.preferences.panelPowerMode = .floor   // Dim panel: the floor path
         var brightness: [Double] = []
         f.runtime.hygieneDevices = HygieneDevices(canSetBrightness: { true }, brightness: { nil },
             setBrightness: { brightness.append($0) }, keyboard: { nil }, setKeyboard: { _ in }, wakeDisplay: {})

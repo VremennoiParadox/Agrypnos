@@ -104,7 +104,7 @@ final class PopoverSectionLayoutTests: XCTestCase {
     }
 
     func testPowerSectionShowsHygieneBatteryRampAndThermal() {
-        let layout = PopoverStackLayout.make(section: .power)
+        let layout = PopoverStackLayout.make(section: .power, panelPowerMode: .floor)
         XCTAssertEqual(layout.section, .power)
         XCTAssertEqual(
             layout.stackedCards.map(\.y),

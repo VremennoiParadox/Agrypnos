@@ -4,18 +4,19 @@ import XCTest
 final class WatchCaptionPanelModeTests: XCTestCase {
     func testDimPanelCaptionsStayTheBrightnessFloorStory() {
         XCTAssertEqual(
-            AgrypnosCopy.captionPrepared(floor: 15, panelPowerMode: .floor),
-            AgrypnosCopy.captionPrepared(floor: 15)
+            AgrypnosCopy.captionPrepared(floor: 15),
+            AgrypnosCopy.captionPrepared(floor: 15, panelPowerMode: .displaySleep),
+            "new installs start on Sleep panel"
         )
         XCTAssertEqual(
-            AgrypnosCopy.captionPrepared(floor: 15),
+            AgrypnosCopy.captionPrepared(floor: 15, panelPowerMode: .floor),
             "Armed. Waiting for lid close — then brightness floor, keyboard backlight off. Auto-off at 15% battery."
         )
         XCTAssertEqual(
             AgrypnosCopy.watchCaption(
                 engaged: true, leftover: false, floor: 15, lidClosed: false, panelPowerMode: .floor
             ),
-            AgrypnosCopy.captionPrepared(floor: 15)
+            AgrypnosCopy.captionPrepared(floor: 15, panelPowerMode: .floor)
         )
         XCTAssertEqual(
             AgrypnosCopy.menuTooltip(

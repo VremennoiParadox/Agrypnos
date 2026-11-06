@@ -5,7 +5,9 @@ final class PanelPowerModeSwitchTests: XCTestCase {
     let t0 = Date(timeIntervalSince1970: 10_000)
 
     func testSwitchAToBWhileArmedAndClosedSleepsDisplayNotFloor() {
-        var engine = WatchEngine(preferences: .default)
+        var prefs = UserPreferences.default
+        prefs.panelPowerMode = .floor   // Dim panel: the floor path
+        var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: true)
         XCTAssertEqual(engine.preferences.panelPowerMode, .floor)
         XCTAssertTrue(engine.lidCloseConfirmed)

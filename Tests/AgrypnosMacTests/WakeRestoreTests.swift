@@ -8,6 +8,7 @@ import AgrypnosCore
 final class WakeRestoreTests: XCTestCase {
     private func fixtureAfterClosedLidSleep(current: Double) -> (RuntimeFixture, Box) {
         let f = RuntimeFixture()
+        f.runtime.engine.preferences.panelPowerMode = .floor   // Dim panel: the floor path
         let box = Box(current: current)
         f.runtime.hygieneDevices = HygieneDevices(canSetBrightness: { true }, brightness: { box.current },
             setBrightness: { box.writes.append($0) }, keyboard: { nil }, setKeyboard: { _ in }, wakeDisplay: {})

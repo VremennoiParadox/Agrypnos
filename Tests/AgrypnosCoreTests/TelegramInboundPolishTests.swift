@@ -281,7 +281,9 @@ final class TelegramInboundDisarmLidTests: XCTestCase {
     }
 
     func testDisarmConfirmedClosedClearsHoldAndRequestsSleep() {
-        var engine = WatchEngine(preferences: .default)
+        var prefs = UserPreferences.default
+        prefs.panelPowerMode = .floor   // Dim panel: the floor path
+        var engine = WatchEngine(preferences: prefs)
         _ = engine.userSetEngaged(true, now: t0, lidClosed: false)
         XCTAssertTrue(engine.observeLid(closed: true, now: t0).isEmpty)
         XCTAssertEqual(
