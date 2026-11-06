@@ -201,6 +201,8 @@ public enum AgrypnosCopy: Sendable {
     public static let notifTelegramToken = "Telegram bot token"
     public static let notifTelegramChatId = "Telegram chat id"
     public static let notifTelegramUserId = "Telegram user id"
+    /// Visible caption beside a user id field. The card title names the bot; VoiceOver keeps the long name.
+    public static let notifUserIdShort = "User id"
     public static let notifTelegram = "Telegram"
     public static let notifTelegramTokenShort = "Token"
     public static let notifTelegramChatShort = "Chat id"

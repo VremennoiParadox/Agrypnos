@@ -89,10 +89,12 @@ final class NotifPopoverChromeTests: XCTestCase {
         XCTAssertEqual(AgrypnosCopy.notifTelegramChatShort, "Chat id")
         XCTAssertEqual(AgrypnosCopy.notifTelegramUserId, "Telegram user id")
         XCTAssertEqual(AgrypnosCopy.notifDiscordUserId, "Discord user id")
-        let needed = AgrypnosCopy.notifTelegramChatShort.count * 9 + 8
-        let userLabel = AgrypnosCopy.notifTelegramUserId.count * 9 + 8
-        XCTAssertGreaterThanOrEqual(PopoverCopyLayout.secretFieldLabelWidthPoints, needed)
-        XCTAssertGreaterThanOrEqual(PopoverCopyLayout.secretFieldLabelWidthPoints, userLabel)
+        // The card title names the bot, so the visible caption is short and the field keeps its width.
+        XCTAssertEqual(AgrypnosCopy.notifUserIdShort, "User id")
+        for caption in [AgrypnosCopy.notifTelegramChatShort, AgrypnosCopy.notifUserIdShort, "Channel"] {
+            XCTAssertGreaterThanOrEqual(PopoverCopyLayout.secretFieldLabelWidthPoints, caption.count * 9 + 8, caption)
+        }
+        XCTAssertLessThanOrEqual(PopoverCopyLayout.secretFieldLabelWidthPoints, 80)
         XCTAssertEqual(AgrypnosCopy.notifSaveFailed, "Couldn't save that secret.")
         XCTAssertFalse(AgrypnosCopy.notifSaveFailed.lowercased().contains("saved."))
     }

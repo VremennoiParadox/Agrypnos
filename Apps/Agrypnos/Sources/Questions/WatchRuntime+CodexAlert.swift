@@ -11,7 +11,7 @@ extension WatchRuntime {
     var codexAlertCaption: String {
         if let failure = codexSetupFailure { return failure }
         if preferences.codexAlertEnabled { return QuestionSetupChrome.codexTrustStatus }
-        return QuestionSetupChrome.codexHelp
+        return "Codex: alerts off."
     }
 
     private func codexHasDestination() -> Bool {

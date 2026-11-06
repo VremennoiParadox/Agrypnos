@@ -44,8 +44,8 @@ public enum PopoverCopyLayout: Sendable {
     /// Right-aligned on the How long row, extending left into the gap past the 56pt field.
     public static let minutesLabelWidthPoints = 80
     public static let percentValueWidthPoints = 54
-    /// "Telegram user id" at 13pt — token/chat/user labels beside the Notif secret fields.
-    public static let secretFieldLabelWidthPoints = 152
+    /// "Channel" at 13pt — the widest short caption beside a Notif secret field.
+    public static let secretFieldLabelWidthPoints = 80
     /// "1m 30s" at 13pt — wider than a percent so the idle-wait value does not clip.
     public static let timeValueWidthPoints = 72
 }
