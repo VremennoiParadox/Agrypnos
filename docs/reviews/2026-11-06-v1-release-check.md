@@ -167,3 +167,33 @@ Everything else in this report (B2, B3, H2–H5, M2–M10, T1, T2) needs no deci
 | Q5 | H1: should an Auto-on watch that ends with the lid open send a bot message? | No. Message only when the lid was confirmed closed, or the watch was turned on by hand |
 | Q6 | H6: switch local banners to the system notification API (asks permission once, shows as Agrypnos)? | Yes |
 | Q7 | M1: should new installs default How long to Agents? | Yes |
+
+---
+
+## Fix status (branch `v1-release-fixes`)
+
+| Item | Status |
+|---|---|
+| B1 | Your call: no code change. Idle-wait help, README, and `AGENTS.md` now name the long-reply limit and say to raise the wait |
+| B2 | Fixed. Plugin bundled again; `build-macos.sh` fails on a missing runtime resource |
+| B3 | Fixed. 1.18.32 and newer accepted; status line names the version. Native end-to-end test passes on 1.18.34. Live bot check on 1.18.34 still yours |
+| B4 | On hold until you have checked the app on your Mac |
+| H1 | Fixed: an Auto-on watch ending with the lid open sends no bot message |
+| H2 | Fixed: "Codex: alerts off." |
+| H3 | Fixed: cards fit their measured text; switches on the title row |
+| H4 | Fixed: "User id" caption, fields full width again |
+| H5 | Fixed: `ungrant.sh` clears the hold first; README Uninstall section |
+| H6 | Fixed: UserNotifications banners, permission asked once at launch |
+| M1 | Fixed: new installs start on Agents |
+| M2 | Copy fixed, password dialog gets 5 minutes. The app still waits on the dialog synchronously |
+| M3 | How long hints shortened. The "Watch-end POST" title is unchanged (the README, bot guide, and agent bar all use it) |
+| M4, M10 | Not done (cosmetic) |
+| M5 | Header eye uses the mode color. The Keep awake card tint is unchanged |
+| M6, M8 | Fixed |
+| M7 | Stray key dropped. A prefs decode failure still resets to defaults |
+| M9 | 1 of 5 fixed. The other 4 are in the Telegram and Discord pollers, left alone because they can't be live-tested here |
+| T1 | macOS CI job added |
+| T2 | Passes on 1.18.34 |
+| Ponytail cuts | Not done, after the release as planned |
+
+Found while fixing: the Xcode app target compiles `MenuBar/` and the package tests don't, so a missing import in the popover passed `swift test` and failed only the app build. The new CI job builds the app on every push.
