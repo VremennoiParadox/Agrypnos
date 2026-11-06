@@ -334,9 +334,9 @@ OpenCode and Claude Code forwarding needs one complete bot from the steps above:
 
 1. Check **OpenCode** under **Agents**.
 2. In **Notif → Question notifications**, click **Enable OpenCode forwarding**. This also turns on **Forward agent questions**.
-3. Restart OpenCode once. The card shows a connected terminal count when forwarding is live.
+3. Restart OpenCode once. The card shows the OpenCode version and a connected terminal count when forwarding is live.
 
-Setup installs a small plugin, `agrypnos-opencode.js`, in `~/.config/opencode` (or `$XDG_CONFIG_HOME/opencode`) and registers it in `tui.json`. Your other OpenCode settings stay as they are, and `tui.jsonc` isn't touched. If setup finds a symlink, a plugin file you edited, or a `tui.json` it can't safely change, it stops and tells you why instead of overwriting anything. This covers OpenCode 1.18.32 in the terminal. It doesn't set up the OpenCode desktop app.
+Setup installs a small plugin, `agrypnos-opencode.js`, in `~/.config/opencode` (or `$XDG_CONFIG_HOME/opencode`) and registers it in `tui.json`. Your other OpenCode settings stay as they are, and `tui.jsonc` isn't touched. If setup finds a symlink, a plugin file you edited, or a `tui.json` it can't safely change, it stops and tells you why instead of overwriting anything. This covers OpenCode 1.18.32 or newer in the terminal. It doesn't set up the OpenCode desktop app.
 
 The plugin talks to Agrypnos over a private Unix socket. There's no network port, server address, or password to enter.
 
