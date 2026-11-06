@@ -17,3 +17,15 @@ jobs:
         run: |
           chmod +x Scripts/verify-linux.sh Scripts/check-file-sizes.sh
           ./Scripts/verify-linux.sh
+
+  macos:
+    name: Mac app build and tests
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the app (fails if a runtime resource is missing)
+        run: ./Scripts/build-macos.sh
+      - name: Core and Mac tests (the native OpenCode smoke skips without the binary)
+        run: swift test
+      - name: OpenCode plugin tests
+        run: node --test Tests/OpenCodePlugin/question-plugin.test.mjs
