@@ -13,7 +13,7 @@ extension PopoverController {
         swW: CGFloat,
         swH: CGFloat
     ) {
-        addPrefTitle(AgrypnosCopy.notifEnabled, in: card, ci: ci, width: cw)
+        addPrefTitle(AgrypnosCopy.notifEnabled, in: card, ci: ci, width: cw - swW - 8)
         _ = PopoverForm.help(
             AgrypnosCopy.notifEnabledHelp,
             in: card,
@@ -24,7 +24,7 @@ extension PopoverController {
         )
         notifSwitch = PopoverForm.switchControl(
             in: card,
-            y: CGFloat(PopoverStackLayout.notifEnableSwitchY),
+            y: CGFloat(PopoverStackLayout.titleSwitchY),
             contentW: contentW,
             ci: ci,
             swW: swW,

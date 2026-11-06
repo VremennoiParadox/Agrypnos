@@ -15,6 +15,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WatchRuntimeDelegate {
         NSApp.setActivationPolicy(.accessory)
         guard runtime.start() else { NSApp.terminate(nil); return }
         AppEditMenu.install()
+        PopoverCopyLayout.measureLines = PopoverTextMeasure.lines
         hotkey.onTrigger = { [weak self] in
             self?.runtime.toggle()
         }

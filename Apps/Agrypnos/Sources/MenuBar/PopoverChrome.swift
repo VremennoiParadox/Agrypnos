@@ -118,3 +118,25 @@ enum LabelFactory {
         return field
     }
 }
+
+/// Real wrapped line count for a 12pt help label at the card's inner width.
+@MainActor
+enum PopoverTextMeasure {
+    private static let font = NSFont.systemFont(ofSize: 12)
+    private static let lineHeight = NSLayoutManager().defaultLineHeight(for: font)
+    private static let probe: NSTextField = {
+        let field = NSTextField(wrappingLabelWithString: "")
+        field.font = font
+        return field
+    }()
+
+    nonisolated static func lines(_ text: String) -> Int {
+        MainActor.assumeIsolated {
+            probe.stringValue = text
+            let width = CGFloat(PopoverStackLayout.width - 2 * (PopoverStackLayout.pad + PopoverStackLayout.inset))
+            let bounds = NSRect(x: 0, y: 0, width: width, height: .greatestFiniteMagnitude)
+            let height = probe.cell?.cellSize(forBounds: bounds).height ?? 0
+            return max(Int((height / lineHeight).rounded()), 1)
+        }
+    }
+}

@@ -345,7 +345,6 @@ final class NotifPopoverChromeTests: XCTestCase {
             PopoverStackLayout.inset
                 + PopoverStackLayout.titleRowHeight
                 + PopoverCopyLayout.notifEnableHelpHeightPoints
-                + PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset
         )
         XCTAssertEqual(

@@ -27,7 +27,15 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static let titleRowHeight = 24
     public static let segmentRowHeight = 28
     public static let sliderBlockHeight = 48
-    public static let durationCardHeight = 232
+    public static let durationHintY = 68
+    /// Gap + countdown label under a running timer's hint.
+    public static let countdownRowHeight = 24
+    /// Fits the longest hint, or a running timer's hint plus its countdown, whichever is taller.
+    public static var durationCardHeight: Int {
+        let hint = PopoverCopyLayout.durationHintHeightPoints
+        let timed = PopoverCopyLayout.timedHintLines * PopoverCopyLayout.lineHeightPoints + countdownRowHeight
+        return durationHintY + max(hint, timed) + inset
+    }
     public static let batteryCardHeight = 88
     public static let loginCardHeight = 44
     public static let secretFieldRowHeight = 28
@@ -53,10 +61,8 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static var prefMinMaxY: Int { prefControlY + 24 }
     public static var settleControlY: Int { prefHelpY + PopoverCopyLayout.settleHelpHeightPoints }
     public static var settleMinMaxY: Int { settleControlY + 24 }
-    public static var terminalBusyControlY: Int {
-        prefHelpY + PopoverCopyLayout.countTerminalSessionsHelpHeightPoints
-    }
-    public static var autoArmControlY: Int { prefHelpY + PopoverCopyLayout.autoArmHelpHeightPoints }
+    /// Switch cards keep the switch on the title row, like Keep awake, so help text never leaves a gap above it.
+    public static var titleSwitchY: Int { prefTitleY }
     public static let panelPowerControlY = prefTitleY
     public static var panelPowerCaptionY: Int { panelPowerControlY + segmentRowHeight }
     public static var panelPowerHelpY: Int { panelPowerCaptionY + PopoverCopyLayout.panelPowerCaptionHeightPoints }
@@ -66,9 +72,6 @@ public struct PopoverStackLayout: Equatable, Sendable {
     }
 
     public static var notifEnableHelpY: Int { prefTitleY + titleRowHeight }
-    public static var notifEnableSwitchY: Int {
-        notifEnableHelpY + PopoverCopyLayout.notifEnableHelpHeightPoints
-    }
     public static var notifTelegramTokenY: Int {
         prefTitleY + titleRowHeight + PopoverCopyLayout.notifTelegramHelpHeightPoints
     }
@@ -196,7 +199,6 @@ public struct PopoverStackLayout: Equatable, Sendable {
             inset
             + titleRowHeight
             + PopoverCopyLayout.countTerminalSessionsHelpHeightPoints
-            + switchRowHeight
             + inset
         let rampHeight =
             inset
@@ -208,13 +210,11 @@ public struct PopoverStackLayout: Equatable, Sendable {
             inset
             + titleRowHeight
             + PopoverCopyLayout.helpHeightPoints
-            + switchRowHeight
             + inset
         let notifEnableHeight =
             inset
             + titleRowHeight
             + PopoverCopyLayout.notifEnableHelpHeightPoints
-            + switchRowHeight
             + inset
         let notifDiscordHeight =
             inset
@@ -255,7 +255,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
                     + inset
             case .hygiene: return hygieneHeight
             case .battery: return batteryCardHeight
-            case .autoArm: return autoArmControlY + switchRowHeight + inset
+            case .autoArm: return prefHelpY + PopoverCopyLayout.autoArmHelpHeightPoints + inset
             case .agentInclude: return includeHeight
             case .settle: return settleHeight
             case .terminalBusy: return terminalBusyHeight

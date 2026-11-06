@@ -106,16 +106,17 @@ final class PopoverStackLayoutTests: XCTestCase {
             PopoverStackLayout.inset
                 + PopoverStackLayout.titleRowHeight
                 + PopoverCopyLayout.helpHeightPoints
-                + PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset
         )
+        // How long fits its longest hint, or a running timer's hint plus the countdown.
         XCTAssertEqual(
-            power.thermal!.height,
-            PopoverStackLayout.prefControlY
-                + PopoverStackLayout.switchRowHeight
+            watch.duration!.height,
+            PopoverStackLayout.durationHintY
+                + max(PopoverCopyLayout.durationHintHeightPoints,
+                      PopoverCopyLayout.timedHintLines * PopoverCopyLayout.lineHeightPoints
+                        + PopoverStackLayout.countdownRowHeight)
                 + PopoverStackLayout.inset
         )
-        XCTAssertEqual(watch.duration!.height, 232)
         XCTAssertEqual(power.battery!.height, 88)
         XCTAssertEqual(general.login!.height, 44)
         XCTAssertEqual(general.hotkeyHint!.height, PopoverCopyLayout.hotkeyHintHeightPoints)
@@ -246,7 +247,6 @@ final class PopoverStackLayoutTests: XCTestCase {
             PopoverStackLayout.inset
                 + PopoverStackLayout.titleRowHeight
                 + PopoverCopyLayout.helpHeightPoints
-                + PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset
         )
         XCTAssertFalse(agents.needsScroll)

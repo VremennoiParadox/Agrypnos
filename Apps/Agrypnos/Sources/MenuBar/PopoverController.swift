@@ -346,7 +346,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         guard let runtime else { return }
         let hint = hintCopy(for: runtime)
         durationHint?.stringValue = hint
-        let lines = max(CopyWrap.lineCount(hint, columns: PopoverCopyLayout.innerColumns), 1)
+        let lines = PopoverCopyLayout.lines(hint)
         durationHint?.frame.size.height = CGFloat(lines * PopoverCopyLayout.lineHeightPoints)
         if let durationHint, let countdownLabel {
             countdownLabel.frame.origin.y = durationHint.frame.maxY + 4

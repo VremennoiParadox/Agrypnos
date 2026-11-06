@@ -11,10 +11,10 @@ public enum QuestionSetupChrome {
     public static let policy = "Questions go to your bot only while Keep awake is on. Turning it off hands them back to the agent. After a question is recognized, Agrypnos waits 10 minutes for an answer. If none comes, Keep awake turns off. The Mac is asked to sleep only when the lid is confirmed closed. A busy agent delays that. " + needsBot
     public static let helpY = 40
     public static var helpMaxLines: Int {
-        max(CopyWrap.lineCount(help, columns: PopoverCopyLayout.innerColumns), 1)
+        PopoverCopyLayout.lines(help)
     }
     public static var policyMaxLines: Int {
-        max(CopyWrap.lineCount(policy, columns: PopoverCopyLayout.innerColumns), 1)
+        PopoverCopyLayout.lines(policy)
     }
     public static var policyY: Int { helpY + helpMaxLines * PopoverCopyLayout.lineHeightPoints + 8 }
     public static let statusHeight = 56
@@ -29,7 +29,7 @@ public enum QuestionSetupChrome {
     public static let hookButtonRowHeight = 28
     public static let hookStatusHeight = 32
     public static var codexHelpMaxLines: Int {
-        max(CopyWrap.lineCount(codexHelp, columns: PopoverCopyLayout.innerColumns), 1)
+        PopoverCopyLayout.lines(codexHelp)
     }
     public static var codexHelpHeight: Int { codexHelpMaxLines * PopoverCopyLayout.lineHeightPoints }
     public static var codexEnableY: Int { hookHelpY + codexHelpHeight }
@@ -37,7 +37,7 @@ public enum QuestionSetupChrome {
     public static var codexStatusY: Int { codexDisableY + hookButtonRowHeight }
     public static var codexCardHeight: Int { codexStatusY + hookStatusHeight + 12 }
     public static var cursorNoteMaxLines: Int {
-        max(CopyWrap.lineCount(cursorNote, columns: PopoverCopyLayout.innerColumns), 1)
+        PopoverCopyLayout.lines(cursorNote)
     }
     public static var cursorNoteCardHeight: Int {
         12 + cursorNoteMaxLines * PopoverCopyLayout.lineHeightPoints + 12

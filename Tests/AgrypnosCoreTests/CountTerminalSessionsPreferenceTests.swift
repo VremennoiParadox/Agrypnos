@@ -100,17 +100,14 @@ final class CountTerminalSessionsPreferenceTests: XCTestCase {
             PopoverStackLayout.inset
                 + PopoverStackLayout.titleRowHeight
                 + PopoverCopyLayout.countTerminalSessionsHelpHeightPoints
-                + PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset
         )
         XCTAssertEqual(layout.contentHeight, layout.terminalBusy!.maxY + PopoverStackLayout.pad)
         XCTAssertLessThanOrEqual(layout.contentHeight, PopoverStackLayout.maxVisibleHeight)
         XCTAssertFalse(layout.needsScroll)
         XCTAssertEqual(layout.popoverHeight, layout.contentHeight)
-        XCTAssertEqual(
-            PopoverStackLayout.terminalBusyControlY,
-            PopoverStackLayout.prefHelpY + PopoverCopyLayout.countTerminalSessionsHelpHeightPoints
-        )
+        // The switch sits on the title row, so no band opens between the help and the switch.
+        XCTAssertEqual(PopoverStackLayout.titleSwitchY, PopoverStackLayout.prefTitleY)
         XCTAssertNil(PopoverStackLayout.make(section: .watch).terminalBusy)
         XCTAssertNil(PopoverStackLayout.make(section: .power).terminalBusy)
         XCTAssertNil(PopoverStackLayout.make(section: .notif).terminalBusy)
