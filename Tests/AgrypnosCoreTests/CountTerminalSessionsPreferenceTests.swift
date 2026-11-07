@@ -99,7 +99,7 @@ final class CountTerminalSessionsPreferenceTests: XCTestCase {
             layout.terminalBusy!.height,
             PopoverStackLayout.inset
                 + PopoverStackLayout.titleRowHeight
-                + PopoverCopyLayout.countTerminalSessionsHelpHeightPoints
+                + PopoverHelp.height(.terminalBusy, expanded: false)
                 + PopoverStackLayout.inset
         )
         XCTAssertEqual(layout.contentHeight, layout.terminalBusy!.maxY + PopoverStackLayout.pad)

@@ -4,10 +4,11 @@ public enum PopoverCopyLayout: Sendable {
     /// Lines a 12pt help text wraps to across the card's inner width. Tests and Linux use the
     /// conservative column estimate; the app installs real AppKit measurement at launch so
     /// each card fits its text with no blank band.
-    nonisolated(unsafe) public static var measureLines: (String) -> Int = {
-        max(CopyWrap.lineCount($0, columns: innerColumns), 1)
+    public static let innerWidthPoints = 272
+    nonisolated(unsafe) public static var measureLines: (String, Int) -> Int = { text, width in
+        max(CopyWrap.lineCount(text, columns: innerColumns * width / innerWidthPoints), 1)
     }
-    public static func lines(_ text: String) -> Int { measureLines(text) }
+    public static func lines(_ text: String, width: Int = innerWidthPoints) -> Int { measureLines(text, width) }
     /// The longest How long hint any duration, Keep awake state, or thermal setting can show.
     public static var durationHintMaxLines: Int {
         var hints: [String] = []
@@ -19,11 +20,11 @@ public enum PopoverCopyLayout: Sendable {
                 }
             }
         }
-        return hints.map(lines).max() ?? 1
+        return hints.map(PopoverHelp.lines).max() ?? 1
     }
     /// A running timer shows its hint plus the countdown row.
     public static var timedHintLines: Int {
-        lines(AgrypnosCopy.durationHint(option: .oneHour, engaged: true, remainingSeconds: nil))
+        PopoverHelp.lines(AgrypnosCopy.durationHint(option: .oneHour, engaged: true, remainingSeconds: nil))
     }
     /// Leftover + “battery” wraps to 4 lines at the conservative column budget.
     public static let captionMaxLines = 4

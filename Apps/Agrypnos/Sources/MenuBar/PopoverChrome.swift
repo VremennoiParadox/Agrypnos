@@ -143,11 +143,10 @@ enum PopoverTextMeasure {
         return field
     }()
 
-    nonisolated static func lines(_ text: String) -> Int {
+    nonisolated static func lines(_ text: String, width: Int) -> Int {
         MainActor.assumeIsolated {
             probe.stringValue = text
-            let width = CGFloat(PopoverStackLayout.width - 2 * (PopoverStackLayout.pad + PopoverStackLayout.inset))
-            let bounds = NSRect(x: 0, y: 0, width: width, height: .greatestFiniteMagnitude)
+            let bounds = NSRect(x: 0, y: 0, width: CGFloat(width), height: .greatestFiniteMagnitude)
             let height = probe.cell?.cellSize(forBounds: bounds).height ?? 0
             return max(Int((height / lineHeight).rounded()), 1)
         }

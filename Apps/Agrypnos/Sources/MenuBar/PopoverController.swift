@@ -113,6 +113,8 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var watchCaptionLines = PopoverCopyLayout.captionMaxLines
     /// True while `open` paints the popover before it is shown.
     private var opening = false
+    var expandedHelp = PopoverController.loadExpandedHelp()
+    var helpViews: [PopoverCard: (label: NSTextField, chevron: NSButton)] = [:]
 
     init(runtime: WatchRuntime) {
         self.runtime = runtime
@@ -139,6 +141,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
             self.refresh()
         }
         popover.contentViewController = makeController()
+        for help in expandedHelp { applyHelpText(help) }
     }
 
     func toggle(relativeTo button: NSView) {
@@ -351,7 +354,11 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
         guard let runtime else { return }
         let hint = hintCopy(for: runtime)
         durationHint?.stringValue = hint
-        let lines = PopoverCopyLayout.lines(hint)
+        // VoiceOver reads the full hint even while the card shows only its short line.
+        durationControl?.setAccessibilityHelp(AgrypnosCopy.durationHint(
+            option: runtime.preferences.duration, engaged: runtime.engaged, remainingSeconds: nil,
+            thermalAutoOff: runtime.preferences.thermalAutoOff))
+        let lines = PopoverHelp.lines(hint)
         durationHint?.frame.size.height = CGFloat(lines * PopoverCopyLayout.lineHeightPoints)
         if let durationHint, let countdownLabel {
             countdownLabel.frame.origin.y = durationHint.frame.maxY + 4
@@ -365,7 +372,8 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     }
 
     private func hintCopy(for runtime: WatchRuntime) -> String {
-        AgrypnosCopy.durationHint(
+        guard expandedHelp.contains(.duration) else { return PopoverHelp.durationShort(runtime.preferences.duration) }
+        return AgrypnosCopy.durationHint(
             option: runtime.preferences.duration,
             engaged: runtime.engaged,
             remainingSeconds: runtime.engine.statusItemRemainingSeconds(now: Date()),

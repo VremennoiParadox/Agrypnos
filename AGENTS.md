@@ -91,6 +91,7 @@ Switcher is **landed**: **Watch** · **Power** · **Agents** · **Notif** · **G
   - **Height hugs active section:** After the switch (and after the height animation settles), popover height must match the active section’s content — no huge empty bottom under short sections; no clipping mid-card while empty space sits below.
 - **Honesty:** Mac optical on smooth section-switch **passed** (Watch ↔ Power ↔ Agents ↔ Notif ↔ General — no ghost paint, height hugging). Open-lid brightness and Agents picker / OpenCode process/session **passed** (user optical, 2026-09-24). Power A/B (Dim panel / Sleep panel; A↔B exclusive + height) and Telegram `/status` live battery **passed** (user optical, 2026-09-25) — Discord inbound/outbound were separately user-confirmed on 2026-10-11. Still not every provider. Still not think-detection.
 - Plain captions only (personality rules below).
+- **Collapsible help (human decision 2026-11-07; branch `collapsible-help`, reversible):** How long, Auto-on, the idle wait, Count terminal sessions, Watch-end POST, Discord, and Telegram show one short plain line that says what the control does. A chevron swaps in the full help and remembers it. VoiceOver reads the full help. The Power A/B caption, Thermal auto-off, and the question cards stay fully visible.
 
 ### Menu-bar status item (landed)
 

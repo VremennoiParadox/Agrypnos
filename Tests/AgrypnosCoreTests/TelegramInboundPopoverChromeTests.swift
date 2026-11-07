@@ -88,7 +88,7 @@ final class TelegramInboundPopoverChromeTests: XCTestCase {
             layout.notifTelegram!.height,
             PopoverStackLayout.inset
                 + PopoverStackLayout.titleRowHeight
-                + PopoverCopyLayout.notifTelegramHelpHeightPoints
+                + PopoverHelp.height(.notifTelegram, expanded: false)
                 + 3 * PopoverStackLayout.secretFieldRowHeight
                 + PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset

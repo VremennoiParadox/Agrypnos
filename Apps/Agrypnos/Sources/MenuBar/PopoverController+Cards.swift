@@ -131,14 +131,7 @@ extension PopoverController {
             text: AgentSettleGraceChrome.valueLabel(seconds: UserPreferences.default.agentSettleGrace),
             width: PopoverForm.timeValueWidth
         )
-        _ = PopoverForm.help(
-            AgrypnosCopy.settleGraceHelp,
-            in: card,
-            y: CGFloat(PopoverStackLayout.prefHelpY),
-            x: ci,
-            width: cw,
-            lines: PopoverCopyLayout.settleHelpMaxLines
-        )
+        addCollapsibleHelp(.settle, in: card, y: CGFloat(PopoverStackLayout.prefHelpY), ci: ci, cw: cw)
         let settleRange = UserPreferences.agentSettleGraceRange
         settleSlider = PopoverForm.slider(
             in: card,
@@ -285,9 +278,11 @@ extension PopoverController {
             color: .secondaryLabelColor,
             lines: PopoverCopyLayout.durationHintMaxLines
         )
-        durationHint.frame = NSRect(x: ci, y: CGFloat(PopoverStackLayout.durationHintY), width: cw, height: PopoverMetrics.durationHintHeight)
-        durationHint.preferredMaxLayoutWidth = cw
+        let hintW = cw - CGFloat(PopoverHelp.chevronWidthPoints)
+        durationHint.frame = NSRect(x: ci, y: CGFloat(PopoverStackLayout.durationHintY), width: hintW, height: PopoverMetrics.durationHintHeight)
+        durationHint.preferredMaxLayoutWidth = hintW
         card.addSubview(durationHint)
+        addHelpChevron(.duration, in: card, label: durationHint, ci: ci, cw: cw)
         countdownLabel = LabelFactory.make("", font: .monospacedDigitSystemFont(ofSize: 13, weight: .medium), color: .labelColor)
         countdownLabel.frame = NSRect(x: ci, y: 104, width: cw, height: 20)
         countdownLabel.setAccessibilityLabel("Keep awake timer")
@@ -377,14 +372,7 @@ extension PopoverController {
         swH: CGFloat
     ) {
         addPrefTitle(AgrypnosCopy.countTerminalSessions, in: card, ci: ci, width: cw - swW - 8)
-        _ = PopoverForm.help(
-            AgrypnosCopy.countTerminalSessionsHelp,
-            in: card,
-            y: CGFloat(PopoverStackLayout.prefHelpY),
-            x: ci,
-            width: cw,
-            lines: PopoverCopyLayout.countTerminalSessionsHelpMaxLines
-        )
+        addCollapsibleHelp(.terminalBusy, in: card, y: CGFloat(PopoverStackLayout.prefHelpY), ci: ci, cw: cw)
         terminalBusySwitch = PopoverForm.switchControl(
             in: card,
             y: CGFloat(PopoverStackLayout.titleSwitchY),

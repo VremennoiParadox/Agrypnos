@@ -7,14 +7,7 @@ import AgrypnosCore
 extension PopoverController {
     func addAutoArmCard(_ card: CardView, contentW: CGFloat, ci: CGFloat, cw: CGFloat, swW: CGFloat, swH: CGFloat) {
         addPrefTitle(AgrypnosCopy.autoArm, in: card, ci: ci, width: cw - swW - 8)
-        _ = PopoverForm.help(
-            AgrypnosCopy.autoArmHelp,
-            in: card,
-            y: CGFloat(PopoverStackLayout.prefHelpY),
-            x: ci,
-            width: cw,
-            lines: PopoverCopyLayout.autoArmHelpMaxLines
-        )
+        addCollapsibleHelp(.autoArm, in: card, y: CGFloat(PopoverStackLayout.prefHelpY), ci: ci, cw: cw)
         autoArmSwitch = PopoverForm.switchControl(
             in: card,
             y: CGFloat(PopoverStackLayout.titleSwitchY),

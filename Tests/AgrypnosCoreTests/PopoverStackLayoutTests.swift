@@ -92,7 +92,7 @@ final class PopoverStackLayoutTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(
             agents.settle!.height,
             PopoverStackLayout.titleRowHeight
-                + PopoverCopyLayout.settleHelpHeightPoints
+                + PopoverHelp.height(.settle, expanded: false)
                 + PopoverStackLayout.sliderBlockHeight
         )
         XCTAssertGreaterThanOrEqual(
@@ -108,12 +108,12 @@ final class PopoverStackLayoutTests: XCTestCase {
                 + PopoverCopyLayout.helpHeightPoints
                 + PopoverStackLayout.inset
         )
-        // How long fits its longest hint, or a running timer's hint plus the countdown.
+        // How long fits its longest short line, or a timer's short line plus the countdown.
         XCTAssertEqual(
             watch.duration!.height,
             PopoverStackLayout.durationHintY
-                + max(PopoverCopyLayout.durationHintHeightPoints,
-                      PopoverCopyLayout.timedHintLines * PopoverCopyLayout.lineHeightPoints
+                + max(PopoverHelp.height(.duration, expanded: false),
+                      PopoverHelp.lines(PopoverHelp.durationShort(.oneHour)) * PopoverCopyLayout.lineHeightPoints
                         + PopoverStackLayout.countdownRowHeight)
                 + PopoverStackLayout.inset
         )
@@ -210,7 +210,7 @@ final class PopoverStackLayoutTests: XCTestCase {
             agents.settle!.height,
             PopoverStackLayout.inset
                 + PopoverStackLayout.titleRowHeight
-                + PopoverCopyLayout.settleHelpHeightPoints
+                + PopoverHelp.height(.settle, expanded: false)
                 + PopoverStackLayout.sliderBlockHeight
                 + PopoverStackLayout.inset
         )
@@ -220,13 +220,13 @@ final class PopoverStackLayoutTests: XCTestCase {
         )
         XCTAssertEqual(
             PopoverStackLayout.settleControlY,
-            PopoverStackLayout.prefHelpY + PopoverCopyLayout.settleHelpHeightPoints
+            PopoverStackLayout.prefHelpY + PopoverHelp.height(.settle, expanded: false)
         )
         XCTAssertEqual(
             PopoverStackLayout.settleMinMaxY,
             PopoverStackLayout.settleControlY + 24
         )
-        XCTAssertGreaterThan(
+        XCTAssertGreaterThanOrEqual(
             PopoverStackLayout.settleControlY,
             PopoverStackLayout.prefControlY
         )
