@@ -44,21 +44,24 @@ public struct PopoverSectionResize: Equatable, Sendable {
         panelPowerMode: PanelPowerMode = .default,
         showQuestionNotifications: Bool = false,
         showsWatchCaption: Bool = false,
-        watchCaptionLines: Int = PopoverCopyLayout.captionMaxLines
+        watchCaptionLines: Int = PopoverCopyLayout.captionMaxLines,
+        expandedHelp: Set<PopoverCard> = []
     ) -> PopoverSectionResize {
         let fromLayout = PopoverStackLayout.make(
             section: from,
             panelPowerMode: panelPowerMode,
             showQuestionNotifications: from == .notif && showQuestionNotifications,
             showsWatchCaption: showsWatchCaption,
-            watchCaptionLines: watchCaptionLines
+            watchCaptionLines: watchCaptionLines,
+            expandedHelp: expandedHelp
         )
         let toLayout = PopoverStackLayout.make(
             section: to,
             panelPowerMode: panelPowerMode,
             showQuestionNotifications: to == .notif && showQuestionNotifications,
             showsWatchCaption: showsWatchCaption,
-            watchCaptionLines: watchCaptionLines
+            watchCaptionLines: watchCaptionLines,
+            expandedHelp: expandedHelp
         )
         let fromHeight = fromLayout.popoverHeight
         let toHeight = toLayout.popoverHeight

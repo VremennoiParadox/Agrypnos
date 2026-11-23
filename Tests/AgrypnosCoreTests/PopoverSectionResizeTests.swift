@@ -110,18 +110,18 @@ final class PopoverSectionResizeTests: XCTestCase {
     }
 
     func testGrowAndShrinkBothHideOutgoingNow() {
-        // Watch carries the Auto-on card, so Power is the shorter of the two.
-        let power = PopoverStackLayout.make(section: .power)
+        // General is the shortest section, so General → Watch grows and Watch → General shrinks.
+        let power = PopoverStackLayout.make(section: .general)
         let watch = PopoverStackLayout.make(section: .watch)
         XCTAssertLessThan(power.popoverHeight, watch.popoverHeight)
 
-        let grow = PopoverSectionResize.make(from: .power, to: .watch, animated: true)
+        let grow = PopoverSectionResize.make(from: .general, to: .watch, animated: true)
         XCTAssertTrue(grow.animatesHeight)
         XCTAssertGreaterThan(grow.toHeight, grow.fromHeight)
         XCTAssertTrue(grow.hidesOutgoingImmediately)
         XCTAssertEqual(grow.documentHeightDuringMotion, watch.contentHeight)
 
-        let shrink = PopoverSectionResize.make(from: .watch, to: .power, animated: true)
+        let shrink = PopoverSectionResize.make(from: .watch, to: .general, animated: true)
         XCTAssertTrue(shrink.animatesHeight)
         XCTAssertLessThan(shrink.toHeight, shrink.fromHeight)
         XCTAssertTrue(shrink.hidesOutgoingImmediately)

@@ -14,14 +14,7 @@ extension PopoverController {
         swH: CGFloat
     ) {
         addPrefTitle(AgrypnosCopy.notifEnabled, in: card, ci: ci, width: cw - swW - 8)
-        _ = PopoverForm.help(
-            AgrypnosCopy.notifEnabledHelp,
-            in: card,
-            y: CGFloat(PopoverStackLayout.notifEnableHelpY),
-            x: ci,
-            width: cw,
-            lines: PopoverCopyLayout.notifEnableHelpMaxLines
-        )
+        addCollapsibleHelp(.notifEnable, in: card, y: CGFloat(PopoverStackLayout.notifEnableHelpY), ci: ci, cw: cw)
         notifSwitch = PopoverForm.switchControl(
             in: card,
             y: CGFloat(PopoverStackLayout.titleSwitchY),
@@ -46,14 +39,7 @@ extension PopoverController {
         swH: CGFloat
     ) {
         addPrefTitle(AgrypnosCopy.notifDiscord, in: card, ci: ci, width: cw)
-        _ = PopoverForm.help(
-            AgrypnosCopy.notifDiscordHelp,
-            in: card,
-            y: CGFloat(PopoverStackLayout.prefHelpY),
-            x: ci,
-            width: cw,
-            lines: PopoverCopyLayout.notifDiscordHelpMaxLines
-        )
+        addCollapsibleHelp(.notifDiscord, in: card, y: CGFloat(PopoverStackLayout.prefHelpY), ci: ci, cw: cw)
         discordInboundTokenSecrets = PopoverForm.labeledSecretField(
             in: card,
             y: CGFloat(PopoverStackLayout.notifDiscordInboundTokenY),
@@ -119,14 +105,7 @@ extension PopoverController {
         swH: CGFloat
     ) {
         addPrefTitle(AgrypnosCopy.notifTelegram, in: card, ci: ci, width: cw)
-        _ = PopoverForm.help(
-            AgrypnosCopy.notifTelegramHelp,
-            in: card,
-            y: CGFloat(PopoverStackLayout.prefHelpY),
-            x: ci,
-            width: cw,
-            lines: PopoverCopyLayout.notifTelegramHelpMaxLines
-        )
+        addCollapsibleHelp(.notifTelegram, in: card, y: CGFloat(PopoverStackLayout.prefHelpY), ci: ci, cw: cw)
         telegramTokenSecrets = PopoverForm.labeledSecretField(
             in: card,
             y: CGFloat(PopoverStackLayout.notifTelegramTokenY),

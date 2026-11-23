@@ -344,17 +344,14 @@ final class NotifPopoverChromeTests: XCTestCase {
             layout.notifEnable!.height,
             PopoverStackLayout.inset
                 + PopoverStackLayout.titleRowHeight
-                + PopoverCopyLayout.notifEnableHelpHeightPoints
+                + PopoverHelp.height(.notifEnable, expanded: false)
                 + PopoverStackLayout.inset
         )
         XCTAssertEqual(
             layout.notifDiscord!.height,
             PopoverStackLayout.inset
                 + PopoverStackLayout.titleRowHeight
-                + CopyWrap.lineCount(
-                    AgrypnosCopy.notifDiscordHelp,
-                    columns: PopoverCopyLayout.innerColumns
-                ) * PopoverCopyLayout.lineHeightPoints
+                + PopoverHelp.height(.notifDiscord, expanded: false)
                 + 3 * PopoverStackLayout.secretFieldRowHeight
                 + PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset
@@ -363,7 +360,7 @@ final class NotifPopoverChromeTests: XCTestCase {
             layout.notifTelegram!.height,
             PopoverStackLayout.inset
                 + PopoverStackLayout.titleRowHeight
-                + PopoverCopyLayout.notifTelegramHelpHeightPoints
+                + PopoverHelp.height(.notifTelegram, expanded: false)
                 + 3 * PopoverStackLayout.secretFieldRowHeight
                 + PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset

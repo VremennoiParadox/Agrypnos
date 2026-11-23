@@ -88,11 +88,7 @@ final class DiscordInboundPopoverChromeTests: XCTestCase {
 
     func testDiscordCardHoldsTokenChannelAndInboundSwitch() {
         let layout = PopoverStackLayout.make(section: .notif)
-        let discordHelpHeight =
-            CopyWrap.lineCount(
-                AgrypnosCopy.notifDiscordHelp,
-                columns: PopoverCopyLayout.innerColumns
-            ) * PopoverCopyLayout.lineHeightPoints
+        let discordHelpHeight = PopoverHelp.height(.notifDiscord, expanded: false)
         XCTAssertNil(layout.notifDiscordInbound)
         XCTAssertEqual(
             layout.notifTelegram?.y,

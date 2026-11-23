@@ -31,9 +31,12 @@ public struct PopoverStackLayout: Equatable, Sendable {
     /// Gap + countdown label under a running timer's hint.
     public static let countdownRowHeight = 24
     /// Fits the longest hint, or a running timer's hint plus its countdown, whichever is taller.
-    public static var durationCardHeight: Int {
-        let hint = PopoverCopyLayout.durationHintHeightPoints
-        let timed = PopoverCopyLayout.timedHintLines * PopoverCopyLayout.lineHeightPoints + countdownRowHeight
+    public static func durationCardHeight(expanded: Bool) -> Int {
+        let hint = PopoverHelp.height(.duration, expanded: expanded)
+        let timedLines = expanded
+            ? PopoverCopyLayout.timedHintLines
+            : PopoverHelp.lines(PopoverHelp.durationShort(.oneHour))
+        let timed = timedLines * PopoverCopyLayout.lineHeightPoints + countdownRowHeight
         return durationHintY + max(hint, timed) + inset
     }
     public static let batteryCardHeight = 88
@@ -59,7 +62,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
     public static var prefHelpY: Int { prefTitleY + titleRowHeight }
     public static var prefControlY: Int { prefHelpY + PopoverCopyLayout.helpHeightPoints }
     public static var prefMinMaxY: Int { prefControlY + 24 }
-    public static var settleControlY: Int { prefHelpY + PopoverCopyLayout.settleHelpHeightPoints }
+    public static var settleControlY: Int { prefHelpY + PopoverHelp.height(.settle, expanded: false) }
     public static var settleMinMaxY: Int { settleControlY + 24 }
     /// Switch cards keep the switch on the title row, like Keep awake, so help text never leaves a gap above it.
     public static var titleSwitchY: Int { prefTitleY }
@@ -73,7 +76,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
 
     public static var notifEnableHelpY: Int { prefTitleY + titleRowHeight }
     public static var notifTelegramTokenY: Int {
-        prefTitleY + titleRowHeight + PopoverCopyLayout.notifTelegramHelpHeightPoints
+        prefTitleY + titleRowHeight + PopoverHelp.height(.notifTelegram, expanded: false)
     }
     public static var notifTelegramChatY: Int { notifTelegramTokenY + secretFieldRowHeight }
     public static var notifTelegramUserY: Int { notifTelegramChatY + secretFieldRowHeight }
@@ -81,7 +84,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
         notifTelegramUserY + secretFieldRowHeight
     }
     public static var notifDiscordInboundTokenY: Int {
-        prefHelpY + PopoverCopyLayout.notifDiscordHelpHeightPoints
+        prefHelpY + PopoverHelp.height(.notifDiscord, expanded: false)
     }
     public static var notifDiscordInboundChannelY: Int {
         notifDiscordInboundTokenY + secretFieldRowHeight
@@ -171,8 +174,10 @@ public struct PopoverStackLayout: Equatable, Sendable {
         panelPowerMode: PanelPowerMode = .default,
         showQuestionNotifications: Bool = false,
         showsWatchCaption: Bool = false,
-        watchCaptionLines: Int = PopoverCopyLayout.captionMaxLines
+        watchCaptionLines: Int = PopoverCopyLayout.captionMaxLines,
+        expandedHelp: Set<PopoverCard> = []
     ) -> PopoverStackLayout {
+        func help(_ card: PopoverCard) -> Int { PopoverHelp.height(card, expanded: expandedHelp.contains(card)) }
         // The caption's real lines, so a one-line caption leaves no blank band under it.
         let captionLines = min(max(watchCaptionLines, 1), PopoverCopyLayout.captionMaxLines)
         let watchHeight =
@@ -192,13 +197,13 @@ public struct PopoverStackLayout: Equatable, Sendable {
         let settleHeight =
             inset
             + titleRowHeight
-            + PopoverCopyLayout.settleHelpHeightPoints
+            + help(.settle)
             + sliderBlockHeight
             + inset
         let terminalBusyHeight =
             inset
             + titleRowHeight
-            + PopoverCopyLayout.countTerminalSessionsHelpHeightPoints
+            + help(.terminalBusy)
             + inset
         let rampHeight =
             inset
@@ -214,19 +219,19 @@ public struct PopoverStackLayout: Equatable, Sendable {
         let notifEnableHeight =
             inset
             + titleRowHeight
-            + PopoverCopyLayout.notifEnableHelpHeightPoints
+            + help(.notifEnable)
             + inset
         let notifDiscordHeight =
             inset
             + titleRowHeight
-            + PopoverCopyLayout.notifDiscordHelpHeightPoints
+            + help(.notifDiscord)
             + 3 * secretFieldRowHeight
             + switchRowHeight
             + inset
         let notifTelegramHeight =
             inset
             + titleRowHeight
-            + PopoverCopyLayout.notifTelegramHelpHeightPoints
+            + help(.notifTelegram)
             + 3 * secretFieldRowHeight
             + switchRowHeight
             + inset
@@ -246,7 +251,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
         func height(for card: PopoverCard) -> Int {
             switch card {
             case .watch: return watchHeight
-            case .duration: return durationCardHeight
+            case .duration: return durationCardHeight(expanded: expandedHelp.contains(.duration))
             case .lastWatchEnd: return inset + PopoverCopyLayout.lastWatchEndHeightPoints + inset
             case .panelPower:
                 return inset
@@ -255,7 +260,7 @@ public struct PopoverStackLayout: Equatable, Sendable {
                     + inset
             case .hygiene: return hygieneHeight
             case .battery: return batteryCardHeight
-            case .autoArm: return prefHelpY + PopoverCopyLayout.autoArmHelpHeightPoints + inset
+            case .autoArm: return prefHelpY + help(.autoArm) + inset
             case .agentInclude: return includeHeight
             case .settle: return settleHeight
             case .terminalBusy: return terminalBusyHeight

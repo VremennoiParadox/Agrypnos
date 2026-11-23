@@ -19,6 +19,7 @@
 		87299C24812BC138E73D77BC /* PopoverController+Canvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50D9BE7A9730D85A15B6E96E /* PopoverController+Canvas.swift */; };
 		83E9538CE09AAA2166595788 /* PopoverController+Cards.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9704B117A23E378C79A3883 /* PopoverController+Cards.swift */; };
 		51A4F14CFF7974BBC248E4FB /* PopoverController+ClaudeHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052BE85C746568D8A215D1DF /* PopoverController+ClaudeHook.swift */; };
+		1C1C7DC5F38C346952159753 /* PopoverController+Help.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21E6D5F9C177E512BB0F3EC8 /* PopoverController+Help.swift */; };
 		3E342BC9083A87088493456F /* PopoverController+Notif.swift in Sources */ = {isa = PBXBuildFile; fileRef = D36BE0786C01BFCA5770EAE1 /* PopoverController+Notif.swift */; };
 		B3BF8385D303AB9F8B3915EC /* PopoverController+OpenCodePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2D724306EE431110D4B6552 /* PopoverController+OpenCodePlugin.swift */; };
 		D26100AA275DD2C7CC545A83 /* PopoverController+Questions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8B9236115BA41F196506414 /* PopoverController+Questions.swift */; };
@@ -85,6 +86,7 @@
 		50D9BE7A9730D85A15B6E96E /* PopoverController+Canvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Canvas.swift"; sourceTree = "<group>"; };
 		C9704B117A23E378C79A3883 /* PopoverController+Cards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Cards.swift"; sourceTree = "<group>"; };
 		052BE85C746568D8A215D1DF /* PopoverController+ClaudeHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+ClaudeHook.swift"; sourceTree = "<group>"; };
+		21E6D5F9C177E512BB0F3EC8 /* PopoverController+Help.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Help.swift"; sourceTree = "<group>"; };
 		D36BE0786C01BFCA5770EAE1 /* PopoverController+Notif.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Notif.swift"; sourceTree = "<group>"; };
 		E2D724306EE431110D4B6552 /* PopoverController+OpenCodePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+OpenCodePlugin.swift"; sourceTree = "<group>"; };
 		D8B9236115BA41F196506414 /* PopoverController+Questions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PopoverController+Questions.swift"; sourceTree = "<group>"; };
@@ -209,6 +211,7 @@
 				50D9BE7A9730D85A15B6E96E /* PopoverController+Canvas.swift */,
 				C9704B117A23E378C79A3883 /* PopoverController+Cards.swift */,
 				052BE85C746568D8A215D1DF /* PopoverController+ClaudeHook.swift */,
+				21E6D5F9C177E512BB0F3EC8 /* PopoverController+Help.swift */,
 				D36BE0786C01BFCA5770EAE1 /* PopoverController+Notif.swift */,
 				E2D724306EE431110D4B6552 /* PopoverController+OpenCodePlugin.swift */,
 				D8B9236115BA41F196506414 /* PopoverController+Questions.swift */,
@@ -400,6 +403,7 @@
 				87299C24812BC138E73D77BC /* PopoverController+Canvas.swift in Sources */,
 				83E9538CE09AAA2166595788 /* PopoverController+Cards.swift in Sources */,
 				51A4F14CFF7974BBC248E4FB /* PopoverController+ClaudeHook.swift in Sources */,
+				1C1C7DC5F38C346952159753 /* PopoverController+Help.swift in Sources */,
 				3E342BC9083A87088493456F /* PopoverController+Notif.swift in Sources */,
 				B3BF8385D303AB9F8B3915EC /* PopoverController+OpenCodePlugin.swift in Sources */,
 				D26100AA275DD2C7CC545A83 /* PopoverController+Questions.swift in Sources */,
