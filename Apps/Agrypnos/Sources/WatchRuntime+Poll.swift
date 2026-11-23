@@ -94,14 +94,12 @@ extension WatchRuntime {
                 countTerminalSessions: terminals,
                 included: included
             )
-            await MainActor.run {
-                self?.finishAgentProbe(
-                    snap,
-                    generation: generation,
-                    included: included,
-                    countTerminalSessionsAsBusy: terminals
-                )
-            }
+            await self?.finishAgentProbe(
+                snap,
+                generation: generation,
+                included: included,
+                countTerminalSessionsAsBusy: terminals
+            )
         }
         finishPollTick(
             now: now,
@@ -237,9 +235,9 @@ extension WatchRuntime {
         }
         let willSleep = applyCommands.contains(.requestSleep)
         let enabled = engine.preferences.notifEnabled
-        let needsPost = postToken != nil || shouldAwaitWatchEndPost(
+        let needsPost = postToken != nil || (!engine.lastEndQuiet && shouldAwaitWatchEndPost(
             enabled: enabled, reason: disengageReason, willSleep: willSleep
-        )
+        ))
         if needsPost {
             idlePostTask?.cancel()
             idlePostTask = Task { @MainActor in

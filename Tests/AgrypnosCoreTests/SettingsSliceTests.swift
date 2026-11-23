@@ -137,7 +137,7 @@ final class SettingsSliceTests: XCTestCase {
         let loaded = try roundTrip(prefs)
         XCTAssertEqual(loaded.hotkey, remap)
         XCTAssertEqual(loaded.hotkey.display, "⌥⌘S")
-        XCTAssertEqual(loaded.duration, .indefinite)
+        XCTAssertEqual(loaded.duration, UserPreferences.default.duration)
         XCTAssertEqual(loaded.batteryFloorPercent, 15)
     }
 

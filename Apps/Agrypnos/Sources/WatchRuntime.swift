@@ -128,10 +128,8 @@ final class WatchRuntime {
     }
 
     func start() -> Bool {
-        guard SleepDisabledCrashGuard.start() else {
-            notify("Couldn't take ownership of the wake hold. Agrypnos may already be running.")
-            return false
-        }
+        // Another copy owns the wake hold. The app delegate hands off to it.
+        guard SleepDisabledCrashGuard.start() else { return false }
         ownsWakeHold = true
         inboundPoller.runtime = self
         discordGateway.runtime = self
@@ -394,7 +392,7 @@ final class WatchRuntime {
     @discardableResult
     func setEngaged(_ on: Bool, auto: Bool = false) -> HygieneApplyResult {
         if on {
-            let grantNote = auto ? AgrypnosCopy.autoArmGrantMissing : AgrypnosCopy.grantNeeded
+            let grantNote = auto ? AgrypnosCopy.autoArmGrantMissing : AgrypnosCopy.grantMissing
             guard armKernel(allowInstall: !auto, grantMissingNote: grantNote) else { return HygieneApplyResult() }
             resetQuestionWatchForNewArm()
             invalidateAgentProbe()

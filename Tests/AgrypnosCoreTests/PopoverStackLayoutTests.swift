@@ -106,16 +106,17 @@ final class PopoverStackLayoutTests: XCTestCase {
             PopoverStackLayout.inset
                 + PopoverStackLayout.titleRowHeight
                 + PopoverCopyLayout.helpHeightPoints
-                + PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset
         )
+        // How long fits its longest hint, or a running timer's hint plus the countdown.
         XCTAssertEqual(
-            power.thermal!.height,
-            PopoverStackLayout.prefControlY
-                + PopoverStackLayout.switchRowHeight
+            watch.duration!.height,
+            PopoverStackLayout.durationHintY
+                + max(PopoverCopyLayout.durationHintHeightPoints,
+                      PopoverCopyLayout.timedHintLines * PopoverCopyLayout.lineHeightPoints
+                        + PopoverStackLayout.countdownRowHeight)
                 + PopoverStackLayout.inset
         )
-        XCTAssertEqual(watch.duration!.height, 232)
         XCTAssertEqual(power.battery!.height, 88)
         XCTAssertEqual(general.login!.height, 44)
         XCTAssertEqual(general.hotkeyHint!.height, PopoverCopyLayout.hotkeyHintHeightPoints)
@@ -166,11 +167,11 @@ final class PopoverStackLayoutTests: XCTestCase {
         XCTAssertEqual(PopoverCopyLayout.helpMaxLines, 2)
         XCTAssertEqual(PopoverCopyLayout.helpHeightPoints, 2 * PopoverCopyLayout.lineHeightPoints)
         XCTAssertGreaterThan(settleLines, PopoverCopyLayout.helpMaxLines)
-        XCTAssertEqual(settleLines, 8)
-        XCTAssertEqual(PopoverCopyLayout.settleHelpMaxLines, 8)
+        // The slot is exactly the wrapped help: no blank band, no clipping.
+        XCTAssertEqual(PopoverCopyLayout.settleHelpMaxLines, settleLines)
         XCTAssertEqual(
             PopoverCopyLayout.settleHelpHeightPoints,
-            8 * PopoverCopyLayout.lineHeightPoints
+            settleLines * PopoverCopyLayout.lineHeightPoints
         )
         XCTAssertGreaterThanOrEqual(
             PopoverCopyLayout.settleHelpHeightPoints,
@@ -246,7 +247,6 @@ final class PopoverStackLayoutTests: XCTestCase {
             PopoverStackLayout.inset
                 + PopoverStackLayout.titleRowHeight
                 + PopoverCopyLayout.helpHeightPoints
-                + PopoverStackLayout.switchRowHeight
                 + PopoverStackLayout.inset
         )
         XCTAssertFalse(agents.needsScroll)

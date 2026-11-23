@@ -46,7 +46,7 @@ The usual keep-awake tricks don't help here. Power assertions (what `caffeinate`
 - On lid close, the keyboard backlight goes off and the panel dims to a floor you choose. If you prefer, the panel sleeps instead.
 - Set How long to **1h**, **3h**, or custom minutes for a countdown that starts when you turn Keep awake on.
 - Set How long to **Agents** and Keep awake turns off by itself when the wait after agent signals stop ends.
-- Turn on **Auto-on** and Keep awake also turns itself on when your selected tools look busy for 30 seconds with the lid open (How long must be **Agents**). After it turns off, it waits for the next run. It is off by default.
+- Turn on **Auto-on** and Keep awake also turns itself on when your selected tools look busy for 30 seconds with the lid open (How long must be **Agents**). After it turns off, it waits for the next run. If the lid is open when it turns off, it doesn't message your bot. It is off by default.
 - Low battery and thermal pressure turn Keep awake off too, and a reboot always clears it.
 - If you want, *your* Telegram or Discord bot gets a message when the timer ends or the wait after agent signals stop ends. Discord also messages when Agrypnos asks the Mac to sleep. Either bot takes `/arm`, `/disarm`, `/status`, and `/help` from your phone.
 - When OpenCode or Claude Code asks you a multiple-choice question, your bot can show it and send your answer back (BETA). Codex can ping your bot when it's waiting on you.
@@ -72,12 +72,12 @@ The first time you turn Keep awake on, Agrypnos asks to install a small sudoers 
 /usr/bin/pmset -a disablesleep 0
 ```
 
-macOS asks for your password once. To remove the rule later, run `./Scripts/ungrant.sh`.
+macOS asks for your password once. To remove it later, see [Uninstall](#uninstall).
 
 ## Quick start
 
 1. Click the eye in the menu bar. The popover opens on **Watch**.
-2. Under **How long**, pick **Agents**.
+2. **How long** starts on **Agents**. Leave it there.
 3. Turn on **Keep awake**. The menu-bar eye turns **purple** for Agents. The eye is gray when off, blue for ∞, and gold on a timer. It stays the same size in every mode.
 4. Start your agent and close the lid.
 
@@ -134,7 +134,7 @@ It reads file modification times, not what's inside the files. If Cursor is sele
 
 Once Agrypnos has seen work since you turned Keep awake on, it starts the wait after agent signals stop each time the busy signals stop. New activity starts the wait over. You can set it from 1 minute 30 seconds to 10 minutes. When the wait runs out, Keep awake turns off. If Agrypnos never saw any work since you turned it on, Keep awake stays on. The wait is there because an agent can go quiet for a while between file writes, and that shouldn't look like the end of the run.
 
-Agrypnos can't tell whether a model is "thinking". It only sees processes and files, so pick a wait after agent signals stop that fits how your agents work.
+Agrypnos can't tell whether a model is "thinking". It only sees processes and files, so pick a wait after agent signals stop that fits how your agents work. While a model writes a long reply, Claude Code writes nothing to its session file and uses little CPU until the reply is done. A reply that takes longer than about 45 seconds plus your wait ends Keep awake mid-turn, so raise the wait if your agents write long replies.
 
 > [!TIP]
 > Terminal session files don't count as busy by default, so a terminal left open can't hold the Mac awake on its own. Some agents run commands like tests in a terminal and go quiet while they wait for it. Turn on **Count terminal sessions as busy** in **Agents** if you want that terminal to count.
@@ -334,9 +334,9 @@ OpenCode and Claude Code forwarding needs one complete bot from the steps above:
 
 1. Check **OpenCode** under **Agents**.
 2. In **Notif → Question notifications**, click **Enable OpenCode forwarding**. This also turns on **Forward agent questions**.
-3. Restart OpenCode once. The card shows a connected terminal count when forwarding is live.
+3. Restart OpenCode once. The card shows the OpenCode version and a connected terminal count when forwarding is live.
 
-Setup installs a small plugin, `agrypnos-opencode.js`, in `~/.config/opencode` (or `$XDG_CONFIG_HOME/opencode`) and registers it in `tui.json`. Your other OpenCode settings stay as they are, and `tui.jsonc` isn't touched. If setup finds a symlink, a plugin file you edited, or a `tui.json` it can't safely change, it stops and tells you why instead of overwriting anything. This covers OpenCode 1.18.32 in the terminal. It doesn't set up the OpenCode desktop app.
+Setup installs a small plugin, `agrypnos-opencode.js`, in `~/.config/opencode` (or `$XDG_CONFIG_HOME/opencode`) and registers it in `tui.json`. Your other OpenCode settings stay as they are, and `tui.jsonc` isn't touched. If setup finds a symlink, a plugin file you edited, or a `tui.json` it can't safely change, it stops and tells you why instead of overwriting anything. This covers OpenCode 1.18.32 or newer in the terminal. It doesn't set up the OpenCode desktop app.
 
 The plugin talks to Agrypnos over a private Unix socket. There's no network port, server address, or password to enter.
 
@@ -386,7 +386,7 @@ Everything is in the popover, one section at a time.
 
 | Section | What's in it |
 |---|---|
-| **Watch** | Keep awake, How long (`∞`, `1h`, `3h`, custom minutes, **Agents**) with the time left on a timer, Auto-on when tools look busy (**Agents** only), and when Keep awake last ended |
+| **Watch** | Keep awake, How long (`∞`, `1h`, `3h`, custom minutes, **Agents**, the default) with the time left on a timer, Auto-on when tools look busy (**Agents** only), and when Keep awake last ended |
 | **Power** | Sleep panel (default) or Dim panel, keyboard backlight off, brightness floor (Dim panel only), low-battery auto-off, brightness return time (Dim panel only), thermal auto-off |
 | **Agents** | Which tools count as busy (at least one), wait after agent signals stop (1m 30s–10m), count terminal sessions as busy |
 | **Notif** | Setup instructions, Watch-end POST, Discord (token, channel, user id, Discord inbound), Telegram (token, chat id, user id, Telegram inbound), Question notifications (BETA), Clear secrets |
@@ -400,6 +400,33 @@ Everything is in the popover, one section at a time.
 - Claim power savings nobody measured.
 - Upload your transcripts or run a shared bot. Question forwarding, if you turn it on, sends the question and its options to your own bot.
 - Report what your agent is doing or when it will finish. `/status` only reports what Agrypnos can see.
+
+## Uninstall
+
+1. If you turned on question forwarding, open **Notif → Question notifications** and click **Disable** for Claude Code and Codex, and **Remove integration** for OpenCode. Each removes only Agrypnos's own hook or plugin.
+2. In **General**, turn off **Launch at login**, then click **Quit Agrypnos**. Quitting turns Keep awake off.
+3. Turn lid-close sleep back on, then remove the sudoers rule. Run them in this order: once the rule is gone, Agrypnos can no longer clear the setting for you.
+
+   ```bash
+   sudo /usr/bin/pmset -a disablesleep 0
+   ```
+
+   ```bash
+   sudo rm /etc/sudoers.d/agrypnos-disablesleep
+   ```
+
+   From a clone of this repo, `./Scripts/ungrant.sh` does both.
+4. Delete `Agrypnos.app`, then its data folder, which holds your bot secrets:
+
+   ```bash
+   rm -rf ~/Library/Application\ Support/Agrypnos
+   ```
+
+   ```bash
+   defaults delete app.agrypnos.Agrypnos
+   ```
+
+If the Mac won't sleep with the lid closed after this, run `sudo /usr/bin/pmset -a disablesleep 0` again. A reboot also clears it.
 
 ## Development
 

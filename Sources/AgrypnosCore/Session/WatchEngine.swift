@@ -26,6 +26,8 @@ public struct WatchEngine: Equatable, Sendable {
     /// This watch was turned on by Auto-on, not by the user.
     public private(set) var autoArmed = false
     public private(set) var autoArmGate = AutoArmGate()
+    /// The last watch end sends no bot message: Auto-on turned it on and the lid was not confirmed closed.
+    public private(set) var lastEndQuiet = false
     var lastWatchEndRollback: LastWatchEnd?
     private var timerEndRollback: Date?
     private var userForcedRollback = false
@@ -362,8 +364,11 @@ public struct WatchEngine: Equatable, Sendable {
 
     mutating func disengage(_ reason: DisengageReason, at now: Date) -> [WatchCommand] {
         let wasEngaged = engaged
+        // Human decision 2026-11-06: an Auto-on watch ending with the lid open messages nobody.
+        let quiet = wasEngaged && autoArmed && !lidCloseConfirmed
+        lastEndQuiet = quiet
         // Capture before reset: settled already requires sawBusy; keep that honesty.
-        let postWatchEnd = wasEngaged && !postedThisUserArm && (
+        let postWatchEnd = wasEngaged && !postedThisUserArm && !quiet && (
             NotifIdlePostPolicy.shouldPost(enabled: preferences.notifEnabled, reason: reason, sawBusy: settle.sawBusy)
             || (preferences.notifEnabled && reason == .timerExpired)
         )

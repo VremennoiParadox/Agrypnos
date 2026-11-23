@@ -7,7 +7,7 @@ import AgrypnosCore
 
 extension WatchRuntime {
     @discardableResult
-    func armKernel(allowInstall: Bool = true, grantMissingNote: String = AgrypnosCopy.grantNeeded) -> Bool {
+    func armKernel(allowInstall: Bool = true, grantMissingNote: String = AgrypnosCopy.grantMissing) -> Bool {
         var result = setKernel(true)
         if result == .grantMissing, allowInstall {
             if GrantInstaller.installViaNativeAuth() {

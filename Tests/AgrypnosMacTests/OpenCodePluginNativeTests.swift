@@ -7,7 +7,7 @@ import AgrypnosCore
 final class OpenCodePluginNativeTests: XCTestCase {
     func testProductionPluginRepliesThroughRealSocketToOriginalOpenCodeChat() async throws {
         guard FileManager.default.isExecutableFile(atPath: "/opt/homebrew/bin/opencode") else {
-            throw XCTSkip("OpenCode 1.18.32 native smoke needs the installed binary")
+            throw XCTSkip("OpenCode native smoke needs the installed binary (1.18.32 or newer)")
         }
         let repo = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let root = URL(fileURLWithPath: "/private/tmp/ag-native-" + UUID().uuidString)

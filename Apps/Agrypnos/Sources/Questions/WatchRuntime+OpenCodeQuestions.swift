@@ -16,7 +16,10 @@ extension WatchRuntime {
         }
         if preferences.openCodePluginEnabled {
             let count = openCodePluginSource?.connectedCount ?? 0
-            if count > 0 { return "OpenCode 1.18.32: connected (\(count) terminal\(count == 1 ? "" : "s"))." }
+            if count > 0 {
+                let versions = openCodePluginSource?.connectedVersions.joined(separator: ", ") ?? ""
+                return "OpenCode \(versions): connected (\(count) terminal\(count == 1 ? "" : "s"))."
+            }
             return "OpenCode: installed, waiting. Restart OpenCode once to load forwarding."
         }
         return "OpenCode: forwarding is not installed."

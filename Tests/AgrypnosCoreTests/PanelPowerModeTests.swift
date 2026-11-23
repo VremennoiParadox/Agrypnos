@@ -201,7 +201,7 @@ final class PanelPowerWatchEngineTests: XCTestCase {
         XCTAssertFalse(commands.contains(.applyBrightnessFloor))
         XCTAssertFalse(commands.contains(.requestSleep))
         XCTAssertTrue(engine.engaged)
-        XCTAssertEqual(engine.preferences.duration, .indefinite)
+        XCTAssertEqual(engine.preferences.duration, UserPreferences.default.duration)
         XCTAssertTrue(engine.lidHygieneApplied)
     }
 
@@ -281,7 +281,7 @@ final class PanelPowerWatchEngineTests: XCTestCase {
             [.disengage(.batteryFloor), .requestSleep]
         )
         XCTAssertFalse(engine.engaged)
-        XCTAssertEqual(engine.preferences.duration, .indefinite)
+        XCTAssertEqual(engine.preferences.duration, UserPreferences.default.duration)
     }
 
     func testPowerBDisengageWithLidClosedDoesNotWakeDisplay() {

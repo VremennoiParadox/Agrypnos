@@ -15,7 +15,7 @@ public enum AgrypnosCopy: Sendable {
         "Dim panel: when the lid closes, brightness drops to this percent."
     public static let settleGrace = "Wait after agent signals stop"
     public static let settleGraceHelp =
-        "How long to wait after local busy signals stop before Keep awake turns off. A quiet gap mid-run, with no file writes or CPU use, can look finished, so this wait keeps it from ending early. Agrypnos sees only local process and session activity, not what an agent is doing."
+        "How long to wait after local busy signals stop before Keep awake turns off. A quiet gap mid-run, with no file writes or CPU use, can look finished, so this wait keeps it from ending early. Agrypnos sees only local process and session activity, not what an agent is doing. A long model reply writes nothing until it ends, so raise this wait if Keep awake turns off mid-reply."
     public static let agentInclude = "Which tools count as busy."
     public static let countTerminalSessions = "Count terminal sessions as busy"
     public static let countTerminalSessionsHelp =
@@ -37,9 +37,9 @@ public enum AgrypnosCopy: Sendable {
     public static let agentsHint =
         "Keep awake turns off when the wait after agent signals stop ends (battery / thermal still apply)."
     public static let timedHint =
-        "Sends the Mac to sleep by the end of the timer unless the lid is open."
+        "When the timer ends, Keep awake turns off and Agrypnos sends the Mac to sleep unless the lid is open."
     public static let userOffSleepHint =
-        "Turning Keep awake off with the lid confirmed closed sends the Mac to sleep. With the lid open or unconfirmed it turns Keep awake off and does not sleep the Mac."
+        "Turning Keep awake off with the lid confirmed closed sends the Mac to sleep. With the lid open it turns Keep awake off and does not sleep the Mac."
     // User-armed watches do not auto-off on Low Power Mode, so it is not listed here.
     public static let indefiniteHint =
         "Stays on until you turn it off (battery / thermal still apply)."
@@ -60,6 +60,8 @@ public enum AgrypnosCopy: Sendable {
 
     public static let captionOff = ""
     public static let grantNeeded = "The lid-close grant isn’t installed yet. macOS will ask once."
+    /// After "Not now" or a failed install.
+    public static let grantMissing = "Keep awake stays off: it needs the lid-close grant. Turn Keep awake on again to install it."
     public static let timerEnded = "Timer ended. Keep awake turned off."
     public static let batteryEnded = "Low battery. Keep awake turned off."
     public static let thermalEnded = "Thermal pressure. Keep awake turned off."
@@ -201,6 +203,8 @@ public enum AgrypnosCopy: Sendable {
     public static let notifTelegramToken = "Telegram bot token"
     public static let notifTelegramChatId = "Telegram chat id"
     public static let notifTelegramUserId = "Telegram user id"
+    /// Visible caption beside a user id field. The card title names the bot; VoiceOver keeps the long name.
+    public static let notifUserIdShort = "User id"
     public static let notifTelegram = "Telegram"
     public static let notifTelegramTokenShort = "Token"
     public static let notifTelegramChatShort = "Chat id"

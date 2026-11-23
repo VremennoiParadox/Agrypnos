@@ -213,7 +213,7 @@ final class TelegramInboundWatchEngineTests: XCTestCase {
         XCTAssertTrue(arm.contains(.engage))
         XCTAssertFalse(arm.contains(.applyBrightnessFloor))
         XCTAssertFalse(arm.contains(.requestKeyboardBacklightOff))
-        XCTAssertEqual(engine.preferences.duration, .indefinite)
+        XCTAssertEqual(engine.preferences.duration, UserPreferences.default.duration)
 
         let again = engine.applyTelegramInbound(.arm, now: t0.addingTimeInterval(1))
         XCTAssertTrue(engine.engaged)
@@ -223,7 +223,7 @@ final class TelegramInboundWatchEngineTests: XCTestCase {
         let disarm = engine.applyTelegramInbound(.disarm, now: t0.addingTimeInterval(2))
         XCTAssertFalse(engine.engaged)
         XCTAssertEqual(disarm, [.disengage(.user)])
-        XCTAssertEqual(engine.preferences.duration, .indefinite)
+        XCTAssertEqual(engine.preferences.duration, UserPreferences.default.duration)
 
         let idle = engine.applyTelegramInbound(.disarm, now: t0.addingTimeInterval(3))
         XCTAssertFalse(engine.engaged)
@@ -247,7 +247,7 @@ final class TelegramInboundWatchEngineTests: XCTestCase {
         let commands = engine.applyTelegramInbound(.status, now: t0.addingTimeInterval(1))
         XCTAssertTrue(commands.isEmpty)
         XCTAssertTrue(engine.engaged)
-        XCTAssertEqual(engine.preferences.duration, .indefinite)
+        XCTAssertEqual(engine.preferences.duration, UserPreferences.default.duration)
     }
 
     func testIgnoreDoesNotMutateTheWatch() {

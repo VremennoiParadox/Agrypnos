@@ -328,7 +328,7 @@ final class DiscordInboundWatchEngineTests: XCTestCase {
         XCTAssertTrue(engine.applyInbound(.help, now: t0.addingTimeInterval(2)).isEmpty)
         XCTAssertTrue(engine.applyInbound(.ignore, now: t0.addingTimeInterval(3)).isEmpty)
         XCTAssertTrue(engine.engaged)
-        XCTAssertEqual(engine.preferences.duration, .indefinite)
+        XCTAssertEqual(engine.preferences.duration, UserPreferences.default.duration)
     }
 
     func testShouldSetEngagedIsShared() {

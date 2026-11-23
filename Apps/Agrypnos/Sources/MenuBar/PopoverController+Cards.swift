@@ -285,7 +285,7 @@ extension PopoverController {
             color: .secondaryLabelColor,
             lines: PopoverCopyLayout.durationHintMaxLines
         )
-        durationHint.frame = NSRect(x: ci, y: 68, width: cw, height: PopoverMetrics.durationHintHeight)
+        durationHint.frame = NSRect(x: ci, y: CGFloat(PopoverStackLayout.durationHintY), width: cw, height: PopoverMetrics.durationHintHeight)
         durationHint.preferredMaxLayoutWidth = cw
         card.addSubview(durationHint)
         countdownLabel = LabelFactory.make("", font: .monospacedDigitSystemFont(ofSize: 13, weight: .medium), color: .labelColor)
@@ -346,7 +346,7 @@ extension PopoverController {
         swW: CGFloat,
         swH: CGFloat
     ) {
-        addPrefTitle(AgrypnosCopy.thermalAutoOff, in: card, ci: ci, width: cw)
+        addPrefTitle(AgrypnosCopy.thermalAutoOff, in: card, ci: ci, width: cw - swW - 8)
         _ = PopoverForm.help(
             AgrypnosCopy.thermalAutoOffHelp,
             in: card,
@@ -356,7 +356,7 @@ extension PopoverController {
         )
         thermalSwitch = PopoverForm.switchControl(
             in: card,
-            y: CGFloat(PopoverStackLayout.prefControlY),
+            y: CGFloat(PopoverStackLayout.titleSwitchY),
             contentW: contentW,
             ci: ci,
             swW: swW,
@@ -376,7 +376,7 @@ extension PopoverController {
         swW: CGFloat,
         swH: CGFloat
     ) {
-        addPrefTitle(AgrypnosCopy.countTerminalSessions, in: card, ci: ci, width: cw)
+        addPrefTitle(AgrypnosCopy.countTerminalSessions, in: card, ci: ci, width: cw - swW - 8)
         _ = PopoverForm.help(
             AgrypnosCopy.countTerminalSessionsHelp,
             in: card,
@@ -387,7 +387,7 @@ extension PopoverController {
         )
         terminalBusySwitch = PopoverForm.switchControl(
             in: card,
-            y: CGFloat(PopoverStackLayout.terminalBusyControlY),
+            y: CGFloat(PopoverStackLayout.titleSwitchY),
             contentW: contentW,
             ci: ci,
             swW: swW,

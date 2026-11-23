@@ -1,8 +1,21 @@
 import AppKit
 
+#if canImport(AgrypnosCore)
+import AgrypnosCore
+#endif
+
 enum AgrypnosPalette {
     static let indigo = NSColor(srgbRed: 0.42, green: 0.38, blue: 0.92, alpha: 1)
     static let gold = NSColor(srgbRed: 0.90, green: 0.74, blue: 0.38, alpha: 1)
+
+    /// Armed eye color by How long: blue ∞, purple Agents, gold for a timer.
+    static func armed(_ duration: DurationOption) -> NSColor {
+        switch duration {
+        case .indefinite: return .systemBlue
+        case .untilAgentsSettle: return .systemPurple
+        case .oneHour, .threeHours, .custom: return gold
+        }
+    }
 }
 
 final class FlippedView: NSView {
@@ -116,5 +129,27 @@ enum LabelFactory {
             cell.truncatesLastVisibleLine = false
         }
         return field
+    }
+}
+
+/// Real wrapped line count for a 12pt help label at the card's inner width.
+@MainActor
+enum PopoverTextMeasure {
+    private static let font = NSFont.systemFont(ofSize: 12)
+    private static let lineHeight = NSLayoutManager().defaultLineHeight(for: font)
+    private static let probe: NSTextField = {
+        let field = NSTextField(wrappingLabelWithString: "")
+        field.font = font
+        return field
+    }()
+
+    nonisolated static func lines(_ text: String) -> Int {
+        MainActor.assumeIsolated {
+            probe.stringValue = text
+            let width = CGFloat(PopoverStackLayout.width - 2 * (PopoverStackLayout.pad + PopoverStackLayout.inset))
+            let bounds = NSRect(x: 0, y: 0, width: width, height: .greatestFiniteMagnitude)
+            let height = probe.cell?.cellSize(forBounds: bounds).height ?? 0
+            return max(Int((height / lineHeight).rounded()), 1)
+        }
     }
 }

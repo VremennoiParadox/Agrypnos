@@ -61,6 +61,7 @@ final class CodexAlertHookProcessTests: XCTestCase {
         )
         runtime.disableCodexAlerts()
         XCTAssertFalse(runtime.preferences.codexAlertEnabled)
+        XCTAssertEqual(runtime.codexAlertCaption, "Codex: alerts off.")
         let after = String(data: try Data(contentsOf: hooks), encoding: .utf8)!
         XCTAssertTrue(after.contains("UserPromptSubmit"))
         XCTAssertTrue(after.contains("Stop"))

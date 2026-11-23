@@ -129,7 +129,7 @@ private final class OpenCodeSocketWorker {
                     if !client.authenticated {
                         guard case let .hello(version, token, _, generation, host, _, _) = message,
                               version == 1, token == configuration.token,
-                              generation == configuration.generation, host == "1.18.32" else { disconnect(client.id); return }
+                              generation == configuration.generation, OpenCodeHostVersion.isSupported(host) else { disconnect(client.id); return }
                         client.authenticated = true
                         _ = enqueue(try OpenCodeBridgeMessage.ready(generation: generation).encodedFrame(), to: client.id)
                     } else if case .hello = message { disconnect(client.id); return }

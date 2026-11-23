@@ -6,7 +6,7 @@ import AgrypnosCore
 
 extension PopoverController {
     func addAutoArmCard(_ card: CardView, contentW: CGFloat, ci: CGFloat, cw: CGFloat, swW: CGFloat, swH: CGFloat) {
-        addPrefTitle(AgrypnosCopy.autoArm, in: card, ci: ci, width: cw)
+        addPrefTitle(AgrypnosCopy.autoArm, in: card, ci: ci, width: cw - swW - 8)
         _ = PopoverForm.help(
             AgrypnosCopy.autoArmHelp,
             in: card,
@@ -17,7 +17,7 @@ extension PopoverController {
         )
         autoArmSwitch = PopoverForm.switchControl(
             in: card,
-            y: CGFloat(PopoverStackLayout.autoArmControlY),
+            y: CGFloat(PopoverStackLayout.titleSwitchY),
             contentW: contentW,
             ci: ci,
             swW: swW,

@@ -130,7 +130,8 @@ final class AgrypnosCopyTests: XCTestCase {
     }
 
     func testDurationHintsArePlainAndFitTheDurationCard() {
-        let lid = "Turning Keep awake off with the lid confirmed closed sends the Mac to sleep. With the lid open or unconfirmed it turns Keep awake off and does not sleep the Mac."
+        let lid = "Turning Keep awake off with the lid confirmed closed sends the Mac to sleep. With the lid open it turns Keep awake off and does not sleep the Mac."
+        XCTAssertEqual(AgrypnosCopy.timedHint, "When the timer ends, Keep awake turns off and Agrypnos sends the Mac to sleep unless the lid is open.")
         func withLid(_ base: String) -> String { base + " " + lid }
         XCTAssertEqual(
             AgrypnosCopy.agentsHint,
@@ -365,7 +366,7 @@ final class AgrypnosCopyTests: XCTestCase {
         XCTAssertEqual(AgrypnosCopy.settleGrace, "Wait after agent signals stop")
         XCTAssertEqual(
             AgrypnosCopy.settleGraceHelp,
-            "How long to wait after local busy signals stop before Keep awake turns off. A quiet gap mid-run, with no file writes or CPU use, can look finished, so this wait keeps it from ending early. Agrypnos sees only local process and session activity, not what an agent is doing."
+            "How long to wait after local busy signals stop before Keep awake turns off. A quiet gap mid-run, with no file writes or CPU use, can look finished, so this wait keeps it from ending early. Agrypnos sees only local process and session activity, not what an agent is doing. A long model reply writes nothing until it ends, so raise this wait if Keep awake turns off mid-reply."
         )
         XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("local busy signals"))
         XCTAssertTrue(AgrypnosCopy.settleGraceHelp.lowercased().contains("keep awake"))

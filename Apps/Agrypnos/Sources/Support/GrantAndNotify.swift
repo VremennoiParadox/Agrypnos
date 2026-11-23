@@ -1,18 +1,34 @@
 import AppKit
+import UserNotifications
 
 #if canImport(AgrypnosCore)
 import AgrypnosCore
 #endif
 
+/// Local Mac banners, shown as Agrypnos. Not the Notif path: bots stay the only Notif channel.
 enum UserNotify {
+    /// Asks once. A denied permission leaves banners off; the popover still shows state.
+    static func requestPermission() {
+        center?.requestAuthorization(options: [.alert, .sound]) { _, _ in }
+    }
+
     static func post(_ message: String) {
-        let escaped = message
-            .replacingOccurrences(of: "\\", with: "\\\\")
-            .replacingOccurrences(of: "\"", with: "\\\"")
-        _ = ProcessRunner.run("/usr/bin/osascript", [
-            "-e",
-            "display notification \"\(escaped)\" with title \"Agrypnos\" sound name \"Tink\"",
-        ])
+        guard let center else { return }
+        let content = UNMutableNotificationContent()
+        content.title = AgrypnosCopy.appName
+        content.body = message
+        content.sound = .default
+        // Wait briefly so a banner posted right before quit still reaches the system.
+        let delivered = DispatchSemaphore(value: 0)
+        center.add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)) { _ in
+            delivered.signal()
+        }
+        _ = delivered.wait(timeout: .now() + 1)
+    }
+
+    /// The notification center needs a real app bundle. Test runners and command-line hosts have none.
+    private static var center: UNUserNotificationCenter? {
+        Bundle.main.bundleURL.pathExtension == "app" ? .current() : nil
     }
 
     static func post(reason: DisengageReason) {
@@ -43,13 +59,14 @@ enum GrantInstaller {
         let intro = NSAlert()
         intro.alertStyle = .informational
         intro.messageText = "Let Agrypnos keep awake"
-        intro.informativeText = AgrypnosCopy.grantNeeded + " The grant is two exact pmset disablesleep commands. See SECURITY.md."
+        intro.informativeText = AgrypnosCopy.grantNeeded + " The grant is two exact pmset disablesleep commands. Details are in SECURITY.md on GitHub."
         intro.addButton(withTitle: "Enable")
         intro.addButton(withTitle: "Not now")
         NSApp.activate(ignoringOtherApps: true)
         guard intro.runModal() == .alertFirstButtonReturn else { return false }
 
-        let result = ProcessRunner.run("/usr/bin/osascript", ["-e", osa], timeout: 120)
+        // Room for a slow password entry; the system dialog closes if this times out.
+        let result = ProcessRunner.run("/usr/bin/osascript", ["-e", osa], timeout: 300)
         return result.exit == 0
     }
 }
