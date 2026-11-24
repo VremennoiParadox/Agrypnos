@@ -107,6 +107,7 @@ final class PopoverController: NSObject, NSTextFieldDelegate {
     var loginCard: CardView!
     var shortcutLabel: NSTextField!
     var quitButton: NSButton!
+    var donateButton: NSButton!
     var currentSection: PopoverSection = .default
     var sectionMotion = 0
     var watchCaptionShown = false

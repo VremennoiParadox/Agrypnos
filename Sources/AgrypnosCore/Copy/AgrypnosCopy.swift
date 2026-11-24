@@ -34,6 +34,9 @@ public enum AgrypnosCopy: Sendable {
         "High temperature turns Keep awake off and sends the Mac to sleep."
     public static let launchAtLogin = "Launch at login"
     public static let quit = "Quit Agrypnos"
+    public static let donate = "Donate"
+    public static let donateHelp = "Opens GitHub Sponsors in your browser."
+    public static let donateURL = URL(string: "https://github.com/sponsors/VremennoiParadox/")!
     public static let agentsHint =
         "Keep awake turns off when the wait after agent signals stop ends (battery / thermal still apply)."
     public static let timedHint =

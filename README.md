@@ -390,7 +390,7 @@ Everything is in the popover, one section at a time.
 | **Power** | Sleep panel (default) or Dim panel, keyboard backlight off, brightness floor (Dim panel only), low-battery auto-off, brightness return time (Dim panel only), thermal auto-off |
 | **Agents** | Which tools count as busy (at least one), wait after agent signals stop (1m 30s–10m), count terminal sessions as busy |
 | **Notif** | Setup instructions, Watch-end POST, Discord (token, channel, user id, Discord inbound), Telegram (token, chat id, user id, Telegram inbound), Question notifications (BETA), Clear secrets |
-| **General** | Launch at login, global shortcut (default `⌥⌘A`, remappable), quit |
+| **General** | Launch at login, global shortcut (default `⌥⌘A`, remappable), Donate (opens GitHub Sponsors in your browser), quit |
 
 ## What it won't do
 

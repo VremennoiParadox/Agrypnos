@@ -50,7 +50,8 @@ final class ProcessDescendantTests: XCTestCase {
     func testTerminatingLeaderDoesNotLeaveIgnoringDescendantRunning() throws {
         let pidFile = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: pidFile) }
-        let result = ProcessRunner.run("/bin/sh", ["-c", "(trap '' TERM; exec /bin/sleep 5) & echo $! > \"$1\"; wait", "test", pidFile.path], timeout: 0.1)
+        // The shell must write the pid file before the deadline; 0.1s was too short on loaded CI runners.
+        let result = ProcessRunner.run("/bin/sh", ["-c", "(trap '' TERM; exec /bin/sleep 5) & echo $! > \"$1\"; wait", "test", pidFile.path], timeout: 1)
         XCTAssertNotEqual(result.exit, 0)
         let pid = try XCTUnwrap(Int32(try String(contentsOf: pidFile).trimmingCharacters(in: .whitespacesAndNewlines)))
         defer { _ = kill(pid, SIGKILL) }

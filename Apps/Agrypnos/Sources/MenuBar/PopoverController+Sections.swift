@@ -158,6 +158,7 @@ extension PopoverController {
         recorder.button.autoresizingMask = []
         hotkeyHint.autoresizingMask = []
         quitButton.autoresizingMask = []
+        donateButton.autoresizingMask = []
         if let y = layout.shortcutY, let hint = layout.hotkeyHint {
             shortcutLabel.isHidden = false
             shortcutLabel.frame.origin.y = CGFloat(y)
@@ -180,8 +181,11 @@ extension PopoverController {
         if let y = layout.quitY {
             quitButton.isHidden = false
             quitButton.frame.origin.y = CGFloat(y)
+            donateButton.isHidden = false
+            donateButton.frame.origin.y = CGFloat(y)
         } else {
             quitButton.isHidden = true
+            donateButton.isHidden = true
         }
     }
 }
