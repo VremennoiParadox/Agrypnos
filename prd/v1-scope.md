@@ -8,7 +8,7 @@ A human closes a MacBook lid overnight while Cursor / Claude Code / Codex work. 
 
 ## Personality
 
-Playful with the user, professional in the mechanism. Greek *agrypnos* = sleepless. Eye / night-watch, not a coffee cup. Not a Sleepless clone.
+Playful with the user, professional in the mechanism. Greek *agrypnos* = sleepless. Eye / night-watch, not a coffee cup.
 
 ## Acceptance (map to tests where noted)
 

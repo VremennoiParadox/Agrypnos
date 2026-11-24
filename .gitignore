@@ -23,3 +23,6 @@ Apps/Agrypnos/build/
 
 # README demo master renders stay local; the README uses the WebPs.
 docs/readme/*.mp4
+
+# Maintainer rules; stays on the maintainer's Mac.
+AGENTS.local.md

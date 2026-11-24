@@ -16,7 +16,7 @@ See `AGENTS.md` and `prd/v1-scope.md`. Files stay well under 600 lines.
 
 ## Not chosen
 
-- Cloning Sleepless’s one-file AppKit app (god object, coffee cup). Layout rhythm (cards, timer, battery slider) is the reference; code and personality are original.
+- A one-file AppKit app (god object) or a coffee-cup look. Code and personality are original.
 - Claiming watt numbers.
 - Every agent provider.
 - Sandboxed App Store build (process scan + IOKit + home-directory session files).
