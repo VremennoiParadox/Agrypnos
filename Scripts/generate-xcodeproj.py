@@ -267,7 +267,7 @@ common_tgt = f"""
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = app.agrypnos.Agrypnos;
 				PRODUCT_NAME = Agrypnos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
