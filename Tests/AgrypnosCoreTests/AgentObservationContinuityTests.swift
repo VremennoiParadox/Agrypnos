@@ -66,6 +66,8 @@ final class AgentObservationContinuityTests: XCTestCase {
             (SafetyInputs(batteryPercent: 90, onBatteryDischarging: false, thermalSerious: true, lowPowerMode: false), .thermal)
         ] {
             var engine = armed()
+            // Thermal must hold for a minute before it ends the watch.
+            if safety.thermalSerious { _ = engine.tick(now: t0.addingTimeInterval(3540), safety: safety, agents: idle) }
             XCTAssertEqual(engine.tick(now: t0.addingTimeInterval(3600), safety: safety, agents: idle), [.disengage(reason)])
             XCTAssertFalse(engine.engaged)
         }

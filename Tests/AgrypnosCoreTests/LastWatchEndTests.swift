@@ -94,6 +94,8 @@ final class LastWatchEndTests: XCTestCase {
             _ = engine.userSetEngaged(true, now: t0)
             if busyFirst { _ = engine.tick(now: t0, safety: .acPower, agents: .busy) }
             observeHealthyIdle(&engine, before: t0.addingTimeInterval(wait))
+            // Thermal must hold for a minute before it ends the watch.
+            if safety.thermalSerious { _ = engine.tick(now: t0.addingTimeInterval(wait - 60), safety: safety, agents: .idle) }
             _ = engine.tick(now: t0.addingTimeInterval(wait), safety: safety, agents: .idle)
             return engine
         }
@@ -109,7 +111,7 @@ final class LastWatchEndTests: XCTestCase {
         let battery = record(.indefinite, safety: SafetyInputs(batteryPercent: 12, onBatteryDischarging: true, thermalSerious: false, lowPowerMode: false), wait: 1)
         XCTAssertEqual(battery.preferences.lastWatchEnd?.reason, .batteryFloor)
 
-        let thermal = record(.indefinite, safety: SafetyInputs(batteryPercent: 90, onBatteryDischarging: false, thermalSerious: true, lowPowerMode: false), wait: 1)
+        let thermal = record(.indefinite, safety: SafetyInputs(batteryPercent: 90, onBatteryDischarging: false, thermalSerious: true, lowPowerMode: false), wait: 61)
         XCTAssertEqual(thermal.preferences.lastWatchEnd?.reason, .thermal)
 
         let agents = record(.untilAgentsSettle, safety: .acPower, wait: 120, busyFirst: true)

@@ -300,9 +300,11 @@ final class NotifWatchEngineTests: XCTestCase {
 
         var thermal = WatchEngine(preferences: prefs)
         _ = thermal.userSetEngaged(true, now: t0)
+        let hot = SafetyInputs(batteryPercent: 90, onBatteryDischarging: false, thermalSerious: true, lowPowerMode: false)
+        XCTAssertTrue(thermal.tick(now: t0.addingTimeInterval(1), safety: hot, agents: .idle).isEmpty)
         XCTAssertEqual(
             thermal.tick(
-                now: t0.addingTimeInterval(1),
+                now: t0.addingTimeInterval(61),
                 safety: SafetyInputs(
                     batteryPercent: 90,
                     onBatteryDischarging: false,
