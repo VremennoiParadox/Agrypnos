@@ -313,7 +313,7 @@ extension WatchRuntime {
                   !self.engine.engaged else { return }
             _ = lid.sample(self.readLid() == true, now: Date())
             let canSleep = shouldSleep && lid.confirmedClosed
-            let final = canSleep ? self.apply([.requestSleep]) : result
+            let final = canSleep ? self.apply([.disengage(.questionUnanswered), .requestSleep]) : result
             self.finishDisengageHygiene(sleepResult: final)
             self.questionSleepTask = nil
             self.delegate?.watchRuntimeDidChange(self)

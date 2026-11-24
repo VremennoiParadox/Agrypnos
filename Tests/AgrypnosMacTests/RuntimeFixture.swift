@@ -17,6 +17,8 @@ final class RuntimeFixture {
     var sleepRequests = 0
     var sleepExit: Int32 = 0
     var panelSleepRequests = 0
+    var secondsSinceInput: TimeInterval?
+    var externalDisplay = false
     var messages: [String] = []
     var postContinuation: CheckedContinuation<Void, Never>?
     var questionUptime: TimeInterval = 0
@@ -56,6 +58,8 @@ final class RuntimeFixture {
             readNotifSecrets: { [unowned self] in self.notifSecrets }
         )
         runtime.questionUptime = { [unowned self] in self.questionUptime }
+        runtime.userPresence = UserPresence(secondsSinceInput: { [unowned self] in self.secondsSinceInput },
+                                            externalDisplayOnline: { [unowned self] in self.externalDisplay })
         runtime.hygieneDevices = HygieneDevices(canSetBrightness: { true }, brightness: { nil },
             setBrightness: { _ in }, keyboard: { nil }, setKeyboard: { _ in }, wakeDisplay: {})
         runtime.engine.preferences.notifEnabled = true

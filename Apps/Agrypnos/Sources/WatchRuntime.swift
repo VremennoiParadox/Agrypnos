@@ -63,6 +63,7 @@ final class WatchRuntime {
     var wakeRestorePending = false
     var savedKeyboard: Double?
     var hygieneDevices = HygieneDevices()
+    var userPresence = UserPresence()
     var hygieneEffects = HygieneEffects()
     let brightnessRamp = BrightnessRampController()
     var lidTimer: Timer?
@@ -485,6 +486,7 @@ final class WatchRuntime {
             savedKeyboard: &savedKeyboard,
             ramp: brightnessRamp,
             devices: hygieneDevices,
+            presence: userPresence,
             readLid: readLid,
             runCommand: runCommand
         )
