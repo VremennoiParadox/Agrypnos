@@ -33,6 +33,10 @@ final class ClaudeQuestionHookSource {
         guard client >= 0 else { return }
         var uid = uid_t(), gid = gid_t()
         guard getpeereid(client, &uid, &gid) == 0, uid == getuid() else { close(client); return }
+        // Claude Code can kill the hook before the answer lands. A write to that closed socket
+        // must fail, not end the app (the crash helper would drop the wake hold).
+        var enabled: Int32 = 1
+        _ = setsockopt(client, SOL_SOCKET, SO_NOSIGPIPE, &enabled, socklen_t(MemoryLayout<Int32>.size))
         Task { @MainActor in await self.serve(client) }
     }
     private func serve(_ fd: Int32) async {
