@@ -2,7 +2,7 @@
   <img src="docs/readme/agrypnos-eye.png" width="240" alt="Agrypnos icon">
   <h1>Agrypnos</h1>
   <p><b>Close the lid. Your coding agents keep working.</b></p>
-  <p>A small macOS menu-bar app that keeps your Mac awake with the lid shut while your agents run, and lets it sleep again when the wait after agent signals stop ends, or when you say so.</p>
+  <p>A small macOS menu-bar app that keeps your Mac awake with the lid shut while your agents run, and lets it sleep again once their activity has stopped for a wait you set, or when you say so.</p>
   <p>
     <a href="https://github.com/VremennoiParadox/Agrypnos/actions/workflows/core.yml"><img src="https://github.com/VremennoiParadox/Agrypnos/actions/workflows/core.yml/badge.svg" alt="Core tests"></a>
     <img src="https://img.shields.io/badge/macOS-14%2B-black?logo=apple" alt="macOS 14+">
@@ -54,14 +54,11 @@ The usual keep-awake tricks don't help here. Power assertions (what `caffeinate`
 
 ## Install
 
-There's no signed download yet, so you build it yourself. You need macOS 14 or later and Xcode.
+You need macOS 14 or later.
 
-```bash
-git clone https://github.com/VremennoiParadox/Agrypnos.git
-cd Agrypnos
-./Scripts/build-macos.sh
-open dist/Agrypnos.app
-```
+1. Download [Agrypnos.dmg](https://github.com/VremennoiParadox/Agrypnos/releases/latest/download/Agrypnos.dmg) from the [latest release](https://github.com/VremennoiParadox/Agrypnos/releases/latest).
+2. Open it and drag **Agrypnos** into **Applications**.
+3. Open Agrypnos from **Applications**. Run it from there, not from the disk image: the Claude Code and Codex hooks remember where the app is.
 
 An eye appears in the menu bar. That's Agrypnos. It has no Dock icon and no settings window. Everything lives in the menu-bar popover.
 
@@ -73,6 +70,17 @@ The first time you turn Keep awake on, Agrypnos asks to install a small sudoers 
 ```
 
 macOS asks for your password once. To remove it later, see [Uninstall](#uninstall).
+
+### Build from source
+
+You need Xcode.
+
+```bash
+git clone https://github.com/VremennoiParadox/Agrypnos.git
+cd Agrypnos
+./Scripts/build-macos.sh
+open dist/Agrypnos.app
+```
 
 ## Quick start
 
@@ -147,10 +155,10 @@ Agrypnos can't tell whether a model is "thinking". It only sees processes, files
 - **Wait after agent signals stop ended.** Only when How long is **Agents**.
 - **Low battery.** On battery, at the level you set (15% by default, 5–100%).
 - **Thermal pressure.** When macOS reports a serious or critical thermal state for a minute. You can turn this off in **Power**.
-- **Low Power Mode.** On battery with Low Power Mode on, Keep awake that Agrypnos took over at launch (see below) turns off. Keep awake you turned on yourself, from the popover, the hotkey, or `/arm`, stays on.
+- **Low Power Mode.** On battery with Low Power Mode on, Keep awake that Auto-on turned on, or that Agrypnos took over at launch (see below), turns off. Keep awake you turned on yourself, from the popover, the hotkey, or `/arm`, stays on.
 - **Unanswered question.** A forwarded agent question got no answer for 10 minutes. See [Question notifications](#question-notifications-beta).
 
-If the lid is confirmed closed when one of these happens, Agrypnos also asks the Mac to sleep. The timer asks unless the lid is known to be open. Neither asks while someone is using the Mac: when there was keyboard or mouse input in the last minute and the Mac has no lid, or its lid is closed with an external display connected.
+If the lid is confirmed closed when one of these happens, Agrypnos also asks the Mac to sleep. The timer asks unless the lid is known to be open. Agrypnos skips that sleep when someone seems to be using the Mac: there was keyboard or mouse input in the last minute, and the Mac has no lid or has an external display connected.
 
 Keep awake also ends in these cases:
 
@@ -214,7 +222,7 @@ If the bot doesn't answer, the Mac is probably asleep. Nothing relays commands w
    <img src="Apps/Agrypnos/Resources/Assets.xcassets/guide-telegram-botfather.imageset/guide-telegram-botfather.png" width="520" alt="BotFather reply with the bot token">
 
 3. Open your new bot and tap **Start** (or send it anything). Telegram only knows your chat id after you've messaged the bot.
-4. In a browser, open `https://api.telegram.org/bot<token>/getUpdates` with your token in place of `<token>`. Find `"chat":{"id":` and copy the number after it. The number after `"from":{"id":` is your Telegram user id. In a private chat with the bot, the two numbers match.
+4. In a browser, open `https://api.telegram.org/bot<token>/getUpdates` with your token in place of `<token>`. Find `"chat":{"id":` and copy the number after it. The number after `"from":{"id":` (not shown in the screenshot) is your Telegram user id. In a private chat with the bot, the two numbers match.
 
    <img src="Apps/Agrypnos/Resources/Assets.xcassets/guide-telegram-getupdates.imageset/guide-telegram-getupdates.png" width="520" alt="getUpdates response with the chat id highlighted">
 
@@ -294,7 +302,7 @@ Nothing arrived? Check that Watch-end POST is on and the token and id are right.
 - **Clear secrets** in **Notif** deletes every saved token and id from this Mac. Question forwarding stops with them.
 - To kill a bot for good: `/revoke` or `/deletebot` in BotFather, or **Bot → Reset Token** in the Discord Developer Portal.
 
-Secrets live in `~/Library/Application Support/Agrypnos/notif-secrets.json` with mode `0600`. They're not in the Keychain on purpose: an unsigned app asking for your login password looks like exactly the thing you shouldn't trust.
+Secrets live in `~/Library/Application Support/Agrypnos/notif-secrets.json` with mode `0600`. They're kept out of the Keychain on purpose, so Agrypnos never shows a Keychain password prompt.
 
 Telegram holds messages for the bot until someone fetches them. When you first turn **Telegram inbound** on, or quit and relaunch, Agrypnos skips those old messages without running them. If the Mac was asleep when they arrived, the bot replies "Missed while asleep."
 
@@ -360,9 +368,9 @@ Codex alerts tell you Codex is waiting. They don't forward or answer the questio
 
 1. Save a Telegram token and chat id, or a Discord token and channel id. Inbound, user ids, and Watch-end POST aren't needed.
 2. In **Notif → Question notifications**, click **Enable Codex alerts**.
-3. Use Codex as you already do. No alert arrives until Codex runs the new hook.
+3. Use Codex as you already do.
 
-Setup adds a hook to `~/.codex/hooks.json` for questions (`request_user_input`) and approvals (`Bash`, `apply_patch`). It keeps your other hooks. There's no trust step to do: Codex has no `codex hooks` command, and the ChatGPT app has no documented trust screen. The bot message is "Codex is waiting on you." with the question text (left out if Codex marks it secret), or "Codex is waiting for an approval." If Agrypnos isn't running, Codex works as usual. **Disable** removes the Agrypnos hook.
+Setup adds a hook to `~/.codex/hooks.json` for questions (`request_user_input`) and approvals (`Bash`, `apply_patch`). It keeps your other hooks. There's nothing to approve in Codex. The bot message is "Codex is waiting on you." with the question text (left out if Codex marks it secret), or "Codex is waiting for an approval." If Agrypnos isn't running, Codex works as usual. **Disable** removes the Agrypnos hook.
 
 The Claude Code and Codex hooks run Agrypnos from where it is now. If you move `Agrypnos.app`, click the Enable button again.
 
@@ -399,7 +407,6 @@ Everything is in the popover, one section at a time.
 - Detect every AI tool. It knows the four above.
 - Turn off Wi-Fi or Bluetooth.
 - Blank the screen when you turn Keep awake on.
-- Claim power savings nobody measured.
 - Upload your transcripts or run a shared bot. Question forwarding, if you turn it on, sends the question and its options to your own bot.
 - Report what your agent is doing or when it will finish. `/status` only reports what Agrypnos can see.
 
@@ -418,7 +425,7 @@ Everything is in the popover, one section at a time.
    ```
 
    From a clone of this repo, `./Scripts/ungrant.sh` does both.
-4. Delete `Agrypnos.app`, then its data folder, which holds your bot secrets:
+4. Delete `Agrypnos.app` from **Applications**, then its data folder, which holds your bot secrets:
 
    ```bash
    rm -rf ~/Library/Application\ Support/Agrypnos
