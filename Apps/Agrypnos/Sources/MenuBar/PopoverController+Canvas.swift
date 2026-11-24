@@ -220,10 +220,27 @@ extension PopoverController {
         )
         document.addSubview(quitButton)
 
+        donateButton = NSButton(title: AgrypnosCopy.donate, target: self, action: #selector(openDonate))
+        donateButton.bezelStyle = .rounded
+        donateButton.controlSize = .regular
+        donateButton.toolTip = AgrypnosCopy.donateHelp
+        donateButton.sizeToFit()
+        donateButton.frame = NSRect(
+            x: pad,
+            y: CGFloat(general.quitY!),
+            width: donateButton.frame.width,
+            height: donateButton.frame.height
+        )
+        document.addSubview(donateButton)
+
         applySection(.watch)
 
         let vc = NSViewController()
         vc.view = root
         return vc
+    }
+
+    @objc func openDonate() {
+        NSWorkspace.shared.open(AgrypnosCopy.donateURL)
     }
 }

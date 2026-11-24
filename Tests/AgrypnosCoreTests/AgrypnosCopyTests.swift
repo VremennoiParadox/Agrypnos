@@ -12,6 +12,11 @@ final class AgrypnosCopyTests: XCTestCase {
         XCTAssertEqual(AgrypnosCopy.hotkeyHint(.defaultToggle), "⌥⌘A toggles Keep awake")
     }
 
+    func testDonatePointsAtTheLiveSponsorsPage() {
+        XCTAssertEqual(AgrypnosCopy.donate, "Donate")
+        XCTAssertEqual(AgrypnosCopy.donateURL.absoluteString, "https://github.com/sponsors/VremennoiParadox/")
+    }
+
     func testCoreCopySurfaceDoesNotClaimForcedDisplaySleep() {
         assertNoDisplaySleepFiction(allUserFacingCopy().joined(separator: "\n"))
     }
