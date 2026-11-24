@@ -88,6 +88,7 @@ final class QuestionWatchTests: XCTestCase {
         XCTAssertEqual(engine.tick(now: Date(timeIntervalSince1970: 600), safety: safe, agents: idle,
             kernelSleepDisabled: false, questionWait: decision), [.assertSleepDisabled])
         let hot = SafetyInputs(batteryPercent: 90, onBatteryDischarging: false, thermalSerious: true, lowPowerMode: false)
+        _ = engine.tick(now: Date(timeIntervalSince1970: 541), safety: hot, agents: idle, questionWait: decision)
         XCTAssertTrue(engine.tick(now: Date(timeIntervalSince1970: 601), safety: hot, agents: idle,
             questionWait: QuestionWaitDecision(action: .endUnanswered, timeouts: [])).contains(.disengage(.thermal)))
     }

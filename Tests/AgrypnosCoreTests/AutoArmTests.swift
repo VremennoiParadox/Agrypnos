@@ -17,12 +17,22 @@ final class AutoArmTests: XCTestCase {
         WatchEngine(preferences: UserPreferences(duration: .untilAgentsSettle, autoArmWhenBusy: true))
     }
 
+    /// Cursor (no CPU signal) with one fresh session write at `written`.
+    private func writeAgents(at written: Date) -> AgentSnapshot {
+        AgentSnapshot(reports: [
+            AgentReport(kind: .cursor, processRunning: true, cpuBusy: false, recentSessionWrite: true, isBusy: true,
+                        newestWrite: written),
+        ])
+    }
+
     /// Feeds busy checks every 5s from `from` through `through`. Returns the first second that came back due.
+    /// Busy checks default to CPU busy, which is fresh evidence on every check.
     private func feed(_ engine: inout WatchEngine, busy: Bool?, from: TimeInterval, through: TimeInterval,
-                      lidClosed: Bool? = false, safety: SafetyInputs? = nil) -> TimeInterval? {
+                      lidClosed: Bool? = false, safety: SafetyInputs? = nil, agents: AgentSnapshot? = nil) -> TimeInterval? {
         var s = from
         while s <= through {
-            if engine.autoArmDue(now: at(s), busy: busy, lidClosed: lidClosed, safety: safety ?? calm) { return s }
+            if engine.autoArmDue(now: at(s), busy: busy, agents: agents ?? busyAgents(busy == true),
+                                 lidClosed: lidClosed, safety: safety ?? calm) { return s }
             s += 5
         }
         return nil
@@ -66,6 +76,31 @@ final class AutoArmTests: XCTestCase {
         XCTAssertNil(feed(&engine, busy: true, from: 0, through: 25))
         XCTAssertNil(feed(&engine, busy: false, from: 30, through: 30))
         XCTAssertEqual(feed(&engine, busy: true, from: 35, through: 120), 65)
+    }
+
+    // MARK: Fresh evidence
+
+    /// One session write stays fresh for 45s, longer than the 30s count. It alone must not arm.
+    func testOneSessionWriteNeverArms() {
+        var engine = autoOnEngine()
+        XCTAssertNil(feed(&engine, busy: true, from: 0, through: 40, agents: writeAgents(at: t0)))
+    }
+
+    /// Found live: the CPU blip that came with the write must not count as fresh evidence.
+    func testCPUOnlyAtTheStartOfTheCountDoesNotArm() {
+        var engine = autoOnEngine()
+        let blip = AgentSnapshot(reports: [
+            AgentReport(kind: .claudeCode, processRunning: true, cpuBusy: true, recentSessionWrite: true, isBusy: true,
+                        newestWrite: t0),
+        ])
+        XCTAssertNil(feed(&engine, busy: true, from: 0, through: 0, agents: blip))
+        XCTAssertNil(feed(&engine, busy: true, from: 5, through: 40, agents: writeAgents(at: t0)))
+    }
+
+    func testANewerWriteDuringTheCountArms() {
+        var engine = autoOnEngine()
+        XCTAssertNil(feed(&engine, busy: true, from: 0, through: 15, agents: writeAgents(at: t0)))
+        XCTAssertEqual(feed(&engine, busy: true, from: 20, through: 60, agents: writeAgents(at: at(18))), 30)
     }
 
     // MARK: Gates

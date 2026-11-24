@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 import IOKit
 
@@ -38,5 +39,19 @@ enum ThermalMonitor {
     static func isSerious() -> Bool {
         let state = ProcessInfo.processInfo.thermalState
         return state == .serious || state == .critical
+    }
+}
+
+/// Someone may be using the Mac. Automatic sleep and Sleep panel check this before acting.
+struct UserPresence {
+    var secondsSinceInput: () -> TimeInterval? = {
+        CGEventSource.secondsSinceLastEventType(.hidSystemState, eventType: CGEventType(rawValue: ~0)!)
+    }
+    var externalDisplayOnline: () -> Bool = {
+        var count: UInt32 = 0
+        guard CGGetOnlineDisplayList(0, nil, &count) == .success, count > 0 else { return false }
+        var ids = [CGDirectDisplayID](repeating: 0, count: Int(count))
+        guard CGGetOnlineDisplayList(count, &ids, &count) == .success else { return false }
+        return ids.prefix(Int(count)).contains { CGDisplayIsBuiltin($0) == 0 }
     }
 }

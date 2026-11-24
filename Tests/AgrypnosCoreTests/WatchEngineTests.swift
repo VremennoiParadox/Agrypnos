@@ -254,17 +254,17 @@ final class WatchEngineTests: XCTestCase {
         )
     }
 
-    func testThermalTickDisengages() {
+    func testThermalNeedsAMinuteBeforeItDisengages() {
         var engine = WatchEngine(preferences: .default)
         _ = engine.userSetEngaged(true, now: t0)
-        XCTAssertEqual(
-            engine.tick(
-                now: t0.addingTimeInterval(1),
-                safety: SafetyInputs(batteryPercent: 90, onBatteryDischarging: false, thermalSerious: true, lowPowerMode: false),
-                agents: .idle
-            ),
-            [.disengage(.thermal)]
-        )
+        let hot = SafetyInputs(batteryPercent: 90, onBatteryDischarging: false, thermalSerious: true, lowPowerMode: false)
+        let cool = SafetyInputs(batteryPercent: 90, onBatteryDischarging: false, thermalSerious: false, lowPowerMode: false)
+        XCTAssertTrue(engine.tick(now: t0.addingTimeInterval(1), safety: hot, agents: .idle).isEmpty)
+        // A cool reading restarts the minute.
+        XCTAssertTrue(engine.tick(now: t0.addingTimeInterval(30), safety: cool, agents: .idle).isEmpty)
+        XCTAssertTrue(engine.tick(now: t0.addingTimeInterval(35), safety: hot, agents: .idle).isEmpty)
+        XCTAssertTrue(engine.tick(now: t0.addingTimeInterval(94), safety: hot, agents: .idle).isEmpty)
+        XCTAssertEqual(engine.tick(now: t0.addingTimeInterval(95), safety: hot, agents: .idle), [.disengage(.thermal)])
     }
 
     func testThermalTickStaysArmedWhenThermalAutoOffIsOff() {

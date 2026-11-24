@@ -36,6 +36,12 @@ public enum AgentKindClassifier: Sendable {
         }
     }
 
+    /// Commands this agent process runs count toward busy. OpenCode's own CPU does not count,
+    /// but its commands do. Cursor's editor tree and the desktop apps' main processes do not.
+    public static func commandsCountTowardBusy(processName: String) -> Bool {
+        cpuCountsTowardBusy(processName: processName) || classify(processName: processName) == .openCode
+    }
+
     /// Require a desktop executable path: bare CLI prompts can contain helper names.
     static func isCodexDesktop(_ lowered: String) -> Bool {
         let command = lowered.trimmingCharacters(in: .whitespaces)

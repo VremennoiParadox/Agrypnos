@@ -28,6 +28,9 @@ public struct WatchEngine: Equatable, Sendable {
     public private(set) var autoArmGate = AutoArmGate()
     /// The last watch end sends no bot message: Auto-on turned it on and the lid was not confirmed closed.
     public private(set) var lastEndQuiet = false
+    /// One hot reading can be a spike. Thermal ends the watch after it holds this long.
+    public static let thermalHoldSeconds: TimeInterval = 60
+    private var thermalSince: Date?
     var lastWatchEndRollback: LastWatchEnd?
     private var timerEndRollback: Date?
     private var userForcedRollback = false
@@ -156,12 +159,17 @@ public struct WatchEngine: Equatable, Sendable {
 
     /// One busy check while Keep awake is off. True when Auto-on should arm now.
     /// A closed lid or a safety limit holds the arm; the busy count keeps running.
-    public mutating func autoArmDue(now: Date, busy: Bool?, lidClosed: Bool?, safety: SafetyInputs) -> Bool {
+    public mutating func autoArmDue(
+        now: Date, busy: Bool?, agents: AgentSnapshot, lidClosed: Bool?, safety: SafetyInputs
+    ) -> Bool {
         guard autoArmWatching else {
             autoArmGate.restartCount()
             return false
         }
-        guard autoArmGate.observe(busy: busy, now: now), lidClosed != true else { return false }
+        let included = preferences.includedAgentKinds
+        guard autoArmGate.observe(busy: busy, cpu: agents.busyCPU(included: included),
+                                  newestWrite: agents.newestBusyWrite(included: included), now: now),
+              lidClosed != true else { return false }
         return AutoOffEvaluator.reason(
             engaged: true,
             timerEnd: nil,
@@ -250,6 +258,9 @@ public struct WatchEngine: Equatable, Sendable {
         questionWait: QuestionWaitDecision = .normal
     ) -> [WatchCommand] {
         guard engaged else { return [] }
+        thermalSince = safety.thermalSerious ? thermalSince ?? now : nil
+        var safety = safety
+        safety.thermalSerious = thermalSince.map { now.timeIntervalSince($0) >= Self.thermalHoldSeconds } ?? false
         if let reason = AutoOffEvaluator.reason(
             engaged: true,
             timerEnd: timerEnd,
@@ -327,6 +338,7 @@ public struct WatchEngine: Equatable, Sendable {
     ) -> [WatchCommand] {
         engaged = true
         userForcedThisSession = forcedByUser
+        thermalSince = nil
         holdingForIdlePost = false
         pendingLastWatchEnd = nil
         if resetPostedThisUserArm {

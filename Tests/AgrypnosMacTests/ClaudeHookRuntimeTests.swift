@@ -107,6 +107,32 @@ final class ClaudeHookRuntimeTests: XCTestCase {
         XCTAssertEqual(answers, ["Pick B?": "B"])
     }
 
+    /// Claude Code can kill the hook (interrupt, exit, timeout) while the question waits on the bot.
+    /// Handing it back then writes to a closed socket. Without SO_NOSIGPIPE that write ends the app,
+    /// and the crash helper drops the wake hold.
+    func testHandBackAfterHookProcessDiedDoesNotEndTheApp() async throws {
+        let dir = URL(fileURLWithPath: "/private/tmp/ag-claude-pipe-" + UUID().uuidString, isDirectory: true)
+        let sock = dir.appendingPathComponent("hook.sock")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        var handBack: ClaudeQuestionHookSource.ReturnLocal?
+        let received = expectation(description: "received")
+        let source = ClaudeQuestionHookSource(socketURL: sock, uptime: { 1000 }, receive: { _, _, local in
+            handBack = local
+            received.fulfill()
+            return true
+        })
+        try source.start()
+        defer { source.stop() }
+        let fd = try LocalHookSocket.connect(url: sock, timeout: 2)
+        try LocalHookSocket.writeAll(fd, Data(#"""
+        {"session_id":"s","cwd":"/p","hook_event_name":"PreToolUse","tool_name":"AskUserQuestion","tool_use_id":"t","tool_input":{"questions":[{"question":"Q?","header":"Q","options":[{"label":"A","description":"a"},{"label":"B","description":"b"}],"multiSelect":false}]}}
+        """#.utf8))
+        shutdown(fd, SHUT_WR)
+        await fulfillment(of: [received], timeout: 5)
+        close(fd)
+        await handBack?()
+    }
+
     func testMissingSocketIsNativeFallbackWithinTwoSeconds() {
         let missing = FileManager.default.temporaryDirectory.appendingPathComponent("agrypnos-claude-missing.sock")
         let started = Date()

@@ -46,7 +46,7 @@ The usual keep-awake tricks don't help here. Power assertions (what `caffeinate`
 - On lid close, the keyboard backlight goes off and the panel dims to a floor you choose. If you prefer, the panel sleeps instead.
 - Set How long to **1h**, **3h**, or custom minutes for a countdown that starts when you turn Keep awake on.
 - Set How long to **Agents** and Keep awake turns off by itself when the wait after agent signals stop ends.
-- Turn on **Auto-on** and Keep awake also turns itself on when your selected tools look busy for 30 seconds with the lid open (How long must be **Agents**). After it turns off, it waits for the next run. If the lid is open when it turns off, it doesn't message your bot. It is off by default.
+- Turn on **Auto-on** and Keep awake also turns itself on when your selected tools look busy for 30 seconds with the lid open (How long must be **Agents**). One stray file write isn't enough: it needs another write during those 30 seconds, or CPU use when they're up. After it turns off, it waits for the next run. If the lid is open when it turns off, it doesn't message your bot. It is off by default.
 - Low battery and thermal pressure turn Keep awake off too, and a reboot always clears it.
 - If you want, *your* Telegram or Discord bot gets a message when the timer ends or the wait after agent signals stop ends. Discord also messages when Agrypnos asks the Mac to sleep. Either bot takes `/arm`, `/disarm`, `/status`, and `/help` from your phone.
 - When OpenCode or Claude Code asks you a multiple-choice question, your bot can show it and send your answer back (BETA). Codex can ping your bot when it's waiting on you.
@@ -104,7 +104,7 @@ The **Power** section has two panel modes. You pick one.
 
 | Mode | On a confirmed lid close | When you open the lid again |
 |---|---|---|
-| **Sleep panel** (default) | The display itself sleeps (`displaysleepnow`). | The display wakes. Nothing fades back, so the brightness floor and fade settings are hidden. |
+| **Sleep panel** (default) | The display itself sleeps (`displaysleepnow`). With an external display connected, it leaves the displays on: macOS already turns the built-in panel off with the lid closed. | The display wakes. Nothing fades back, so the brightness floor and fade settings are hidden. |
 | **Dim panel** | Brightness drops to your floor (15% by default, 1–40%). The panel stays on. | Brightness fades back over 1, 2, or 3 seconds (2 by default). |
 
 Both modes turn the keyboard backlight off by default, and **Power** has a switch for that. Dim panel also has a switch for the brightness floor. Neither mode puts the Mac to sleep or turns Keep awake off, so your agents keep running either way. Turning Keep awake on with the lid open never touches the screen.
@@ -114,6 +114,8 @@ If Agrypnos never saw your brightness before the lid closed, it won't guess one 
 ### How it knows your agents are busy
 
 It only looks at your own Mac, and only at the tools you leave checked under **Agents**. A tool counts as busy when its process is running and one of its session files changed in the last 45 seconds. For Claude Code and the Codex CLI, a running process that uses 5% CPU or more also counts. The Claude and Codex desktop apps' own CPU use doesn't.
+
+Commands a tool runs count too. When Claude Code, Codex, or OpenCode runs a command in a shell, like a build or a test run, that command's CPU counts toward the tool, so a long test run doesn't look idle while the agent waits for it. Servers a tool starts directly, like MCP or language servers, don't count. Cursor's commands don't either, because Cursor's own terminals look the same (see the tip below).
 
 <p align="center">
   <picture>
@@ -134,7 +136,7 @@ It reads file modification times, not what's inside the files. If Cursor is sele
 
 Once Agrypnos has seen work since you turned Keep awake on, it starts the wait after agent signals stop each time the busy signals stop. New activity starts the wait over. You can set it from 1 minute 30 seconds to 10 minutes. When the wait runs out, Keep awake turns off. If Agrypnos never saw any work since you turned it on, Keep awake stays on. The wait is there because an agent can go quiet for a while between file writes, and that shouldn't look like the end of the run.
 
-Agrypnos can't tell whether a model is "thinking". It only sees processes and files, so pick a wait after agent signals stop that fits how your agents work. While a model writes a long reply, Claude Code writes nothing to its session file and uses little CPU until the reply is done. A reply that takes longer than about 45 seconds plus your wait ends Keep awake mid-turn, so raise the wait if your agents write long replies.
+Agrypnos can't tell whether a model is "thinking". It only sees processes, files, and the CPU of commands they run, so pick a wait after agent signals stop that fits how your agents work. While a model writes a long reply, Claude Code writes nothing to its session file and uses little CPU until the reply is done. A reply that takes longer than about 45 seconds plus your wait ends Keep awake mid-turn, so raise the wait if your agents write long replies.
 
 > [!TIP]
 > Terminal session files don't count as busy by default, so a terminal left open can't hold the Mac awake on its own. Some agents run commands like tests in a terminal and go quiet while they wait for it. Turn on **Count terminal sessions as busy** in **Agents** if you want that terminal to count.
@@ -144,17 +146,17 @@ Agrypnos can't tell whether a model is "thinking". It only sees processes and fi
 - **Timer ended.** For **1h**, **3h**, or custom minutes.
 - **Wait after agent signals stop ended.** Only when How long is **Agents**.
 - **Low battery.** On battery, at the level you set (15% by default, 5–100%).
-- **Thermal pressure.** When macOS reports a serious or critical thermal state. You can turn this off in **Power**.
+- **Thermal pressure.** When macOS reports a serious or critical thermal state for a minute. You can turn this off in **Power**.
 - **Low Power Mode.** On battery with Low Power Mode on, Keep awake that Agrypnos took over at launch (see below) turns off. Keep awake you turned on yourself, from the popover, the hotkey, or `/arm`, stays on.
 - **Unanswered question.** A forwarded agent question got no answer for 10 minutes. See [Question notifications](#question-notifications-beta).
 
-If the lid is confirmed closed when one of these happens, Agrypnos also asks the Mac to sleep. The timer asks unless the lid is known to be open.
+If the lid is confirmed closed when one of these happens, Agrypnos also asks the Mac to sleep. The timer asks unless the lid is known to be open. Neither asks while someone is using the Mac: when there was keyboard or mouse input in the last minute and the Mac has no lid, or its lid is closed with an external display connected.
 
 Keep awake also ends in these cases:
 
 - **Reboot.** macOS clears the setting. Launch at login never turns Keep awake back on.
 - **Quit or crash.** Quitting Agrypnos turns the setting off. If the lid is confirmed closed, quitting also asks the Mac to sleep. If the app crashes or gets force-quit, a small helper it started at launch turns the setting off right after.
-- **Wake hold lost.** If Agrypnos can't set `disablesleep` again and read it back, it turns Keep awake off instead of showing it as on.
+- **Wake hold lost.** If macOS shows `disablesleep` cleared and Agrypnos can't set it again and read it back, it turns Keep awake off instead of showing it as on. A check that fails to read the setting doesn't count as lost.
 
 When the timer, the wait after agent signals stop, an unanswered question, low battery, thermal pressure, or Low Power Mode turns Keep awake off, Agrypnos also shows a macOS notification that says why. The **Watch** section always shows when Keep awake last ended and why.
 

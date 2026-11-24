@@ -31,6 +31,7 @@ final class RuntimeRaceTests: XCTestCase {
         f.runtime.engine.preferences.panelPowerMode = .displaySleep
         _ = f.runtime.engine.userSetEngaged(true, now: Date(), lidClosed: false)
         _ = f.runtime.engine.observeLid(closed: true, now: Date().addingTimeInterval(-1))
+        f.kernelHeld = false  // the hold was cleared elsewhere, so close reasserts it
         f.kernelWriteHook = { on in if on { f.lidClosed = false } }
         f.runtime.pollLid()
         XCTAssertEqual(f.panelSleepRequests, 0, "Power B sleeps open panel after blocking reassertion")

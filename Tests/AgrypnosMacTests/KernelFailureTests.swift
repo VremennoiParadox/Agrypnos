@@ -34,13 +34,25 @@ final class KernelFailureTests: XCTestCase {
         XCTAssertFalse(f.messages.isEmpty)
     }
 
-    func testUnknownArmReadbackUndoesSetAndStaysArmedWhenClearUnconfirmed() {
+    func testUnreadableHoldIsNotRewrittenAndWatchStays() {
         let f = RuntimeFixture()
         _ = f.runtime.engine.userSetEngaged(true, now: Date(), lidClosed: false)
-        f.kernelHeld = true
         f.kernelUnknown = true
         var writes: [Bool] = []
         f.kernelWriteHook = { writes.append($0) }
+        f.runtime.apply([.assertSleepDisabled])
+        XCTAssertEqual(writes, [], "An unreadable pmset is not a cleared hold")
+        XCTAssertTrue(f.kernelHeld)
+        XCTAssertTrue(f.runtime.engine.engaged)
+        XCTAssertNil(f.runtime.preferences.lastWatchEnd)
+    }
+
+    func testUnknownArmReadbackUndoesSetAndStaysArmedWhenClearUnconfirmed() {
+        let f = RuntimeFixture()
+        _ = f.runtime.engine.userSetEngaged(true, now: Date(), lidClosed: false)
+        f.kernelHeld = false
+        var writes: [Bool] = []
+        f.kernelWriteHook = { writes.append($0); if $0 { f.kernelUnknown = true } }
         f.runtime.apply([.assertSleepDisabled])
         XCTAssertEqual(writes.first, true)
         XCTAssertTrue(writes.contains(false))

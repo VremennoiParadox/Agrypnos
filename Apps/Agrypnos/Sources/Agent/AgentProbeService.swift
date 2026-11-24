@@ -17,7 +17,7 @@ struct ProbeCollection<Value> {
 enum ProcessListReader {
     static func records(
         run: () -> (exit: Int32, out: String, err: String) = {
-            ProcessRunner.run("/bin/ps", ["-axo", "pid=", "-o", "pcpu=", "-o", "args="])
+            ProcessRunner.run("/bin/ps", ["-axo", "pid=", "-o", "ppid=", "-o", "pcpu=", "-o", "args="])
         }
     ) -> ProbeCollection<ProcessRecord> {
         let result = run()

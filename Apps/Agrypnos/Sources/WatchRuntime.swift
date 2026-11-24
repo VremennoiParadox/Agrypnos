@@ -63,6 +63,7 @@ final class WatchRuntime {
     var wakeRestorePending = false
     var savedKeyboard: Double?
     var hygieneDevices = HygieneDevices()
+    var userPresence = UserPresence()
     var hygieneEffects = HygieneEffects()
     let brightnessRamp = BrightnessRampController()
     var lidTimer: Timer?
@@ -455,7 +456,7 @@ final class WatchRuntime {
     func apply(_ commands: [WatchCommand]) -> HygieneApplyResult {
         for command in commands {
             if case .assertSleepDisabled = command {
-                guard armKernel(allowInstall: false) else {
+                guard reassertWakeHold() else {
                     engine.endForWakeHoldFailure(now: Date())
                     if !disarmKernel() {
                         rollbackFailedKernelClear(reason: .wakeHoldFailed)
@@ -485,6 +486,7 @@ final class WatchRuntime {
             savedKeyboard: &savedKeyboard,
             ramp: brightnessRamp,
             devices: hygieneDevices,
+            presence: userPresence,
             readLid: readLid,
             runCommand: runCommand
         )
