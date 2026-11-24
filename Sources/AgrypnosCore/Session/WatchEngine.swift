@@ -156,12 +156,17 @@ public struct WatchEngine: Equatable, Sendable {
 
     /// One busy check while Keep awake is off. True when Auto-on should arm now.
     /// A closed lid or a safety limit holds the arm; the busy count keeps running.
-    public mutating func autoArmDue(now: Date, busy: Bool?, lidClosed: Bool?, safety: SafetyInputs) -> Bool {
+    public mutating func autoArmDue(
+        now: Date, busy: Bool?, agents: AgentSnapshot, lidClosed: Bool?, safety: SafetyInputs
+    ) -> Bool {
         guard autoArmWatching else {
             autoArmGate.restartCount()
             return false
         }
-        guard autoArmGate.observe(busy: busy, now: now), lidClosed != true else { return false }
+        let included = preferences.includedAgentKinds
+        guard autoArmGate.observe(busy: busy, cpu: agents.busyCPU(included: included),
+                                  newestWrite: agents.newestBusyWrite(included: included), now: now),
+              lidClosed != true else { return false }
         return AutoOffEvaluator.reason(
             engaged: true,
             timerEnd: nil,

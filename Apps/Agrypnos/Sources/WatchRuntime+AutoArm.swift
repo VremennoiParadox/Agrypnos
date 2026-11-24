@@ -13,14 +13,14 @@ extension WatchRuntime {
 
     /// One busy check while Keep awake is off. Same arm path as the popover switch,
     /// minus the grant installer: Auto-on never pops an admin prompt by itself.
-    func autoArmIfDue(busy: Bool?, now: Date) {
+    func autoArmIfDue(busy: Bool?, agents: AgentSnapshot, now: Date) {
         let safety = lastSafety ?? SafetyInputs(
             batteryPercent: lastBatteryReading?.percent,
             onBatteryDischarging: lastBatteryReading?.onBatteryDischarging ?? false,
             thermalSerious: ThermalMonitor.isSerious(),
             lowPowerMode: ProcessInfo.processInfo.isLowPowerModeEnabled
         )
-        guard engine.autoArmDue(now: now, busy: busy, lidClosed: readLid(), safety: safety) else { return }
+        guard engine.autoArmDue(now: now, busy: busy, agents: agents, lidClosed: readLid(), safety: safety) else { return }
         WatchDiagnostics.event("auto-on arm")
         setEngaged(true, auto: true)
         if !engine.engaged {

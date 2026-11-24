@@ -139,7 +139,7 @@ extension WatchRuntime {
             engine.interruptAgentObservations()
         }
         guard engine.engaged else {
-            autoArmIfDue(busy: busy, now: now)
+            autoArmIfDue(busy: busy, agents: observation.snapshot, now: now)
             delegate?.watchRuntimeDidChange(self)
             return
         }
@@ -168,7 +168,7 @@ extension WatchRuntime {
         // Only Auto-on reaches here while off (cached snapshot or probe still in flight).
         guard engine.engaged else {
             if observeAgents {
-                autoArmIfDue(busy: agents.anyBusy(included: engine.preferences.includedAgentKinds), now: now)
+                autoArmIfDue(busy: agents.anyBusy(included: engine.preferences.includedAgentKinds), agents: agents, now: now)
             }
             delegate?.watchRuntimeDidChange(self)
             return

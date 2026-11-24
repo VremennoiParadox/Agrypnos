@@ -23,19 +23,23 @@ public struct AgentReport: Equatable, Sendable {
     public var cpuBusy: Bool
     public var recentSessionWrite: Bool
     public var isBusy: Bool
+    /// Newest fresh session write. Auto-on needs a newer one before it trusts a write alone.
+    public var newestWrite: Date?
 
     public init(
         kind: AgentKind,
         processRunning: Bool,
         cpuBusy: Bool,
         recentSessionWrite: Bool,
-        isBusy: Bool
+        isBusy: Bool,
+        newestWrite: Date? = nil
     ) {
         self.kind = kind
         self.processRunning = processRunning
         self.cpuBusy = cpuBusy
         self.recentSessionWrite = recentSessionWrite
         self.isBusy = isBusy
+        self.newestWrite = newestWrite
     }
 }
 
@@ -52,6 +56,15 @@ public struct AgentSnapshot: Equatable, Sendable {
 
     public func anyBusy(included: Set<AgentKind>) -> Bool {
         reports.contains { $0.isBusy && included.contains($0.kind) }
+    }
+
+    /// A busy selected tool shows CPU, so this check is fresh evidence on its own.
+    public func busyCPU(included: Set<AgentKind>) -> Bool {
+        reports.contains { $0.isBusy && $0.cpuBusy && included.contains($0.kind) }
+    }
+
+    public func newestBusyWrite(included: Set<AgentKind>) -> Date? {
+        reports.filter { $0.isBusy && included.contains($0.kind) }.compactMap(\.newestWrite).max()
     }
 }
 
@@ -109,15 +122,16 @@ public struct AgentHeuristicEngine: Equatable, Sendable {
         let cpuBusy = matched.contains {
             AgentKindClassifier.cpuCountsTowardBusy(processName: $0.name) && $0.cpuPercent >= threshold
         } || Self.commandCPU(under: agents, in: processes) >= threshold
-        let recentSessionWrite = sessionWrites.contains { signal in
+        let fresh = sessionWrites.filter { signal in
             signal.kind == kind && signal.isFresh(now: now, freshness: config.sessionFreshness)
         }
         return AgentReport(
             kind: kind,
             processRunning: processRunning,
             cpuBusy: cpuBusy,
-            recentSessionWrite: recentSessionWrite,
-            isBusy: processRunning && (cpuBusy || recentSessionWrite)
+            recentSessionWrite: !fresh.isEmpty,
+            isBusy: processRunning && (cpuBusy || !fresh.isEmpty),
+            newestWrite: fresh.map(\.modified).max()
         )
     }
 
