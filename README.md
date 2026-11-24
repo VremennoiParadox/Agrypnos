@@ -46,7 +46,7 @@ The usual keep-awake tricks don't help here. Power assertions (what `caffeinate`
 - On lid close, the keyboard backlight goes off and the panel dims to a floor you choose. If you prefer, the panel sleeps instead.
 - Set How long to **1h**, **3h**, or custom minutes for a countdown that starts when you turn Keep awake on.
 - Set How long to **Agents** and Keep awake turns off by itself when the wait after agent signals stop ends.
-- Turn on **Auto-on** and Keep awake also turns itself on when your selected tools look busy for 30 seconds with the lid open (How long must be **Agents**). One stray file write isn't enough: it needs CPU use or another write during those 30 seconds. After it turns off, it waits for the next run. If the lid is open when it turns off, it doesn't message your bot. It is off by default.
+- Turn on **Auto-on** and Keep awake also turns itself on when your selected tools look busy for 30 seconds with the lid open (How long must be **Agents**). One stray file write isn't enough: it needs another write during those 30 seconds, or CPU use when they're up. After it turns off, it waits for the next run. If the lid is open when it turns off, it doesn't message your bot. It is off by default.
 - Low battery and thermal pressure turn Keep awake off too, and a reboot always clears it.
 - If you want, *your* Telegram or Discord bot gets a message when the timer ends or the wait after agent signals stop ends. Discord also messages when Agrypnos asks the Mac to sleep. Either bot takes `/arm`, `/disarm`, `/status`, and `/help` from your phone.
 - When OpenCode or Claude Code asks you a multiple-choice question, your bot can show it and send your answer back (BETA). Codex can ping your bot when it's waiting on you.

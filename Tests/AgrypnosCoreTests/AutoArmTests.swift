@@ -86,6 +86,17 @@ final class AutoArmTests: XCTestCase {
         XCTAssertNil(feed(&engine, busy: true, from: 0, through: 40, agents: writeAgents(at: t0)))
     }
 
+    /// Found live: the CPU blip that came with the write must not count as fresh evidence.
+    func testCPUOnlyAtTheStartOfTheCountDoesNotArm() {
+        var engine = autoOnEngine()
+        let blip = AgentSnapshot(reports: [
+            AgentReport(kind: .claudeCode, processRunning: true, cpuBusy: true, recentSessionWrite: true, isBusy: true,
+                        newestWrite: t0),
+        ])
+        XCTAssertNil(feed(&engine, busy: true, from: 0, through: 0, agents: blip))
+        XCTAssertNil(feed(&engine, busy: true, from: 5, through: 40, agents: writeAgents(at: t0)))
+    }
+
     func testANewerWriteDuringTheCountArms() {
         var engine = autoOnEngine()
         XCTAssertNil(feed(&engine, busy: true, from: 0, through: 15, agents: writeAgents(at: t0)))
