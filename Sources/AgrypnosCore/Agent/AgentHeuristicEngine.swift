@@ -104,26 +104,42 @@ public struct AgentHeuristicEngine: Equatable, Sendable {
     ) -> AgentReport {
         let matched = processes.filter { AgentKindClassifier.classify(processName: $0.name) == kind }
         let processRunning = !matched.isEmpty
+        let threshold = config.claudeCodexCPUBusyThreshold
+        let agents = matched.filter { AgentKindClassifier.commandsCountTowardBusy(processName: $0.name) }
         let cpuBusy = matched.contains {
-            AgentKindClassifier.cpuCountsTowardBusy(processName: $0.name)
-                && $0.cpuPercent >= config.claudeCodexCPUBusyThreshold
-        }
+            AgentKindClassifier.cpuCountsTowardBusy(processName: $0.name) && $0.cpuPercent >= threshold
+        } || Self.commandCPU(under: agents, in: processes) >= threshold
         let recentSessionWrite = sessionWrites.contains { signal in
             signal.kind == kind && signal.isFresh(now: now, freshness: config.sessionFreshness)
-        }
-        let isBusy: Bool
-        switch kind {
-        case .cursor, .openCode:
-            isBusy = processRunning && recentSessionWrite
-        case .claudeCode, .codex:
-            isBusy = processRunning && (cpuBusy || recentSessionWrite)
         }
         return AgentReport(
             kind: kind,
             processRunning: processRunning,
             cpuBusy: cpuBusy,
             recentSessionWrite: recentSessionWrite,
-            isBusy: isBusy
+            isBusy: processRunning && (cpuBusy || recentSessionWrite)
         )
+    }
+
+    /// CPU of commands the agents ran: their shell children and everything under those.
+    /// Servers an agent starts directly (MCP, language servers) are not commands.
+    static func commandCPU(under agents: [ProcessRecord], in processes: [ProcessRecord]) -> Double {
+        guard !agents.isEmpty else { return 0 }
+        let children = Dictionary(grouping: processes, by: { $0.parentPID ?? -1 })
+        var stack = agents.flatMap { children[$0.pid] ?? [] }.filter { isShell($0.name) }
+        var seen = Set<Int>()
+        var total = 0.0
+        while let process = stack.popLast() {
+            guard seen.insert(process.pid).inserted else { continue }
+            total += process.cpuPercent
+            stack += children[process.pid] ?? []
+        }
+        return total
+    }
+
+    static func isShell(_ processName: String) -> Bool {
+        var name = AgentKindClassifier.basename(processName)
+        if name.hasPrefix("-") { name.removeFirst() }  // login shell
+        return ["sh", "bash", "zsh", "dash", "fish", "ksh", "tcsh", "csh"].contains(name)
     }
 }
