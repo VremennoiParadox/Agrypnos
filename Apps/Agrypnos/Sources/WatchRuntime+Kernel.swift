@@ -32,6 +32,13 @@ extension WatchRuntime {
         return true
     }
 
+    /// Reassert only a hold pmset shows as gone. An unreadable pmset (timeout, odd output) is not a
+    /// cleared hold: rewriting it could fail the readback and drop a hold that was still on.
+    func reassertWakeHold() -> Bool {
+        guard readKernel() == .clear else { return true }
+        return armKernel(allowInstall: false)
+    }
+
     @discardableResult
     func disarmKernel() -> Bool {
         _ = setKernel(false)

@@ -455,7 +455,7 @@ final class WatchRuntime {
     func apply(_ commands: [WatchCommand]) -> HygieneApplyResult {
         for command in commands {
             if case .assertSleepDisabled = command {
-                guard armKernel(allowInstall: false) else {
+                guard reassertWakeHold() else {
                     engine.endForWakeHoldFailure(now: Date())
                     if !disarmKernel() {
                         rollbackFailedKernelClear(reason: .wakeHoldFailed)
