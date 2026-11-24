@@ -11,7 +11,7 @@ reviewing it, read [the OpenCode milestone](docs/superpowers/plans/2026-10-01-op
 and [the native-question design](docs/superpowers/specs/2026-09-29-native-agent-questions-design.md).
 The human authorized finishing OpenCode first for their test on 2026-10-01.
 OpenCode question forwarding is Mac-checked for OpenCode 1.18.32.
-Newer OpenCode versions are accepted when they expose `question.reply` and `question.list` (human decision 2026-11-06). The popover status names the detected version. Automated: the native end-to-end test passed on OpenCode 1.18.34 (2026-11-06). No live bot check on 1.18.34 yet.
+Newer OpenCode versions are accepted when they expose `question.reply` and `question.list` (human decision 2026-11-06). The popover status names the detected version. Automated: the native end-to-end test passed on OpenCode 1.18.34 (2026-11-06). Live bot check on 1.18.34 passed (user-confirmed, 2026-11-24).
 Claude Code forwarding passed its same-session Mac check (user-confirmed, 2026-10-11).
 Codex waiting alerts passed their ChatGPT-app check (user-confirmed, 2026-10-11). They do not answer the question.
 Cursor has no question forwarding and no waiting alert.
@@ -79,7 +79,7 @@ Switcher is **landed**: **Watch** · **Power** · **Agents** · **Notif** · **G
 
 - Top of the popover: slim section switcher. Prefer native segmented control / quiet text. Toolbar *position* like macOS prefs is fine; **do not** copy icon+blue-tile prefs chrome.
 - Card map:
-  - **Watch:** Keep awake (arm) + duration presets/custom + Auto-on card under How long (human decision 2026-11-06; default OFF; not Mac-checked yet) + arming caption + last-end honesty (caption-only last watch end from real `DisengageReason`)
+  - **Watch:** Keep awake (arm) + duration presets/custom + Auto-on card under How long (human decision 2026-11-06; default OFF; Mac-proven, user-confirmed 2026-11-24) + arming caption + last-end honesty (caption-only last watch end from real `DisengageReason`)
   - **Power:** mutually exclusive panel mode A/B (landed, Mac-proven; default B for new installs; Dim panel / Sleep panel picker + caption + help that teach A vs B in the popover) + keyboard backlight off switch + brightness floor switch and % (floor chrome hidden while B), battery auto-off, brightness return ramp (visible in A; hide while B), thermal auto-off toggle (default ON; unlocked)
   - **Agents:** per-tool include multi-select (landed, Mac-proven) + idle wait after local busy signals stop + count terminal sessions as busy (I3, landed on main — Core #80 / UI #79; default OFF; Mac-proven, user-confirmed 2026-10-11)
   - **Notif:** Setup instructions… first; landed outbound POST (Discord bot token + channel id + Telegram token + chat id; dotted + reveal; clear secrets); Telegram user id + Discord user id fields (dotted, digits only; required for question **Send answers**); Question notifications (BETA) disclosure; landed Telegram inbound on/off; landed slash `/arm` `/disarm` `/status` `/help`, wake-miss drain, lid-gated Telegram `/disarm` (Mac-proven); facts-richer `/status` dump + `/help` mirror (Mac-proven, reply copy); live battery on `/status` (Mac-proven, reply copy); Discord inbound **landed** (Core + UI; bot token + channel id — Mac-proven, user-confirmed 2026-10-11); Discord outbound is a bot channel message to the saved channel id (incoming webhook URL gone — Mac-proven, user-confirmed 2026-10-11)
@@ -91,7 +91,7 @@ Switcher is **landed**: **Watch** · **Power** · **Agents** · **Notif** · **G
   - **Height hugs active section:** After the switch (and after the height animation settles), popover height must match the active section’s content — no huge empty bottom under short sections; no clipping mid-card while empty space sits below.
 - **Honesty:** Mac optical on smooth section-switch **passed** (Watch ↔ Power ↔ Agents ↔ Notif ↔ General — no ghost paint, height hugging). Open-lid brightness and Agents picker / OpenCode process/session **passed** (user optical, 2026-09-24). Power A/B (Dim panel / Sleep panel; A↔B exclusive + height) and Telegram `/status` live battery **passed** (user optical, 2026-09-25) — Discord inbound/outbound were separately user-confirmed on 2026-10-11. Still not every provider. Still not think-detection.
 - Plain captions only (personality rules below).
-- **Collapsible help (human decision 2026-11-07; branch `collapsible-help`, reversible):** How long, Auto-on, the idle wait, Count terminal sessions, Watch-end POST, Discord, and Telegram show one short plain line that says what the control does. A chevron swaps in the full help and remembers it. VoiceOver reads the full help. The Power A/B caption, Thermal auto-off, and the question cards stay fully visible.
+- **Collapsible help (human decision 2026-11-07; landed on main — #100; Mac-proven, user-confirmed 2026-11-24):** How long, Auto-on, the idle wait, Count terminal sessions, Watch-end POST, Discord, and Telegram show one short plain line that says what the control does. A chevron swaps in the full help and remembers it. VoiceOver reads the full help. The Power A/B caption, Thermal auto-off, and the question cards stay fully visible.
 
 ### Menu-bar status item (landed)
 
@@ -122,7 +122,7 @@ The menu-bar item is always a fixed-size **eye icon only**, with no visible titl
   - **Honesty:** Mac optical on the Agents picker and OpenCode process/session prove **passed** (user optical, 2026-09-24). Do not claim other providers or think-detection.
   - Plain copy: “Which tools count as busy.” Ban “we track every AI” and think-detection claims.
 - **Count terminal sessions as busy (I3)** — popover **Agents** toggle. **Landed on main (Core #80 / UI #79; Mac-proven, user-confirmed 2026-10-11).** **Default OFF.** When **ON**: terminal session files that `SessionFileLayout` already walks for **selected** tools count toward busy (not Cursor-only — any agent layout we already walk that has terminal session files; do not invent new providers). When **OFF**: exclude those terminal files from busy; only real agent session/transcript writes (+ existing process/CPU rules for selected tools) count. Nested `/subagents/*.jsonl` stays as already specified (counts when the parent tool is selected) — **not** this toggle. Plain copy: “Count terminal sessions as busy.” Help: some agents launch terminals for tasks like testing; while that terminal is running a command the agent can look idle and Keep awake can turn off. Turn the setting on to prevent that. Ban inventing think-detection. Still not every provider.
-- **Auto-on (Keep awake turns itself on)** — popover **Watch** toggle, card right under How long (human decision 2026-11-06; Watch because Agents would scroll). **Default OFF.** Not Mac-checked yet.
+- **Auto-on (Keep awake turns itself on)** — popover **Watch** toggle, card right under How long (human decision 2026-11-06; Watch because Agents would scroll). **Default OFF.** Mac-proven (user-confirmed, 2026-11-24).
   - **Arms only when all hold:** toggle ON; How long is **Agents**; Keep awake is off; selected tools look busy (same local busy signals as Agents mode) for **30 seconds** of consecutive checks (a gap or incomplete probe restarts the count); the lid is not closed (raw lid open, or no lid); battery / thermal / Low Power Mode would not turn it off right away.
   - Any other How long: the toggle is disabled and does nothing. Auto-on never changes How long.
   - Same WatchEngine engage path as a user arm — no second arm stack. Not a forced watch (the Low Power Mode rule applies). The busy that triggered the arm counts as busy seen this arm, so the wait after agent signals stop always ends it.
@@ -237,7 +237,15 @@ User-confirmed live checks — **passed, 2026-10-11**. The user confirmed the pr
 - [x] Claude Code forwarding reaches the original same-session conversation; Codex waiting alerts work in the ChatGPT app.
 - [x] Timer expiry reaches physical Mac sleep and delivers the configured bot message.
 
-This confirmation covers these live checks. Cursor still has no question forwarding or waiting alert; Codex alerts do not answer questions. Public distribution signing, notarization and acceptance of a packaged download remain separate checks.
+User-confirmed live checks — **passed, 2026-11-24**. The user confirmed everything this file still listed as unchecked; these are human test results, not checks rerun by the agent. Build, hardware and OS details were not supplied with this confirmation.
+
+- [x] Auto-on: arms after 30 seconds of busy on Agents with the lid not closed; ends quietly with the lid open.
+- [x] OpenCode question forwarding on 1.18.34 through a live bot.
+- [x] New installs start on Agents; saved prefs keep their How long.
+- [x] Local banners show as Agrypnos through UserNotifications.
+- [x] Collapsible help: short line, chevron for full help, remembered.
+
+These confirmations cover these live checks. Cursor still has no question forwarding or waiting alert; Codex alerts do not answer questions. Public distribution signing, notarization and acceptance of a packaged download remain separate checks.
 
 - Pure logic gets tests first. Watch the test fail, then implement.
 - On Linux: `swift test` and `Scripts/verify-linux.sh`. That is real evidence for Core.
